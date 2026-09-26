@@ -2,10 +2,18 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Models;
 using GymBook.Services;
+using GymBook.Services.Sync;
+using GymBook.Views;
 
 namespace GymBook.ViewModels;
 
-public partial class ProfileViewModel(DataStore store, Units units, DialogService dialogs) : BaseViewModel
+public partial class ProfileViewModel(
+    DataStore store,
+    Units units,
+    DialogService dialogs,
+    AccountService account,
+    SyncService sync,
+    IServiceProvider services) : BaseViewModel
 {
     bool _loading;
 
@@ -24,17 +32,34 @@ public partial class ProfileViewModel(DataStore store, Units units, DialogServic
     [ObservableProperty] bool warmups;
     [ObservableProperty] bool trackRir;
     [ObservableProperty] string version = "";
+    [ObservableProperty] bool isSignedIn;
+    [ObservableProperty] string accountEmail = "";
+    [ObservableProperty] string syncStatus = "";
 
     UserProfile P => store.Profile;
 
     public override Task OnAppearingAsync()
     {
+        sync.StatusChanged += OnSyncChanged;
+        store.Changed += OnSyncChanged;
         Refresh();
         return Task.CompletedTask;
     }
 
+    public override void OnDisappearing()
+    {
+        sync.StatusChanged -= OnSyncChanged;
+        store.Changed -= OnSyncChanged;
+    }
+
+    void OnSyncChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(Refresh);
+
     void Refresh()
     {
+        IsSignedIn = account.IsSignedIn;
+        AccountEmail = account.Email ?? "";
+        SyncStatus = sync.LastSyncedAt is { } at && sync.Status == "Up to date" ? $"Synced {at:t}" : sync.Status;
+
         _loading = true;
         Name = string.IsNullOrWhiteSpace(P.Name) ? "Athlete" : P.Name;
         Initial = Name[..1].ToUpperInvariant();
@@ -132,19 +157,71 @@ public partial class ProfileViewModel(DataStore store, Units units, DialogServic
     Task OpenHistory() => GoTo(Routes.History);
 
     [RelayCommand]
+    Task SignIn() => AccountPage.ShowAsync(services);
+
+    [RelayCommand]
+    async Task SyncNow()
+    {
+        await sync.SyncNowAsync();
+        Refresh();
+    }
+
+    [RelayCommand]
+    async Task SignOut()
+    {
+        var unsynced = await account.HasUnsyncedChangesAsync();
+        var message = unsynced
+            ? "Some changes haven't reached your account yet (you seem to be offline). Signing out now deletes them from this device."
+            : "Your data stays in your account and will come back when you sign in again. It is removed from this device.";
+        if (!await dialogs.Confirm("Sign out?", message, unsynced ? "Sign out anyway" : "Sign out"))
+            return;
+        await account.SignOutAsync();
+        ShowOnboarding();
+    }
+
+    [RelayCommand]
+    async Task DeleteAccount()
+    {
+        var password = await dialogs.Prompt("Delete account?",
+            "This permanently deletes your account and all synced data. Enter your password to confirm.", accept: "Delete");
+        if (string.IsNullOrEmpty(password))
+            return;
+        try
+        {
+            await account.DeleteAccountAsync(password);
+        }
+        catch (Exception e) when (e is ApiException or SessionExpiredException)
+        {
+            await dialogs.Alert("Couldn't delete account", e.Message);
+            return;
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
+        {
+            await dialogs.Alert("You're offline", "Connect to the internet to delete your account.");
+            return;
+        }
+        ShowOnboarding();
+    }
+
+    static void ShowOnboarding() =>
+        Application.Current!.Windows[0].Page = Application.Current.Handler!.MauiContext!.Services
+            .GetRequiredService<PlanWizardPage>().ForOnboarding();
+
+    [RelayCommand]
     async Task Export()
     {
-        store.Save();
-        await Share.Default.RequestAsync(new ShareFileRequest("GymBook data", new ShareFile(store.FilePath, "application/json")));
+        await Share.Default.RequestAsync(new ShareFileRequest("GymBook data", new ShareFile(store.ExportJson(), "application/json")));
     }
 
     [RelayCommand]
     async Task Reset()
     {
-        if (!await dialogs.Confirm("Reset all data?", "This permanently deletes your plans, workouts and settings.", "Delete everything"))
+        var message = account.IsSignedIn
+            ? "This permanently deletes your plans, workouts and settings from this device and from your account."
+            : "This permanently deletes your plans, workouts and settings.";
+        if (!await dialogs.Confirm("Reset all data?", message, "Delete everything"))
             return;
         store.Reset();
-        Application.Current!.Windows[0].Page = Application.Current.Handler!.MauiContext!.Services
-            .GetRequiredService<Views.PlanWizardPage>().ForOnboarding();
+        ShowOnboarding();
     }
 }

@@ -1,4 +1,5 @@
 using GymBook.Services;
+using GymBook.Services.Sync;
 using GymBook.Views;
 
 namespace GymBook;
@@ -6,13 +7,15 @@ namespace GymBook;
 public partial class App : Application
 {
     readonly DataStore _store;
+    readonly SyncService _sync;
     readonly IServiceProvider _services;
 
-    public App(DataStore store, IServiceProvider services)
+    public App(DataStore store, SyncService sync, IServiceProvider services)
     {
         InitializeComponent();
         UserAppTheme = AppTheme.Dark;
         _store = store;
+        _sync = sync;
         _services = services;
     }
 
@@ -27,6 +30,9 @@ public partial class App : Application
         window.Width = 440;
         window.Height = 760;
 #endif
+        // Catch up with changes made on other devices.
+        window.Created += (_, _) => _sync.Schedule(TimeSpan.Zero);
+        window.Resumed += (_, _) => _sync.Schedule(TimeSpan.Zero);
         return window;
     }
 

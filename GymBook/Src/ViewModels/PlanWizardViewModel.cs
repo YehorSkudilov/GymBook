@@ -7,7 +7,7 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>Step-by-step questionnaire used both for first-run onboarding and for generating new plans.</summary>
-public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs) : BaseViewModel
+public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, IServiceProvider services) : BaseViewModel
 {
     enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, Result }
 
@@ -190,6 +190,9 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             Exercises = string.Join("\n", w.Exercises.Select(e => $"{e.Sets} × {e.RepMin}–{e.RepMax}   {store.GetExercise(e.ExerciseId)?.Name}")),
         }).ToList();
     }
+
+    [RelayCommand]
+    Task SignIn() => Views.AccountPage.ShowAsync(services);
 
     [RelayCommand]
     async Task Next()

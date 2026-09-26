@@ -32,10 +32,10 @@
 		<ApplicationTitle>GymBook</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.gymbook</ApplicationId>
+		<ApplicationId>com.yehorskudilov.gymbook</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
@@ -69,6 +69,25 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\GymBook.Shared\GymBook.Shared.csproj" />
+		<ProjectReference Include="..\GymBook.LocalData\GymBook.LocalData.csproj" />
+	</ItemGroup>
+
+	<!-- The deployed API that Release builds talk to (see Src/Services/Sync/ApiConfig.cs). Pass it with
+	     -p:ApiBaseUrl=https://... or an API_BASE_URL environment variable; CI sets it from the API_BASE_URL variable. -->
+	<PropertyGroup>
+		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == ''">$(API_BASE_URL)</ApiBaseUrl>
+	</PropertyGroup>
+
+	<Target Name="ValidateApiBaseUrl" BeforeTargets="BeforeBuild;CoreCompile" Condition="'$(Configuration)' == 'Release'">
+		<Error Condition="'$(ApiBaseUrl)' == ''" Text="ApiBaseUrl is not set. Set it via -p:ApiBaseUrl=https://... or an API_BASE_URL environment variable." />
+	</Target>
+
+	<ItemGroup>
+		<AssemblyMetadata Include="ApiBaseUrl" Value="$(ApiBaseUrl)" />
 	</ItemGroup>
 
 </Project>

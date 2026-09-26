@@ -1,0 +1,130 @@
+using System.Threading.RateLimiting;
+using GymBook.Api;
+using GymBook.Api.Auth;
+using GymBook.Api.Data;
+using GymBook.Api.Sync;
+using GymBook.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+
+var builder = WebApplication.CreateBuilder(args);
+
+var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+jwt.Validate();
+builder.Services.AddSingleton(jwt);
+builder.Services.AddSingleton(TimeProvider.System);
+
+// Nothing legitimate is large except sync, which raises its own limit.
+builder.WebHost.ConfigureKestrel(k => k.Limits.MaxRequestBodySize = 1024 * 1024);
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
+builder.Services.AddDbContext<ApiDbContext>(o => o.UseNpgsql(
+    builder.Configuration.GetConnectionString("Default") ?? throw new InvalidOperationException("ConnectionStrings:Default is not configured.")));
+
+builder.Services.AddIdentityCore<AppUser>(o =>
+    {
+        o.User.RequireUniqueEmail = true;
+        // The user name is the email, so allow every character an email can contain.
+        o.User.AllowedUserNameCharacters = "";
+        // Length over composition rules (NIST SP 800-63B); lockout and rate limits handle guessing.
+        o.Password.RequiredLength = GymBook.Contracts.AuthLimits.MinPasswordLength;
+        o.Password.RequireDigit = false;
+        o.Password.RequireLowercase = false;
+        o.Password.RequireUppercase = false;
+        o.Password.RequireNonAlphanumeric = false;
+        o.Lockout.AllowedForNewUsers = true;
+        o.Lockout.MaxFailedAccessAttempts = 5;
+        o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    })
+    .AddSignInManager()
+    .AddEntityFrameworkStores<ApiDbContext>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(o =>
+    {
+        o.MapInboundClaims = false;
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidIssuer = jwt.Issuer,
+            ValidAudience = jwt.Audience,
+            IssuerSigningKey = jwt.Key,
+            ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            RequireExpirationTime = true,
+            RequireSignedTokens = true,
+            ClockSkew = TimeSpan.FromSeconds(30),
+            NameClaimType = "sub",
+        };
+    });
+
+// Every endpoint requires a signed-in user unless it explicitly opts out with [AllowAnonymous].
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+
+var authPerMinute = builder.Configuration.GetValue("RateLimiting:AuthPerMinute", 10);
+builder.Services.AddRateLimiter(o =>
+{
+    o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    o.AddPolicy(RateLimits.Auth, ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = authPerMinute, Window = TimeSpan.FromMinutes(1) }));
+    o.AddPolicy(RateLimits.Sync, ctx => RateLimitPartition.GetTokenBucketLimiter(
+        ctx.User.FindFirst("sub")?.Value ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new TokenBucketRateLimiterOptions { TokenLimit = 30, TokensPerPeriod = 30, ReplenishmentPeriod = TimeSpan.FromMinutes(1) }));
+});
+
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<SyncProcessor>();
+builder.Services.AddProblemDetails();
+builder.Services.AddControllers(o =>
+    {
+        // Otherwise every non-nullable string becomes [Required], which rejects legitimately empty values.
+        o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+        o.MaxModelValidationErrors = 50;
+    })
+    .AddJsonOptions(o => GymBookJson.Configure(o.JsonSerializerOptions));
+builder.Services.AddOpenApi();
+
+var app = builder.Build();
+
+// Only trusts X-Forwarded-* from loopback by default; add your reverse proxy to KnownProxies/KnownNetworks
+// when deploying behind one, or client IPs (used for rate limiting) will be the proxy's.
+app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto });
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi().AllowAnonymous();
+    using var scope = app.Services.CreateScope();
+    scope.ServiceProvider.GetRequiredService<ApiDbContext>().Database.Migrate();
+}
+else
+{
+    app.UseExceptionHandler();
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseRateLimiter();
+app.UseAuthorization();
+app.MapControllers();
+app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
+
+app.Run();
+
+namespace GymBook.Api
+{
+    public static class RateLimits
+    {
+        public const string Auth = "auth";
+        public const string Sync = "sync";
+    }
+}

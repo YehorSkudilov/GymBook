@@ -1,55 +1,58 @@
-using System.Text.Json;
+using GymBook.LocalData;
 using GymBook.Models;
 
 namespace GymBook.Services;
 
-/// <summary>Owns the single JSON document that holds all user data.</summary>
+/// <summary>
+/// Owns all user data: <see cref="Data"/> in memory, persisted to the on-device EF Core database by
+/// <see cref="LocalStore"/>, which also tracks what still has to sync.
+/// </summary>
 public class DataStore
 {
-    readonly string _path = Path.Combine(FileSystem.AppDataDirectory, "gymbook.json");
-    readonly Lock _gate = new();
+    readonly LocalStore _local = new(
+        Path.Combine(FileSystem.AppDataDirectory, "gymbook-local.db"),
+        legacyJsonPath: Path.Combine(FileSystem.AppDataDirectory, "gymbook.json"));
 
-    public AppData Data { get; private set; } = new();
+    public AppData Data => _local.Data;
 
+    public LocalStore Local => _local;
+
+    /// <summary>Raised after any data change, local or pulled from the server.</summary>
     public event EventHandler? Changed;
 
-    public DataStore()
-    {
-        Load();
-    }
-
-    public string FilePath => _path;
-
-    void Load()
-    {
-        try
-        {
-            if (File.Exists(_path))
-                Data = JsonSerializer.Deserialize(File.ReadAllText(_path), AppJsonContext.Default.AppData) ?? new AppData();
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Failed to load data: {ex}");
-            Data = new AppData();
-        }
-    }
+    /// <summary>Raised after the user changed something locally; the sync service listens to push it.</summary>
+    public event EventHandler? Saved;
 
     public void Save()
     {
-        lock (_gate)
-        {
-            var json = JsonSerializer.Serialize(Data, AppJsonContext.Default.AppData);
-            var tmp = _path + ".tmp";
-            File.WriteAllText(tmp, json);
-            File.Move(tmp, _path, overwrite: true);
-        }
+        _local.Save();
+        Saved?.Invoke(this, EventArgs.Empty);
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>Deletes all data. When signed in, the deletion syncs to the account as well.</summary>
     public void Reset()
     {
-        Data = new AppData();
-        Save();
+        _local.Reset();
+        Saved?.Invoke(this, EventArgs.Empty);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Removes everything from this device only; used on sign-out.</summary>
+    public void WipeDevice()
+    {
+        _local.WipeDevice();
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    internal void RaiseChanged() => Changed?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>Writes all data as a single JSON file for sharing and returns its path.</summary>
+    public string ExportJson()
+    {
+        var path = Path.Combine(FileSystem.CacheDirectory, "gymbook-export.json");
+        File.WriteAllText(path, LocalJson.Serialize(Data));
+        return path;
     }
 
     public UserProfile Profile => Data.Profile;

@@ -158,8 +158,7 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
                 }
                 break;
             case "Duplicate plan":
-                var json = System.Text.Json.JsonSerializer.Serialize(new AppData { Plans = [plan] }, AppJsonContext.Default.AppData);
-                var copy = System.Text.Json.JsonSerializer.Deserialize(json, AppJsonContext.Default.AppData)!.Plans[0];
+                var copy = LocalJson.Clone(plan);
                 copy.Id = Guid.NewGuid().ToString("N");
                 copy.Name += " (copy)";
                 copy.CreatedAt = DateTime.Now;

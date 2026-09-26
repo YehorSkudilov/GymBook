@@ -1,4 +1,5 @@
 using GymBook.Services;
+using GymBook.Services.Sync;
 using GymBook.ViewModels;
 using GymBook.Views;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<WorkoutService>();
         builder.Services.AddSingleton<DialogService>();
         builder.Services.AddSingleton<ExercisePickerService>();
+        builder.Services.AddSingleton<AuthSession>();
+        builder.Services.AddSingleton(sp => new ApiClient(ApiConfig.CreateClient(), sp.GetRequiredService<AuthSession>()));
+        builder.Services.AddSingleton<SyncService>();
+        builder.Services.AddSingleton<AccountService>();
 
         AddPage<HomePage, HomeViewModel>(builder.Services);
         AddPage<PlansPage, PlansViewModel>(builder.Services);
@@ -40,6 +45,7 @@ public static class MauiProgram
         AddPage<PlanWizardPage, PlanWizardViewModel>(builder.Services);
         AddPage<ExerciseDetailPage, ExerciseDetailViewModel>(builder.Services);
         AddPage<ExercisePickerPage, ExercisePickerViewModel>(builder.Services);
+        AddPage<AccountPage, AccountViewModel>(builder.Services);
 
 #if DEBUG
         builder.Logging.AddDebug();

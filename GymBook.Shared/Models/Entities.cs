@@ -1,17 +1,29 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace GymBook.Models;
 
-public class Exercise
+// These classes are shared by the app, the API and both databases, and double as the sync wire format.
+// They must never carry anything the server decides on its own (owner, server version, etc.): those live
+// in EF shadow properties on the server so a client can't set them. The MaxLength attributes bound what a
+// client may upload and are enforced by the API's model validation.
+
+public class Exercise : ISyncEntity
 {
+    [MaxLength(SyncLimits.IdLength)]
     public string Id { get; set; } = "";
+    [MaxLength(SyncLimits.NameLength)]
     public string Name { get; set; } = "";
     public MuscleGroup PrimaryMuscle { get; set; }
+    [MaxItems(20)]
     public List<MuscleGroup> SecondaryMuscles { get; set; } = [];
     public Equipment Equipment { get; set; }
     public Mechanic Mechanic { get; set; }
+    [MaxLength(SyncLimits.TextLength)]
     public string Instructions { get; set; } = "";
     public bool IsCustom { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public bool IsDeleted { get; set; }
 
     [JsonIgnore]
     public bool IsBodyweight => Equipment is Equipment.Bodyweight or Equipment.Band;
@@ -20,27 +32,37 @@ public class Exercise
     public string Subtitle => $"{PrimaryMuscle.Display()} · {Equipment.Display()}";
 }
 
-public class WorkoutPlan
+public class WorkoutPlan : ISyncEntity
 {
+    [MaxLength(SyncLimits.IdLength)]
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    [MaxLength(SyncLimits.NameLength)]
     public string Name { get; set; } = "";
+    [MaxLength(SyncLimits.TextLength)]
     public string Description { get; set; } = "";
     public Goal Goal { get; set; }
     public int DaysPerWeek { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public int NextWorkoutIndex { get; set; }
+    [MaxItems(50)]
     public List<PlanWorkout> Workouts { get; set; } = [];
+    public DateTimeOffset UpdatedAt { get; set; }
+    public bool IsDeleted { get; set; }
 }
 
 public class PlanWorkout
 {
+    [MaxLength(SyncLimits.IdLength)]
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    [MaxLength(SyncLimits.NameLength)]
     public string Name { get; set; } = "";
+    [MaxItems(100)]
     public List<PlanExercise> Exercises { get; set; } = [];
 }
 
 public class PlanExercise
 {
+    [MaxLength(SyncLimits.IdLength)]
     public string ExerciseId { get; set; } = "";
     public int Sets { get; set; } = 3;
     public int RepMin { get; set; } = 8;
@@ -49,15 +71,22 @@ public class PlanExercise
     public int RestSeconds { get; set; } = 120;
 }
 
-public class WorkoutSession
+public class WorkoutSession : ISyncEntity
 {
+    [MaxLength(SyncLimits.IdLength)]
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    [MaxLength(SyncLimits.NameLength)]
     public string Name { get; set; } = "";
+    [MaxLength(SyncLimits.IdLength)]
     public string? PlanId { get; set; }
+    [MaxLength(SyncLimits.IdLength)]
     public string? PlanWorkoutId { get; set; }
     public DateTime StartedAt { get; set; } = DateTime.Now;
     public DateTime? EndedAt { get; set; }
+    [MaxItems(100)]
     public List<SessionExercise> Exercises { get; set; } = [];
+    public DateTimeOffset UpdatedAt { get; set; }
+    public bool IsDeleted { get; set; }
 
     [JsonIgnore]
     public TimeSpan Duration => (EndedAt ?? DateTime.Now) - StartedAt;
@@ -68,12 +97,15 @@ public class WorkoutSession
 
 public class SessionExercise
 {
+    [MaxLength(SyncLimits.IdLength)]
     public string ExerciseId { get; set; } = "";
     public int RepMin { get; set; } = 8;
     public int RepMax { get; set; } = 12;
     public int TargetRir { get; set; } = 2;
     public int RestSeconds { get; set; } = 120;
+    [MaxLength(SyncLimits.TextLength)]
     public string? Recommendation { get; set; }
+    [MaxItems(100)]
     public List<SetEntry> Sets { get; set; } = [];
 }
 
@@ -87,14 +119,20 @@ public class SetEntry
     public DateTime? CompletedAt { get; set; }
 }
 
-public class BodyWeightEntry
+public class BodyWeightEntry : ISyncEntity
 {
+    /// <summary>One entry per calendar day, so the day is the identity unless set explicitly.</summary>
+    [MaxLength(SyncLimits.IdLength)]
+    public string Id { get => field ?? Date.ToString("yyyy-MM-dd"); set; }
     public DateTime Date { get; set; }
     public double WeightKg { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public bool IsDeleted { get; set; }
 }
 
 public class UserProfile
 {
+    [MaxLength(SyncLimits.NameLength)]
     public string Name { get; set; } = "";
     public Goal Goal { get; set; } = Goal.BuildMuscle;
     public Experience Experience { get; set; } = Experience.Beginner;
@@ -108,20 +146,7 @@ public class UserProfile
     public bool WarmupSuggestions { get; set; } = true;
     public bool TrackRir { get; set; } = true;
     public bool OnboardingDone { get; set; }
-}
-
-public class AppData
-{
-    public int Version { get; set; } = 1;
-    public UserProfile Profile { get; set; } = new();
-    public List<WorkoutPlan> Plans { get; set; } = [];
+    [MaxLength(SyncLimits.IdLength)]
     public string? ActivePlanId { get; set; }
-    public List<WorkoutSession> Sessions { get; set; } = [];
-    public WorkoutSession? ActiveSession { get; set; }
-    public List<BodyWeightEntry> BodyWeights { get; set; } = [];
-    public List<Exercise> CustomExercises { get; set; } = [];
+    public DateTimeOffset UpdatedAt { get; set; }
 }
-
-[JsonSourceGenerationOptions(UseStringEnumConverter = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-[JsonSerializable(typeof(AppData))]
-public partial class AppJsonContext : JsonSerializerContext;

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.AccountPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:AccountViewModel"
+    Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*" Padding="20,16,20,20">
+        <Button Text="✕" FontSize="18" Style="{StaticResource StepButton}" WidthRequest="40" HeightRequest="40"
+                BackgroundColor="{StaticResource Surface2}" HorizontalOptions="Start" Command="{Binding CloseCommand}" />
+
+        <ScrollView Grid.Row="1" Margin="0,20,0,0">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="28" />
+                <Label Text="Back up your workouts and pick up where you left off on any device." Style="{StaticResource Caption}" FontSize="15" />
+
+                <Label Text="EMAIL" Style="{StaticResource Overline}" Margin="0,14,0,0" />
+                <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                    <Entry Text="{Binding Email}" Placeholder="you@example.com" Keyboard="Email" MaxLength="256"
+                           IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" />
+                </Border>
+
+                <Label Text="PASSWORD" Style="{StaticResource Overline}" Margin="0,8,0,0" />
+                <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                    <Entry Text="{Binding Password}" IsPassword="True" MaxLength="128" ReturnCommand="{Binding SubmitCommand}" />
+                </Border>
+                <Label Text="{Binding PasswordHint}" Style="{StaticResource Caption}" FontSize="12" IsVisible="{Binding IsRegister}" />
+
+                <Label Text="{Binding Error}" TextColor="{StaticResource Danger}" FontSize="14" Margin="0,4,0,0" />
+
+                <Grid Margin="0,8,0,0">
+                    <Button Text="{Binding SubmitText}" Style="{StaticResource PrimaryButton}" Command="{Binding SubmitCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="White" HeightRequest="24" />
+                </Grid>
+                <Button Text="{Binding ToggleText}" Style="{StaticResource GhostButton}" Command="{Binding ToggleCommand}" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</views:BasePage>

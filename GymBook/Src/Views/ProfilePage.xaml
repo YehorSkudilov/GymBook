@@ -53,6 +53,40 @@
                 </Grid>
             </Border>
 
+            <Label Text="ACCOUNT" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+            <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding IsSignedIn, Converter={StaticResource Not}}">
+                <Grid Style="{StaticResource Row}">
+                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding SignInCommand}" /></Grid.GestureRecognizers>
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label Text="Sign in to back up and sync" TextColor="{StaticResource Accent}" />
+                        <Label Text="Keep your workouts safe and use GymBook on all your devices" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding IsSignedIn}">
+                <VerticalStackLayout>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding SyncNowCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="{Binding AccountEmail}" LineBreakMode="TailTruncation" />
+                            <Label Text="{Binding SyncStatus}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="Sync now" TextColor="{StaticResource Accent}" FontSize="14" VerticalOptions="Center" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding SignOutCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Sign out" VerticalOptions="Center" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding DeleteAccountCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Delete account" TextColor="{StaticResource Danger}" VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
             <Label Text="TRAINING PROFILE" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0">
                 <VerticalStackLayout>

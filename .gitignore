@@ -55,3 +55,9 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# EF design-time database
+design-time.db*
+
+# Visual Studio cache
+.vs/

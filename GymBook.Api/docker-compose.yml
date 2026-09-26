@@ -1,0 +1,15 @@
+# Local development database only. Bound to 127.0.0.1 so it isn't reachable from the network.
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: gymbook
+      POSTGRES_USER: gymbook
+      POSTGRES_PASSWORD: gymbook_dev
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - gymbook-pg:/var/lib/postgresql/data
+
+volumes:
+  gymbook-pg:
