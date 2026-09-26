@@ -1,0 +1,44 @@
+# Production stack: the API plus its Postgres database. Settings come from .env, which the Publish API
+# workflow writes on the server. For the local development database, use docker-compose.yml instead.
+name: gymbook
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: GymBook.Api/Dockerfile
+    restart: unless-stopped
+    # Plain HTTP, bound to localhost: a reverse proxy on the host terminates TLS in front of it.
+    ports:
+      - "127.0.0.1:${API_PORT:?API_PORT is not set}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__Default=Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
+      - Database__MigrateOnStartup=true
+      # The proxy reaches the container through Docker's bridge network, so trust X-Forwarded-* from there;
+      # otherwise every client shares the proxy's IP for rate limiting.
+      - ReverseProxy__KnownNetworks=172.16.0.0/12
+
+  db:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is not set}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is not set}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Not published: only the API container can reach the database.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

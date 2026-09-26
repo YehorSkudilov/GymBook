@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<views:BasePage
+<views:TabView
     x:Class="GymBook.Views.StatsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
-    x:DataType="vm:StatsViewModel"
-    Shell.NavBarIsVisible="False">
+    x:DataType="vm:StatsViewModel">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20,24,20,32" Spacing="14">
+        <VerticalStackLayout Spacing="14">
             <Grid ColumnDefinitions="*,Auto">
                 <Label Text="Progress" Style="{StaticResource Title}" />
                 <Button Grid.Column="1" Text="History" Style="{StaticResource SmallButton}" Command="{Binding OpenHistoryCommand}" VerticalOptions="Center" />
@@ -120,5 +118,4 @@
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>
-    </ScrollView>
-</views:BasePage>
+</views:TabView>

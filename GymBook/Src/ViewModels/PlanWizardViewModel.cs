@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Models;
 using GymBook.Services;
+using GymBook.Views;
 
 namespace GymBook.ViewModels;
 
@@ -256,6 +257,6 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         if (wasOnboarding)
             App.ShowMainShell();
         else
-            await Shell.Current.GoToAsync("//plans");
+            await MainPage.ShowTab(AppTab.Plans);
     }
 }

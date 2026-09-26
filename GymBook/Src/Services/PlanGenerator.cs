@@ -54,6 +54,7 @@ public static class PlanGenerator
             variants[baseName] = variant + 1;
             plan.Workouts.Add(BuildWorkout(name, template, variant, count, profile));
         }
+        plan.RestDays = [.. PlanSchedule.DefaultRestDays(plan.Workouts.Count).Order()];
         return plan;
     }
 

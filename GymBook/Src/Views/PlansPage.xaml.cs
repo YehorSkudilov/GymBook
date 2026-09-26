@@ -2,7 +2,7 @@ using GymBook.ViewModels;
 
 namespace GymBook.Views;
 
-public partial class PlansPage : BasePage
+public partial class PlansPage : TabView
 {
     public PlansPage(PlansViewModel viewModel)
     {

@@ -25,6 +25,28 @@ public class MuscleMapDrawable : IDrawable
         return new(m => m == ex.PrimaryMuscle ? accent : ex.SecondaryMuscles.Contains(m) ? accent.WithAlpha(0.45f) : Neutral);
     }
 
+    /// <summary>Muscles a workout trains: primary movers solid, secondary ones faded.</summary>
+    public static MuscleMapDrawable ForWorkout(IEnumerable<Exercise> exercises)
+    {
+        var list = exercises.ToList();
+        var primary = list.Select(e => e.PrimaryMuscle).ToHashSet();
+        var secondary = list.SelectMany(e => e.SecondaryMuscles).ToHashSet();
+        var accent = Color.FromArgb("#3F7DFF");
+        return new(m => primary.Contains(m) ? accent : secondary.Contains(m) ? accent.WithAlpha(0.45f) : Neutral);
+    }
+
+    /// <summary>Shades muscles by load relative to the most-worked one, so any amount of work reads clearly.</summary>
+    public static MuscleMapDrawable ForLoad(IReadOnlyDictionary<MuscleGroup, double> load)
+    {
+        var max = load.Values.DefaultIfEmpty(0).Max();
+        var accent = Color.FromArgb("#3F7DFF");
+        return new(m =>
+        {
+            var v = load.GetValueOrDefault(m);
+            return v <= 0 || max <= 0 ? Neutral : accent.WithAlpha((float)(0.3 + 0.7 * v / max));
+        });
+    }
+
     /// <summary>Colours muscles by weekly set count relative to the 10–20 sets hypertrophy range.</summary>
     public static MuscleMapDrawable ForVolume(IReadOnlyDictionary<MuscleGroup, double> sets)
     {

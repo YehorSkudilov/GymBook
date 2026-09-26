@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.CalendarPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:CalendarViewModel"
+    Title="Calendar"
+    Shell.TabBarIsVisible="False">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Today" Command="{Binding GoToTodayCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,8,20,32" Spacing="16">
+
+            <!-- Month -->
+            <Border Style="{StaticResource Card}" Padding="12,14">
+                <Border.GestureRecognizers>
+                    <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousMonthCommand}" />
+                    <SwipeGestureRecognizer Direction="Left" Command="{Binding NextMonthCommand}" />
+                </Border.GestureRecognizers>
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                        <ImageButton Source="ic_chevron_right.png" Rotation="180" WidthRequest="36" HeightRequest="36" Padding="9"
+                                     BackgroundColor="{StaticResource Surface2}" CornerRadius="18"
+                                     Command="{Binding PreviousMonthCommand}" />
+                        <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center">
+                            <Label Text="{Binding MonthTitle}" Style="{StaticResource H3}" HorizontalOptions="Center" />
+                            <Label Text="{Binding MonthSummary}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                        <ImageButton Grid.Column="2" Source="ic_chevron_right.png" WidthRequest="36" HeightRequest="36" Padding="9"
+                                     BackgroundColor="{StaticResource Surface2}" CornerRadius="18"
+                                     Command="{Binding NextMonthCommand}" IsVisible="{Binding CanGoNext}" />
+                    </Grid>
+
+                    <FlexLayout BindableLayout.ItemsSource="{Binding WeekdayLetters}" Wrap="NoWrap">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Label FlexLayout.Basis="14.2857%" Text="{Binding .}" Style="{StaticResource Caption}" FontSize="12"
+                                       HorizontalTextAlignment="Center" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+
+                    <FlexLayout BindableLayout.ItemsSource="{Binding Days}" Wrap="Wrap">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CalendarDayItem">
+                                <Grid FlexLayout.Basis="14.2857%" HeightRequest="48">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                    </Grid.GestureRecognizers>
+                                    <Border WidthRequest="38" HeightRequest="38" StrokeShape="RoundRectangle 19"
+                                            BackgroundColor="{Binding Background}" Stroke="{Binding Border}" StrokeThickness="1.5"
+                                            HorizontalOptions="Center" VerticalOptions="Center">
+                                        <Label Text="{Binding Text}" TextColor="{Binding DayColor}" FontFamily="OpenSansSemibold" FontSize="14"
+                                               HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Border>
+                                    <Border IsVisible="{Binding ShowMulti}" WidthRequest="16" HeightRequest="16" StrokeShape="RoundRectangle 8"
+                                            BackgroundColor="{StaticResource Accent2}" StrokeThickness="0"
+                                            HorizontalOptions="End" VerticalOptions="Start" Margin="0,2,2,0">
+                                        <Label Text="{Binding Count}" TextColor="White" FontSize="10" FontFamily="OpenSansSemibold"
+                                               HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Month stats -->
+            <Border Style="{StaticResource Card}" Padding="16,14">
+                <Grid ColumnDefinitions="*,*,*">
+                    <VerticalStackLayout>
+                        <Label Text="{Binding AvgPerWeek}" Style="{StaticResource StatValue}" FontSize="18" />
+                        <Label Text="Avg per week" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="{Binding WeeklyTarget}" Style="{StaticResource StatValue}" FontSize="18" />
+                        <Label Text="Weekly target" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="2">
+                        <HorizontalStackLayout Spacing="4">
+                            <Image Source="ic_flame.png" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
+                            <Label Text="{Binding Streak}" Style="{StaticResource StatValue}" FontSize="18" />
+                        </HorizontalStackLayout>
+                        <Label Text="Streak" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <!-- Selected day -->
+            <VerticalStackLayout IsVisible="{Binding HasSelection}" Spacing="10">
+                <Label Text="{Binding SelectedTitle}" Style="{StaticResource H3}" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding SelectedSessions}" Spacing="10">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SessionItem">
+                            <views:SessionCard />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+                <Label IsVisible="{Binding SelectedIsEmpty}" Text="No workout on this day." Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+
+            <Label IsVisible="{Binding HasSelection, Converter={StaticResource Not}}" Text="Tap a day to see its workouts."
+                   Style="{StaticResource Caption}" HorizontalOptions="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>

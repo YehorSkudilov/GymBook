@@ -25,7 +25,7 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock)
         var accepted = new HashSet<(Type, string)>();
         var rejected = new SyncChanges();
 
-        var wrote = await UpsertAsync(db.Plans, changes.Plans, (to, from) => to.Workouts = from.Workouts, rejected.Plans);
+        var wrote = await UpsertAsync(db.Plans, changes.Plans, (to, from) => { to.Workouts = from.Workouts; to.RestDays = from.RestDays; }, rejected.Plans);
         wrote |= await UpsertAsync(db.Sessions, changes.Sessions, (to, from) => to.Exercises = from.Exercises, rejected.Sessions);
         wrote |= await UpsertAsync(db.CustomExercises, changes.CustomExercises, (to, from) => to.SecondaryMuscles = from.SecondaryMuscles, rejected.CustomExercises);
         wrote |= await UpsertAsync(db.BodyWeights, changes.BodyWeights, (_, _) => { }, rejected.BodyWeights);

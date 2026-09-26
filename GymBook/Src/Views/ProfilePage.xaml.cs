@@ -2,7 +2,7 @@ using GymBook.ViewModels;
 
 namespace GymBook.Views;
 
-public partial class ProfilePage : BasePage
+public partial class ProfilePage : TabView
 {
     public ProfilePage(ProfileViewModel viewModel)
     {

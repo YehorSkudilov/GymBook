@@ -46,6 +46,13 @@ public class WorkoutPlan : ISyncEntity
     public int NextWorkoutIndex { get; set; }
     [MaxItems(50)]
     public List<PlanWorkout> Workouts { get; set; } = [];
+    /// <summary>
+    /// Positions of rest days in the plan's day order, counting workouts and rest days together (0-based):
+    /// [3] for Push, Pull, Legs, Rest, Push, Pull, Legs. Null for plans from before rest days were stored,
+    /// which get a default layout.
+    /// </summary>
+    [MaxItems(50)]
+    public List<int>? RestDays { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
 }

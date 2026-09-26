@@ -7,12 +7,7 @@
     Title="GymBook"
     Shell.FlyoutBehavior="Disabled">
 
-    <TabBar>
-        <ShellContent Title="Workout" Icon="tab_home.png" Route="home" ContentTemplate="{DataTemplate views:HomePage}" />
-        <ShellContent Title="Plans" Icon="tab_plans.png" Route="plans" ContentTemplate="{DataTemplate views:PlansPage}" />
-        <ShellContent Title="Exercises" Icon="tab_exercises.png" Route="exercises" ContentTemplate="{DataTemplate views:ExercisesPage}" />
-        <ShellContent Title="Progress" Icon="tab_stats.png" Route="stats" ContentTemplate="{DataTemplate views:StatsPage}" />
-        <ShellContent Title="Profile" Icon="tab_profile.png" Route="profile" ContentTemplate="{DataTemplate views:ProfilePage}" />
-    </TabBar>
+    <!-- The tabs are a CNavBar + CView inside MainPage; Shell only handles pushing detail pages on top. -->
+    <ShellContent Route="main" ContentTemplate="{DataTemplate views:MainPage}" />
 
 </Shell>

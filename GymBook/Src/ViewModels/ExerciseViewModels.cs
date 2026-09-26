@@ -156,6 +156,14 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     [ObservableProperty] IDrawable? chart;
     [ObservableProperty] List<LineItem> history = [];
     [ObservableProperty] bool isCustom;
+    [ObservableProperty] string? imageStart;
+    [ObservableProperty] string? imageEnd;
+    [ObservableProperty] bool hasImages;
+    [ObservableProperty] string tags = "";
+    [ObservableProperty] bool hasTags;
+    [ObservableProperty] bool showSummary;
+    [ObservableProperty] List<LineItem> steps = [];
+    [ObservableProperty] bool hasSteps;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) => _id = query["id"]?.ToString();
 
@@ -174,6 +182,18 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         Mechanic = ex.Mechanic == Models.Mechanic.Compound ? "Compound" : "Isolation";
         MuscleMap = MuscleMapDrawable.ForExercise(ex);
         IsCustom = ex.IsCustom;
+
+        var details = ExerciseLibrary.Details(ex.Id);
+        ImageStart = details?.Images.ElementAtOrDefault(0);
+        ImageEnd = details?.Images.ElementAtOrDefault(1);
+        HasImages = ImageStart != null;
+        var tags = new[] { details?.Level, details?.Force, details?.Category }.Where(t => !string.IsNullOrEmpty(t)).ToList();
+        Tags = string.Join(" · ", tags);
+        HasTags = tags.Count > 0;
+        Steps = details?.Steps.Select((s, i) => new LineItem { Title = (i + 1).ToString(), Detail = s }).ToList() ?? [];
+        HasSteps = Steps.Count > 0;
+        // Imported exercises' instructions are just their steps joined; curated ones have their own short summary.
+        ShowSummary = details == null || ex.Instructions != string.Join(" ", details.Steps);
 
         var sessions = store.History
             .Select(s => (s, e: s.Exercises.FirstOrDefault(x => x.ExerciseId == ex.Id)))
@@ -197,6 +217,11 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         }).ToList();
         return Task.CompletedTask;
     }
+
+    /// <summary>No open dataset has licensable demo videos, so this searches YouTube for form videos instead.</summary>
+    [RelayCommand]
+    Task WatchVideo() => Browser.Default.OpenAsync(
+        $"https://www.youtube.com/results?search_query={Uri.EscapeDataString($"{Name} exercise proper form")}", BrowserLaunchMode.External);
 
     [RelayCommand]
     async Task Delete()

@@ -2,9 +2,9 @@ using GymBook.ViewModels;
 
 namespace GymBook.Views;
 
-public partial class StatsPage : TabView
+public partial class MuscleBreakdownPage : ContentPage
 {
-    public StatsPage(StatsViewModel viewModel)
+    public MuscleBreakdownPage(MuscleBreakdownViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="GymBook.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton"
+    Shell.NavBarIsVisible="False">
+
+    <!--  Shared glass look for the nav bar and the workout pill.  -->
+    <ContentPage.Resources>
+        <Color x:Key="GlassTint">#1D212C</Color>
+        <x:Double x:Key="GlassTintOpacity">0.55</x:Double>
+        <Color x:Key="GlassBorder">#26FFFFFF</Color>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*,32,32">
+        <!--  Each tab scrolls and pads itself (see TabView), so tabs keep their own scroll positions.  -->
+        <skeleton:CView
+            x:Name="TabContent"
+            Grid.RowSpan="2"
+            SwipeNavigationCommand="{Binding Source={x:Reference NavBar}, Path=SelectPageCommand}" />
+        <!--  Workout in progress: floats above the nav bar on every tab; tap to resume.  -->
+        <skeleton:AcrylicView
+            x:Name="ActiveBar"
+            Margin="0,0,0,10"
+            BorderColor="{StaticResource GlassBorder}"
+            CornerRadius="17"
+            EffectStyle="Custom"
+            HorizontalOptions="Center"
+            IsVisible="False"
+            TintColor="{StaticResource GlassTint}"
+            TintOpacity="{StaticResource GlassTintOpacity}"
+            VerticalOptions="End">
+            <HorizontalStackLayout
+                Padding="14,8"
+                BackgroundColor="Transparent"
+                Spacing="8">
+                <HorizontalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnActiveBarTapped" />
+                </HorizontalStackLayout.GestureRecognizers>
+                <BoxView
+                    x:Name="ActiveDot"
+                    CornerRadius="4"
+                    HeightRequest="8"
+                    VerticalOptions="Center"
+                    WidthRequest="8"
+                    Color="{StaticResource Success}" />
+                <Label
+                    x:Name="ActiveName"
+                    FontFamily="OpenSansSemibold"
+                    FontSize="13"
+                    LineBreakMode="TailTruncation"
+                    MaximumWidthRequest="180"
+                    TextColor="{StaticResource TextPrimary}"
+                    VerticalOptions="Center" />
+                <Label
+                    x:Name="ActiveTime"
+                    FontSize="13"
+                    TextColor="{StaticResource TextSecondary}"
+                    VerticalOptions="Center" />
+                <Image
+                    HeightRequest="14"
+                    Source="ic_chevron_right.png"
+                    VerticalOptions="Center"
+                    WidthRequest="14" />
+            </HorizontalStackLayout>
+        </skeleton:AcrylicView>
+
+        <skeleton:CNavBar
+            x:Name="NavBar"
+            Grid.Row="1"
+            Grid.RowSpan="2"
+            Margin="10,4,10,10"
+            BorderColor="{StaticResource GlassBorder}"
+            FontFamily="OutlinedIcons"
+            IsNavigating="{Binding Source={x:Reference TabContent}, Path=IsNavigating}"
+            LabelColor="{StaticResource TextSecondary}"
+            SelectedFontFamily="RegularIcons"
+            TintColor="{StaticResource GlassTint}"
+            TintOpacity="{StaticResource GlassTintOpacity}" />
+    </Grid>
+</ContentPage>

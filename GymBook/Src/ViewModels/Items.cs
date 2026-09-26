@@ -38,6 +38,38 @@ public class DayItem
     public Color DayColor => Done || IsToday ? Colors.White : Color.FromArgb("#9AA3B5");
 }
 
+/// <summary>A small exercise tile: its photo when the catalogue has one, otherwise the muscle's initials.</summary>
+public record ExerciseThumb(string? Image, string Initial, Color Color, Color Soft)
+{
+    public bool HasImage => Image != null;
+
+    public static ExerciseThumb For(Exercise ex) => new(
+        ExerciseLibrary.Details(ex.Id)?.Images.FirstOrDefault(),
+        ex.PrimaryMuscle.Display()[..2],
+        ex.PrimaryMuscle.Color(),
+        ex.PrimaryMuscle.Color().WithAlpha(0.16f));
+}
+
+/// <summary>One row of the week's plan on the Workout tab.</summary>
+public class PlanDayItem
+{
+    public required string Name { get; init; }
+    public required string Number { get; init; }
+    public bool IsDone { get; init; }
+    public bool IsNext { get; init; }
+    public bool IsRest { get; init; }
+    public required List<string> Thumbnails { get; init; }
+    public required string More { get; init; }
+    public ICommand? OpenCommand { get; init; }
+
+    public bool HasThumbnails => Thumbnails.Count > 0;
+    public bool HasMore => More.Length > 0;
+    public string Badge => IsDone ? "✓" : Number;
+    public Color BadgeColor => IsDone ? Color.FromArgb("#2ED47A") : IsNext ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#626B7E");
+    public Color NameColor => IsRest ? Color.FromArgb("#9AA3B5") : Color.FromArgb("#F4F6FB");
+    public string Status => IsNext ? "Up next" : "";
+}
+
 public class WorkoutPreviewItem
 {
     public required string Name { get; init; }
@@ -103,6 +135,8 @@ public partial class ExerciseItem(Exercise exercise, Action<ExerciseItem> onTap)
     public string Initial => Exercise.PrimaryMuscle.Display()[..2];
     public Color MuscleColor => Exercise.PrimaryMuscle.Color();
     public Color MuscleSoft => Exercise.PrimaryMuscle.Color().WithAlpha(0.16f);
+    public string? Thumbnail { get; } = ExerciseLibrary.Details(exercise.Id)?.Images.FirstOrDefault();
+    public bool HasThumbnail => Thumbnail != null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CheckBackground))]

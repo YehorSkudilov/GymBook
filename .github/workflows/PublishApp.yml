@@ -4,7 +4,9 @@ permissions:
   contents: write
 
 env:
-  PROJECT_PATH: GymBook/GymBook.csproj
+  # The build job checks GymBook out into its own folder next to AppSkeleton (referenced as ..\..\AppSkeleton).
+  PROJECT_PATH: GymBook/GymBook/GymBook.csproj
+  VERSION_BUMP_PROJECT_PATH: GymBook/GymBook.csproj
   PACKAGE_NAME: com.yehorskudilov.gymbook
 
 on:
@@ -52,7 +54,7 @@ jobs:
       - name: Bump MAUI version
         id: bump
         run: |
-          FILE="${{ env.PROJECT_PATH }}"
+          FILE="${{ env.VERSION_BUMP_PROJECT_PATH }}"
 
           CURRENT=$(grep -oPm1 "(?<=<ApplicationDisplayVersion>)[^<]+" "$FILE")
 
@@ -103,7 +105,7 @@ jobs:
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add ${{ env.PROJECT_PATH }}
+          git add ${{ env.VERSION_BUMP_PROJECT_PATH }}
           git commit -m "chore: bump version to ${{ steps.bump.outputs.version }}"
           git push
 
@@ -117,10 +119,18 @@ jobs:
 
     steps:
       # The version job pushed a bump commit, so check out the branch tip rather than the triggering SHA.
-      - name: Checkout
+      - name: Checkout GymBook
         uses: actions/checkout@v6
         with:
           ref: ${{ github.ref }}
+          path: GymBook
+
+      - name: Checkout AppSkeleton
+        uses: actions/checkout@v6
+        with:
+          repository: YehorSkudilov/AppSkeleton
+          token: ${{ secrets.REPO_TOKEN }}
+          path: AppSkeleton
 
       # =========================
       # .NET + MAUI

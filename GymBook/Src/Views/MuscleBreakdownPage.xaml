@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="GymBook.Views.MuscleBreakdownPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:MuscleBreakdownViewModel"
+    BackgroundColor="#B3000000"
+    Shell.NavBarIsVisible="False">
+
+    <!-- Near-full-screen card over the dimmed plan page; tapping the dimmed edge closes it. -->
+    <Grid>
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding CloseCommand}" />
+        </Grid.GestureRecognizers>
+
+        <Border Margin="12,36,12,24" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 24" StrokeThickness="1"
+                Stroke="{StaticResource Stroke}" Padding="0">
+            <!-- Swallows taps so only the dimmed edge closes the popup. -->
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer />
+            </Border.GestureRecognizers>
+
+            <Grid RowDefinitions="Auto,*">
+                <!-- Header -->
+                <VerticalStackLayout Padding="20,18,20,12" Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding Title}" Style="{StaticResource H2}" LineBreakMode="TailTruncation" />
+                            <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <ImageButton Grid.Column="1" Source="ic_close.png" WidthRequest="34" HeightRequest="34" Padding="8"
+                                     BackgroundColor="{StaticResource Surface2}" CornerRadius="17" VerticalOptions="Start"
+                                     Command="{Binding CloseCommand}" />
+                    </Grid>
+
+                    <!-- This day / whole plan -->
+                    <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="3">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="3">
+                            <Border BackgroundColor="{Binding DayTabBackground}" StrokeShape="RoundRectangle 10" StrokeThickness="0"
+                                    Padding="0,8" IsEnabled="{Binding CanShowDay}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ShowDayCommand}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="This day" TextColor="{Binding DayTabText}" FontFamily="OpenSansSemibold" FontSize="13"
+                                       HorizontalOptions="Center" />
+                            </Border>
+                            <Border Grid.Column="1" BackgroundColor="{Binding PlanTabBackground}" StrokeShape="RoundRectangle 10"
+                                    StrokeThickness="0" Padding="0,8">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ShowPlanCommand}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="Whole plan" TextColor="{Binding PlanTabText}" FontFamily="OpenSansSemibold" FontSize="13"
+                                       HorizontalOptions="Center" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+
+                <ScrollView Grid.Row="1">
+                    <VerticalStackLayout Padding="20,0,20,24" Spacing="16">
+                        <GraphicsView Drawable="{Binding Map}" HeightRequest="280" />
+                        <Grid ColumnDefinitions="*,*" Padding="30,0">
+                            <Label Text="Front" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                            <Label Grid.Column="1" Text="Back" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                        </Grid>
+                        <Label Text="Darker blue means more sets (auxiliary sets count half)." Style="{StaticResource Caption}"
+                               FontSize="12" HorizontalOptions="Center" TextColor="{StaticResource TextTertiary}" />
+
+                        <!-- Totals -->
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                            <Border Style="{StaticResource Card}" Padding="12">
+                                <VerticalStackLayout>
+                                    <Label Text="{Binding TotalSets}" Style="{StaticResource StatValue}" FontSize="18" />
+                                    <Label Text="Sets" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource Card}" Padding="12">
+                                <VerticalStackLayout>
+                                    <Label Text="{Binding TotalExercises}" Style="{StaticResource StatValue}" FontSize="18" />
+                                    <Label Text="Exercises" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </Border>
+                            <Border Grid.Column="2" Style="{StaticResource Card}" Padding="12">
+                                <VerticalStackLayout>
+                                    <Label Text="{Binding TotalMuscles}" Style="{StaticResource StatValue}" FontSize="18" />
+                                    <Label Text="Muscles" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+
+                        <!-- Main muscles -->
+                        <Label Text="Main muscles" Style="{StaticResource H3}" />
+                        <Border Style="{StaticResource Card}" Padding="16,12">
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Primary}" Spacing="14">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:MuscleRow">
+                                        <VerticalStackLayout Spacing="5">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                                <BoxView WidthRequest="8" HeightRequest="8" CornerRadius="4" Color="{Binding Color}" VerticalOptions="Center" />
+                                                <Label Grid.Column="1" Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="14" />
+                                                <Label Grid.Column="2" Text="{Binding Sets}" Style="{StaticResource Caption}" FontFamily="OpenSansSemibold" />
+                                            </Grid>
+                                            <ProgressBar Progress="{Binding Fraction}" ProgressColor="{Binding Color}" HeightRequest="4" />
+                                            <Label Text="{Binding Exercises}" Style="{StaticResource Caption}" FontSize="11"
+                                                   TextColor="{StaticResource TextTertiary}" LineBreakMode="TailTruncation" />
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Auxiliary muscles -->
+                        <VerticalStackLayout Spacing="10" IsVisible="{Binding HasAuxiliary}">
+                            <Label Text="Auxiliary muscles" Style="{StaticResource H3}" />
+                            <Border Style="{StaticResource Card}" Padding="16,12">
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Auxiliary}" Spacing="14">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:MuscleRow">
+                                            <VerticalStackLayout Spacing="5">
+                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                                    <BoxView WidthRequest="8" HeightRequest="8" CornerRadius="4" Color="{Binding Color}"
+                                                             Opacity="0.6" VerticalOptions="Center" />
+                                                    <Label Grid.Column="1" Text="{Binding Name}" FontSize="14" />
+                                                    <Label Grid.Column="2" Text="{Binding Sets}" Style="{StaticResource Caption}" />
+                                                </Grid>
+                                                <ProgressBar Progress="{Binding Fraction}" ProgressColor="{Binding Color}" Opacity="0.6" HeightRequest="4" />
+                                                <Label Text="{Binding Exercises}" Style="{StaticResource Caption}" FontSize="11"
+                                                       TextColor="{StaticResource TextTertiary}" LineBreakMode="TailTruncation" />
+                                            </VerticalStackLayout>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </Border>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

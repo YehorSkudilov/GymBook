@@ -1,3 +1,4 @@
+using AppSkeleton;
 using GymBook.Services;
 using GymBook.Services.Sync;
 using GymBook.ViewModels;
@@ -13,10 +14,12 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseAppSkeleton()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                fonts.AddCIcons();
             });
 
         builder.Services.AddSingleton<DataStore>();
@@ -32,6 +35,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<SyncService>();
         builder.Services.AddSingleton<AccountService>();
 
+        builder.Services.AddTransient<MainPage>();
         AddPage<HomePage, HomeViewModel>(builder.Services);
         AddPage<PlansPage, PlansViewModel>(builder.Services);
         AddPage<ExercisesPage, ExercisesViewModel>(builder.Services);
@@ -40,6 +44,7 @@ public static class MauiProgram
         AddPage<WorkoutPage, WorkoutViewModel>(builder.Services);
         AddPage<SessionDetailPage, SessionDetailViewModel>(builder.Services);
         AddPage<HistoryPage, HistoryViewModel>(builder.Services);
+        AddPage<CalendarPage, CalendarViewModel>(builder.Services);
         AddPage<PlanDetailPage, PlanDetailViewModel>(builder.Services);
         AddPage<PlanWorkoutEditPage, PlanWorkoutEditViewModel>(builder.Services);
         AddPage<PlanWizardPage, PlanWizardViewModel>(builder.Services);
@@ -55,7 +60,7 @@ public static class MauiProgram
     }
 
     static void AddPage<TPage, TViewModel>(IServiceCollection services)
-        where TPage : Page
+        where TPage : Element
         where TViewModel : class
     {
         services.AddTransient<TPage>();

@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<views:BasePage
+<views:TabView
     x:Class="GymBook.Views.PlansPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
-    x:DataType="vm:PlansViewModel"
-    Shell.NavBarIsVisible="False">
+    x:DataType="vm:PlansViewModel">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20,24,20,32" Spacing="16">
+        <VerticalStackLayout Spacing="16">
             <Label Text="Plans" Style="{StaticResource Title}" />
 
             <Label Text="ACTIVE PLAN" Style="{StaticResource Overline}" IsVisible="{Binding HasActivePlan}" />
@@ -54,5 +52,4 @@
                 </BindableLayout.ItemTemplate>
             </VerticalStackLayout>
         </VerticalStackLayout>
-    </ScrollView>
-</views:BasePage>
+</views:TabView>

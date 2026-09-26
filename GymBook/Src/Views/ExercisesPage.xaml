@@ -1,33 +1,40 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<views:BasePage
+<views:TabView
     x:Class="GymBook.Views.ExercisesPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:Name="Root"
     x:DataType="vm:ExercisesViewModel"
-    Shell.NavBarIsVisible="False">
+    ScrollsItself="True">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="0,24,0,0">
-        <Grid ColumnDefinitions="*,Auto" Padding="20,0">
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+        <Grid ColumnDefinitions="*,Auto">
             <Label Text="Exercises" Style="{StaticResource Title}" />
             <ImageButton Grid.Column="1" Source="ic_plus.png" WidthRequest="40" HeightRequest="40" Padding="8"
                          BackgroundColor="{StaticResource Surface2}" CornerRadius="20" Command="{Binding CreateCustomCommand}" VerticalOptions="Center" />
         </Grid>
 
-        <Border Grid.Row="1" Style="{StaticResource InputBox}" HeightRequest="46" Margin="20,14,20,10" Padding="12,0">
+        <Border Grid.Row="1" Style="{StaticResource InputBox}" HeightRequest="46" Margin="0,14,0,10" Padding="12,0">
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                 <Image Source="ic_search.png" WidthRequest="18" HeightRequest="18" />
                 <Entry Grid.Column="1" Text="{Binding SearchText}" Placeholder="Search exercises" ClearButtonVisibility="WhileEditing" />
             </Grid>
         </Border>
 
-        <views:ChipBar Grid.Row="2" />
+        <!-- The chip bar pads itself for the picker page; bleed it to the screen edges here. -->
+        <views:ChipBar Grid.Row="2" Margin="-20,0" />
 
-        <CollectionView Grid.Row="3" ItemsSource="{Binding Items}" Margin="20,8,20,0">
+        <CollectionView Grid.Row="3" ItemsSource="{Binding Items}" Margin="0,8,0,0">
             <CollectionView.Header>
                 <Label Text="{Binding CountText}" Style="{StaticResource Caption}" Margin="0,0,0,6" />
             </CollectionView.Header>
+            <!-- Lets the last rows scroll clear of the nav bar and the workout pill. -->
+            <CollectionView.Footer>
+                <BoxView x:DataType="views:TabView" Color="Transparent" Margin="0,0,0,20"
+                         HeightRequest="{Binding BottomInset, Source={x:Reference Root}}" />
+            </CollectionView.Footer>
             <CollectionView.EmptyView>
                 <Label Text="No exercises found" Style="{StaticResource Caption}" HorizontalOptions="Center" Margin="0,40" />
             </CollectionView.EmptyView>
@@ -38,4 +45,4 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
     </Grid>
-</views:BasePage>
+</views:TabView>

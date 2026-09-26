@@ -95,17 +95,24 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Only trusts X-Forwarded-* from loopback by default; add your reverse proxy to KnownProxies/KnownNetworks
-// when deploying behind one, or client IPs (used for rate limiting) will be the proxy's.
-app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto });
+// Only trusts X-Forwarded-* from loopback, plus any networks in ReverseProxy:KnownNetworks (comma-separated
+// CIDRs) - otherwise behind a proxy, client IPs (used for rate limiting) would all be the proxy's.
+var forwarded = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto };
+foreach (var network in (app.Configuration["ReverseProxy:KnownNetworks"] ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+    forwarded.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+app.UseForwardedHeaders(forwarded);
 
 if (app.Environment.IsDevelopment())
-{
     app.MapOpenApi().AllowAnonymous();
+
+// Single-instance deployments apply pending migrations at startup (docker-compose.prod.yml turns this on).
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
+{
     using var scope = app.Services.CreateScope();
     scope.ServiceProvider.GetRequiredService<ApiDbContext>().Database.Migrate();
 }
-else
+
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler();
     app.UseHsts();

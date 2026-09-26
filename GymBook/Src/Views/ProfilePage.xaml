@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<views:BasePage
+<views:TabView
     x:Class="GymBook.Views.ProfilePage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
-    x:DataType="vm:ProfileViewModel"
-    Shell.NavBarIsVisible="False">
+    x:DataType="vm:ProfileViewModel">
 
-    <ContentPage.Resources>
+    <ContentView.Resources>
         <Style x:Key="Row" TargetType="Grid">
             <Setter Property="Padding" Value="16,14" />
             <Setter Property="ColumnDefinitions" Value="*,Auto,Auto" />
@@ -31,10 +30,9 @@
             <Setter Property="Margin" Value="16,0" />
             <Setter Property="Color" Value="{StaticResource Surface2}" />
         </Style>
-    </ContentPage.Resources>
+    </ContentView.Resources>
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20,24,20,32" Spacing="14">
+        <VerticalStackLayout Spacing="14">
             <Label Text="Profile" Style="{StaticResource Title}" />
 
             <Border Style="{StaticResource Card}">
@@ -207,5 +205,4 @@
 
             <Label Text="{Binding Version}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" Margin="0,8,0,0" />
         </VerticalStackLayout>
-    </ScrollView>
-</views:BasePage>
+</views:TabView>

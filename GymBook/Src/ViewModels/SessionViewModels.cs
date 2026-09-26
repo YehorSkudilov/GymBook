@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Models;
 using GymBook.Services;
+using GymBook.Views;
 
 namespace GymBook.ViewModels;
 
@@ -65,7 +66,7 @@ public partial class SessionDetailViewModel(DataStore store, StatsService stats,
     }
 
     [RelayCommand]
-    Task Done() => Shell.Current.GoToAsync("//home");
+    Task Done() => MainPage.ShowTab(AppTab.Workout);
 
     [RelayCommand]
     async Task Delete()

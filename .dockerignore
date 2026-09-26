@@ -1,0 +1,11 @@
+# Docker builds use the repository root as context (see GymBook.Api/Dockerfile); only the API and Shared are needed.
+**/bin/
+**/obj/
+**/.vs/
+.git/
+.github/
+GymBook/
+GymBook.LocalData/
+tools/
+**/*.user
+**/.env

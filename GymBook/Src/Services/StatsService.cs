@@ -111,15 +111,25 @@ public class StatsService(DataStore store, RecoveryService recovery)
         return list;
     }
 
-    /// <summary>Consecutive weeks (ending this week or last week) with at least one workout.</summary>
+    /// <summary>Workouts per week the user aims for: the profile's training days or the active plan's, whichever is higher.</summary>
+    public int WeeklyTarget => Math.Max(1, Math.Max(store.Profile.DaysPerWeek, store.ActivePlan?.DaysPerWeek ?? 0));
+
+    /// <summary>
+    /// Consecutive weeks that hit <see cref="WeeklyTarget"/>. The current week only adds to the streak once it
+    /// hits the target; until then the streak runs up to last week, so an unfinished week doesn't break it.
+    /// Past weeks are judged against today's target, since the target at the time isn't recorded.
+    /// </summary>
     public int WeekStreak()
     {
-        var weeks = store.History.Select(s => WeekStart(s.StartedAt)).ToHashSet();
+        var target = WeeklyTarget;
+        var perWeek = store.History.GroupBy(s => WeekStart(s.StartedAt)).ToDictionary(g => g.Key, g => g.Count());
+        bool Hit(DateTime week) => perWeek.GetValueOrDefault(week) >= target;
+
         var week = WeekStart(DateTime.Today);
-        if (!weeks.Contains(week))
+        if (!Hit(week))
             week = week.AddDays(-7);
         var streak = 0;
-        while (weeks.Contains(week))
+        while (Hit(week))
         {
             streak++;
             week = week.AddDays(-7);

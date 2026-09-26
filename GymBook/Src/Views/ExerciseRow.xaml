@@ -9,9 +9,13 @@
         <Grid.GestureRecognizers>
             <TapGestureRecognizer Command="{Binding TapCommand}" />
         </Grid.GestureRecognizers>
-        <Border WidthRequest="46" HeightRequest="46" StrokeShape="RoundRectangle 14" BackgroundColor="{Binding MuscleSoft}">
-            <Label Text="{Binding Initial}" TextColor="{Binding MuscleColor}" FontFamily="OpenSansSemibold" FontSize="15"
-                   HorizontalOptions="Center" VerticalOptions="Center" />
+        <Border WidthRequest="46" HeightRequest="46" StrokeShape="RoundRectangle 14" StrokeThickness="0" BackgroundColor="{Binding MuscleSoft}">
+            <Grid>
+                <!-- The initials show while the photo loads, and stay when there is none or the device is offline. -->
+                <Label Text="{Binding Initial}" TextColor="{Binding MuscleColor}" FontFamily="OpenSansSemibold" FontSize="15"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+                <Image Source="{Binding Thumbnail}" IsVisible="{Binding HasThumbnail}" Aspect="AspectFill" />
+            </Grid>
         </Border>
         <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
             <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="15" LineBreakMode="TailTruncation" />

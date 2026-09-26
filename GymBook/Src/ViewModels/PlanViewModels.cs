@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GymBook.Controls;
 using GymBook.Models;
 using GymBook.Services;
 
@@ -15,14 +16,27 @@ public class PlanItem
     public required IAsyncRelayCommand OpenCommand { get; init; }
 }
 
-public class PlanWorkoutItem
+/// <summary>A day in the plan page's day strip: a workout or a rest day.</summary>
+public class PlanDayChip
 {
+    public required string Title { get; init; }
+    public required bool IsSelected { get; init; }
+    public bool IsRest { get; init; }
+    public required IRelayCommand SelectCommand { get; init; }
+
+    public Color Background => IsSelected ? Color.FromArgb("#272C39") : Colors.Transparent;
+    public Color TextColor => IsSelected ? Color.FromArgb("#F4F6FB") : IsRest ? Color.FromArgb("#626B7E") : Color.FromArgb("#9AA3B5");
+}
+
+/// <summary>An exercise of the selected day on the plan page.</summary>
+public class PlanDayExercise
+{
+    public required ExerciseThumb Thumb { get; init; }
     public required string Name { get; init; }
-    public required string Summary { get; init; }
-    public required string Meta { get; init; }
-    public required bool IsNext { get; init; }
-    public required IAsyncRelayCommand StartCommand { get; init; }
-    public required IAsyncRelayCommand EditCommand { get; init; }
+    public required string Equipment { get; init; }
+    public required string Sets { get; init; }
+    public required string Reps { get; init; }
+    public required IAsyncRelayCommand OpenCommand { get; init; }
 }
 
 public partial class PlansViewModel(DataStore store, DialogService dialogs) : BaseViewModel
@@ -65,6 +79,7 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs) : Ba
             Goal = store.Profile.Goal,
             DaysPerWeek = store.Profile.DaysPerWeek,
             Workouts = [new PlanWorkout { Name = "Workout A" }],
+            RestDays = [],
         };
         store.Data.Plans.Add(plan);
         store.Data.ActivePlanId ??= plan.Id;
@@ -77,12 +92,23 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
     : BaseViewModel, IQueryAttributable
 {
     string? _id;
+    int _selected;
 
     [ObservableProperty] string name = "";
-    [ObservableProperty] string description = "";
     [ObservableProperty] string meta = "";
     [ObservableProperty] bool isActive;
-    [ObservableProperty] List<PlanWorkoutItem> workoutItems = [];
+    [ObservableProperty] List<PlanDayChip> days = [];
+
+    // The selected day
+    [ObservableProperty] string dayName = "";
+    [ObservableProperty] string dayLabel = "";
+    [ObservableProperty] string dayMeta = "";
+    [ObservableProperty] bool isRestDay;
+    [ObservableProperty] bool isWorkoutDay;
+    [ObservableProperty] bool isNextDay;
+    [ObservableProperty] bool isEmptyDay;
+    [ObservableProperty] IDrawable dayMap = MuscleMapDrawable.Empty;
+    [ObservableProperty] List<PlanDayExercise> dayExercises = [];
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) => _id = query["id"]?.ToString();
 
@@ -92,28 +118,157 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
         if (plan == null)
             return GoBack();
         Name = plan.Name;
-        Description = plan.Description;
-        Meta = $"{plan.Goal.Display()} · {plan.DaysPerWeek} days per week · {plan.Workouts.Count} workouts";
         IsActive = plan.Id == store.Data.ActivePlanId;
-        WorkoutItems = plan.Workouts.Select((w, i) => new PlanWorkoutItem
+        var schedule = PlanSchedule.Days(plan);
+        Meta = $"{plan.Goal.Display()} · {plan.Workouts.Count} training days · {schedule.Count - plan.Workouts.Count} rest";
+        _selected = Math.Clamp(_selected, 0, Math.Max(0, schedule.Count - 1));
+
+        Days = schedule.Select((w, i) => new PlanDayChip
         {
-            Name = w.Name,
-            Summary = w.Exercises.Count == 0
-                ? "No exercises yet. Tap Edit to add some."
-                : string.Join("\n", w.Exercises.Select(e => $"{e.Sets} × {store.GetExercise(e.ExerciseId)?.Name}")),
-            Meta = $"{w.Exercises.Count} exercises · {w.Exercises.Sum(e => e.Sets)} sets",
-            IsNext = IsActive && i == plan.NextWorkoutIndex % Math.Max(1, plan.Workouts.Count),
-            StartCommand = new AsyncRelayCommand(() => Start(plan, w)),
-            EditCommand = new AsyncRelayCommand(() => GoTo($"{Routes.PlanWorkout}?plan={plan.Id}&workout={w.Id}")),
+            Title = w?.Name ?? "Rest",
+            IsRest = w == null,
+            IsSelected = i == _selected,
+            SelectCommand = new RelayCommand(() => Select(i)),
+        }).ToList();
+
+        var day = schedule.ElementAtOrDefault(_selected);
+        var next = plan.Workouts.Count > 0 ? plan.Workouts[plan.NextWorkoutIndex % plan.Workouts.Count] : null;
+        DayLabel = $"Day {_selected + 1}";
+        IsRestDay = day == null;
+        IsWorkoutDay = day != null;
+        IsNextDay = IsActive && day != null && day == next;
+        DayName = day?.Name ?? "Rest";
+
+        var exercises = day?.Exercises.Select(pe => (pe, ex: store.GetExercise(pe.ExerciseId))).ToList() ?? [];
+        DayMeta = day == null
+            ? "Recovery day. Muscles grow between sessions."
+            : $"{exercises.Count} exercises · {exercises.Sum(x => x.pe.Sets)} sets";
+        IsEmptyDay = day != null && exercises.Count == 0;
+        DayMap = MuscleMapDrawable.ForWorkout(exercises.Select(x => x.ex).OfType<Exercise>());
+        DayExercises = exercises.Select(x => new PlanDayExercise
+        {
+            Thumb = x.ex == null ? new ExerciseThumb(null, "?", Colors.Gray, Colors.Gray.WithAlpha(0.16f)) : ExerciseThumb.For(x.ex),
+            Name = x.ex?.Name ?? "Unknown exercise",
+            Equipment = x.ex?.Equipment.Display() ?? "",
+            Sets = x.pe.Sets == 1 ? "1 set" : $"{x.pe.Sets} sets",
+            Reps = x.pe.RepMin == x.pe.RepMax ? $"{x.pe.RepMin} reps" : $"{x.pe.RepMin}–{x.pe.RepMax} reps",
+            OpenCommand = new AsyncRelayCommand(() => x.ex == null ? Task.CompletedTask : GoTo($"{Routes.Exercise}?id={x.ex.Id}")),
         }).ToList();
         return Task.CompletedTask;
     }
 
-    Task Start(WorkoutPlan plan, PlanWorkout w)
+    void Select(int index)
     {
+        _selected = index;
+        _ = OnAppearingAsync();
+    }
+
+    PlanWorkout? SelectedWorkout(WorkoutPlan plan) => PlanSchedule.Days(plan).ElementAtOrDefault(_selected);
+
+    [RelayCommand]
+    Task StartDay()
+    {
+        var plan = store.GetPlan(_id);
+        if (plan == null || SelectedWorkout(plan) is not PlanWorkout w)
+            return Task.CompletedTask;
         if (w.Exercises.Count == 0)
             return dialogs.Alert("Empty workout", "Add exercises to this workout first.");
         return StartWorkoutAsync(workouts, dialogs, () => workouts.StartFromPlan(plan, w));
+    }
+
+    /// <summary>Opens the muscle breakdown for the selected day, with a switch to the whole plan.</summary>
+    [RelayCommand]
+    Task OpenMuscles()
+    {
+        var plan = store.GetPlan(_id);
+        if (plan == null)
+            return Task.CompletedTask;
+        var page = new Views.MuscleBreakdownPage(new MuscleBreakdownViewModel(store, plan, SelectedWorkout(plan)));
+        return Shell.Current.Navigation.PushModalAsync(page);
+    }
+
+    [RelayCommand]
+    Task EditDay()
+    {
+        var plan = store.GetPlan(_id);
+        return plan != null && SelectedWorkout(plan) is PlanWorkout w
+            ? GoTo($"{Routes.PlanWorkout}?plan={plan.Id}&workout={w.Id}")
+            : Task.CompletedTask;
+    }
+
+    [RelayCommand]
+    async Task DayOptions()
+    {
+        var plan = store.GetPlan(_id);
+        if (plan == null)
+            return;
+        var days = PlanSchedule.Days(plan);
+        var day = days.ElementAtOrDefault(_selected);
+        var options = new List<string>();
+        if (day != null)
+            options.Add("Edit exercises");
+        if (_selected > 0)
+            options.Add("Move earlier");
+        if (_selected < days.Count - 1)
+            options.Add("Move later");
+        var remove = day == null ? "Remove rest day" : null;
+        switch (await dialogs.ActionSheet(DayName, remove, [.. options]))
+        {
+            case "Edit exercises":
+                await EditDay();
+                break;
+            case "Move earlier":
+                MoveSelected(plan, days, -1);
+                break;
+            case "Move later":
+                MoveSelected(plan, days, 1);
+                break;
+            case "Remove rest day":
+                days.RemoveAt(_selected);
+                SaveDays(plan, days);
+                break;
+        }
+    }
+
+    void MoveSelected(WorkoutPlan plan, List<PlanWorkout?> days, int delta)
+    {
+        var target = _selected + delta;
+        (days[_selected], days[target]) = (days[target], days[_selected]);
+        _selected = target;
+        SaveDays(plan, days);
+    }
+
+    /// <summary>The "+" at the end of the day strip.</summary>
+    [RelayCommand]
+    async Task AddDay()
+    {
+        var plan = store.GetPlan(_id);
+        if (plan == null)
+            return;
+        switch (await dialogs.ActionSheet("Add a day", null, "Workout", "Rest day"))
+        {
+            case "Workout":
+                await AddWorkout(plan);
+                break;
+            case "Rest day":
+                var days = PlanSchedule.Days(plan);
+                if (days.Count >= 7)
+                {
+                    await dialogs.Alert("Week is full", "This plan already fills all 7 days. Remove a day or a workout first.");
+                    return;
+                }
+                days.Add(null);
+                _selected = days.Count - 1;
+                SaveDays(plan, days);
+                break;
+        }
+    }
+
+    void SaveDays(WorkoutPlan plan, List<PlanWorkout?> days)
+    {
+        PlanSchedule.SetDays(plan, days);
+        store.Save();
+        _ = OnAppearingAsync();
     }
 
     [RelayCommand]
@@ -124,17 +279,16 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
         await OnAppearingAsync();
     }
 
-    [RelayCommand]
-    async Task AddWorkout()
+    async Task AddWorkout(WorkoutPlan plan)
     {
-        var plan = store.GetPlan(_id);
-        if (plan == null)
-            return;
         var name = await dialogs.Prompt("New workout", "Workout name", $"Workout {(char)('A' + plan.Workouts.Count)}", accept: "Add");
         if (string.IsNullOrWhiteSpace(name))
             return;
         var w = new PlanWorkout { Name = name.Trim() };
-        plan.Workouts.Add(w);
+        var days = PlanSchedule.Days(plan);
+        days.Add(w);
+        _selected = days.Count - 1;
+        PlanSchedule.SetDays(plan, days);
         store.Save();
         await GoTo($"{Routes.PlanWorkout}?plan={plan.Id}&workout={w.Id}");
     }
@@ -266,9 +420,13 @@ public partial class PlanWorkoutEditViewModel(DataStore store, DialogService dia
         else if (choice == "Delete workout" && await dialogs.Confirm("Delete workout?", $"Remove \"{_workout.Name}\" from the plan?", "Delete"))
         {
             var plan = store.GetPlan(_planId);
-            plan?.Workouts.Remove(_workout);
-            if (plan != null && plan.Workouts.Count > 0)
-                plan.NextWorkoutIndex %= plan.Workouts.Count;
+            if (plan != null)
+            {
+                // Through the schedule so the rest days around it stay where they were.
+                var days = PlanSchedule.Days(plan);
+                days.Remove(_workout);
+                PlanSchedule.SetDays(plan, days);
+            }
             Save();
             await GoBack();
         }
