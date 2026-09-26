@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.ExerciseDetailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:ExerciseDetailViewModel"
+    Title="Exercise"
+    Shell.TabBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,8,20,32" Spacing="14">
+            <VerticalStackLayout Spacing="2">
+                <Label Text="{Binding Name}" Style="{StaticResource Title}" FontSize="26" />
+                <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <GraphicsView Drawable="{Binding MuscleMap}" HeightRequest="220" />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <VerticalStackLayout>
+                            <Label Text="PRIMARY" Style="{StaticResource Overline}" FontSize="10" />
+                            <Label Text="{Binding PrimaryMuscle}" FontFamily="OpenSansSemibold" TextColor="{StaticResource Accent}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" IsVisible="{Binding HasSecondary}">
+                            <Label Text="SECONDARY" Style="{StaticResource Overline}" FontSize="10" />
+                            <Label Text="{Binding SecondaryMuscles}" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2">
+                            <Label Text="TYPE" Style="{StaticResource Overline}" FontSize="10" />
+                            <Label Text="{Binding Mechanic}" FontSize="13" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="How to perform" Style="{StaticResource H3}" />
+                    <Label Text="{Binding Instructions}" FontSize="14" LineHeight="1.35" TextColor="{StaticResource TextSecondary}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                <Border Style="{StaticResource Card}" Padding="12">
+                    <VerticalStackLayout>
+                        <Label Text="{Binding BestE1Rm}" Style="{StaticResource StatValue}" FontSize="17" />
+                        <Label Text="Est. 1RM" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="12">
+                    <VerticalStackLayout>
+                        <Label Text="{Binding BestSet}" Style="{StaticResource StatValue}" FontSize="17" />
+                        <Label Text="Best set" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Card}" Padding="12">
+                    <VerticalStackLayout>
+                        <Label Text="{Binding TimesPerformed}" Style="{StaticResource StatValue}" FontSize="17" />
+                        <Label Text="Sessions" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasHistory}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Estimated 1RM" Style="{StaticResource H3}" />
+                    <GraphicsView Drawable="{Binding Chart}" HeightRequest="180" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="History" Style="{StaticResource H3}" IsVisible="{Binding HasHistory}" />
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding History}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LineItem">
+                        <Border Style="{StaticResource Card}" Padding="14,12">
+                            <VerticalStackLayout Spacing="2">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="14" />
+                                    <Label Grid.Column="1" Text="{Binding Value}" Style="{StaticResource Caption}" FontSize="12" />
+                                </Grid>
+                                <Label Text="{Binding Detail}" Style="{StaticResource Caption}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <Label Text="Log this exercise in a workout to see your progress here." Style="{StaticResource Caption}"
+                   HorizontalTextAlignment="Center" IsVisible="{Binding HasHistory, Converter={StaticResource Not}}" />
+
+            <Button Text="Delete custom exercise" Style="{StaticResource DangerButton}" IsVisible="{Binding IsCustom}" Command="{Binding DeleteCommand}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>

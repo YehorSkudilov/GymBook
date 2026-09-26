@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.HistoryPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:HistoryViewModel"
+    Title="History"
+    Shell.TabBarIsVisible="False">
+
+    <CollectionView ItemsSource="{Binding Items}" Margin="20,0">
+        <CollectionView.Header>
+            <VerticalStackLayout Padding="0,8,0,14">
+                <Label Text="{Binding Summary}" Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+        </CollectionView.Header>
+        <CollectionView.EmptyView>
+            <VerticalStackLayout Padding="20,60" Spacing="6">
+                <Label Text="No workouts yet" Style="{StaticResource H3}" HorizontalOptions="Center" />
+                <Label Text="Finished workouts will show up here." Style="{StaticResource Caption}" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </CollectionView.EmptyView>
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="vm:SessionItem">
+                <views:SessionCard Padding="0,0,0,10" />
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
+</views:BasePage>

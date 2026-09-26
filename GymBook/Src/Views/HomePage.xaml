@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.HomePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:HomeViewModel"
+    Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,24,20,32" Spacing="16">
+
+            <!-- Header -->
+            <VerticalStackLayout Spacing="2">
+                <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
+                <Label Text="{Binding Greeting}" Style="{StaticResource Title}" />
+            </VerticalStackLayout>
+
+            <!-- Resume banner -->
+            <Border IsVisible="{Binding HasActiveSession}" Background="{StaticResource AccentGradient}" Style="{StaticResource Card}">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label Text="Workout in progress" FontFamily="OpenSansSemibold" FontSize="16" TextColor="White" />
+                        <Label Text="{Binding ActiveSessionText}" FontSize="13" TextColor="#DDE6FF" />
+                    </VerticalStackLayout>
+                    <Button Grid.Column="1" Text="Resume" Command="{Binding ResumeCommand}"
+                            BackgroundColor="White" TextColor="{StaticResource Accent}" CornerRadius="12" Padding="18,8" />
+                </Grid>
+            </Border>
+
+            <!-- Week strip -->
+            <Border Style="{StaticResource Card}" Padding="12,14">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto" Padding="4,0">
+                        <Label Text="This week" Style="{StaticResource H3}" />
+                        <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                            <Image Source="ic_flame.png" WidthRequest="16" HeightRequest="16" />
+                            <Label Text="{Binding Streak}" Style="{StaticResource Caption}" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Grid>
+                    <FlexLayout BindableLayout.ItemsSource="{Binding WeekDays}" JustifyContent="SpaceAround">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DayItem">
+                                <VerticalStackLayout Spacing="6" WidthRequest="38">
+                                    <Label Text="{Binding Letter}" Style="{StaticResource Caption}" HorizontalOptions="Center" FontSize="12" />
+                                    <Border WidthRequest="36" HeightRequest="36" StrokeShape="RoundRectangle 18"
+                                            BackgroundColor="{Binding Background}" Stroke="{Binding Border}" StrokeThickness="1.5">
+                                        <Label Text="{Binding Day}" TextColor="{Binding DayColor}" FontFamily="OpenSansSemibold" FontSize="14"
+                                               HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                    <Grid ColumnDefinitions="*,*,*" Padding="4,6,4,0">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding WeekWorkouts}" Style="{StaticResource StatValue}" FontSize="18" />
+                            <Label Text="Workouts" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="{Binding WeekSets}" Style="{StaticResource StatValue}" FontSize="18" />
+                            <Label Text="Sets" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2">
+                            <Label Text="{Binding WeekVolume}" Style="{StaticResource StatValue}" FontSize="18" />
+                            <Label Text="Volume" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Next workout -->
+            <Border IsVisible="{Binding HasPlan}" Style="{StaticResource Card}" Padding="18">
+                <VerticalStackLayout Spacing="14">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding PlanName, StringFormat='NEXT WORKOUT · {0}'}" Style="{StaticResource Overline}" LineBreakMode="TailTruncation" />
+                            <Label Text="{Binding NextWorkoutName}" Style="{StaticResource H2}" FontSize="24" />
+                            <Label Text="{Binding NextWorkoutMuscles}" Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                        <ImageButton Grid.Column="1" Source="ic_more.png" WidthRequest="36" HeightRequest="36" Padding="6"
+                                     VerticalOptions="Start" BackgroundColor="{StaticResource Surface2}" CornerRadius="18"
+                                     Command="{Binding WorkoutOptionsCommand}" />
+                    </Grid>
+
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding NextExercises}" Spacing="8">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:LineItem">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                    <BoxView WidthRequest="6" HeightRequest="6" CornerRadius="3" Color="{StaticResource Accent}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding Title}" FontSize="14" LineBreakMode="TailTruncation" />
+                                    <Label Grid.Column="2" Text="{Binding Value}" Style="{StaticResource Caption}" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding NextWorkoutMeta}" Style="{StaticResource Caption}" />
+                    <Button Text="Start workout" Style="{StaticResource PrimaryButton}" Command="{Binding StartNextCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- No plan -->
+            <Border IsVisible="{Binding HasPlan, Converter={StaticResource Not}}" Style="{StaticResource Card}" Padding="18">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="No active plan" Style="{StaticResource H2}" />
+                    <Label Text="Answer a few questions and GymBook builds a personalised plan with automatic progression." Style="{StaticResource Caption}" />
+                    <Button Text="Create my plan" Style="{StaticResource PrimaryButton}" Command="{Binding CreatePlanCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Start an empty workout" Style="{StaticResource SecondaryButton}" Command="{Binding StartEmptyCommand}" />
+
+            <!-- Recovery -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Muscle recovery" Style="{StaticResource H3}" />
+                    <GraphicsView Drawable="{Binding MuscleMap}" HeightRequest="260" />
+                    <Grid ColumnDefinitions="*,*" Padding="30,0">
+                        <Label Text="Front" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                        <Label Grid.Column="1" Text="Back" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                    </Grid>
+                    <HorizontalStackLayout Spacing="14" HorizontalOptions="Center">
+                        <HorizontalStackLayout Spacing="5">
+                            <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="#FF4D5E" VerticalOptions="Center" />
+                            <Label Text="Fatigued" Style="{StaticResource Caption}" FontSize="12" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="5">
+                            <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="#FFB020" VerticalOptions="Center" />
+                            <Label Text="Recovering" Style="{StaticResource Caption}" FontSize="12" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="5">
+                            <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="#2ED47A" VerticalOptions="Center" />
+                            <Label Text="Fresh" Style="{StaticResource Caption}" FontSize="12" />
+                        </HorizontalStackLayout>
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding RecoverySummary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Recent workouts -->
+            <VerticalStackLayout IsVisible="{Binding HasRecent}" Spacing="10">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Recent workouts" Style="{StaticResource H3}" VerticalOptions="Center" />
+                    <Button Grid.Column="1" Text="See all" Style="{StaticResource GhostButton}" Command="{Binding SeeHistoryCommand}" />
+                </Grid>
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Recent}" Spacing="10">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SessionItem">
+                            <views:SessionCard />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.PlanDetailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PlanDetailViewModel"
+    Title="Plan"
+    Shell.TabBarIsVisible="False">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="More" IconImageSource="ic_more.png" Command="{Binding MoreCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,8,20,32" Spacing="14">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="{Binding Name}" Style="{StaticResource Title}" FontSize="26" />
+                <Label Text="{Binding Description}" Style="{StaticResource Caption}" />
+                <Label Text="{Binding Meta}" Style="{StaticResource Caption}" TextColor="{StaticResource TextTertiary}" />
+            </VerticalStackLayout>
+
+            <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource SuccessSoft}" HorizontalOptions="Start" IsVisible="{Binding IsActive}">
+                <Label Text="Active plan" TextColor="{StaticResource Success}" FontSize="13" FontFamily="OpenSansSemibold" />
+            </Border>
+            <Button Text="Set as active plan" Style="{StaticResource PrimaryButton}" Command="{Binding SetActiveCommand}"
+                    IsVisible="{Binding IsActive, Converter={StaticResource Not}}" />
+
+            <Grid ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+                <Label Text="Workouts" Style="{StaticResource H3}" VerticalOptions="Center" />
+                <Button Grid.Column="1" Text="+ Add workout" Style="{StaticResource GhostButton}" Command="{Binding AddWorkoutCommand}" />
+            </Grid>
+
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding WorkoutItems}" Spacing="12">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PlanWorkoutItem">
+                        <Border Style="{StaticResource Card}">
+                            <VerticalStackLayout Spacing="10">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="18" />
+                                        <Label Text="{Binding Meta}" Style="{StaticResource Caption}" />
+                                    </VerticalStackLayout>
+                                    <Border Grid.Column="1" Style="{StaticResource Pill}" BackgroundColor="{StaticResource AccentSoft}" IsVisible="{Binding IsNext}" VerticalOptions="Start">
+                                        <Label Text="Up next" TextColor="{StaticResource Accent}" FontSize="12" FontFamily="OpenSansSemibold" />
+                                    </Border>
+                                </Grid>
+                                <Label Text="{Binding Summary}" FontSize="14" LineHeight="1.3" TextColor="{StaticResource TextSecondary}" />
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                    <Button Text="Edit" Style="{StaticResource SecondaryButton}" Command="{Binding EditCommand}" />
+                                    <Button Grid.Column="1" Text="Start" HeightRequest="48" Command="{Binding StartCommand}" />
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>

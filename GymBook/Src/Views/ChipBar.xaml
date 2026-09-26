@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="GymBook.Views.ChipBar"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:ExerciseListViewModel">
+    <!-- Horizontal muscle-group filter used by the library and the picker. -->
+    <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+        <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Chips}" Spacing="8" Padding="20,0">
+            <BindableLayout.ItemTemplate>
+                <DataTemplate x:DataType="vm:ChipItem">
+                    <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" Padding="14,7">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+                    </Border>
+                </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </HorizontalStackLayout>
+    </ScrollView>
+</ContentView>

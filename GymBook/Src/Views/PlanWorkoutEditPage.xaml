@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.PlanWorkoutEditPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PlanWorkoutEditViewModel"
+    Title="{Binding Name}"
+    Shell.TabBarIsVisible="False">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="More" IconImageSource="ic_more.png" Command="{Binding MoreCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16,8,16,32" Spacing="12">
+            <Label Text="Changes save automatically. Adjust sets, rep range, target reps in reserve (RIR) and rest for each exercise." Style="{StaticResource Caption}" Margin="4,0" />
+
+            <Border IsVisible="{Binding IsEmpty}" Style="{StaticResource Card}" Padding="20">
+                <Label Text="No exercises yet." Style="{StaticResource Caption}" HorizontalOptions="Center" />
+            </Border>
+
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Exercises}" Spacing="12">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PlanExerciseItem">
+                        <Border Style="{StaticResource Card}" Padding="14">
+                            <VerticalStackLayout Spacing="12">
+                                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="2">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" />
+                                        <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                    <ImageButton Grid.Column="1" Source="ic_arrow_up.png" WidthRequest="32" HeightRequest="32" Padding="6" BackgroundColor="Transparent" Command="{Binding MoveUpCommand}" />
+                                    <ImageButton Grid.Column="2" Source="ic_arrow_down.png" WidthRequest="32" HeightRequest="32" Padding="6" BackgroundColor="Transparent" Command="{Binding MoveDownCommand}" />
+                                    <ImageButton Grid.Column="3" Source="ic_trash.png" WidthRequest="32" HeightRequest="32" Padding="6" BackgroundColor="Transparent" Command="{Binding RemoveCommand}" />
+                                </Grid>
+
+                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                                    <!-- Sets -->
+                                    <Border Style="{StaticResource InnerCard}" Padding="10,8">
+                                        <VerticalStackLayout Spacing="6">
+                                            <Label Text="SETS" Style="{StaticResource Overline}" FontSize="10" />
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <Button Text="−" Style="{StaticResource StepButton}" Command="{Binding SetsDownCommand}" />
+                                                <Label Grid.Column="1" Text="{Binding SetsText}" FontFamily="OpenSansSemibold" FontSize="17" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                <Button Grid.Column="2" Text="+" Style="{StaticResource StepButton}" Command="{Binding SetsUpCommand}" />
+                                            </Grid>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                    <!-- RIR -->
+                                    <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8">
+                                        <VerticalStackLayout Spacing="6">
+                                            <Label Text="TARGET RIR" Style="{StaticResource Overline}" FontSize="10" />
+                                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                                <Button Text="−" Style="{StaticResource StepButton}" Command="{Binding RirDownCommand}" />
+                                                <Label Grid.Column="1" Text="{Binding RirText}" FontFamily="OpenSansSemibold" FontSize="17" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                <Button Grid.Column="2" Text="+" Style="{StaticResource StepButton}" Command="{Binding RirUpCommand}" />
+                                            </Grid>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                    <!-- Reps -->
+                                    <Border Grid.Row="1" Style="{StaticResource InnerCard}" Padding="10,8">
+                                        <VerticalStackLayout Spacing="6">
+                                            <Label Text="REP RANGE" Style="{StaticResource Overline}" FontSize="10" />
+                                            <Label Text="{Binding RepsText}" FontFamily="OpenSansSemibold" FontSize="17" HorizontalOptions="Center" />
+                                            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
+                                                <HorizontalStackLayout Spacing="4" HorizontalOptions="Center">
+                                                    <Button Text="−" Style="{StaticResource StepButton}" WidthRequest="28" MinimumWidthRequest="28" Command="{Binding RepsDownCommand}" />
+                                                    <Button Text="+" Style="{StaticResource StepButton}" WidthRequest="28" MinimumWidthRequest="28" Command="{Binding RepsUpCommand}" />
+                                                </HorizontalStackLayout>
+                                                <HorizontalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center">
+                                                    <Button Text="−" Style="{StaticResource StepButton}" WidthRequest="28" MinimumWidthRequest="28" Command="{Binding RangeDownCommand}" />
+                                                    <Button Text="+" Style="{StaticResource StepButton}" WidthRequest="28" MinimumWidthRequest="28" Command="{Binding RangeUpCommand}" />
+                                                </HorizontalStackLayout>
+                                            </Grid>
+                                            <Grid ColumnDefinitions="*,*">
+                                                <Label Text="min" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" />
+                                                <Label Grid.Column="1" Text="max" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" />
+                                            </Grid>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                    <!-- Rest -->
+                                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8">
+                                        <VerticalStackLayout Spacing="6">
+                                            <Label Text="REST" Style="{StaticResource Overline}" FontSize="10" />
+                                            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                                                <Button Text="−" Style="{StaticResource StepButton}" Command="{Binding RestDownCommand}" />
+                                                <Label Grid.Column="1" Text="{Binding RestText}" FontFamily="OpenSansSemibold" FontSize="17" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                <Button Grid.Column="2" Text="+" Style="{StaticResource StepButton}" Command="{Binding RestUpCommand}" />
+                                            </Grid>
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </Grid>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
+            <Button Text="+ Add exercises" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Accent}" Command="{Binding AddExerciseCommand}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>

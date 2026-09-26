@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.ProfilePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:ProfileViewModel"
+    Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <Style x:Key="Row" TargetType="Grid">
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="ColumnDefinitions" Value="*,Auto,Auto" />
+            <Setter Property="ColumnSpacing" Value="8" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+        </Style>
+        <Style x:Key="RowValue" TargetType="Label">
+            <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="Chevron" TargetType="Image">
+            <Setter Property="Source" Value="ic_chevron_right.png" />
+            <Setter Property="WidthRequest" Value="16" />
+            <Setter Property="HeightRequest" Value="16" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="Divider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Margin" Value="16,0" />
+            <Setter Property="Color" Value="{StaticResource Surface2}" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,24,20,32" Spacing="14">
+            <Label Text="Profile" Style="{StaticResource Title}" />
+
+            <Border Style="{StaticResource Card}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding EditNameCommand}" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                    <Border WidthRequest="56" HeightRequest="56" StrokeShape="RoundRectangle 28" Background="{StaticResource AccentGradient}">
+                        <Label Text="{Binding Initial}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="{Binding Name}" Style="{StaticResource H3}" />
+                        <Label Text="{Binding Summary}" Style="{StaticResource Caption}" />
+                    </VerticalStackLayout>
+                    <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                </Grid>
+            </Border>
+
+            <Label Text="TRAINING PROFILE" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+            <Border Style="{StaticResource Card}" Padding="0">
+                <VerticalStackLayout>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditGoalCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Goal" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding GoalText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditExperienceCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Experience" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding ExperienceText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditDaysCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Training days" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding DaysText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditDurationCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Session length" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding DurationText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditEquipmentCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Equipment" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding EquipmentText}" Style="{StaticResource RowValue}" LineBreakMode="TailTruncation" MaximumWidthRequest="180" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding NewPlanCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Generate a new plan" TextColor="{StaticResource Accent}" VerticalOptions="Center" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="WORKOUT SETTINGS" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+            <Border Style="{StaticResource Card}" Padding="0">
+                <VerticalStackLayout>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditUnitCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Weight unit" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding UnitText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditBodyWeightCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Body weight" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding BodyWeightText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditRestCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Default rest time" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding RestText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}" Padding="16,6">
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Auto-start rest timer" />
+                            <Label Text="Start the timer when you tick off a set" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="2" IsToggled="{Binding AutoRest}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}" Padding="16,6">
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Warm-up sets" />
+                            <Label Text="Add ramp-up sets to heavy compound lifts" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="2" IsToggled="{Binding Warmups}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}" Padding="16,6">
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Track RIR" />
+                            <Label Text="Log reps in reserve for smarter progression" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="2" IsToggled="{Binding TrackRir}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="DATA" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+            <Border Style="{StaticResource Card}" Padding="0">
+                <VerticalStackLayout>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenHistoryCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Workout history" VerticalOptions="Center" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding ExportCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Export data (JSON)" VerticalOptions="Center" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding ResetCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Reset all data" TextColor="{StaticResource Danger}" VerticalOptions="Center" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="{Binding Version}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" Margin="0,8,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>

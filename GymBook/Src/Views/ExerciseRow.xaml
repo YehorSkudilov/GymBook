@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="GymBook.Views.ExerciseRow"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:ExerciseItem">
+    <Grid Padding="0,6" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" BackgroundColor="Transparent">
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding TapCommand}" />
+        </Grid.GestureRecognizers>
+        <Border WidthRequest="46" HeightRequest="46" StrokeShape="RoundRectangle 14" BackgroundColor="{Binding MuscleSoft}">
+            <Label Text="{Binding Initial}" TextColor="{Binding MuscleColor}" FontFamily="OpenSansSemibold" FontSize="15"
+                   HorizontalOptions="Center" VerticalOptions="Center" />
+        </Border>
+        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+            <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="15" LineBreakMode="TailTruncation" />
+            <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="12" />
+        </VerticalStackLayout>
+        <ContentView Grid.Column="2" x:Name="Accessory" VerticalOptions="Center" />
+    </Grid>
+</ContentView>

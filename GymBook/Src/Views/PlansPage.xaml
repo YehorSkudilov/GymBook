@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.PlansPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PlansViewModel"
+    Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,24,20,32" Spacing="16">
+            <Label Text="Plans" Style="{StaticResource Title}" />
+
+            <Label Text="ACTIVE PLAN" Style="{StaticResource Overline}" IsVisible="{Binding HasActivePlan}" />
+            <Border IsVisible="{Binding HasActivePlan}" Background="{StaticResource AccentGradient}" Style="{StaticResource Card}" Padding="18">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ActivePlan.OpenCommand}" />
+                </Border.GestureRecognizers>
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="{Binding ActivePlan.Name}" FontFamily="OpenSansSemibold" FontSize="20" TextColor="White" />
+                    <Label Text="{Binding ActivePlan.Description}" FontSize="13" TextColor="#DDE6FF" />
+                    <Label Text="{Binding ActivePlan.Meta}" FontSize="13" TextColor="White" Margin="0,8,0,0" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Padding="18">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Build a new plan" Style="{StaticResource H3}" />
+                    <Label Text="Let GymBook generate a plan for your goal, schedule and equipment, or start from scratch." Style="{StaticResource Caption}" />
+                    <Button Text="Generate plan" Style="{StaticResource PrimaryButton}" Command="{Binding GenerateCommand}" />
+                    <Button Text="Create empty plan" Style="{StaticResource SecondaryButton}" Command="{Binding CreateEmptyCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="OTHER PLANS" Style="{StaticResource Overline}" IsVisible="{Binding HasOtherPlans}" />
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding OtherPlans}" Spacing="10">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PlanItem">
+                        <Border Style="{StaticResource Card}" Padding="16,14">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" />
+                                    <Label Text="{Binding Description}" Style="{StaticResource Caption}" />
+                                    <Label Text="{Binding Meta}" Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource TextTertiary}" />
+                                </VerticalStackLayout>
+                                <Image Grid.Column="1" Source="ic_chevron_right.png" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>

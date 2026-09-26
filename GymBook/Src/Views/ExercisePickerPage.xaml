@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.ExercisePickerPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:ExercisePickerViewModel">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="0,16,0,0">
+        <Grid ColumnDefinitions="Auto,*,Auto" Padding="12,0" ColumnSpacing="8">
+            <Button Text="Cancel" Style="{StaticResource GhostButton}" TextColor="{StaticResource TextSecondary}" Command="{Binding CancelCommand}" />
+            <Label Grid.Column="1" Text="Add exercises" Style="{StaticResource H3}" HorizontalOptions="Center" VerticalOptions="Center" />
+            <Button Grid.Column="2" Text="{Binding AddText}" CornerRadius="12" Padding="16,6" HeightRequest="40" MinimumHeightRequest="40"
+                    IsEnabled="{Binding CanAdd}" Command="{Binding AddCommand}" />
+        </Grid>
+
+        <Border Grid.Row="1" Style="{StaticResource InputBox}" HeightRequest="46" Margin="20,14,20,10" Padding="12,0">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                <Image Source="ic_search.png" WidthRequest="18" HeightRequest="18" />
+                <Entry Grid.Column="1" Text="{Binding SearchText}" Placeholder="Search exercises" ClearButtonVisibility="WhileEditing" />
+            </Grid>
+        </Border>
+
+        <views:ChipBar Grid.Row="2" />
+
+        <CollectionView Grid.Row="3" ItemsSource="{Binding Items}" Margin="20,8,20,0">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:ExerciseItem">
+                    <views:ExerciseRow IsPicker="True" />
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</views:BasePage>

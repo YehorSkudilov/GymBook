@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Astro is dark-only. -->
+    <Color x:Key="Bg">#0B0D12</Color>
+    <Color x:Key="Surface">#151821</Color>
+    <Color x:Key="Surface2">#1D212C</Color>
+    <Color x:Key="Surface3">#272C39</Color>
+    <Color x:Key="Stroke">#2C3240</Color>
+
+    <Color x:Key="TextPrimary">#F4F6FB</Color>
+    <Color x:Key="TextSecondary">#9AA3B5</Color>
+    <Color x:Key="TextTertiary">#626B7E</Color>
+
+    <Color x:Key="Accent">#3F7DFF</Color>
+    <Color x:Key="AccentSoft">#1A2A4F</Color>
+    <Color x:Key="Accent2">#7C5CFF</Color>
+    <Color x:Key="Success">#2ED47A</Color>
+    <Color x:Key="SuccessSoft">#133526</Color>
+    <Color x:Key="Warning">#FFB020</Color>
+    <Color x:Key="WarningSoft">#3A2C10</Color>
+    <Color x:Key="Danger">#FF4D5E</Color>
+    <Color x:Key="DangerSoft">#3A1419</Color>
+
+    <Color x:Key="White">#FFFFFF</Color>
+    <Color x:Key="Black">#000000</Color>
+
+    <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#3F7DFF" Offset="0" />
+        <GradientStop Color="#7C5CFF" Offset="1" />
+    </LinearGradientBrush>
+</ResourceDictionary>

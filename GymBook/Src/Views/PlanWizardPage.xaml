@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.PlanWizardPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PlanWizardViewModel"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20,16,20,20">
+
+        <!-- Top bar -->
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+            <Button Text="‹" FontSize="24" Style="{StaticResource StepButton}" WidthRequest="40" HeightRequest="40"
+                    BackgroundColor="{StaticResource Surface2}" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}" />
+            <ProgressBar Grid.Column="1" Progress="{Binding Progress}" VerticalOptions="Center" HeightRequest="6" />
+        </Grid>
+
+        <ScrollView Grid.Row="1" Margin="0,20,0,12">
+            <VerticalStackLayout Spacing="14">
+
+                <!-- Welcome art -->
+                <VerticalStackLayout IsVisible="{Binding IsWelcome}" Spacing="0" Margin="0,30,0,10">
+                    <Image Source="logo.png" HeightRequest="140" />
+                </VerticalStackLayout>
+
+                <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="28" />
+                <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="15" />
+
+                <!-- Welcome feature list -->
+                <VerticalStackLayout IsVisible="{Binding IsWelcome}" Spacing="12" Margin="0,14,0,0">
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Personalised plans" Style="{StaticResource H3}" />
+                            <Label Text="Splits, exercises, sets and reps chosen for your goal and schedule." Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Automatic progression" Style="{StaticResource H3}" />
+                            <Label Text="Every session suggests the right weight and reps from your last performance." Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="Recovery and progress" Style="{StaticResource H3}" />
+                            <Label Text="See which muscles are fresh, track personal records, volume and body weight." Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- About you -->
+                <VerticalStackLayout IsVisible="{Binding IsAbout}" Spacing="10" Margin="0,10,0,0">
+                    <Label Text="NAME" Style="{StaticResource Overline}" />
+                    <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                        <Entry Text="{Binding UserName}" Placeholder="Your first name" />
+                    </Border>
+                    <Label Text="WEIGHT UNIT" Style="{StaticResource Overline}" Margin="0,8,0,0" />
+                    <HorizontalStackLayout BindableLayout.ItemsSource="{Binding UnitChips}" Spacing="10">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ChipItem">
+                                <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 12" Padding="16,12">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontFamily="OpenSansSemibold" />
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
+                    <Label Text="BODY WEIGHT" Style="{StaticResource Overline}" Margin="0,8,0,0" />
+                    <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                        <Entry Text="{Binding BodyWeight}" Keyboard="Numeric" Placeholder="75" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Option lists -->
+                <VerticalStackLayout IsVisible="{Binding IsOptions}" BindableLayout.ItemsSource="{Binding Options}" Spacing="10" Margin="0,6,0,0">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:OptionItem">
+                            <Border BackgroundColor="{Binding Background}" Stroke="{Binding StrokeColor}" StrokeThickness="2"
+                                    StrokeShape="RoundRectangle 16" Padding="16,14">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="16" />
+                                    <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" IsVisible="{Binding HasSubtitle}" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <!-- Result -->
+                <VerticalStackLayout IsVisible="{Binding IsResult}" Spacing="12" Margin="0,6,0,0">
+                    <Border Background="{StaticResource AccentGradient}" Style="{StaticResource Card}" Padding="18">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding PlanName}" FontFamily="OpenSansSemibold" FontSize="20" TextColor="White" />
+                            <Label Text="{Binding PlanDescription}" FontSize="13" TextColor="#DDE6FF" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding PlanWorkouts}" Spacing="10">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:WorkoutPreviewItem">
+                                <Border Style="{StaticResource Card}" Padding="16,14">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" />
+                                            <Label Grid.Column="1" Text="{Binding Meta}" Style="{StaticResource Caption}" FontSize="12" />
+                                        </Grid>
+                                        <Label Text="{Binding Exercises}" FontSize="13" LineHeight="1.35" TextColor="{StaticResource TextSecondary}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="2" Text="{Binding NextText}" Style="{StaticResource PrimaryButton}" Command="{Binding NextCommand}" />
+    </Grid>
+</views:BasePage>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.StatsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:StatsViewModel"
+    Shell.NavBarIsVisible="False">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,24,20,32" Spacing="14">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="Progress" Style="{StaticResource Title}" />
+                <Button Grid.Column="1" Text="History" Style="{StaticResource SmallButton}" Command="{Binding OpenHistoryCommand}" VerticalOptions="Center" />
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="{Binding TotalWorkouts}" Style="{StaticResource StatValue}" />
+                        <Label Text="Total workouts" Style="{StaticResource Caption}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="{Binding ThisMonth}" Style="{StaticResource StatValue}" />
+                        <Label Text="This month" Style="{StaticResource Caption}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="1" Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="{Binding TotalVolume}" Style="{StaticResource StatValue}" />
+                        <Label Text="Total volume" Style="{StaticResource Caption}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="{Binding Streak}" Style="{StaticResource StatValue}" />
+                            <Image Source="ic_flame.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                        <Label Text="Week streak" Style="{StaticResource Caption}" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Weekly volume" Style="{StaticResource H3}" />
+                    <Label Text="Weight × reps across all working sets" Style="{StaticResource Caption}" FontSize="12" />
+                    <GraphicsView Drawable="{Binding VolumeChart}" HeightRequest="170" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Workouts per week" Style="{StaticResource H3}" />
+                    <GraphicsView Drawable="{Binding WorkoutsChart}" HeightRequest="150" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Sets per muscle this week" Style="{StaticResource H3}" />
+                    <Label Text="10–20 hard sets per muscle per week is a good target for growth." Style="{StaticResource Caption}" FontSize="12" />
+                    <GraphicsView Drawable="{Binding MuscleMap}" HeightRequest="200" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding MuscleSets}" Spacing="8">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:MuscleBarItem">
+                                <Grid ColumnDefinitions="90,*,64" ColumnSpacing="10">
+                                    <Label Text="{Binding Name}" FontSize="13" VerticalOptions="Center" />
+                                    <ProgressBar Grid.Column="1" Progress="{Binding Progress}" ProgressColor="{Binding Color}" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="{Binding Value}" Style="{StaticResource Caption}" FontSize="12" HorizontalTextAlignment="End" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Body weight" Style="{StaticResource H3}" />
+                            <Label Text="{Binding BodyWeightChange}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Text="Log" Style="{StaticResource SmallButton}" Command="{Binding LogWeightCommand}" VerticalOptions="Start" />
+                    </Grid>
+                    <Label Text="{Binding BodyWeightText}" Style="{StaticResource StatValue}" />
+                    <GraphicsView Drawable="{Binding BodyWeightChart}" HeightRequest="160" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <HorizontalStackLayout Spacing="8">
+                        <Image Source="ic_trophy.png" WidthRequest="20" HeightRequest="20" />
+                        <Label Text="Personal records" Style="{StaticResource H3}" />
+                    </HorizontalStackLayout>
+                    <Label Text="Best estimated one-rep max per exercise." Style="{StaticResource Caption}" FontSize="12" />
+                    <Label Text="No records yet. Finish a workout to set your first." Style="{StaticResource Caption}" IsVisible="{Binding HasRecords, Converter={StaticResource Not}}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Records}" Spacing="4">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:LineItem">
+                                <Grid ColumnDefinitions="*,Auto" Padding="0,6">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                                    </Grid.GestureRecognizers>
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="14" />
+                                        <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" Text="{Binding Value}" FontFamily="OpenSansSemibold" TextColor="{StaticResource Warning}" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>
