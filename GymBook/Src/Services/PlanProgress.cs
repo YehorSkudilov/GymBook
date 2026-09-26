@@ -1,0 +1,65 @@
+using GymBook.Models;
+
+namespace GymBook.Services;
+
+/// <summary>
+/// Progress through a plan, week by week. A week is the plan's day order (<see cref="PlanSchedule.Days"/>) done once,
+/// in any order: a workout is done when a finished session from it counts toward that week, a rest day when it is
+/// marked finished. Finishing any workout of a week unlocks the next one.
+/// </summary>
+public class PlanProgress
+{
+    readonly WorkoutPlan _plan;
+    readonly List<WorkoutSession> _sessions;
+
+    public PlanProgress(WorkoutPlan plan, IEnumerable<WorkoutSession> history)
+    {
+        _plan = plan;
+        _sessions = history.Where(s => s.PlanId == plan.Id).ToList();
+        Days = PlanSchedule.Days(plan);
+        LastUnlockedWeek = _sessions.Select(WeekOf).DefaultIfEmpty(0).Max() + 1;
+    }
+
+    public List<PlanWorkout?> Days { get; }
+
+    /// <summary>The furthest week that can be opened: one past the last week with a finished workout.</summary>
+    public int LastUnlockedWeek { get; }
+
+    /// <summary>The week to show by default: the first unlocked week with anything left to do.</summary>
+    public int CurrentWeek => Enumerable.Range(1, LastUnlockedWeek).FirstOrDefault(w => !IsComplete(w), LastUnlockedWeek);
+
+    /// <summary>The latest session of <paramref name="workout"/> that counts toward <paramref name="week"/>.</summary>
+    public WorkoutSession? SessionFor(PlanWorkout workout, int week) =>
+        _sessions.Where(s => s.PlanWorkoutId == workout.Id && WeekOf(s) == week).MaxBy(s => s.StartedAt);
+
+    public bool IsRestDone(int day, int week) => _plan.RestDaysDone?.Contains(RestKey(day, week)) == true;
+
+    public bool IsDayDone(int day, int week) => Days[day] is { } w ? SessionFor(w, week) != null : IsRestDone(day, week);
+
+    /// <summary>Workouts finished in <paramref name="week"/>. Rest days don't count.</summary>
+    public int WorkoutsDone(int week) => _plan.Workouts.Count(w => SessionFor(w, week) != null);
+
+    public bool IsComplete(int week) => Enumerable.Range(0, Days.Count).All(d => IsDayDone(d, week));
+
+    /// <summary>The first unlocked week <paramref name="workout"/> isn't done in; the last unlocked week never has it done.</summary>
+    public int FirstOpenWeek(PlanWorkout workout) =>
+        Enumerable.Range(1, LastUnlockedWeek).First(w => SessionFor(workout, w) == null);
+
+    /// <summary>The first workout of <paramref name="week"/> that isn't done yet, in day order.</summary>
+    public PlanWorkout? NextWorkout(int week) => Days.OfType<PlanWorkout>().FirstOrDefault(w => SessionFor(w, week) == null);
+
+    /// <summary>Sessions from before plan weeks were stored count toward the calendar week they were done in.</summary>
+    int WeekOf(WorkoutSession s) =>
+        s.PlanWeek ?? Math.Max(1, (StatsService.WeekStart(s.StartedAt) - StatsService.WeekStart(_plan.CreatedAt)).Days / 7 + 1);
+
+    static int RestKey(int day, int week) => week * 1000 + day;
+
+    public static void SetRestDone(WorkoutPlan plan, int day, int week, bool done)
+    {
+        var key = RestKey(day, week);
+        plan.RestDaysDone ??= [];
+        plan.RestDaysDone.Remove(key);
+        if (done)
+            plan.RestDaysDone.Add(key);
+    }
+}

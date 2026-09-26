@@ -53,6 +53,12 @@ public class WorkoutPlan : ISyncEntity
     /// </summary>
     [MaxItems(50)]
     public List<int>? RestDays { get; set; }
+    /// <summary>
+    /// Rest days marked finished, one entry per plan week and day: week × 1000 + day position (as in
+    /// <see cref="RestDays"/>). Null until the first one is marked.
+    /// </summary>
+    [MaxItems(1000)]
+    public List<int>? RestDaysDone { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
 }
@@ -88,6 +94,8 @@ public class WorkoutSession : ISyncEntity
     public string? PlanId { get; set; }
     [MaxLength(SyncLimits.IdLength)]
     public string? PlanWorkoutId { get; set; }
+    /// <summary>The plan week (1-based) this session counts toward. Null for sessions from before plan weeks were stored.</summary>
+    public int? PlanWeek { get; set; }
     public DateTime StartedAt { get; set; } = DateTime.Now;
     public DateTime? EndedAt { get; set; }
     [MaxItems(100)]

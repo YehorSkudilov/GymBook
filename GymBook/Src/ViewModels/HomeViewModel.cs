@@ -31,7 +31,17 @@ public partial class HomeViewModel(
     [ObservableProperty] string weekSets = "";
     [ObservableProperty] string streak = "";
     [ObservableProperty] string planWeek = "";
+    [ObservableProperty] string planWeekDone = "";
+    [ObservableProperty] string nextLabel = "UP NEXT";
     [ObservableProperty] List<PlanDayItem> planDays = [];
+
+    // The plan week picked from the week menu, for as long as that plan stays active; otherwise the current week.
+    string? _chosenPlanId;
+    int _chosenWeek;
+    int _week;
+    // What "Start" in the Up next card starts: the first workout left in the shown week, else in the week after.
+    int _nextWeek;
+    PlanWorkout? _next;
 
     public override Task OnAppearingAsync()
     {
@@ -51,7 +61,15 @@ public partial class HomeViewModel(
         HasPlan = plan is { Workouts.Count: > 0 };
         if (plan is { Workouts.Count: > 0 })
         {
-            var next = plan.Workouts[plan.NextWorkoutIndex % plan.Workouts.Count];
+            var progress = new PlanProgress(plan, store.History);
+            _week = _chosenPlanId == plan.Id ? Math.Min(_chosenWeek, progress.LastUnlockedWeek) : progress.CurrentWeek;
+            (_nextWeek, _next) = progress.NextWorkout(_week) is { } inWeek
+                ? (_week, inWeek)
+                : (_week + 1, progress.NextWorkout(_week + 1) ?? progress.Days.OfType<PlanWorkout>().First());
+            var next = _next;
+            NextLabel = _nextWeek == _week ? "UP NEXT" : $"UP NEXT · WEEK {_nextWeek}";
+            BuildPlanWeek(plan, progress);
+
             var exercises = next.Exercises.Select(e => (pe: e, ex: store.GetExercise(e.ExerciseId))).Where(x => x.ex != null).ToList();
             var sets = next.Exercises.Sum(e => e.Sets);
             var minutes = next.Exercises.Sum(e => e.Sets * (45 + e.RestSeconds)) / 60;
@@ -61,6 +79,11 @@ public partial class HomeViewModel(
             NextWorkoutMuscles = string.Join(" · ", exercises.Select(x => x.ex!.PrimaryMuscle).Distinct().Select(m => m.Display()));
             NextThumbs = exercises.Take(5).Select(x => ExerciseThumb.For(x.ex!)).ToList();
             NextMore = exercises.Count > 5 ? $"+{exercises.Count - 5}" : "";
+        }
+        else
+        {
+            _next = null;
+            PlanDays = [];
         }
 
         var rec = recovery.Compute(DateTime.Now);
@@ -80,7 +103,6 @@ public partial class HomeViewModel(
         }).ToList();
 
         var thisWeek = history.Where(s => s.StartedAt >= weekStart).ToList();
-        BuildPlanWeek(plan, weekStart, thisWeek);
         WeekWorkouts = $"{thisWeek.Count}/{stats.WeeklyTarget}";
         WeekVolume = units.FormatVolume(thisWeek.Sum(stats.SessionVolume));
         WeekSets = thisWeek.Sum(s => s.WorkingSets.Count()).ToString();
@@ -88,50 +110,61 @@ public partial class HomeViewModel(
         Streak = streakWeeks == 1 ? "1 week streak" : $"{streakWeeks} week streak";
     }
 
-    /// <summary>The plan's days in order: workouts (marked done when this week has a session from them) and rest days.</summary>
-    void BuildPlanWeek(WorkoutPlan? plan, DateTime weekStart, List<WorkoutSession> thisWeek)
+    /// <summary>The shown plan week's days in order. Tapping a day opens it on the plan page, where it can be started or marked finished.</summary>
+    void BuildPlanWeek(WorkoutPlan plan, PlanProgress progress)
     {
-        if (plan is not { Workouts.Count: > 0 })
+        var week = _week;
+        PlanWeek = $"Week {week}";
+        PlanWeekDone = $"{progress.WorkoutsDone(week)}/{plan.Workouts.Count} done";
+        var next = progress.NextWorkout(week);
+        PlanDays = progress.Days.Select((w, day) =>
         {
-            PlanDays = [];
-            return;
-        }
-
-        PlanWeek = $"Week {(weekStart - StatsService.WeekStart(plan.CreatedAt)).Days / 7 + 1}";
-        var nextIndex = plan.NextWorkoutIndex % plan.Workouts.Count;
-        var workoutItems = plan.Workouts.Select((w, i) =>
-        {
-            var done = thisWeek.FirstOrDefault(s => s.PlanWorkoutId == w.Id);
+            var open = new AsyncRelayCommand(() => GoTo($"{Routes.Plan}?id={plan.Id}&day={day}&week={week}"));
+            if (w == null)
+                return new PlanDayItem { Name = "Rest", Number = "–", IsRest = true, IsDone = progress.IsRestDone(day, week), Thumbnails = [], More = "", OpenCommand = open };
             var photos = w.Exercises.Select(e => ExerciseLibrary.Details(e.ExerciseId)?.Images.FirstOrDefault()).OfType<string>().ToList();
-            return (Workout: w, Item: new PlanDayItem
+            return new PlanDayItem
             {
                 Name = w.Name,
-                Number = (i + 1).ToString(),
-                IsDone = done != null,
-                IsNext = done == null && i == nextIndex,
+                Number = (plan.Workouts.IndexOf(w) + 1).ToString(),
+                IsDone = progress.SessionFor(w, week) != null,
+                IsNext = w == next,
                 Thumbnails = photos.Take(3).ToList(),
                 More = w.Exercises.Count > 3 ? $"+{w.Exercises.Count - 3}" : "",
-                OpenCommand = done != null
-                    ? new AsyncRelayCommand(() => GoTo($"{Routes.Session}?id={done.Id}"))
-                    : new AsyncRelayCommand(() => StartWorkoutAsync(workouts, dialogs, () => workouts.StartFromPlan(plan, w))),
-            });
-        }).ToDictionary(x => x.Workout);
+                OpenCommand = open,
+            };
+        }).ToList();
+    }
 
-        PlanDays = PlanSchedule.Days(plan)
-            .Select(w => w == null
-                ? new PlanDayItem { Name = "Rest", Number = "–", IsRest = true, Thumbnails = [], More = "" }
-                : workoutItems[w].Item)
+    /// <summary>The "Week N" beside the plan name: shows any unlocked week.</summary>
+    [RelayCommand]
+    async Task ChooseWeek()
+    {
+        var plan = store.ActivePlan;
+        if (plan is not { Workouts.Count: > 0 })
+            return;
+        var progress = new PlanProgress(plan, store.History);
+        var last = progress.LastUnlockedWeek;
+        var labels = Enumerable.Range(1, last)
+            .Select(w => $"Week {w} · {progress.WorkoutsDone(w)}/{plan.Workouts.Count} done{(progress.IsComplete(w) ? " ✓" : "")}")
             .ToList();
+        var pick = await dialogs.ActionSheet($"Finish a workout in week {last} to unlock week {last + 1}", null, [.. labels]);
+        var index = pick == null ? -1 : labels.IndexOf(pick);
+        if (index < 0)
+            return;
+        _chosenPlanId = plan.Id;
+        _chosenWeek = index + 1;
+        Refresh();
     }
 
     [RelayCommand]
     async Task StartNext()
     {
         var plan = store.ActivePlan;
-        if (plan is not { Workouts.Count: > 0 })
+        if (plan == null || _next is not { } next)
             return;
-        var next = plan.Workouts[plan.NextWorkoutIndex % plan.Workouts.Count];
-        await StartWorkoutAsync(workouts, dialogs, () => workouts.StartFromPlan(plan, next));
+        var week = _nextWeek;
+        await StartWorkoutAsync(workouts, dialogs, () => workouts.StartFromPlan(plan, next, week));
     }
 
     [RelayCommand]

@@ -73,6 +73,10 @@
                                     Padding="8,2" VerticalOptions="Center">
                                 <Label Text="Up next" TextColor="{StaticResource Accent}" FontSize="11" FontFamily="OpenSansSemibold" />
                             </Border>
+                            <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource SuccessSoft}" IsVisible="{Binding IsDayDone}"
+                                    Padding="8,2" VerticalOptions="Center">
+                                <Label Text="Finished" TextColor="{StaticResource Success}" FontSize="11" FontFamily="OpenSansSemibold" />
+                            </Border>
                         </HorizontalStackLayout>
                         <Label Text="{Binding DayMeta}" Style="{StaticResource Caption}" FontSize="15" TextColor="{StaticResource TextTertiary}" />
                     </VerticalStackLayout>
@@ -143,7 +147,7 @@
         </ScrollView>
 
         <!-- Start the selected workout -->
-        <Button Grid.Row="1" Text="{Binding DayName, StringFormat='▶  Start {0}'}" Style="{StaticResource PrimaryButton}"
-                Margin="16,8,16,16" IsVisible="{Binding IsWorkoutDay}" Command="{Binding StartDayCommand}" />
+        <Button Grid.Row="1" Text="{Binding DayActionText}" Style="{StaticResource PrimaryButton}"
+                Margin="16,8,16,16" IsVisible="{Binding HasDayAction}" Command="{Binding DayActionCommand}" />
     </Grid>
 </views:BasePage>

@@ -70,7 +70,7 @@
                 </Border.Background>
                 <VerticalStackLayout Spacing="12">
                     <VerticalStackLayout>
-                        <Label Text="UP NEXT" Style="{StaticResource Overline}" TextColor="{StaticResource Accent}" />
+                        <Label Text="{Binding NextLabel}" Style="{StaticResource Overline}" TextColor="{StaticResource Accent}" />
                         <Label Text="{Binding NextWorkoutName}" Style="{StaticResource H2}" FontSize="22" LineBreakMode="TailTruncation" />
                         <Label Text="{Binding NextWorkoutMuscles}" Style="{StaticResource Caption}" FontSize="12" LineBreakMode="TailTruncation" />
                     </VerticalStackLayout>
@@ -110,8 +110,15 @@
                     <ImageButton Grid.Column="1" Source="ic_more.png" WidthRequest="36" HeightRequest="30" Padding="6,3"
                                  BackgroundColor="{StaticResource Surface2}" CornerRadius="15" VerticalOptions="Center"
                                  Command="{Binding PlanOptionsCommand}" />
-                    <Label Grid.Column="2" Text="{Binding PlanWeek}" Style="{StaticResource H3}" TextColor="{StaticResource Accent}"
-                           HorizontalOptions="End" VerticalOptions="Center" />
+                    <!-- Tap to view another unlocked week. -->
+                    <HorizontalStackLayout Grid.Column="2" Spacing="8" HorizontalOptions="End" VerticalOptions="Center" BackgroundColor="Transparent">
+                        <HorizontalStackLayout.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ChooseWeekCommand}" />
+                        </HorizontalStackLayout.GestureRecognizers>
+                        <Label Text="{Binding PlanWeekDone}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                        <Label Text="{Binding PlanWeek, StringFormat='{0} ▾'}" Style="{StaticResource H3}" TextColor="{StaticResource Accent}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
                 </Grid>
 
                 <Border Style="{StaticResource Card}" Padding="16,6">
@@ -119,15 +126,16 @@
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="vm:PlanDayItem">
                                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="0,10" BackgroundColor="Transparent">
-                                    <Grid.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding OpenCommand}" />
-                                    </Grid.GestureRecognizers>
                                     <Border WidthRequest="30" HeightRequest="30" StrokeShape="RoundRectangle 15" StrokeThickness="1.5"
                                             Stroke="{Binding BadgeColor}" BackgroundColor="Transparent" VerticalOptions="Center">
                                         <Label Text="{Binding Badge}" TextColor="{Binding BadgeColor}" FontFamily="OpenSansSemibold" FontSize="13"
                                                HorizontalOptions="Center" VerticalOptions="Center" />
                                     </Border>
-                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <!-- Tap the day to view it, then start it or mark it finished; days can be done in any order. -->
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" BackgroundColor="Transparent">
+                                        <VerticalStackLayout.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                                        </VerticalStackLayout.GestureRecognizers>
                                         <Label Text="{Binding Name}" TextColor="{Binding NameColor}" FontFamily="OpenSansSemibold" FontSize="17"
                                                LineBreakMode="TailTruncation" />
                                         <Label Text="{Binding Status}" IsVisible="{Binding IsNext}" Style="{StaticResource Caption}" FontSize="12"

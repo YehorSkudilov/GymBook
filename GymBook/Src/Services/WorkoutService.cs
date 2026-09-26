@@ -7,9 +7,16 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
 {
     public WorkoutSession? Active => store.Data.ActiveSession;
 
-    public WorkoutSession StartFromPlan(WorkoutPlan plan, PlanWorkout workout)
+    /// <summary>Starts <paramref name="workout"/> for plan week <paramref name="week"/>, by default the first unlocked week it isn't done in.</summary>
+    public WorkoutSession StartFromPlan(WorkoutPlan plan, PlanWorkout workout, int? week = null)
     {
-        var session = new WorkoutSession { Name = workout.Name, PlanId = plan.Id, PlanWorkoutId = workout.Id };
+        var session = new WorkoutSession
+        {
+            Name = workout.Name,
+            PlanId = plan.Id,
+            PlanWorkoutId = workout.Id,
+            PlanWeek = week ?? new PlanProgress(plan, store.History).FirstOpenWeek(workout),
+        };
         foreach (var pe in workout.Exercises)
         {
             var ex = store.GetExercise(pe.ExerciseId);

@@ -93,6 +93,8 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
 {
     string? _id;
     int _selected;
+    // Set when opened from a plan week on Home: the day is shown, started and marked finished for that week.
+    int? _week;
 
     [ObservableProperty] string name = "";
     [ObservableProperty] string meta = "";
@@ -109,8 +111,17 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
     [ObservableProperty] bool isEmptyDay;
     [ObservableProperty] IDrawable dayMap = MuscleMapDrawable.Empty;
     [ObservableProperty] List<PlanDayExercise> dayExercises = [];
+    [ObservableProperty] bool isDayDone;
+    [ObservableProperty] string dayActionText = "";
+    [ObservableProperty] bool hasDayAction;
 
-    public void ApplyQueryAttributes(IDictionary<string, object> query) => _id = query["id"]?.ToString();
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        _id = query["id"]?.ToString();
+        if (query.TryGetValue("day", out var day) && int.TryParse(day?.ToString(), out var d))
+            _selected = d;
+        _week = query.TryGetValue("week", out var week) && int.TryParse(week?.ToString(), out var w) ? w : null;
+    }
 
     public override Task OnAppearingAsync()
     {
@@ -119,24 +130,32 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
             return GoBack();
         Name = plan.Name;
         IsActive = plan.Id == store.Data.ActivePlanId;
-        var schedule = PlanSchedule.Days(plan);
+        var progress = new PlanProgress(plan, store.History);
+        var schedule = progress.Days;
         Meta = $"{plan.Goal.Display()} · {plan.Workouts.Count} training days · {schedule.Count - plan.Workouts.Count} rest";
         _selected = Math.Clamp(_selected, 0, Math.Max(0, schedule.Count - 1));
 
         Days = schedule.Select((w, i) => new PlanDayChip
         {
-            Title = w?.Name ?? "Rest",
+            Title = (_week is { } week && progress.IsDayDone(i, week) ? "✓ " : "") + (w?.Name ?? "Rest"),
             IsRest = w == null,
             IsSelected = i == _selected,
             SelectCommand = new RelayCommand(() => Select(i)),
         }).ToList();
 
         var day = schedule.ElementAtOrDefault(_selected);
-        var next = plan.Workouts.Count > 0 ? plan.Workouts[plan.NextWorkoutIndex % plan.Workouts.Count] : null;
-        DayLabel = $"Day {_selected + 1}";
+        var shownWeek = _week ?? progress.CurrentWeek;
+        var next = progress.NextWorkout(shownWeek);
+        DayLabel = _week == null ? $"Day {_selected + 1}" : $"Week {_week} · Day {_selected + 1}";
+        IsDayDone = _week != null && schedule.Count > 0 && progress.IsDayDone(_selected, shownWeek);
+        // Workouts start (or show the finished session); in a week, rest days are marked finished instead.
+        DayActionText = day != null
+            ? IsDayDone ? "View finished workout" : $"▶  Start {day.Name}"
+            : IsDayDone ? "Mark as not finished" : "✓  Mark rest day finished";
+        HasDayAction = day != null || (_week != null && schedule.Count > 0);
         IsRestDay = day == null;
         IsWorkoutDay = day != null;
-        IsNextDay = IsActive && day != null && day == next;
+        IsNextDay = IsActive && day != null && day == next && !IsDayDone;
         DayName = day?.Name ?? "Rest";
 
         var exercises = day?.Exercises.Select(pe => (pe, ex: store.GetExercise(pe.ExerciseId))).ToList() ?? [];
@@ -165,15 +184,27 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
 
     PlanWorkout? SelectedWorkout(WorkoutPlan plan) => PlanSchedule.Days(plan).ElementAtOrDefault(_selected);
 
+    /// <summary>The button under the day: start the workout or open its finished session, or mark the rest day.</summary>
     [RelayCommand]
-    Task StartDay()
+    Task DayAction()
     {
         var plan = store.GetPlan(_id);
-        if (plan == null || SelectedWorkout(plan) is not PlanWorkout w)
+        if (plan == null)
             return Task.CompletedTask;
+        if (SelectedWorkout(plan) is not PlanWorkout w)
+        {
+            if (_week is { } week)
+            {
+                PlanProgress.SetRestDone(plan, _selected, week, !IsDayDone);
+                store.Save();
+            }
+            return OnAppearingAsync();
+        }
+        if (_week is { } shown && new PlanProgress(plan, store.History).SessionFor(w, shown) is { } done)
+            return GoTo($"{Routes.Session}?id={done.Id}");
         if (w.Exercises.Count == 0)
             return dialogs.Alert("Empty workout", "Add exercises to this workout first.");
-        return StartWorkoutAsync(workouts, dialogs, () => workouts.StartFromPlan(plan, w));
+        return StartWorkoutAsync(workouts, dialogs, () => workouts.StartFromPlan(plan, w, _week));
     }
 
     /// <summary>Opens the muscle breakdown for the selected day, with a switch to the whole plan.</summary>

@@ -89,7 +89,7 @@ public partial class MainPage : ContentPage
         ActiveBar.IsVisible = active != null;
         // Room at the end of every tab so its last items can scroll clear of the pill.
         foreach (var tab in _tabs)
-            ((TabView)tab.Page).BottomInset = active != null ? ActiveBarInset : 0;
+            ((TabView)tab.Page).BottomInset = active != null ? ActiveBarInset : 20;
         if (active == null)
         {
             _activeTimer?.Stop();
