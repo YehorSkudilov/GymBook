@@ -63,7 +63,7 @@ jobs:
             echo "Waiting for the API to report healthy..."
             PORT=$(grep '^API_PORT=' .env | cut -d= -f2)
             for i in $(seq 1 30); do
-              if curl -fsS "http://172.17.0.1:$PORT/health" > /dev/null; then
+              if curl -fsS "http://127.0.0.1:$PORT/health" > /dev/null; then
                 echo "API is up."
                 break
               fi
