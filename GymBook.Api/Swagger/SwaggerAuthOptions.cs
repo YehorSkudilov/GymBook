@@ -20,9 +20,6 @@ public class ValidateSwaggerAuthOptions : IValidateOptions<SwaggerAuthOptions>
         if (string.IsNullOrWhiteSpace(options.Password))
             errors.Add("SwaggerAuth:Password must be configured and non-empty.");
 
-        if (options.Password is { Length: < 12 })
-            errors.Add("SwaggerAuth:Password must be at least 12 characters.");
-
         return errors.Count > 0 ? ValidateOptionsResult.Fail(errors) : ValidateOptionsResult.Success;
     }
 }

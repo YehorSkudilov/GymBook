@@ -46,7 +46,7 @@ jobs:
             # JWT (at least 32 characters)
             Jwt__SigningKey=${{ secrets.JWT_SIGNING_KEY }}
 
-            # Swagger UI basic auth (password at least 12 characters)
+            # Swagger UI basic auth
             SwaggerAuth__Username=${{ vars.SWAGGER_AUTH_USERNAME }}
             SwaggerAuth__Password=${{ secrets.SWAGGER_AUTH_PASSWORD }}
 
