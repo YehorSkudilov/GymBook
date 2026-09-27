@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Certificate>
+  <Subject>CN=User Name</Subject>
+  <Thumbprint>60531B864B1EE0B91AF3F0AE69543B5C7AA6748D</Thumbprint>
+  <CreationDate>2026-09-20T00:59:01</CreationDate>
+  <Expires>2041-09-20T00:59:01</Expires>
+  <!-- Self-signed - Subject must stay "CN=User Name" to match
+       Platforms/Windows/Package.appxmanifest's Identity/@Publisher. Password is the
+       WINDOWS_CERT_PASSWORD GitHub secret, not stored here. -->
+</Certificate>

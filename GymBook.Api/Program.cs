@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using GymBook.Api;
 using GymBook.Api.Auth;
 using GymBook.Api.Data;
+using GymBook.Api.Swagger;
 using GymBook.Api.Sync;
 using GymBook.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -91,7 +92,7 @@ builder.Services.AddControllers(o =>
         o.MaxModelValidationErrors = 50;
     })
     .AddJsonOptions(o => GymBookJson.Configure(o.JsonSerializerOptions));
-builder.Services.AddOpenApi();
+builder.Services.AddSwagger(builder.Configuration);
 
 var app = builder.Build();
 
@@ -101,9 +102,6 @@ var forwarded = new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeader
 foreach (var network in (app.Configuration["ReverseProxy:KnownNetworks"] ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
     forwarded.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
 app.UseForwardedHeaders(forwarded);
-
-if (app.Environment.IsDevelopment())
-    app.MapOpenApi().AllowAnonymous();
 
 // Single-instance deployments apply pending migrations at startup (docker-compose.prod.yml turns this on).
 if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
@@ -119,6 +117,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseSwaggerWithAuth();
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
