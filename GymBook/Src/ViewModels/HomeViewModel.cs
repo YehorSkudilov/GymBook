@@ -12,8 +12,11 @@ public partial class HomeViewModel(
     RecoveryService recovery,
     StatsService stats,
     Units units,
-    DialogService dialogs) : BaseViewModel
+    DialogService dialogs,
+    SyncIndicator syncIndicator) : BaseViewModel
 {
+    public SyncIndicator Sync => syncIndicator;
+
     [ObservableProperty] string greeting = "";
     [ObservableProperty] string dateText = "";
     [ObservableProperty] bool hasPlan;
@@ -110,7 +113,7 @@ public partial class HomeViewModel(
         Streak = streakWeeks == 1 ? "1 week streak" : $"{streakWeeks} week streak";
     }
 
-    /// <summary>The shown plan week's days in order. Tapping a day opens it on the plan page, where it can be started or marked finished.</summary>
+    /// <summary>The shown plan week's days in order. Tapping a day opens it in the day sheet, where it can be started or marked finished.</summary>
     void BuildPlanWeek(WorkoutPlan plan, PlanProgress progress)
     {
         var week = _week;
@@ -119,7 +122,7 @@ public partial class HomeViewModel(
         var next = progress.NextWorkout(week);
         PlanDays = progress.Days.Select((w, day) =>
         {
-            var open = new AsyncRelayCommand(() => GoTo($"{Routes.Plan}?id={plan.Id}&day={day}&week={week}"));
+            var open = new AsyncRelayCommand(() => GoTo($"{Routes.PlanDay}?id={plan.Id}&day={day}&week={week}"));
             if (w == null)
                 return new PlanDayItem { Name = "Rest", Number = "–", IsRest = true, IsDone = progress.IsRestDone(day, week), Thumbnails = [], More = "", OpenCommand = open };
             var photos = w.Exercises.Select(e => ExerciseLibrary.Details(e.ExerciseId)?.Images.FirstOrDefault()).OfType<string>().ToList();
@@ -165,6 +168,17 @@ public partial class HomeViewModel(
             return;
         var week = _nextWeek;
         await StartWorkoutAsync(workouts, dialogs, () => workouts.StartFromPlan(plan, next, week));
+    }
+
+    /// <summary>Tapping the Up next card previews that day, like tapping it in the week below.</summary>
+    [RelayCommand]
+    Task OpenNext()
+    {
+        var plan = store.ActivePlan;
+        if (plan == null || _next is not { } next)
+            return Task.CompletedTask;
+        var day = PlanSchedule.Days(plan).IndexOf(next);
+        return day < 0 ? Task.CompletedTask : GoTo($"{Routes.PlanDay}?id={plan.Id}&day={day}&week={_nextWeek}");
     }
 
     [RelayCommand]

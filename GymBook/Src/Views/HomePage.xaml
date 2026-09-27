@@ -10,10 +10,27 @@
         <VerticalStackLayout Spacing="16">
 
             <!-- Header -->
-            <VerticalStackLayout Spacing="2">
-                <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
-                <Label Text="{Binding Greeting}" Style="{StaticResource Title}" />
-            </VerticalStackLayout>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
+                    <Label Text="{Binding Greeting}" Style="{StaticResource Title}" />
+                </VerticalStackLayout>
+                <!-- Sync status; tap to sync now (or sign in again). Hidden while signed out. -->
+                <Border Grid.Column="1" Style="{StaticResource Pill}" Padding="10,5" VerticalOptions="Start" Margin="0,2,0,0"
+                        IsVisible="{Binding Sync.IsVisible}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding Sync.TapCommand}" />
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="6">
+                        <ActivityIndicator IsRunning="{Binding Sync.IsSyncing}" IsVisible="{Binding Sync.IsSyncing}" Color="{StaticResource Accent}"
+                                           WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                        <Ellipse Fill="{Binding Sync.DotColor}" WidthRequest="8" HeightRequest="8" VerticalOptions="Center"
+                                 IsVisible="{Binding Sync.IsSyncing, Converter={StaticResource Not}}" />
+                        <Label Text="{Binding Sync.Text}" Style="{StaticResource Caption}" FontSize="12" FontFamily="OpenSansSemibold"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+            </Grid>
 
             <!-- Week strip -->
             <Border Style="{StaticResource Card}" Padding="12,14">
@@ -60,8 +77,11 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Next workout -->
+            <!-- Next workout: tap to preview the day; Start starts it straight away. -->
             <Border IsVisible="{Binding HasPlan}" Style="{StaticResource Card}" Padding="16,14">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenNextCommand}" />
+                </Border.GestureRecognizers>
                 <Border.Background>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                         <GradientStop Color="{StaticResource AccentSoft}" Offset="0" />

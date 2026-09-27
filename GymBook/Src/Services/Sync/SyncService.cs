@@ -3,6 +3,8 @@ using GymBook.Models;
 
 namespace GymBook.Services.Sync;
 
+public enum SyncState { SignedOut, Syncing, UpToDate, Offline, Failed, SignInRequired }
+
 /// <summary>
 /// Pushes local changes and pulls the account's changes whenever the app starts or resumes, the network
 /// comes back, or the user edits something (debounced). Everything works offline; this catches up later.
@@ -30,6 +32,7 @@ public class SyncService
         };
     }
 
+    public SyncState State { get; private set; } = SyncState.SignedOut;
     public string Status { get; private set; } = "";
     public DateTimeOffset? LastSyncedAt { get; private set; }
 
@@ -52,7 +55,11 @@ public class SyncService
     {
         await _session.EnsureLoadedAsync();
         if (!_session.IsSignedIn)
+        {
+            if (State != SyncState.SignedOut)
+                SetStatus(SyncState.SignedOut, "");
             return false;
+        }
         if (_store.Local.AccountId != _session.UserId)
         {
             // Secure storage can outlive the database (e.g. iOS keeps the Keychain across reinstalls).
@@ -65,7 +72,7 @@ public class SyncService
             else
             {
                 _session.Clear();
-                SetStatus("Please sign in again.");
+                SetStatus(SyncState.SignInRequired, "Please sign in again.");
                 return false;
             }
         }
@@ -78,7 +85,7 @@ public class SyncService
 
         try
         {
-            SetStatus("Syncing…");
+            SetStatus(SyncState.Syncing, "Syncing…");
             var skipped = 0;
             for (var round = 0; round < 50; round++)
             {
@@ -94,20 +101,20 @@ public class SyncService
                     break;
             }
             LastSyncedAt = DateTimeOffset.Now;
-            SetStatus(skipped > 0 ? $"{skipped} item(s) are too large to sync" : "Up to date");
+            SetStatus(skipped > 0 ? SyncState.Failed : SyncState.UpToDate, skipped > 0 ? $"{skipped} item(s) are too large to sync" : "Up to date");
             return true;
         }
         catch (SessionExpiredException e)
         {
-            SetStatus(e.Message);
+            SetStatus(SyncState.SignInRequired, e.Message);
         }
         catch (ApiException e)
         {
-            SetStatus(e.Message);
+            SetStatus(SyncState.Failed, e.Message);
         }
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
         {
-            SetStatus("Offline. Changes will sync when you're back online.");
+            SetStatus(SyncState.Offline, "Offline. Changes will sync when you're back online.");
         }
         finally
         {
@@ -139,8 +146,9 @@ public class SyncService
         return removed;
     }
 
-    void SetStatus(string status)
+    void SetStatus(SyncState state, string status)
     {
+        State = state;
         Status = status;
         StatusChanged?.Invoke(this, EventArgs.Empty);
     }

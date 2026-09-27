@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.PlanDayPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PlanDayViewModel"
+    Shell.PresentationMode="ModalAnimated"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="#B3000000">
+
+    <!-- A sheet over the dimmed Home page, showing one day of the plan week. -->
+    <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
+        <Grid RowDefinitions="Auto,*,Auto">
+            <Button Text="Close" Style="{StaticResource GhostButton}" TextColor="{StaticResource Accent}" FontSize="17"
+                    HorizontalOptions="End" Margin="8,8,8,0" Command="{Binding CloseCommand}" />
+
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Padding="20,0,20,24" Spacing="18">
+
+                    <!-- Day -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="{Binding DayName}" Style="{StaticResource Title}" FontSize="32" VerticalOptions="Center"
+                                       MaximumWidthRequest="200" LineBreakMode="TailTruncation" />
+                                <ImageButton Source="ic_more.png" WidthRequest="44" HeightRequest="34" Padding="10,5"
+                                             BackgroundColor="{StaticResource Surface2}" CornerRadius="17" VerticalOptions="Center"
+                                             Command="{Binding OptionsCommand}" />
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="17" />
+                            <Label Text="{Binding Meta}" Style="{StaticResource Caption}" FontSize="17" />
+                            <Label Text="{Binding When}" IsVisible="{Binding HasWhen}" Style="{StaticResource Caption}" FontSize="17" />
+                        </VerticalStackLayout>
+                        <!-- Tap for the full muscle breakdown. -->
+                        <GraphicsView Grid.Column="1" Drawable="{Binding DayMap}" WidthRequest="120" HeightRequest="120"
+                                      VerticalOptions="Center" IsVisible="{Binding IsWorkoutDay}">
+                            <GraphicsView.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenMusclesCommand}" />
+                            </GraphicsView.GestureRecognizers>
+                        </GraphicsView>
+                    </Grid>
+
+                    <HorizontalStackLayout Spacing="8">
+                        <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource AccentSoft}" IsVisible="{Binding IsNext}" Padding="12,6">
+                            <Label Text="Up next" TextColor="{StaticResource Accent}" FontSize="13" FontFamily="OpenSansSemibold" />
+                        </Border>
+                        <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource SuccessSoft}" IsVisible="{Binding IsDone}" Padding="12,6">
+                            <Label Text="✓  Finished" TextColor="{StaticResource Success}" FontSize="13" FontFamily="OpenSansSemibold" />
+                        </Border>
+                    </HorizontalStackLayout>
+
+                    <!-- Exercises, each with its set table -->
+                    <Border Style="{StaticResource Card}" Padding="14" IsVisible="{Binding IsWorkoutDay}">
+                        <VerticalStackLayout Spacing="18">
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Exercises}" Spacing="18">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:PlanDaySheetExercise">
+                                        <VerticalStackLayout Spacing="10">
+                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                                <Grid WidthRequest="92" HeightRequest="68">
+                                                    <Border StrokeShape="RoundRectangle 14" StrokeThickness="0" BackgroundColor="{Binding Thumb.Soft}">
+                                                        <Grid>
+                                                            <Label Text="{Binding Thumb.Initial}" TextColor="{Binding Thumb.Color}" FontFamily="OpenSansSemibold"
+                                                                   FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                            <Image Source="{Binding Thumb.Image}" IsVisible="{Binding Thumb.HasImage}" Aspect="AspectFill" />
+                                                        </Grid>
+                                                    </Border>
+                                                    <Border IsVisible="{Binding IsDone}" WidthRequest="26" HeightRequest="26" StrokeShape="RoundRectangle 13"
+                                                            StrokeThickness="0" BackgroundColor="{StaticResource Accent}" Padding="4"
+                                                            HorizontalOptions="End" VerticalOptions="End" Margin="0,0,-4,-4">
+                                                        <Image Source="ic_check.png" />
+                                                    </Border>
+                                                </Grid>
+                                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                                    <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="18" LineBreakMode="TailTruncation" />
+                                                    <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="15" />
+                                                </VerticalStackLayout>
+                                            </Grid>
+
+                                            <Border Style="{StaticResource InnerCard}" Padding="12,10">
+                                                <VerticalStackLayout Spacing="6">
+                                                    <Grid ColumnDefinitions="0.6*,*,*,*">
+                                                        <Label Text="#" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                                                        <Label Grid.Column="1" Text="{Binding FirstHeader}" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                                                        <Label Grid.Column="2" Text="{Binding SecondHeader}" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                                                        <Label Grid.Column="3" Text="{Binding ThirdHeader}" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                                                    </Grid>
+                                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Rows}" Spacing="6">
+                                                        <BindableLayout.ItemTemplate>
+                                                            <DataTemplate x:DataType="vm:PlanDaySetRow">
+                                                                <Grid ColumnDefinitions="0.6*,*,*,*">
+                                                                    <Label Text="{Binding Number}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" />
+                                                                    <Label Grid.Column="1" Text="{Binding First}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" />
+                                                                    <Label Grid.Column="2" Text="{Binding Second}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" />
+                                                                    <Label Grid.Column="3" Text="{Binding Third}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" />
+                                                                </Grid>
+                                                            </DataTemplate>
+                                                        </BindableLayout.ItemTemplate>
+                                                    </VerticalStackLayout>
+                                                </VerticalStackLayout>
+                                            </Border>
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                            <Label Text="No exercises yet. Add some from the ··· menu." Style="{StaticResource Caption}" HorizontalOptions="Center"
+                                   IsVisible="{Binding IsEmptyDay}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Rest -->
+                    <Border Style="{StaticResource Card}" Padding="20,28" IsVisible="{Binding IsRestDay}">
+                        <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                            <Label Text="Rest day" Style="{StaticResource H3}" HorizontalOptions="Center" />
+                            <Label Text="{Binding Meta}" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <Button Grid.Row="2" Text="{Binding ActionText}" Style="{StaticResource PrimaryButton}"
+                    Margin="16,8,16,16" IsVisible="{Binding HasAction}" Command="{Binding DayActionCommand}" />
+        </Grid>
+    </Border>
+</views:BasePage>

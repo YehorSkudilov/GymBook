@@ -58,7 +58,7 @@ public partial class ProfileViewModel(
     {
         IsSignedIn = account.IsSignedIn;
         AccountEmail = account.Email ?? "";
-        SyncStatus = sync.LastSyncedAt is { } at && sync.Status == "Up to date" ? $"Synced {at:t}" : sync.Status;
+        SyncStatus = sync.LastSyncedAt is { } at && sync.State == SyncState.UpToDate ? $"Synced {at:t}" : sync.Status;
 
         _loading = true;
         Name = string.IsNullOrWhiteSpace(P.Name) ? "Athlete" : P.Name;
