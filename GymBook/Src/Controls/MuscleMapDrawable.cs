@@ -70,91 +70,87 @@ public class MuscleMapDrawable : IDrawable
         DrawFigure(canvas, left + (figW + gap) * scale, top, scale, front: false);
     }
 
+    // Shapes are SVG paths on a 100 x 200 figure, drawn for the figure's left half and mirrored around x = 50.
+    static readonly PathF Silhouette = PathBuilder.Build(
+        "M 50.5 21 L 45.5 21 C 45.5 25 44.5 27 42 28 C 37 29 30 30 26 32 C 21 34 19 39 18 45 C 17 52 17 58 17 64 " +
+        "C 15 70 13 78 13 86 C 13 92 14 96 14 99 C 13 103 14 108 17 109 C 20 109 22 105 22 99 C 23 95 24 88 25 80 " +
+        "C 26 74 28 68 29 62 C 30 58 31 55 32 52 C 33 60 34 70 34 80 C 33 86 32 92 32 100 C 31 115 32 130 34 147 " +
+        "C 34 152 33 158 34 166 C 35 175 36 182 36 189 C 34 192 33 195 35 197 L 44 197 C 46 195 45 191 45 188 " +
+        "C 46 180 47 170 47 162 C 47 157 47 153 47 149 C 48 135 49 120 49.5 106 L 50.5 106 Z");
+
+    static readonly (MuscleGroup Muscle, PathF Path)[] Shared = Shapes(
+        (MuscleGroup.Shoulders, "M 34 31 C 27 31 22 35 21 42 C 20 47 21 50 22 52 C 25 47 28 43 33 41 C 34 37 35 34 34 31 Z"),
+        (MuscleGroup.Forearms, "M 18.5 66.5 C 22.5 65.5 26 67.5 26 71 C 25.5 78 23 88 21.5 96 L 17.5 96 C 15.5 88 14 79 14.5 73 C 15 69 16.5 67 18.5 66.5 Z"));
+
+    static readonly (MuscleGroup Muscle, PathF Path)[] Front = Shapes(
+        (MuscleGroup.Traps, "M 45 25 C 42 28 38 30 34 31 L 44 31 Z"),
+        (MuscleGroup.Chest, "M 49 34 L 49 50 C 44 52 38 51 34 48 C 32 45 32 41 34 37 C 38 34 44 33 49 34 Z"),
+        (MuscleGroup.Biceps, "M 23.5 44 C 27.5 44 29.5 49 29.5 55 C 29.5 61 27.5 65 25 66 C 22 65 19.5 60 19.5 54.5 C 19.5 49 21 44.5 23.5 44 Z"),
+        // Rectus abdominis blocks, then the oblique
+        (MuscleGroup.Abs, "M 43 53 L 49 53 L 49 60 L 43 60 Z"),
+        (MuscleGroup.Abs, "M 43 61.5 L 49 61.5 L 49 68.5 L 43 68.5 Z"),
+        (MuscleGroup.Abs, "M 43 70 L 49 70 L 49 77 L 43 77 Z"),
+        (MuscleGroup.Abs, "M 43 78.5 L 49 78.5 L 49 90 C 46 89 44 86 43 83 Z"),
+        (MuscleGroup.Abs, "M 35 50 C 38 53 41 55 42 58 L 42 82 C 39 84 37 86 36 88 C 35 80 35 70 34 60 Z"),
+        // Vastus lateralis, rectus femoris, vastus medialis
+        (MuscleGroup.Quads, "M 33.5 103 C 31.5 116 32 132 35.5 147 C 37.5 145 38.5 140 38.5 132 C 38.5 121 37.5 110 35.5 101 Z"),
+        (MuscleGroup.Quads, "M 39.5 100 C 43 104 45.5 114 45.5 124 C 45.5 132 43.5 140 41.5 145 C 40 139 39.5 130 39.5 120 C 39.5 112 39 105 39.5 100 Z"),
+        (MuscleGroup.Quads, "M 47.5 121 C 49.5 128 50 138 47.5 147 C 44 148 42.5 146 43 141 C 44 134 45.5 127 47.5 121 Z"),
+        (MuscleGroup.Calves, "M 34.5 151 C 32.5 158 33 168 36 180 C 38.5 176 39.5 166 39.5 155 C 38 152 36 151 34.5 151 Z"),
+        (MuscleGroup.Calves, "M 42 152 C 46.5 154 48 164 46 178 C 43.5 174 42 164 42 152 Z"));
+
+    static readonly (MuscleGroup Muscle, PathF Path)[] Back = Shapes(
+        (MuscleGroup.Traps, "M 50 24 C 46 26 42 29 35 31 C 40 34 45 42 48 55 L 50 58 L 50 24 Z"),
+        // Teres / infraspinatus, then the lat
+        (MuscleGroup.Back, "M 36 34 C 40 35 44 38 46 44 C 42 44 38 42 35 40 Z"),
+        (MuscleGroup.Back, "M 34 40 C 38 42 44 46 48 56 L 48 62 C 45 66 41 72 38 78 C 36 70 34 60 33 48 Z"),
+        (MuscleGroup.LowerBack, "M 49.3 62 L 49.3 90 C 47 90 44.5 89 43 87 C 42.5 80 42.5 72 44.5 66 C 46 64 47.5 63 49.3 62 Z"),
+        (MuscleGroup.Triceps, "M 22 44 C 26 43 29.5 47 29.5 54 C 29.5 58 28.5 62 27 64 L 24.5 60 L 22 64 C 20 61 19 57 19.2 52 C 19.4 48 20 45 22 44 Z"),
+        (MuscleGroup.Glutes, "M 49.5 90 C 49.5 97 49.5 104 47 108.5 C 43 111 37 110 34 106 C 31.5 101 32 94 35 90 C 39 87 45 87.5 49.5 90 Z"),
+        // Biceps femoris, semitendinosus
+        (MuscleGroup.Hamstrings, "M 33.5 111 C 32 122 33.5 136 38 148 C 40 146 40.5 140 40.5 130 C 40.5 122 40 116 39.5 112 C 37.5 110.5 35.5 110.5 33.5 111 Z"),
+        (MuscleGroup.Hamstrings, "M 41.5 112 C 44 110.5 47 110.5 48.5 112.5 C 48.8 124 47.5 138 44 148 C 42.5 146 41.5 138 41.5 130 Z"),
+        // Gastrocnemius heads
+        (MuscleGroup.Calves, "M 35 151 C 32.5 158 33 168 37 178 C 39.5 174 40.5 164 40.5 152 Z"),
+        (MuscleGroup.Calves, "M 41.5 152 C 47 155 48 166 44.5 180 C 42 174 41.5 162 41.5 152 Z"));
+
+    static (MuscleGroup, PathF)[] Shapes(params (MuscleGroup Muscle, string Path)[] shapes) =>
+        shapes.Select(s => (s.Muscle, PathBuilder.Build(s.Path))).ToArray();
+
     void DrawFigure(ICanvas c, float x, float y, float s, bool front)
     {
         c.SaveState();
         c.Translate(x, y);
         c.Scale(s, s);
 
-        // Silhouette
         c.FillColor = Body;
-        c.FillCircle(50, 13, 10);
-        c.FillRoundedRectangle(45, 21, 10, 9, 3);
-        c.FillRoundedRectangle(30, 28, 40, 60, 12);
-        c.FillRoundedRectangle(33, 82, 34, 22, 9);
-        c.FillRoundedRectangle(17, 30, 12, 36, 6);
-        c.FillRoundedRectangle(71, 30, 12, 36, 6);
-        c.FillRoundedRectangle(13, 63, 11, 34, 5);
-        c.FillRoundedRectangle(76, 63, 11, 34, 5);
-        c.FillCircle(18.5f, 101, 4.5f);
-        c.FillCircle(81.5f, 101, 4.5f);
-        c.FillRoundedRectangle(33, 100, 16, 52, 8);
-        c.FillRoundedRectangle(51, 100, 16, 52, 8);
-        c.FillRoundedRectangle(34.5f, 150, 13, 42, 6);
-        c.FillRoundedRectangle(52.5f, 150, 13, 42, 6);
-        c.FillRoundedRectangle(33, 190, 15, 7, 3);
-        c.FillRoundedRectangle(52, 190, 15, 7, 3);
+        c.FillEllipse(41.5f, 2, 17, 20);
+        Mirrored(c, () => c.FillPath(Silhouette));
 
-        // Shared: shoulders and forearms
-        Mirror(c, MuscleGroup.Shoulders, (cx, fill) => Ellipse(c, fill, cx, 37, 7.5f, 7));
-        Mirror(c, MuscleGroup.Forearms, (cx, fill) => Ellipse(c, fill, cx, 78, 4.5f, 12), 18.5f);
-
-        if (front)
+        c.StrokeColor = Separator;
+        c.StrokeSize = 0.6f;
+        c.StrokeLineJoin = LineJoin.Round;
+        foreach (var (muscle, path) in Shared.Concat(front ? Front : Back))
         {
-            Poly(c, _fill(MuscleGroup.Traps), (40, 29), (46, 25), (54, 25), (60, 29), (50, 31));
-            Mirror(c, MuscleGroup.Chest, (cx, fill) => { c.FillColor = fill; c.FillRoundedRectangle(cx - 8, 34, 16, 16, 6); }, 41);
-            Mirror(c, MuscleGroup.Biceps, (cx, fill) => Ellipse(c, fill, cx, 50, 5, 11), 23);
-
-            c.FillColor = _fill(MuscleGroup.Abs);
-            c.FillRoundedRectangle(41, 52, 18, 32, 5);
-            c.StrokeColor = Separator;
-            c.StrokeSize = 1;
-            c.DrawLine(50, 53, 50, 83);
-            c.DrawLine(42, 62, 58, 62);
-            c.DrawLine(42, 72, 58, 72);
-
-            Mirror(c, MuscleGroup.Quads, (cx, fill) => Ellipse(c, fill, cx, 123, 7.5f, 21), 41);
-            Mirror(c, MuscleGroup.Calves, (cx, fill) => Ellipse(c, fill, cx, 168, 4.5f, 13), 41);
-        }
-        else
-        {
-            Poly(c, _fill(MuscleGroup.Traps), (39, 29), (50, 24), (61, 29), (56, 42), (50, 48), (44, 42));
-            var back = _fill(MuscleGroup.Back);
-            Poly(c, back, (32, 38), (43, 44), (48, 51), (48, 70), (38, 64), (33, 52));
-            Poly(c, back, (68, 38), (57, 44), (52, 51), (52, 70), (62, 64), (67, 52));
-            c.FillColor = _fill(MuscleGroup.LowerBack);
-            c.FillRoundedRectangle(42, 69, 16, 15, 5);
-            Mirror(c, MuscleGroup.Triceps, (cx, fill) => Ellipse(c, fill, cx, 50, 5, 11), 23);
-            Mirror(c, MuscleGroup.Glutes, (cx, fill) => Ellipse(c, fill, cx, 98, 8.5f, 9), 42);
-            Mirror(c, MuscleGroup.Hamstrings, (cx, fill) => Ellipse(c, fill, cx, 128, 7.5f, 18), 41);
-            Mirror(c, MuscleGroup.Calves, (cx, fill) => Ellipse(c, fill, cx, 166, 5.5f, 14), 41);
+            c.FillColor = _fill(muscle);
+            Mirrored(c, () =>
+            {
+                c.FillPath(path);
+                c.DrawPath(path);
+            });
         }
 
         c.RestoreState();
     }
 
-    /// <summary>Draws a left/right pair; <paramref name="leftX"/> is the left centre, mirrored around x = 50.</summary>
-    void Mirror(ICanvas c, MuscleGroup m, Action<float, Color> draw, float leftX = 27)
+    /// <summary>Draws once as given and once mirrored around x = 50.</summary>
+    static void Mirrored(ICanvas c, Action draw)
     {
-        var fill = _fill(m);
-        draw(leftX, fill);
-        draw(100 - leftX, fill);
-    }
-
-    static void Ellipse(ICanvas c, Color fill, float cx, float cy, float rx, float ry)
-    {
-        c.FillColor = fill;
-        c.FillEllipse(cx - rx, cy - ry, rx * 2, ry * 2);
-    }
-
-    static void Poly(ICanvas c, Color fill, params (float X, float Y)[] points)
-    {
-        var path = new PathF();
-        path.MoveTo(points[0].X, points[0].Y);
-        foreach (var p in points.Skip(1))
-            path.LineTo(p.X, p.Y);
-        path.Close();
-        c.FillColor = fill;
-        c.FillPath(path);
+        draw();
+        c.SaveState();
+        c.Translate(100, 0);
+        c.Scale(-1, 1);
+        draw();
+        c.RestoreState();
     }
 }

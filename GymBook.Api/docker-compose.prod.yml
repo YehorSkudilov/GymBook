@@ -8,9 +8,11 @@ services:
       context: ..
       dockerfile: GymBook.Api/Dockerfile
     restart: unless-stopped
-    # Plain HTTP, bound to localhost: a reverse proxy on the host terminates TLS in front of it.
+    # Plain HTTP; the reverse proxy terminates TLS in front of it. Bound to the Docker bridge gateway rather than
+    # localhost so a containerised proxy (Nginx Proxy Manager) can reach it at 172.17.0.1:API_PORT, while it
+    # stays off the public interface.
     ports:
-      - "127.0.0.1:${API_PORT:?API_PORT is not set}:8080"
+      - "172.17.0.1:${API_PORT:?API_PORT is not set}:8080"
     depends_on:
       db:
         condition: service_healthy
