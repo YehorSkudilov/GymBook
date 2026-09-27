@@ -26,6 +26,15 @@ public static class PlanGenerator
     static readonly string[] Calves = ["standing_calf_raise", "seated_calf_raise", "db_calf_raise", "bw_calf_raise"];
     static readonly string[] Abs = ["cable_crunch", "hanging_leg_raise", "ab_wheel", "leg_raise", "crunch"];
     static readonly string[] Traps = ["barbell_shrug", "db_shrug"];
+    // Neck: one direction per day, rotating through flexion, extension and side work.
+    static readonly string[] NeckFlexion = ["Lying_Face_Up_Plate_Neck_Resistance", "neck_machine", "band_neck_flexion", "Isometric_Neck_Exercise_-_Front_And_Back"];
+    static readonly string[] NeckExtension = ["Lying_Face_Down_Plate_Neck_Resistance", "Seated_Head_Harness_Neck_Resistance", "band_neck_extension", "Isometric_Neck_Exercise_-_Front_And_Back"];
+    static readonly string[] NeckSide = ["plate_lateral_neck_flexion", "neck_machine", "Isometric_Neck_Exercise_-_Sides"];
+    static readonly string[][] NeckSlots = [NeckFlexion, NeckExtension, NeckSide];
+    // Explosive work for combat and power sports, done first while fresh.
+    static readonly string[] ExplosiveLower = ["Front_Box_Jump", "Standing_Long_Jump", "kb_swing", "Knee_Tuck_Jump"];
+    static readonly string[] ExplosiveUpper = ["Medicine_Ball_Chest_Pass", "Plyo_Push-up", "Overhead_Slam"];
+    static readonly string[] PowerLift = ["Power_Clean", "Hang_Clean", "Push_Press", "kb_swing"];
 
     static readonly string[][] FullBody = [Squat, HorizontalPush, HorizontalPull, Hinge, VerticalPush, VerticalPull, SideDelt, Biceps, Triceps, Calves, Abs];
     static readonly string[][] Upper = [HorizontalPush, HorizontalPull, VerticalPush, VerticalPull, InclinePush, SideDelt, Biceps, Triceps, RearDelt];
@@ -47,12 +56,16 @@ public static class PlanGenerator
 
         var count = profile.SessionMinutes switch { <= 30 => 4, <= 45 => 5, <= 60 => 6, _ => 8 };
         var variants = new Dictionary<string, int>();
+        var neckDay = 0;
         foreach (var (name, template) in days)
         {
             var baseName = name.Split(' ')[0];
             var variant = variants.GetValueOrDefault(baseName);
             variants[baseName] = variant + 1;
-            plan.Workouts.Add(BuildWorkout(name, template, variant, count, profile));
+            var workout = BuildWorkout(name, WithPower(profile.Goal, template), variant, count, profile);
+            if (profile.TrainNeck)
+                AddNeck(workout, template, profile, ref neckDay);
+            plan.Workouts.Add(workout);
         }
         plan.RestDays = [.. PlanSchedule.DefaultRestDays(plan.Workouts.Count).Order()];
         return plan;
@@ -67,6 +80,32 @@ public static class PlanGenerator
         5 => ("Upper / Lower / PPL", [("Upper", Upper), ("Lower", Lower), ("Push", Push), ("Pull", Pull), ("Legs", Legs)]),
         _ => ("Push Pull Legs", [("Push A", Push), ("Pull A", Pull), ("Legs A", Legs), ("Push B", Push), ("Pull B", Pull), ("Legs B", Legs)]),
     };
+
+    /// <summary>Combat and power plans open each day with explosive work: jumps on leg days, throws on upper days, a power lift on full-body days.</summary>
+    static string[][] WithPower(Goal goal, string[][] template)
+    {
+        if (goal != Goal.Power)
+            return template;
+        string[] first = template == Lower || template == Legs ? ExplosiveLower : template == FullBody ? PowerLift : ExplosiveUpper;
+        return [first, .. template];
+    }
+
+    /// <summary>
+    /// Neck work on top of the day's exercises, so it's never squeezed out by the session length: one exercise on
+    /// upper-body and full-body days, and two on every day for combat and power sports.
+    /// </summary>
+    static void AddNeck(PlanWorkout workout, string[][] template, UserProfile profile, ref int day)
+    {
+        var count = profile.Goal == Goal.Power ? 2 : template == Lower || template == Legs ? 0 : 1;
+        for (var i = 0; i < count; i++)
+        {
+            var slot = NeckSlots[day++ % NeckSlots.Length];
+            var ex = slot.Select(ExerciseLibrary.Find).OfType<Exercise>()
+                .FirstOrDefault(e => profile.EquipmentAccess.Allows(e.Equipment) && workout.Exercises.All(x => x.ExerciseId != e.Id));
+            if (ex != null)
+                workout.Exercises.Add(Prescription(profile, ex));
+        }
+    }
 
     static PlanWorkout BuildWorkout(string name, string[][] template, int variant, int count, UserProfile profile)
     {
@@ -88,39 +127,5 @@ public static class PlanGenerator
     }
 
     /// <summary>Sets, rep range, RIR and rest for an exercise given the user's goal and experience.</summary>
-    public static PlanExercise Prescription(UserProfile profile, Exercise ex)
-    {
-        var compound = ex.Mechanic == Mechanic.Compound;
-        var (min, max) = (profile.Goal, compound) switch
-        {
-            (Goal.Strength, true) => (4, 6),
-            (Goal.Strength, false) => (8, 12),
-            (Goal.BuildMuscle, true) => (6, 10),
-            (Goal.BuildMuscle, false) => (10, 15),
-            (Goal.LoseFat, true) => (10, 15),
-            (Goal.LoseFat, false) => (12, 20),
-            (_, true) => (8, 12),
-            _ => (10, 15),
-        };
-        if (ex.IsBodyweight)
-            (min, max) = (Math.Max(min, 8), Math.Max(max, 15));
-
-        var rest = (profile.Goal, compound) switch
-        {
-            (Goal.Strength, true) => 180,
-            (Goal.Strength, false) => 90,
-            (Goal.LoseFat, _) => 60,
-            (_, true) => 120,
-            _ => 75,
-        };
-        return new PlanExercise
-        {
-            ExerciseId = ex.Id,
-            Sets = profile.Experience == Experience.Beginner ? 3 : compound ? 4 : 3,
-            RepMin = min,
-            RepMax = max,
-            TargetRir = profile.Experience switch { Experience.Beginner => 3, Experience.Intermediate => 2, _ => 1 },
-            RestSeconds = rest,
-        };
-    }
+    public static PlanExercise Prescription(UserProfile profile, Exercise ex) => TrainingGoals.Prescription(profile.Goal, profile.Experience, ex);
 }

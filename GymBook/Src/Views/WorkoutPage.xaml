@@ -59,6 +59,12 @@
                                     <Border IsVisible="{Binding HasRecommendation}" BackgroundColor="{StaticResource AccentSoft}" StrokeShape="RoundRectangle 10" Padding="10,8">
                                         <Label Text="{Binding Recommendation}" FontSize="13" TextColor="#BFD2FF" />
                                     </Border>
+                                    <!-- How to do the exercise for the goal. -->
+                                    <Label IsVisible="{Binding HasTip}" Text="{Binding Tip}" Style="{StaticResource Caption}" FontSize="13" Padding="2,0" />
+                                    <!-- After a set outside the rep range. -->
+                                    <Border IsVisible="{Binding HasLiveAdvice}" BackgroundColor="{StaticResource WarningSoft}" StrokeShape="RoundRectangle 10" Padding="10,8">
+                                        <Label Text="{Binding LiveAdvice}" FontSize="13" TextColor="{StaticResource Warning}" />
+                                    </Border>
 
                                     <!-- Column headers -->
                                     <Grid ColumnDefinitions="34,*,72,56,48,40" ColumnSpacing="6" Padding="2,0">

@@ -16,6 +16,7 @@ public static class MuscleColors
         MuscleGroup.Glutes => Microsoft.Maui.Graphics.Color.FromArgb("#FF8FAB"),
         MuscleGroup.Quads => Microsoft.Maui.Graphics.Color.FromArgb("#2ED47A"),
         MuscleGroup.Hamstrings => Microsoft.Maui.Graphics.Color.FromArgb("#56E39F"),
+        MuscleGroup.Neck => Microsoft.Maui.Graphics.Color.FromArgb("#F2994A"),
         _ => Microsoft.Maui.Graphics.Color.FromArgb("#7ED957"),
     };
 }

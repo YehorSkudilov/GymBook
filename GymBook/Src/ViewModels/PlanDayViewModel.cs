@@ -26,7 +26,7 @@ public class PlanDaySheetExercise
 /// A single day of a plan week, opened from Home: its exercises with their sets, and the action to start it,
 /// view it or mark the rest day finished.
 /// </summary>
-public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, Units units, ProgressionEngine progression)
+public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, Units units, ProgressionEngine progression, WorkoutEstimator estimator)
     : BaseViewModel, IQueryAttributable
 {
     string? _planId;
@@ -102,7 +102,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         else
         {
             Meta = $"{planned.Count} exercises · {planned.Sum(x => x.pe.Sets)} sets";
-            When = $"~{planned.Sum(x => x.pe.Sets * (45 + x.pe.RestSeconds)) / 60} min";
+            When = WorkoutEstimator.Format(estimator.Minutes(workout, plan.Goal));
             Exercises = planned.Select(x => Planned(x.pe, x.ex)).ToList();
             ActionText = $"▶  Start {workout.Name}";
             HasAction = true;

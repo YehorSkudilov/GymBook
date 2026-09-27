@@ -13,7 +13,9 @@ public partial class HomeViewModel(
     StatsService stats,
     Units units,
     DialogService dialogs,
-    SyncIndicator syncIndicator) : BaseViewModel
+    SyncIndicator syncIndicator,
+    WorkoutEstimator estimator,
+    ProgressionEngine progression) : BaseViewModel
 {
     public SyncIndicator Sync => syncIndicator;
 
@@ -37,6 +39,10 @@ public partial class HomeViewModel(
     [ObservableProperty] string planWeekDone = "";
     [ObservableProperty] string nextLabel = "UP NEXT";
     [ObservableProperty] List<PlanDayItem> planDays = [];
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasWelcomeBack))]
+    string welcomeBack = "";
+    public bool HasWelcomeBack => WelcomeBack.Length > 0;
 
     // The plan week picked from the week menu, for as long as that plan stays active; otherwise the current week.
     string? _chosenPlanId;
@@ -75,10 +81,10 @@ public partial class HomeViewModel(
 
             var exercises = next.Exercises.Select(e => (pe: e, ex: store.GetExercise(e.ExerciseId))).Where(x => x.ex != null).ToList();
             var sets = next.Exercises.Sum(e => e.Sets);
-            var minutes = next.Exercises.Sum(e => e.Sets * (45 + e.RestSeconds)) / 60;
+            var minutes = estimator.Minutes(next, plan.Goal);
             PlanName = plan.Name;
             NextWorkoutName = next.Name;
-            NextWorkoutMeta = $"{exercises.Count} exercises · {sets} sets\n~{minutes} min";
+            NextWorkoutMeta = $"{exercises.Count} exercises · {sets} sets\n{WorkoutEstimator.Format(minutes)}";
             NextWorkoutMuscles = string.Join(" · ", exercises.Select(x => x.ex!.PrimaryMuscle).Distinct().Select(m => m.Display()));
             NextThumbs = exercises.Take(5).Select(x => ExerciseThumb.For(x.ex!)).ToList();
             NextMore = exercises.Count > 5 ? $"+{exercises.Count - 5}" : "";
@@ -88,6 +94,10 @@ public partial class HomeViewModel(
             _next = null;
             PlanDays = [];
         }
+
+        WelcomeBack = progression.DaysAway() is { } away
+            ? $"It's been {away} days since your last workout. Your weights are set lighter for a safe return and build back up over the next few sessions."
+            : "";
 
         var rec = recovery.Compute(DateTime.Now);
         MuscleMap = MuscleMapDrawable.ForRecovery(rec);

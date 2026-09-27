@@ -136,9 +136,16 @@ public partial class ExercisePickerViewModel(DataStore store) : ExerciseListView
     public void Cancel() => Completed?.Invoke([]);
 }
 
-public partial class ExerciseDetailViewModel(DataStore store, StatsService stats, Units units, DialogService dialogs)
+public partial class ExerciseDetailViewModel(DataStore store, StatsService stats, Units units, DialogService dialogs, ProgressionEngine progression)
     : BaseViewModel, IQueryAttributable
 {
+    // Coaching for the active plan's goal (or the profile's)
+    [ObservableProperty] string goalTitle = "";
+    [ObservableProperty] string goalTarget = "";
+    [ObservableProperty] List<string> goalTips = [];
+    [ObservableProperty] string startingWeight = "";
+    [ObservableProperty] bool hasStartingWeight;
+
     string? _id;
 
     [ObservableProperty] string name = "";
@@ -201,6 +208,16 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
             .ToList();
         HasHistory = sessions.Count > 0;
         TimesPerformed = sessions.Count.ToString();
+
+        var goal = store.ActivePlan?.Goal ?? store.Profile.Goal;
+        var target = TrainingGoals.Prescription(goal, store.Profile.Experience, ex);
+        GoalTitle = $"For {goal.Display().ToLowerInvariant()}";
+        GoalTarget = $"{target.Sets} sets · min {target.RepMin}, max {target.RepMax} reps · {target.TargetRir} in reserve · rest {Units.Rest(target.RestSeconds)}";
+        GoalTips = TrainingGoals.Tips(goal, ex, target.RepMin, target.RepMax, target.RestSeconds);
+        // Before the first time: a starting weight estimated from the user's strength, age and build.
+        var (startKg, basis) = sessions.Count == 0 ? progression.StartingWeight(ex, target.RepMin, target.TargetRir) : (0, "");
+        StartingWeight = startKg > 0 ? $"Try {units.FormatWithUnit(startKg)} for your first sets, {basis}." : "";
+        HasStartingWeight = startKg > 0;
 
         var best = stats.BestFor(ex.Id);
         BestE1Rm = best == null || ex.IsBodyweight ? "—" : units.FormatWithUnit(best.E1RmKg);

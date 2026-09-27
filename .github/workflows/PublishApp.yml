@@ -34,6 +34,25 @@ on:
           - beta
           - production
 
+  # Lets Publish.yml call this as a reusable workflow instead of keeping its own copy
+  # of the version-bump/build/release jobs - see that file's publish-app job. Inputs
+  # are re-declared as plain strings since workflow_call doesn't support the `choice`
+  # type; Publish.yml's own workflow_dispatch still exposes the dropdown to the human
+  # and passes the chosen string straight through.
+  workflow_call:
+    inputs:
+      version_bump:
+        description: "Version bump"
+        required: true
+        type: string
+        default: x.x.1
+
+      release_channel:
+        description: "Google Play release channel"
+        required: true
+        type: string
+        default: internal
+
 jobs:
 
   # ==================================================

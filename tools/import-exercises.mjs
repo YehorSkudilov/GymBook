@@ -102,11 +102,11 @@ const CURATED = {
 const SKIP_CATEGORIES = new Set(["stretching", "cardio"]);
 const SKIP_EQUIPMENT = new Set(["foam roll"]);
 
-// Dataset muscles -> GymBook's MuscleGroup (which has no separate lats, adductors, abductors or neck).
+// Dataset muscles -> GymBook's MuscleGroup (which has no separate lats, adductors or abductors).
 const MUSCLES = {
   abdominals: "Abs", abductors: "Glutes", adductors: "Quads", biceps: "Biceps", calves: "Calves",
   chest: "Chest", forearms: "Forearms", glutes: "Glutes", hamstrings: "Hamstrings", lats: "Back",
-  "lower back": "LowerBack", "middle back": "Back", neck: "Traps", quadriceps: "Quads",
+  "lower back": "LowerBack", "middle back": "Back", neck: "Neck", quadriceps: "Quads",
   shoulders: "Shoulders", traps: "Traps", triceps: "Triceps",
 };
 

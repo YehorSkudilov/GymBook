@@ -88,7 +88,7 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs) : Ba
     }
 }
 
-public partial class PlanDetailViewModel(DataStore store, WorkoutService workouts, DialogService dialogs)
+public partial class PlanDetailViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, WorkoutEstimator estimator)
     : BaseViewModel, IQueryAttributable
 {
     string? _id;
@@ -161,7 +161,7 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
         var exercises = day?.Exercises.Select(pe => (pe, ex: store.GetExercise(pe.ExerciseId))).ToList() ?? [];
         DayMeta = day == null
             ? "Recovery day. Muscles grow between sessions."
-            : $"{exercises.Count} exercises · {exercises.Sum(x => x.pe.Sets)} sets";
+            : $"{exercises.Count} exercises · {exercises.Sum(x => x.pe.Sets)} sets · {WorkoutEstimator.Format(estimator.Minutes(day, plan.Goal))}";
         IsEmptyDay = day != null && exercises.Count == 0;
         DayMap = MuscleMapDrawable.ForWorkout(exercises.Select(x => x.ex).OfType<Exercise>());
         DayExercises = exercises.Select(x => new PlanDayExercise
@@ -324,15 +324,47 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
         await GoTo($"{Routes.PlanWorkout}?plan={plan.Id}&workout={w.Id}");
     }
 
+    /// <summary>
+    /// Switches the plan's goal and offers to re-apply it to every exercise, so rep ranges, sets, effort and rest
+    /// don't have to be set up one by one.
+    /// </summary>
+    async Task ChangeGoal(WorkoutPlan plan)
+    {
+        var labels = TrainingGoals.All.Select(g => g == plan.Goal ? $"{g.Display()} ✓" : g.Display()).ToList();
+        var pick = await dialogs.ActionSheet("Training goal", null, [.. labels]);
+        var index = pick == null ? -1 : labels.IndexOf(pick);
+        if (index < 0)
+            return;
+        var goal = TrainingGoals.All[index];
+        var apply = await dialogs.Confirm($"Use {goal.Display()} for every exercise?",
+            $"{goal.Description()}. This resets each exercise's rep range, sets, reps in reserve and rest to suit it.", "Apply to all", "Only change the goal");
+        plan.Goal = goal;
+        if (apply)
+        {
+            foreach (var pe in plan.Workouts.SelectMany(w => w.Exercises))
+            {
+                if (store.GetExercise(pe.ExerciseId) is not { } ex)
+                    continue;
+                var p = TrainingGoals.Prescription(goal, store.Profile.Experience, ex);
+                (pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir, pe.RestSeconds) = (p.Sets, p.RepMin, p.RepMax, p.TargetRir, p.RestSeconds);
+            }
+        }
+        store.Save();
+        await OnAppearingAsync();
+    }
+
     [RelayCommand]
     async Task More()
     {
         var plan = store.GetPlan(_id);
         if (plan == null)
             return;
-        var choice = await dialogs.ActionSheet(plan.Name, "Delete plan", "Rename plan", "Duplicate plan");
+        var choice = await dialogs.ActionSheet(plan.Name, "Delete plan", "Training goal", "Rename plan", "Duplicate plan");
         switch (choice)
         {
+            case "Training goal":
+                await ChangeGoal(plan);
+                break;
             case "Rename plan":
                 var name = await dialogs.Prompt("Rename plan", "Plan name", plan.Name);
                 if (!string.IsNullOrWhiteSpace(name))
@@ -425,7 +457,9 @@ public partial class PlanWorkoutEditViewModel(DataStore store, DialogService dia
             return;
         foreach (var ex in picked)
         {
-            var pe = PlanGenerator.Prescription(store.Profile, ex);
+            // Set up for the plan's goal straight away.
+            var goal = store.GetPlan(_planId)?.Goal ?? store.Profile.Goal;
+            var pe = TrainingGoals.Prescription(goal, store.Profile.Experience, ex);
             _workout.Exercises.Add(pe);
             Exercises.Add(new PlanExerciseItem(this, pe, ex));
         }

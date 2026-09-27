@@ -2,6 +2,9 @@ name: Publish API
 
 on:
   workflow_dispatch:
+  # Lets Publish.yml call this as a reusable workflow instead of keeping its own copy
+  # of the deploy script - see that file's deploy-api job.
+  workflow_call:
 
 jobs:
 

@@ -72,6 +72,29 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- How to train it for the goal -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding GoalTitle}" Style="{StaticResource H3}" />
+                        <Label Text="{Binding GoalTarget}" Style="{StaticResource Caption}" FontSize="13" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding GoalTips}" Spacing="8">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <Ellipse Fill="{StaticResource Accent}" WidthRequest="6" HeightRequest="6" VerticalOptions="Start" Margin="0,7,0,0" />
+                                    <Label Grid.Column="1" Text="{Binding .}" FontSize="14" LineHeight="1.3" TextColor="{StaticResource TextSecondary}" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                    <Border IsVisible="{Binding HasStartingWeight}" BackgroundColor="{StaticResource AccentSoft}" StrokeShape="RoundRectangle 10" Padding="10,8">
+                        <Label Text="{Binding StartingWeight}" FontSize="13" TextColor="#BFD2FF" />
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
             <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
                 <Border Style="{StaticResource Card}" Padding="12">
                     <VerticalStackLayout>

@@ -1,12 +1,13 @@
 namespace GymBook.Models;
 
-public enum MuscleGroup { Chest, Back, Traps, Shoulders, Biceps, Triceps, Forearms, Abs, LowerBack, Glutes, Quads, Hamstrings, Calves }
+// New values go at the end: they are stored as numbers.
+public enum MuscleGroup { Chest, Back, Traps, Shoulders, Biceps, Triceps, Forearms, Abs, LowerBack, Glutes, Quads, Hamstrings, Calves, Neck }
 
 public enum Equipment { Barbell, Dumbbell, Machine, Cable, Bodyweight, Kettlebell, EzBar, Band, Other }
 
 public enum Mechanic { Compound, Isolation }
 
-public enum Goal { BuildMuscle, Strength, LoseFat, GeneralFitness }
+public enum Goal { BuildMuscle, Strength, LoseFat, GeneralFitness, Power }
 
 public enum Experience { Beginner, Intermediate, Advanced }
 
@@ -30,17 +31,19 @@ public static class EnumDisplay
 
     public static string Display(this Goal g) => g switch
     {
-        Goal.BuildMuscle => "Build muscle",
-        Goal.Strength => "Get stronger",
+        Goal.BuildMuscle => "Bodybuilding",
+        Goal.Strength => "Strength",
         Goal.LoseFat => "Lose fat",
+        Goal.Power => "Combat & power sports",
         _ => "General fitness",
     };
 
     public static string Description(this Goal g) => g switch
     {
-        Goal.BuildMuscle => "Hypertrophy-focused volume in moderate rep ranges",
-        Goal.Strength => "Heavier compound lifts with lower reps and longer rest",
+        Goal.BuildMuscle => "Grow muscle: at least 10 reps on compounds and 12 on isolation work",
+        Goal.Strength => "Heavy compounds for 3–6 fast, clean reps, plus muscle endurance work",
         Goal.LoseFat => "Higher reps and shorter rest to keep intensity up",
+        Goal.Power => "Boxing, jiu-jitsu, MMA, wrestling: heavy lifts for 6 reps or fewer and explosive, fast reps",
         _ => "A balanced mix of strength and muscle work",
     };
 

@@ -108,7 +108,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             case Step.Goal:
                 Title = "What's your main goal?";
                 Subtitle = "This sets your rep ranges, rest times and exercise choice.";
-                AddOptions(Enum.GetValues<Goal>(), g => g.Display(), g => g.Description(), _goal);
+                AddOptions(TrainingGoals.All, g => g.Display(), g => g.Description(), _goal);
                 break;
             case Step.Experience:
                 Title = "How experienced are you?";

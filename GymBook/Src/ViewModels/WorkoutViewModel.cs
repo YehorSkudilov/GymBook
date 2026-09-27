@@ -36,6 +36,8 @@ public partial class WorkoutViewModel(
     internal Units Units => units;
     internal ProgressionEngine Engine => engine;
     internal DialogService Dialogs => dialogs;
+    /// <summary>The goal the exercises are coached for: the plan's, or the profile's for a workout outside a plan.</summary>
+    internal Goal Goal => store.GetPlan(_session?.PlanId)?.Goal ?? store.Profile.Goal;
 
     public override async Task OnAppearingAsync()
     {
@@ -266,6 +268,15 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     public string TargetText => $"{Model.RepMin}–{Model.RepMax} reps · {Model.TargetRir} RIR · rest {Units.Rest(Model.RestSeconds)}";
     public string Recommendation => Model.Recommendation ?? "";
     public bool HasRecommendation => !string.IsNullOrEmpty(Model.Recommendation);
+    /// <summary>The main coaching cue for this exercise and goal; the rest are on the exercise's page.</summary>
+    public string Tip => TrainingGoals.Tips(_parent.Goal, Exercise, Model.RepMin, Model.RepMax, Model.RestSeconds).FirstOrDefault() ?? "";
+    public bool HasTip => Tip.Length > 0;
+
+    /// <summary>Feedback on the last working set: under the minimum or over the maximum, and what the next set changed to.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLiveAdvice))]
+    string liveAdvice = "";
+    public bool HasLiveAdvice => LiveAdvice.Length > 0;
     public bool TrackRir => _parent.TrackRir;
     public string UnitLabel => _parent.UnitLabel;
 
@@ -298,6 +309,15 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             var next = Sets.SkipWhile(s => s != row).Skip(1).FirstOrDefault(s => !s.IsCompleted && s.Model.IsWarmup == row.Model.IsWarmup);
             if (next != null && next.Model.WeightKg <= 0 && row.Model.WeightKg > 0)
                 next.WeightText = row.WeightText;
+
+            // Out of the rep range: say so, and adjust the next set unless its weight was already changed by hand.
+            if (!row.Model.IsWarmup)
+            {
+                var advice = _parent.Engine.AfterSet(Exercise, row.Model, Model.RepMin, Model.RepMax, Model.TargetRir);
+                LiveAdvice = advice?.Advice ?? "";
+                if (advice?.NextKg is { } kg && next != null && Math.Abs(next.Model.WeightKg - row.Model.WeightKg) < 0.01)
+                    next.WeightText = Units.Format(kg);
+            }
         }
         _parent.OnSetToggled(this, row);
     }

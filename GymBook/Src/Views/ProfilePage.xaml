@@ -148,6 +148,28 @@
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
+                    <!-- Age, body fat and training history refine starting weights for new exercises. -->
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditAgeCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Age" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding AgeText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditBodyFatCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Body fat" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding BodyFatText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditTrainingSinceCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Training for" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding TrainingSinceText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}">
                         <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditRestCommand}" /></Grid.GestureRecognizers>
                         <Label Text="Default rest time" VerticalOptions="Center" />
@@ -177,6 +199,14 @@
                             <Label Text="Log reps in reserve for smarter progression" Style="{StaticResource Caption}" FontSize="12" />
                         </VerticalStackLayout>
                         <Switch Grid.Column="2" IsToggled="{Binding TrackRir}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}" Padding="16,6">
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Train neck" />
+                            <Label Text="Add neck exercises to new plans" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="2" IsToggled="{Binding TrainNeck}" />
                     </Grid>
                 </VerticalStackLayout>
             </Border>

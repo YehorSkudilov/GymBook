@@ -25,6 +25,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<DataStore>();
         builder.Services.AddSingleton<Units>();
         builder.Services.AddSingleton<ProgressionEngine>();
+        builder.Services.AddSingleton<WorkoutEstimator>();
         builder.Services.AddSingleton<RecoveryService>();
         builder.Services.AddSingleton<StatsService>();
         builder.Services.AddSingleton<WorkoutService>();

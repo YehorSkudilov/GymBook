@@ -31,6 +31,10 @@ public partial class ProfileViewModel(
     [ObservableProperty] bool autoRest;
     [ObservableProperty] bool warmups;
     [ObservableProperty] bool trackRir;
+    [ObservableProperty] bool trainNeck;
+    [ObservableProperty] string ageText = "";
+    [ObservableProperty] string bodyFatText = "";
+    [ObservableProperty] string trainingSinceText = "";
     [ObservableProperty] string version = "";
     [ObservableProperty] bool isSignedIn;
     [ObservableProperty] string accountEmail = "";
@@ -68,6 +72,10 @@ public partial class ProfileViewModel(
         Summary = count == 0 ? "No workouts logged yet" : $"{count} workouts since {since:MMM yyyy}";
         UnitText = P.Unit == WeightUnit.Kg ? "Kilograms" : "Pounds";
         BodyWeightText = units.FormatWithUnit(P.BodyWeightKg);
+        AgeText = P.BirthYear is { } year ? $"{DateTime.Now.Year - year}" : "Not set";
+        BodyFatText = P.BodyFatPercent is { } bf ? $"{bf:0.#}%" : "Not set";
+        TrainingSinceText = P.TrainingSince is { } started ? TrainingAge(started) : "Not set";
+        TrainNeck = P.TrainNeck;
         RestText = Units.Rest(P.DefaultRestSeconds);
         GoalText = P.Goal.Display();
         ExperienceText = P.Experience.Display();
@@ -84,6 +92,17 @@ public partial class ProfileViewModel(
     partial void OnAutoRestChanged(bool value) => Update(() => P.AutoRestTimer = value);
     partial void OnWarmupsChanged(bool value) => Update(() => P.WarmupSuggestions = value);
     partial void OnTrackRirChanged(bool value) => Update(() => P.TrackRir = value);
+    partial void OnTrainNeckChanged(bool value) => Update(() => P.TrainNeck = value);
+
+    // How long the user has trained, bucketed: they pick a range rather than remember a date.
+    static readonly (string Label, double Years)[] TrainingAges =
+        [("Just starting", 0), ("Under 6 months", 0.25), ("6–12 months", 0.75), ("1–2 years", 1.5), ("2–4 years", 3), ("4+ years", 5)];
+
+    static string TrainingAge(DateTime since)
+    {
+        var years = (DateTime.Now - since).TotalDays / 365;
+        return TrainingAges.LastOrDefault(t => years >= t.Years * 0.9).Label ?? TrainingAges[0].Label;
+    }
 
     void Update(Action change)
     {
@@ -136,7 +155,36 @@ public partial class ProfileViewModel(
     Task EditRest() => Pick("Default rest time", [45, 60, 90, 120, 150, 180, 240, 300], s => Units.Rest(s), s => P.DefaultRestSeconds = s);
 
     [RelayCommand]
-    Task EditGoal() => Pick("Goal", Enum.GetValues<Goal>(), g => g.Display(), g => P.Goal = g);
+    async Task EditAge()
+    {
+        var current = P.BirthYear is { } year ? $"{DateTime.Now.Year - year}" : "";
+        var value = await dialogs.Prompt("Age", "Used to estimate starting weights for new exercises", current, Keyboard.Numeric);
+        if (value == null)
+            return;
+        P.BirthYear = int.TryParse(value, out var age) && age is >= 10 and <= 100 ? DateTime.Now.Year - age : null;
+        store.Save();
+        Refresh();
+    }
+
+    [RelayCommand]
+    async Task EditBodyFat()
+    {
+        var value = await dialogs.Prompt("Body fat", "Your body fat percentage, if you know it. Leave empty to skip.",
+            P.BodyFatPercent?.ToString("0.#") ?? "", Keyboard.Numeric);
+        if (value == null)
+            return;
+        P.BodyFatPercent = double.TryParse(value.Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var bf)
+            && bf is >= 3 and <= 60 ? bf : null;
+        store.Save();
+        Refresh();
+    }
+
+    [RelayCommand]
+    Task EditTrainingSince() => Pick("How long have you been training?", TrainingAges, t => t.Label,
+        t => P.TrainingSince = DateTime.Today.AddDays(-t.Years * 365));
+
+    [RelayCommand]
+    Task EditGoal() => Pick("Goal", TrainingGoals.All, g => g.Display(), g => P.Goal = g);
 
     [RelayCommand]
     Task EditExperience() => Pick("Experience", Enum.GetValues<Experience>(), e => e.Display(), e => P.Experience = e);

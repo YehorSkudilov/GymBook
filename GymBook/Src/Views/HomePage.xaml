@@ -32,6 +32,14 @@
                 </Border>
             </Grid>
 
+            <!-- Back after a break: weights are scaled down automatically. -->
+            <Border IsVisible="{Binding HasWelcomeBack}" Style="{StaticResource Card}" BackgroundColor="{StaticResource AccentSoft}" Padding="16,14">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Welcome back" Style="{StaticResource H3}" TextColor="{StaticResource Accent}" />
+                    <Label Text="{Binding WelcomeBack}" FontSize="13" TextColor="#BFD2FF" />
+                </VerticalStackLayout>
+            </Border>
+
             <!-- Week strip -->
             <Border Style="{StaticResource Card}" Padding="12,14">
                 <Border.GestureRecognizers>

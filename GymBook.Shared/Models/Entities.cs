@@ -156,6 +156,15 @@ public class UserProfile
     public EquipmentAccess EquipmentAccess { get; set; } = EquipmentAccess.FullGym;
     public WeightUnit Unit { get; set; } = WeightUnit.Kg;
     public double BodyWeightKg { get; set; } = 75;
+    // Optional, used to estimate strength for exercises the user hasn't done yet.
+    [Range(1900, 2100)]
+    public int? BirthYear { get; set; }
+    [Range(3, 60)]
+    public double? BodyFatPercent { get; set; }
+    /// <summary>When the user started training consistently.</summary>
+    public DateTime? TrainingSince { get; set; }
+    /// <summary>Whether generated plans include neck work.</summary>
+    public bool TrainNeck { get; set; } = true;
     public int DefaultRestSeconds { get; set; } = 120;
     public bool AutoRestTimer { get; set; } = true;
     public bool WarmupSuggestions { get; set; } = true;
