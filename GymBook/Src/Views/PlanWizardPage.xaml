@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton"
     x:DataType="vm:PlanWizardViewModel"
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False">
@@ -106,7 +107,7 @@
                     <Border IsVisible="{Binding HasQuestionsError}" BackgroundColor="{StaticResource DangerSoft}" StrokeShape="RoundRectangle 16"
                             StrokeThickness="0" Padding="16,12">
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="{Binding QuestionsError}" TextColor="{StaticResource Danger}" FontSize="14" />
+                            <skeleton:CLabel Text="{Binding QuestionsError}" TextColor="{StaticResource Danger}" FontSize="14" />
                             <Button Text="Try again" Style="{StaticResource GhostButton}" HorizontalOptions="Start" Padding="0,4"
                                     Command="{Binding RetryQuestionsCommand}" />
                         </VerticalStackLayout>
@@ -136,9 +137,10 @@
                     </VerticalStackLayout>
                     <VerticalStackLayout Spacing="8">
                         <Label Text="Anything else the AI should know?" FontFamily="OpenSansSemibold" FontSize="16" />
-                        <Border Style="{StaticResource InputBox}" Padding="12,4">
+                        <!-- A few rows to start with (the minimum is on the box, which the editor fills), growing as they type -->
+                        <Border Style="{StaticResource InputBox}" Padding="12,6" MinimumHeightRequest="130">
                             <Editor Text="{Binding ExtraNote}" Placeholder="e.g. a bad left shoulder, training for a marathon, love deadlifts" AutoSize="TextChanges"
-                                    MinimumHeightRequest="80" MaxLength="500" />
+                                    VerticalOptions="Fill" MinimumHeightRequest="118" MaxLength="500" />
                         </Border>
                     </VerticalStackLayout>
                 </VerticalStackLayout>
