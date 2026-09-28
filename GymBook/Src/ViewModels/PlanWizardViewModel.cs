@@ -45,7 +45,9 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     [ObservableProperty] bool isWelcome;
     [ObservableProperty] bool isAbout;
     [ObservableProperty] bool isOptions;
-    [ObservableProperty] bool isQuestions;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowQuestions))]
+    bool isQuestions;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowPlan), nameof(CanRegenerate), nameof(CanChat))]
     bool isResult;

@@ -137,10 +137,10 @@
                     </VerticalStackLayout>
                     <VerticalStackLayout Spacing="8">
                         <Label Text="Anything else the AI should know?" FontFamily="OpenSansSemibold" FontSize="16" />
-                        <!-- A few rows to start with (the minimum is on the box, which the editor fills), growing as they type -->
-                        <Border Style="{StaticResource InputBox}" Padding="12,6" MinimumHeightRequest="130">
-                            <Editor Text="{Binding ExtraNote}" Placeholder="e.g. a bad left shoulder, training for a marathon, love deadlifts" AutoSize="TextChanges"
-                                    VerticalOptions="Fill" MinimumHeightRequest="118" MaxLength="500" />
+                        <!-- A few rows to start with, growing as they type (HeightRequest -1 clears InputBox's fixed height) -->
+                        <Border Style="{StaticResource InputBox}" Padding="12,6" MinimumHeightRequest="130" HeightRequest="-1">
+                            <Editor Text="{Binding ExtraNote}" Placeholder="e.g. a bad left shoulder, training for a marathon, love deadlifts"
+                                    AutoSize="TextChanges" MinimumHeightRequest="118" MaxLength="500" />
                         </Border>
                     </VerticalStackLayout>
                 </VerticalStackLayout>

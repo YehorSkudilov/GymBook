@@ -27,10 +27,10 @@
                     <!-- Text -->
                     <VerticalStackLayout Spacing="8">
                         <Label Text="PASTE THE PLAN" Style="{StaticResource Overline}" />
-                        <!-- A few rows to start with (the minimum is on the box, which the editor fills), growing as the plan is typed or pasted -->
-                        <Border Style="{StaticResource InputBox}" Padding="12,6" MinimumHeightRequest="150">
+                        <!-- A few rows to start with, growing as the plan is typed or pasted (HeightRequest -1 clears InputBox's fixed height) -->
+                        <Border Style="{StaticResource InputBox}" Padding="12,6" MinimumHeightRequest="150" HeightRequest="-1">
                             <Editor Text="{Binding Text}" Placeholder="Day 1 - Push&#10;Bench press 4x6-8&#10;Overhead press 3x8-10&#10;…"
-                                    AutoSize="TextChanges" VerticalOptions="Fill" MinimumHeightRequest="138" MaxLength="20000" />
+                                    AutoSize="TextChanges" MinimumHeightRequest="138" MaxLength="20000" />
                         </Border>
                     </VerticalStackLayout>
 

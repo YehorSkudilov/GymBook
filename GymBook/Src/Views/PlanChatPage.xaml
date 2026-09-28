@@ -72,7 +72,7 @@
             <!-- Compose -->
             <VerticalStackLayout Grid.Row="3" Padding="16,6,16,16" Spacing="6">
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <Border Style="{StaticResource InputBox}" Padding="12,2">
+                    <Border Style="{StaticResource InputBox}" Padding="12,2" HeightRequest="-1" MinimumHeightRequest="48">
                         <Editor Text="{Binding Draft}" Placeholder="Ask for a change…" AutoSize="TextChanges" MaximumHeightRequest="120" MaxLength="2000" />
                     </Border>
                     <Border Grid.Column="1" WidthRequest="48" HeightRequest="48" StrokeShape="RoundRectangle 24" StrokeThickness="0"
