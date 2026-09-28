@@ -74,7 +74,7 @@ public static class PrivacyPolicy
         <p>Your account data is kept while your account exists. You can delete your account at any time in the app
         (Profile tab &rarr; Delete account); this permanently deletes your account and all data synced to it from our server.
         Signing out removes your data from that device. Data kept only on your device is deleted when you uninstall the app.</p>
-        <p>You can also export your data from the app at any time.</p>
+        <p>You can also <a href="/delete-account">request deletion without the app</a>, and export your data from the app at any time.</p>
 
         <h2>Children</h2>
         <p>GymBook is not directed at children under 13, and we don't knowingly collect data from them.</p>
