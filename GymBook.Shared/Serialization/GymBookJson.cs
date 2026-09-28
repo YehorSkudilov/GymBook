@@ -43,6 +43,7 @@ public static class GymBookJson
 [JsonSerializable(typeof(ApiProblem))]
 [JsonSerializable(typeof(GeneratePlanRequest))]
 [JsonSerializable(typeof(GeneratePlanResponse))]
+[JsonSerializable(typeof(PlanQuotaResponse))]
 [JsonSerializable(typeof(WorkoutSession))]
 [JsonSerializable(typeof(WorkoutPlan))]
 [JsonSerializable(typeof(Exercise))]

@@ -51,6 +51,19 @@ public class GeneratePlanResponse
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public List<GeneratedWorkout> Workouts { get; set; } = [];
+    /// <summary>What's left after this one.</summary>
+    public PlanQuotaResponse? Quota { get; set; }
+}
+
+/// <summary>How many AI plans the user may still generate.</summary>
+public class PlanQuotaResponse
+{
+    public int Limit { get; set; }
+    public int Remaining { get; set; }
+    /// <summary>The window the limit applies to, e.g. "day" or "30 days".</summary>
+    public string Period { get; set; } = "";
+    /// <summary>When the oldest generation in the window expires, freeing up another; null when none are used.</summary>
+    public DateTimeOffset? NextAvailableAt { get; set; }
 }
 
 public class GeneratedWorkout

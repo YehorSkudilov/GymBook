@@ -76,8 +76,6 @@ builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
 var authPerMinute = builder.Configuration.GetValue("RateLimiting:AuthPerMinute", 10);
-var planLimit = builder.Configuration.GetValue("RateLimiting:PlanGenerationsLimit", 10);
-var planWindow = RateLimits.ParseWindow(builder.Configuration["RateLimiting:PlanGenerationsWindow"] ?? "1h");
 builder.Services.AddRateLimiter(o =>
 {
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -87,10 +85,6 @@ builder.Services.AddRateLimiter(o =>
     o.AddPolicy(RateLimits.Sync, ctx => RateLimitPartition.GetTokenBucketLimiter(
         ctx.User.FindFirst("sub")?.Value ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new TokenBucketRateLimiterOptions { TokenLimit = 30, TokensPerPeriod = 30, ReplenishmentPeriod = TimeSpan.FromMinutes(1) }));
-    // Each AI plan is a paid OpenAI call: PlanGenerationsLimit per user per PlanGenerationsWindow (e.g. 2 per 1d, 5 per 30d).
-    o.AddPolicy(RateLimits.PlanGeneration, ctx => RateLimitPartition.GetFixedWindowLimiter(
-        ctx.User.FindFirst("sub")?.Value ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-        _ => new FixedWindowRateLimiterOptions { PermitLimit = planLimit, Window = planWindow }));
 });
 
 builder.Services.AddScoped<TokenService>();
@@ -102,6 +96,12 @@ builder.Services.AddHttpClient<OpenAiPlanGenerator>(c =>
     c.BaseAddress = new Uri(openAi.BaseUrl);
     c.Timeout = TimeSpan.FromSeconds(openAi.TimeoutSeconds);
 });
+// Each AI plan is a paid OpenAI call: PlanGenerationsLimit per user in any PlanGenerationsWindow (e.g. 2 per 1d, 5 per 30d),
+// counted in the database so it survives restarts.
+builder.Services.AddSingleton(PlanQuota.Parse(
+    builder.Configuration.GetValue("RateLimiting:PlanGenerationsLimit", 10),
+    builder.Configuration["RateLimiting:PlanGenerationsWindow"] ?? "1h"));
+builder.Services.AddScoped<PlanQuota>();
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers(o =>
     {
@@ -153,23 +153,5 @@ namespace GymBook.Api
     {
         public const string Auth = "auth";
         public const string Sync = "sync";
-        public const string PlanGeneration = "plan-generation";
-
-        /// <summary>A window like "90m", "12h", "1d" or "30d" (minutes, hours, days, weeks with "w").</summary>
-        public static TimeSpan ParseWindow(string value)
-        {
-            var text = value.Trim().ToLowerInvariant();
-            if (text.Length >= 2 && double.TryParse(text[..^1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var n) && n > 0)
-            {
-                switch (text[^1])
-                {
-                    case 'm': return TimeSpan.FromMinutes(n);
-                    case 'h': return TimeSpan.FromHours(n);
-                    case 'd': return TimeSpan.FromDays(n);
-                    case 'w': return TimeSpan.FromDays(n * 7);
-                }
-            }
-            throw new InvalidOperationException($"Rate limit window \"{value}\" isn't valid; use e.g. 90m, 12h, 1d or 30d.");
-        }
     }
 }
