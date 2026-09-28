@@ -10,7 +10,7 @@
     Shell.TabBarIsVisible="False">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="More" IconImageSource="ic_more.png" Command="{Binding MoreCommand}" />
+        <ToolbarItem Text="More" IconImageSource="{StaticResource IconMore}" Command="{Binding MoreCommand}" />
     </ContentPage.ToolbarItems>
 
     <ScrollView>
@@ -31,9 +31,9 @@
                                         <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" />
                                         <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="12" />
                                     </VerticalStackLayout>
-                                    <ImageButton Grid.Column="1" Source="ic_arrow_up.png" WidthRequest="32" HeightRequest="32" Padding="6" BackgroundColor="Transparent" Command="{Binding MoveUpCommand}" />
-                                    <ImageButton Grid.Column="2" Source="ic_arrow_down.png" WidthRequest="32" HeightRequest="32" Padding="6" BackgroundColor="Transparent" Command="{Binding MoveDownCommand}" />
-                                    <ImageButton Grid.Column="3" Source="ic_trash.png" WidthRequest="32" HeightRequest="32" Padding="6" BackgroundColor="Transparent" Command="{Binding RemoveCommand}" />
+                                    <ImageButton Grid.Column="1" Source="{StaticResource IconArrowUp}" WidthRequest="32" HeightRequest="32" Padding="6" BackgroundColor="Transparent" Command="{Binding MoveUpCommand}" />
+                                    <ImageButton Grid.Column="2" Source="{StaticResource IconArrowDown}" WidthRequest="32" HeightRequest="32" Padding="6" BackgroundColor="Transparent" Command="{Binding MoveDownCommand}" />
+                                    <ImageButton Grid.Column="3" Source="{StaticResource IconTrash}" WidthRequest="32" HeightRequest="32" Padding="6" BackgroundColor="Transparent" Command="{Binding RemoveCommand}" />
                                 </Grid>
 
                                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">

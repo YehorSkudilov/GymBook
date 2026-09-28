@@ -10,7 +10,7 @@
     Shell.TabBarIsVisible="False">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="More" IconImageSource="ic_more.png" Command="{Binding MoreCommand}" />
+        <ToolbarItem Text="More" IconImageSource="{StaticResource IconMore}" Command="{Binding MoreCommand}" />
     </ContentPage.ToolbarItems>
 
     <Grid RowDefinitions="*,Auto">
@@ -63,7 +63,7 @@
                         <HorizontalStackLayout Spacing="10">
                             <Label Text="{Binding DayName}" Style="{StaticResource Title}" FontSize="28" VerticalOptions="Center"
                                    MaximumWidthRequest="200" LineBreakMode="TailTruncation" />
-                            <ImageButton Source="ic_more.png" WidthRequest="40" HeightRequest="32" Padding="8,4"
+                            <ImageButton Source="{StaticResource IconMore}" WidthRequest="40" HeightRequest="32" Padding="8,4"
                                          BackgroundColor="{StaticResource Surface2}" CornerRadius="16" VerticalOptions="Center"
                                          Command="{Binding DayOptionsCommand}" />
                         </HorizontalStackLayout>
@@ -88,7 +88,7 @@
                         </Border.GestureRecognizers>
                         <Grid>
                             <GraphicsView Drawable="{Binding DayMap}" WidthRequest="116" HeightRequest="116" InputTransparent="True" />
-                            <Image Source="ic_chevron_right.png" WidthRequest="12" HeightRequest="12" HorizontalOptions="End"
+                            <Image Source="{StaticResource IconChevronRight}" WidthRequest="12" HeightRequest="12" HorizontalOptions="End"
                                    VerticalOptions="End" Opacity="0.7" />
                         </Grid>
                     </Border>

@@ -25,7 +25,7 @@
                             <HorizontalStackLayout Spacing="10">
                                 <Label Text="{Binding DayName}" Style="{StaticResource Title}" FontSize="32" VerticalOptions="Center"
                                        MaximumWidthRequest="200" LineBreakMode="TailTruncation" />
-                                <ImageButton Source="ic_more.png" WidthRequest="44" HeightRequest="34" Padding="10,5"
+                                <ImageButton Source="{StaticResource IconMore}" WidthRequest="44" HeightRequest="34" Padding="10,5"
                                              BackgroundColor="{StaticResource Surface2}" CornerRadius="17" VerticalOptions="Center"
                                              Command="{Binding OptionsCommand}" />
                             </HorizontalStackLayout>
@@ -70,7 +70,7 @@
                                                     <Border IsVisible="{Binding IsDone}" WidthRequest="26" HeightRequest="26" StrokeShape="RoundRectangle 13"
                                                             StrokeThickness="0" BackgroundColor="{StaticResource Accent}" Padding="4"
                                                             HorizontalOptions="End" VerticalOptions="End" Margin="0,0,-4,-4">
-                                                        <Image Source="ic_check.png" />
+                                                        <Image Source="{StaticResource IconCheck}" />
                                                     </Border>
                                                 </Grid>
                                                 <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">

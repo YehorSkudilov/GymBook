@@ -214,6 +214,10 @@ public partial class ProfileViewModel(
     [RelayCommand]
     Task OpenSyncDetails() => GoTo(Routes.SyncDetails);
 
+    /// <summary>The same public page the store listing links to, served by the API.</summary>
+    [RelayCommand]
+    Task OpenPrivacy() => Browser.Default.OpenAsync(new Uri(ApiConfig.BaseAddress, "privacy"), BrowserLaunchMode.SystemPreferred);
+
     [RelayCommand]
     Task SignIn() => AccountPage.ShowAsync(services);
 

@@ -123,6 +123,8 @@ app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
+// Public, login-free privacy policy for the store listing and the app.
+app.MapGet("/privacy", GymBook.Api.Privacy.PrivacyPolicy.Page).AllowAnonymous().DisableRateLimiting();
 
 app.Run();
 

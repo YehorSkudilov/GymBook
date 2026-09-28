@@ -32,10 +32,10 @@
                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6" Padding="4,0">
                         <Label Text="This week" Style="{StaticResource H3}" />
                         <HorizontalStackLayout Grid.Column="1" Spacing="4">
-                            <Image Source="ic_flame.png" WidthRequest="16" HeightRequest="16" />
+                            <Image Source="{StaticResource IconFlame}" WidthRequest="16" HeightRequest="16" />
                             <Label Text="{Binding Streak}" Style="{StaticResource Caption}" VerticalOptions="Center" />
                         </HorizontalStackLayout>
-                        <Image Grid.Column="2" Source="ic_chevron_right.png" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
+                        <Image Grid.Column="2" Source="{StaticResource IconChevronRight}" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
                     </Grid>
                     <FlexLayout BindableLayout.ItemsSource="{Binding WeekDays}" JustifyContent="SpaceAround">
                         <BindableLayout.ItemTemplate>
@@ -125,7 +125,7 @@
                             <TapGestureRecognizer Command="{Binding ChooseWeekCommand}" />
                         </Label.GestureRecognizers>
                     </Label>
-                    <ImageButton Grid.Column="2" Source="ic_more.png" WidthRequest="36" HeightRequest="30" Padding="6,3"
+                    <ImageButton Grid.Column="2" Source="{StaticResource IconMore}" WidthRequest="36" HeightRequest="30" Padding="6,3"
                                  BackgroundColor="{StaticResource Surface2}" CornerRadius="15" VerticalOptions="Center"
                                  Command="{Binding PlanOptionsCommand}" />
                 </Grid>

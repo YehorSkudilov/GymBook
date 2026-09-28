@@ -36,7 +36,7 @@
                     <VerticalStackLayout>
                         <HorizontalStackLayout Spacing="6">
                             <Label Text="{Binding Streak}" Style="{StaticResource StatValue}" />
-                            <Image Source="ic_flame.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                            <Image Source="{StaticResource IconFlame}" WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
                         </HorizontalStackLayout>
                         <Label Text="Week streak" Style="{StaticResource Caption}" />
                     </VerticalStackLayout>
@@ -94,7 +94,7 @@
             <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="10">
                     <HorizontalStackLayout Spacing="8">
-                        <Image Source="ic_trophy.png" WidthRequest="20" HeightRequest="20" />
+                        <Image Source="{StaticResource IconTrophy}" WidthRequest="20" HeightRequest="20" />
                         <Label Text="Personal records" Style="{StaticResource H3}" />
                     </HorizontalStackLayout>
                     <Label Text="Best estimated one-rep max per exercise." Style="{StaticResource Caption}" FontSize="12" />

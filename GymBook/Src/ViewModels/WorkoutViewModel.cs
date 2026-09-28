@@ -599,7 +599,7 @@ public partial class SetRowViewModel : ObservableObject
     public string RirDisplay => string.IsNullOrWhiteSpace(RirText) ? "–" : RirText;
     public string E1Rm => _parent.E1RmText(Model);
     public Color CheckBackground => IsCompleted ? Color.FromArgb("#2ED47A") : Color.FromArgb("#272C39");
-    public string CheckIcon => IsCompleted ? "ic_check.png" : "ic_check_muted.png";
+    public ImageSource CheckIcon => (ImageSource)Application.Current!.Resources[IsCompleted ? "IconCheck" : "IconCheckMuted"];
     public Color LabelColor => Model.IsWarmup ? Color.FromArgb("#FFB020") : Color.FromArgb("#9AA3B5");
     // Done sets stand out in green; the ones still to do are dimmed.
     public Color ValueColor => IsCompleted ? Color.FromArgb("#2ED47A") : Color.FromArgb("#9AA3B5");

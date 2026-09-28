@@ -27,14 +27,14 @@ public partial class ExerciseRow : ContentView
                 WidthRequest = 28,
                 HeightRequest = 28,
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 14 },
-                Content = new Image { Source = "ic_check.png", WidthRequest = 16, HeightRequest = 16 },
+                Content = new Image { Source = (ImageSource)Application.Current!.Resources["IconCheck"], WidthRequest = 16, HeightRequest = 16 },
             };
             check.SetBinding(BackgroundColorProperty, nameof(ViewModels.ExerciseItem.CheckBackground));
             Accessory.Content = check;
         }
         else
         {
-            Accessory.Content = new Image { Source = "ic_chevron_right.png", WidthRequest = 18, HeightRequest = 18 };
+            Accessory.Content = new Image { Source = (ImageSource)Application.Current!.Resources["IconChevronRight"], WidthRequest = 18, HeightRequest = 18 };
         }
     }
 }

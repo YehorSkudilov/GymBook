@@ -60,7 +60,7 @@
                     VerticalOptions="Center" />
                 <Image
                     HeightRequest="14"
-                    Source="ic_chevron_right.png"
+                    Source="{StaticResource IconChevronRight}"
                     VerticalOptions="Center"
                     WidthRequest="14" />
             </HorizontalStackLayout>

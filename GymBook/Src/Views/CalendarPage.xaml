@@ -24,14 +24,14 @@
                 </Border.GestureRecognizers>
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                        <ImageButton Source="ic_chevron_right.png" Rotation="180" WidthRequest="36" HeightRequest="36" Padding="9"
+                        <ImageButton Source="{StaticResource IconChevronRight}" Rotation="180" WidthRequest="36" HeightRequest="36" Padding="9"
                                      BackgroundColor="{StaticResource Surface2}" CornerRadius="18"
                                      Command="{Binding PreviousMonthCommand}" />
                         <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center">
                             <Label Text="{Binding MonthTitle}" Style="{StaticResource H3}" HorizontalOptions="Center" />
                             <Label Text="{Binding MonthSummary}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
                         </VerticalStackLayout>
-                        <ImageButton Grid.Column="2" Source="ic_chevron_right.png" WidthRequest="36" HeightRequest="36" Padding="9"
+                        <ImageButton Grid.Column="2" Source="{StaticResource IconChevronRight}" WidthRequest="36" HeightRequest="36" Padding="9"
                                      BackgroundColor="{StaticResource Surface2}" CornerRadius="18"
                                      Command="{Binding NextMonthCommand}" IsVisible="{Binding CanGoNext}" />
                     </Grid>
@@ -84,7 +84,7 @@
                     </VerticalStackLayout>
                     <VerticalStackLayout Grid.Column="2">
                         <HorizontalStackLayout Spacing="4">
-                            <Image Source="ic_flame.png" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
+                            <Image Source="{StaticResource IconFlame}" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
                             <Label Text="{Binding Streak}" Style="{StaticResource StatValue}" FontSize="18" />
                         </HorizontalStackLayout>
                         <Label Text="Streak" Style="{StaticResource Caption}" FontSize="12" />

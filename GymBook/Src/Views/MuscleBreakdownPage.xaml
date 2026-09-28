@@ -29,7 +29,7 @@
                             <Label Text="{Binding Title}" Style="{StaticResource H2}" LineBreakMode="TailTruncation" />
                             <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="12" />
                         </VerticalStackLayout>
-                        <ImageButton Grid.Column="1" Source="ic_close.png" WidthRequest="34" HeightRequest="34" Padding="8"
+                        <ImageButton Grid.Column="1" Source="{StaticResource IconClose}" WidthRequest="34" HeightRequest="34" Padding="8"
                                      BackgroundColor="{StaticResource Surface2}" CornerRadius="17" VerticalOptions="Start"
                                      Command="{Binding CloseCommand}" />
                     </Grid>
