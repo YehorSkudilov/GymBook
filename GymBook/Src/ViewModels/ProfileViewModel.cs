@@ -22,7 +22,9 @@ public partial class ProfileViewModel(
     [ObservableProperty] string summary = "";
     [ObservableProperty] string unitText = "";
     [ObservableProperty] string bodyWeightText = "";
-    [ObservableProperty] string restText = "";
+    [ObservableProperty] string compoundRestText = "";
+    [ObservableProperty] string isolationRestText = "";
+    [ObservableProperty] string warmupRestText = "";
     [ObservableProperty] string goalText = "";
     [ObservableProperty] string experienceText = "";
     [ObservableProperty] string daysText = "";
@@ -83,7 +85,9 @@ public partial class ProfileViewModel(
         BodyFatText = P.BodyFatPercent is { } bf ? $"{bf:0.#}%" : "Not set";
         TrainingSinceText = P.TrainingSince is { } started ? TrainingAge(started) : "Not set";
         TrainNeck = P.TrainNeck;
-        RestText = Units.Rest(P.DefaultRestSeconds);
+        CompoundRestText = RestLabel(P.CompoundRestSeconds);
+        IsolationRestText = RestLabel(P.IsolationRestSeconds);
+        WarmupRestText = Units.Rest(P.WarmupRestSeconds);
         GoalText = P.Goal.Display();
         ExperienceText = P.Experience.Display();
         DaysText = $"{P.DaysPerWeek} days";
@@ -158,8 +162,53 @@ public partial class ProfileViewModel(
         Refresh();
     }
 
+    static readonly int[] RestTimes = [30, 45, 60, 75, 90, 120, 150, 180, 240, 300];
+
+    static string RestLabel(int? seconds) => seconds is { } s ? Units.Rest(s) : "By goal";
+
     [RelayCommand]
-    Task EditRest() => Pick("Default rest time", [45, 60, 90, 120, 150, 180, 240, 300], s => Units.Rest(s), s => P.DefaultRestSeconds = s);
+    Task EditCompoundRest() => EditRest("Compound exercises", Mechanic.Compound, s => P.CompoundRestSeconds = s);
+
+    [RelayCommand]
+    Task EditIsolationRest() => EditRest("Isolation exercises", Mechanic.Isolation, s => P.IsolationRestSeconds = s);
+
+    [RelayCommand]
+    Task EditWarmupRest() => Pick("Rest after warm-up sets", RestTimes, s => Units.Rest(s), s => P.WarmupRestSeconds = s);
+
+    /// <summary>Picks the rest for one kind of exercise, then offers to use it in the plans and the workout in progress.</summary>
+    async Task EditRest(string title, Mechanic mechanic, Action<int?> apply)
+    {
+        List<int?> values = [null, .. RestTimes.Select(s => (int?)s)];
+        var labels = values.Select(RestLabel).ToList();
+        var index = labels.IndexOf(await dialogs.ActionSheet($"Rest for {title.ToLowerInvariant()}", null, [.. labels]) ?? "");
+        if (index < 0)
+            return;
+        apply(values[index]);
+
+        // Everything already set up with a rest time: plan exercises, and the workout in progress.
+        var affected = new List<(Goal Goal, Exercise Exercise, Action<int> Update)>();
+        void Add(Goal goal, string exerciseId, Action<int> update)
+        {
+            if (store.GetExercise(exerciseId) is { } ex && ex.Mechanic == mechanic)
+                affected.Add((goal, ex, update));
+        }
+        foreach (var plan in store.Data.Plans)
+            foreach (var pe in plan.Workouts.SelectMany(w => w.Exercises))
+                Add(plan.Goal, pe.ExerciseId, s => pe.RestSeconds = s);
+        if (store.Data.ActiveSession is { } session)
+            foreach (var se in session.Exercises)
+                Add(store.GetPlan(session.PlanId)?.Goal ?? P.Goal, se.ExerciseId, s => se.RestSeconds = s);
+
+        if (affected.Count > 0 && await dialogs.Confirm("Update your plans?",
+                $"Use this rest for the {title.ToLowerInvariant()} already in your plans and the workout in progress. Otherwise it applies to exercises you add from now on.",
+                "Update", "Only new exercises"))
+        {
+            foreach (var (goal, ex, update) in affected)
+                update(TrainingGoals.Prescription(goal, P.Experience, ex, P).RestSeconds);
+        }
+        store.Save();
+        Refresh();
+    }
 
     [RelayCommand]
     async Task EditAge()

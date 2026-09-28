@@ -127,5 +127,5 @@ public static class PlanGenerator
     }
 
     /// <summary>Sets, rep range, RIR and rest for an exercise given the user's goal and experience.</summary>
-    public static PlanExercise Prescription(UserProfile profile, Exercise ex) => TrainingGoals.Prescription(profile.Goal, profile.Experience, ex);
+    public static PlanExercise Prescription(UserProfile profile, Exercise ex) => TrainingGoals.Prescription(profile.Goal, profile.Experience, ex, profile);
 }

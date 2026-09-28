@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<views:BasePage
+<views:SheetPage
     x:Class="GymBook.Views.PlanDayPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:PlanDayViewModel"
-    Shell.PresentationMode="ModalAnimated"
+    Shell.PresentationMode="ModalNotAnimated"
     Shell.NavBarIsVisible="False"
-    BackgroundColor="#B3000000">
+    Backdrop="#B3000000">
 
     <!-- A sheet over the dimmed Home page, showing one day of the plan week. -->
     <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
@@ -124,4 +124,4 @@
                     Margin="16,8,16,16" IsVisible="{Binding HasAction}" Command="{Binding DayActionCommand}" />
         </Grid>
     </Border>
-</views:BasePage>
+</views:SheetPage>

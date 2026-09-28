@@ -345,7 +345,7 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
             {
                 if (store.GetExercise(pe.ExerciseId) is not { } ex)
                     continue;
-                var p = TrainingGoals.Prescription(goal, store.Profile.Experience, ex);
+                var p = TrainingGoals.Prescription(goal, store.Profile.Experience, ex, store.Profile);
                 (pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir, pe.RestSeconds) = (p.Sets, p.RepMin, p.RepMax, p.TargetRir, p.RestSeconds);
             }
         }
@@ -459,7 +459,7 @@ public partial class PlanWorkoutEditViewModel(DataStore store, DialogService dia
         {
             // Set up for the plan's goal straight away.
             var goal = store.GetPlan(_planId)?.Goal ?? store.Profile.Goal;
-            var pe = TrainingGoals.Prescription(goal, store.Profile.Experience, ex);
+            var pe = TrainingGoals.Prescription(goal, store.Profile.Experience, ex, store.Profile);
             _workout.Exercises.Add(pe);
             Exercises.Add(new PlanExerciseItem(this, pe, ex));
         }

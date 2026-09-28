@@ -18,6 +18,8 @@ public class SessionExpiredException() : Exception("Your session has expired. Pl
 /// <summary>Typed calls to the GymBook API. Renews the access token transparently.</summary>
 public class ApiClient(HttpClient http, AuthSession session)
 {
+    static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30), PlanGenerationTimeout = TimeSpan.FromSeconds(120);
+
     readonly SemaphoreSlim _refreshGate = new(1, 1);
 
     /// <summary>Raised when the refresh token is rejected and the session was cleared.</summary>
@@ -47,29 +49,33 @@ public class ApiClient(HttpClient http, AuthSession session)
     public Task<SyncResponse> SyncAsync(SyncRequest request, CancellationToken ct = default) =>
         SendAuthorizedAsync<SyncRequest, SyncResponse>("api/sync", request, ct);
 
+    /// <summary>An AI-made plan for the wizard's answers. Signed-in users only; it can take the model a minute.</summary>
+    public Task<GeneratePlanResponse> GeneratePlanAsync(GeneratePlanRequest request, CancellationToken ct = default) =>
+        SendAuthorizedAsync<GeneratePlanRequest, GeneratePlanResponse>("api/plans/generate", request, ct, PlanGenerationTimeout);
+
     public async Task DeleteAccountAsync(string password, CancellationToken ct = default)
     {
         using var response = await SendWithTokenAsync("api/account/delete", new DeleteAccountRequest { Password = password }, ct);
         await EnsureSuccessAsync(response);
     }
 
-    async Task<TResponse> SendAuthorizedAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken ct)
+    async Task<TResponse> SendAuthorizedAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken ct, TimeSpan? timeout = null)
     {
-        using var response = await SendWithTokenAsync(path, body, ct);
+        using var response = await SendWithTokenAsync(path, body, ct, timeout);
         return await ReadAsync<TResponse>(response);
     }
 
-    async Task<HttpResponseMessage> SendWithTokenAsync<TRequest>(string path, TRequest body, CancellationToken ct)
+    async Task<HttpResponseMessage> SendWithTokenAsync<TRequest>(string path, TRequest body, CancellationToken ct, TimeSpan? timeout = null)
     {
         var token = await GetAccessTokenAsync(forceRefresh: false, ct);
-        var response = await PostAsync(path, body, token, ct);
+        var response = await PostAsync(path, body, token, ct, timeout);
         if (response.StatusCode != HttpStatusCode.Unauthorized)
             return response;
 
         // The access token was rejected (expired early, revoked, account gone): renew once and retry.
         response.Dispose();
         token = await GetAccessTokenAsync(forceRefresh: true, ct);
-        response = await PostAsync(path, body, token, ct);
+        response = await PostAsync(path, body, token, ct, timeout);
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
             response.Dispose();
@@ -114,12 +120,16 @@ public class ApiClient(HttpClient http, AuthSession session)
         return await ReadAsync<TResponse>(response);
     }
 
-    Task<HttpResponseMessage> PostAsync<TRequest>(string path, TRequest body, string? token, CancellationToken ct)
+    // Each call has its own timeout (the HttpClient's is only the upper bound). The response body is buffered before
+    // SendAsync returns, so it can still be read after the timeout is disposed.
+    async Task<HttpResponseMessage> PostAsync<TRequest>(string path, TRequest body, string? token, CancellationToken ct, TimeSpan? timeout = null)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body, TypeInfo<TRequest>()) };
         if (token != null)
             request.Headers.Authorization = new("Bearer", token);
-        return http.SendAsync(request, ct);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        cts.CancelAfter(timeout ?? DefaultTimeout);
+        return await http.SendAsync(request, cts.Token);
     }
 
     static async Task<T> ReadAsync<T>(HttpResponseMessage response)

@@ -21,7 +21,8 @@ public static class TrainingGoals
     /// <summary>Isometric holds count each rep as a hold of a few seconds.</summary>
     public static bool IsIsometric(Exercise ex) => ex.Name.Contains("Isometric", StringComparison.OrdinalIgnoreCase);
 
-    public static PlanExercise Prescription(Goal goal, Experience experience, Exercise ex)
+    /// <summary>Sets, reps, effort and rest for <paramref name="ex"/> under <paramref name="goal"/>; the rest times set in <paramref name="profile"/>, if any, replace the goal's.</summary>
+    public static PlanExercise Prescription(Goal goal, Experience experience, Exercise ex, UserProfile? profile = null)
     {
         var compound = ex.Mechanic == Mechanic.Compound;
         var explosive = IsExplosive(ex);
@@ -72,8 +73,15 @@ public static class TrainingGoals
             rest = 60;
         }
 
+        if (RestOverride(profile, ex) is { } own)
+            rest = own;
+
         return new PlanExercise { ExerciseId = ex.Id, Sets = sets, RepMin = min, RepMax = max, TargetRir = rir, RestSeconds = rest };
     }
+
+    /// <summary>The rest the user set for exercises like <paramref name="ex"/>, or null to rest as the goal suggests.</summary>
+    public static int? RestOverride(UserProfile? profile, Exercise ex) =>
+        ex.Mechanic == Mechanic.Compound ? profile?.CompoundRestSeconds : profile?.IsolationRestSeconds;
 
     /// <summary>Roughly how long one rep takes, including the lowering.</summary>
     public static double SecondsPerRep(Goal goal, Exercise? ex)

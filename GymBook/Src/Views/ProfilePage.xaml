@@ -183,9 +183,29 @@
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditRestCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Default rest time" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="{Binding RestText}" Style="{StaticResource RowValue}" />
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditCompoundRestCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Rest: compound" />
+                            <Label Text="Squats, presses, rows and other multi-joint lifts" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="{Binding CompoundRestText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditIsolationRestCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Rest: isolation" />
+                            <Label Text="Curls, raises, extensions and other single-joint moves" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="{Binding IsolationRestText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditWarmupRestCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Rest: warm-up sets" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="{Binding WarmupRestText}" Style="{StaticResource RowValue}" />
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:SheetPage
+    x:Class="GymBook.Views.WorkoutMenuPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:WorkoutMenuViewModel"
+    Shell.PresentationMode="ModalNotAnimated"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
+
+    <ContentPage.Resources>
+        <Style x:Key="MenuRow" TargetType="Grid">
+            <Setter Property="ColumnDefinitions" Value="32,*,Auto" />
+            <Setter Property="ColumnSpacing" Value="16" />
+            <Setter Property="Padding" Value="18,0" />
+            <Setter Property="MinimumHeightRequest" Value="58" />
+        </Style>
+        <Style x:Key="MenuIcon" TargetType="Image">
+            <Setter Property="WidthRequest" Value="26" />
+            <Setter Property="HeightRequest" Value="26" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="MenuLabel" TargetType="Label">
+            <Setter Property="Grid.Column" Value="1" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="MenuValue" TargetType="Label">
+            <Setter Property="Grid.Column" Value="2" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="MenuCard" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Surface2}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 22" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="Padding" Value="0,6" />
+        </Style>
+    </ContentPage.Resources>
+
+    <!-- A sheet over the workout: name, timing, finish or discard, and the logging settings. Changes apply as they're made. -->
+    <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
+        <Grid RowDefinitions="Auto,*">
+            <Button Text="Done" Style="{StaticResource GhostButton}" FontSize="17" HorizontalOptions="Start" Margin="12,8,8,0"
+                    Command="{Binding CloseCommand}" />
+
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Padding="20,4,20,24" Spacing="14">
+
+                    <!-- Name; the pencil renames it -->
+                    <HorizontalStackLayout Spacing="12" Margin="0,8,0,6">
+                        <Label Text="{Binding Name}" Style="{StaticResource Title}" FontSize="32" VerticalOptions="Center"
+                               MaximumWidthRequest="280" LineBreakMode="TailTruncation" />
+                        <Border WidthRequest="38" HeightRequest="38" StrokeShape="RoundRectangle 19" StrokeThickness="0"
+                                BackgroundColor="{StaticResource Accent}" VerticalOptions="Center">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding RenameCommand}" />
+                            </Border.GestureRecognizers>
+                            <Image WidthRequest="20" HeightRequest="20">
+                                <Image.Source>
+                                    <FontImageSource FontFamily="OutlinedIcons" Glyph="edit" Color="White" Size="32" />
+                                </Image.Source>
+                            </Image>
+                        </Border>
+                    </HorizontalStackLayout>
+
+                    <!-- Timing -->
+                    <Border Style="{StaticResource MenuCard}">
+                        <VerticalStackLayout>
+                            <Grid Style="{StaticResource MenuRow}">
+                                <Image Style="{StaticResource MenuIcon}">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="event_note" Color="{StaticResource TextSecondary}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="Start" Style="{StaticResource MenuLabel}" />
+                                <Label Text="{Binding StartText}" Style="{StaticResource MenuValue}" />
+                            </Grid>
+                            <Grid Style="{StaticResource MenuRow}">
+                                <Image Style="{StaticResource MenuIcon}">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="hourglass_empty" Color="{StaticResource TextSecondary}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="Duration" Style="{StaticResource MenuLabel}" />
+                                <Label Text="{Binding DurationText}" Style="{StaticResource MenuValue}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Finish or throw away -->
+                    <Border Style="{StaticResource MenuCard}">
+                        <VerticalStackLayout>
+                            <Grid Style="{StaticResource MenuRow}">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding CompleteCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Image Style="{StaticResource MenuIcon}">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="military_tech" Color="{StaticResource Accent}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="Complete" Style="{StaticResource MenuLabel}" TextColor="{StaticResource Accent}" />
+                            </Grid>
+                            <Grid Style="{StaticResource MenuRow}">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding DiscardCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Image Style="{StaticResource MenuIcon}">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="delete" Color="{StaticResource Danger}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="Discard" Style="{StaticResource MenuLabel}" TextColor="{StaticResource Danger}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Logging settings, the same as on the Profile page -->
+                    <Label Text="Settings" Style="{StaticResource Title}" FontSize="26" Margin="0,14,0,0" />
+                    <Border Style="{StaticResource MenuCard}">
+                        <VerticalStackLayout>
+                            <Grid Style="{StaticResource MenuRow}">
+                                <Image Style="{StaticResource MenuIcon}">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="local_fire_department" Color="{StaticResource TextSecondary}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="Track RIR" Style="{StaticResource MenuLabel}" />
+                                <Switch Grid.Column="2" IsToggled="{Binding TrackRir}" VerticalOptions="Center" />
+                            </Grid>
+                            <Grid Style="{StaticResource MenuRow}">
+                                <Image Style="{StaticResource MenuIcon}">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="timer" Color="{StaticResource TextSecondary}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="Auto-start rest timer" Style="{StaticResource MenuLabel}" />
+                                <Switch Grid.Column="2" IsToggled="{Binding AutoRest}" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+    </Border>
+</views:SheetPage>

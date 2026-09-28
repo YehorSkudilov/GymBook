@@ -14,7 +14,7 @@ public class JwtOptions
     public string Issuer { get; set; } = "";
     public string Audience { get; set; } = "";
 
-    /// <summary>HMAC-SHA256 key. Comes from user-secrets / environment, never from appsettings.json.</summary>
+    /// <summary>HMAC-SHA256 key, from Jwt__SigningKey in .env.</summary>
     public string SigningKey { get; set; } = "";
 
     public int AccessTokenMinutes { get; set; } = 15;

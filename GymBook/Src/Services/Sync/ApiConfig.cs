@@ -24,6 +24,6 @@ public static class ApiConfig
         handler.ServerCertificateCustomValidationCallback = (request, _, _, errors) =>
             errors == SslPolicyErrors.None || request.RequestUri?.Host is "localhost" or "10.0.2.2";
 #endif
-        return new HttpClient(handler) { BaseAddress = BaseAddress, Timeout = TimeSpan.FromSeconds(30) };
+        return new HttpClient(handler) { BaseAddress = BaseAddress, Timeout = TimeSpan.FromSeconds(150) };
     }
 }

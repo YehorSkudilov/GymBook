@@ -22,6 +22,7 @@
                 </VerticalStackLayout>
             </Border>
 
+            <Label Text="OTHER PLANS" Style="{StaticResource Overline}" IsVisible="{Binding HasOtherPlans}" />
             <Border Style="{StaticResource Card}" Padding="18">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Build a new plan" Style="{StaticResource H3}" />
@@ -30,8 +31,6 @@
                     <Button Text="Create empty plan" Style="{StaticResource SecondaryButton}" Command="{Binding CreateEmptyCommand}" />
                 </VerticalStackLayout>
             </Border>
-
-            <Label Text="OTHER PLANS" Style="{StaticResource Overline}" IsVisible="{Binding HasOtherPlans}" />
             <VerticalStackLayout BindableLayout.ItemsSource="{Binding OtherPlans}" Spacing="10">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="vm:PlanItem">

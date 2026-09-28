@@ -1,0 +1,101 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GymBook.Services;
+
+namespace GymBook.ViewModels;
+
+/// <summary>
+/// The ··· sheet of the workout in progress: its name, when it started and how long it has run, finishing or
+/// discarding it, and the logging settings. Every change is saved as it's made.
+/// </summary>
+public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs) : BaseViewModel, IQueryAttributable
+{
+    WorkoutViewModel? _workout;
+    IDispatcherTimer? _timer;
+    bool _loading;
+
+    [ObservableProperty] string name = "";
+    [ObservableProperty] string startText = "";
+    [ObservableProperty] string durationText = "";
+    [ObservableProperty] bool trackRir;
+    [ObservableProperty] bool autoRest;
+
+    public void ApplyQueryAttributes(IDictionary<string, object> query) => _workout = query.TryGetValue("workout", out var w) ? w as WorkoutViewModel : null;
+
+    public override async Task OnAppearingAsync()
+    {
+        if (_workout?.StartedAt is not { } started)
+        {
+            await GoBack();
+            return;
+        }
+        _loading = true;
+        Name = _workout.Name;
+        StartText = started.Date == DateTime.Today ? $"Today, {started:t}" : $"{started:ddd d MMM}, {started:t}";
+        TrackRir = store.Profile.TrackRir;
+        AutoRest = store.Profile.AutoRestTimer;
+        _loading = false;
+        Tick();
+
+        _timer ??= Application.Current!.Dispatcher.CreateTimer();
+        _timer.Interval = TimeSpan.FromSeconds(1);
+        _timer.Tick -= OnTick;
+        _timer.Tick += OnTick;
+        _timer.Start();
+    }
+
+    public override void OnDisappearing() => _timer?.Stop();
+
+    void OnTick(object? sender, EventArgs e) => Tick();
+
+    void Tick()
+    {
+        if (_workout?.StartedAt is { } started)
+            DurationText = Units.Clock(DateTime.Now - started);
+    }
+
+    partial void OnTrackRirChanged(bool value) => UpdateProfile(p => p.TrackRir = value);
+
+    partial void OnAutoRestChanged(bool value) => UpdateProfile(p => p.AutoRestTimer = value);
+
+    void UpdateProfile(Action<Models.UserProfile> change)
+    {
+        if (_loading || _workout == null)
+            return;
+        change(store.Profile);
+        store.Save();
+        _workout.RefreshSettings();
+    }
+
+    [RelayCommand]
+    async Task Rename()
+    {
+        var value = await dialogs.Prompt("Rename workout", "Workout name", Name);
+        if (string.IsNullOrWhiteSpace(value) || _workout == null)
+            return;
+        _workout.SetName(value);
+        Name = _workout.Name;
+    }
+
+    [RelayCommand]
+    Task Close() => GoBack();
+
+    /// <summary>Closes the sheet, then finishes the workout as the Finish button does.</summary>
+    [RelayCommand]
+    async Task Complete()
+    {
+        var workout = _workout;
+        await GoBack();
+        if (workout != null)
+            await workout.FinishCommand.ExecuteAsync(null);
+    }
+
+    [RelayCommand]
+    async Task Discard()
+    {
+        var workout = _workout;
+        await GoBack();
+        if (workout != null)
+            await workout.DiscardCommand.ExecuteAsync(null);
+    }
+}

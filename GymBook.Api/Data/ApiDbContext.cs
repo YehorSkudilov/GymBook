@@ -33,6 +33,14 @@ public class RefreshToken
     public DateTimeOffset? RevokedAt { get; set; }
 }
 
+/// <summary>One AI-generated plan, kept to enforce the per-user quota (see <see cref="Plans.PlanQuota"/>).</summary>
+public class PlanGeneration
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string UserId { get; set; } = "";
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
 /// <summary>
 /// Server database. User data reuses the shared records; ownership (<see cref="UserIdColumn"/>) and the
 /// sync stamp (<see cref="VersionColumn"/>) are shadow properties, so nothing a client sends can set them,
@@ -49,6 +57,7 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
     public DbSet<BodyWeightEntry> BodyWeights => Set<BodyWeightEntry>();
     public DbSet<UserProfile> Profiles => Set<UserProfile>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<PlanGeneration> PlanGenerations => Set<PlanGeneration>();
 
     /// <summary>Read by the query filters on every query; null (no signed-in user) matches nothing.</summary>
     string? CurrentUserId => currentUser.UserId;
@@ -83,6 +92,13 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
             b.HasIndex(t => t.TokenHash).IsUnique();
             b.HasIndex(t => t.FamilyId);
             b.HasOne<AppUser>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<PlanGeneration>(b =>
+        {
+            b.ToTable("plan_generations");
+            b.HasIndex(g => new { g.UserId, g.CreatedAt });
+            b.HasOne<AppUser>().WithMany().HasForeignKey(g => g.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 

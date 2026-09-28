@@ -210,7 +210,7 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         TimesPerformed = sessions.Count.ToString();
 
         var goal = store.ActivePlan?.Goal ?? store.Profile.Goal;
-        var target = TrainingGoals.Prescription(goal, store.Profile.Experience, ex);
+        var target = TrainingGoals.Prescription(goal, store.Profile.Experience, ex, store.Profile);
         GoalTitle = $"For {goal.Display().ToLowerInvariant()}";
         GoalTarget = $"{target.Sets} sets · min {target.RepMin}, max {target.RepMax} reps · {target.TargetRir} in reserve · rest {Units.Rest(target.RestSeconds)}";
         GoalTips = TrainingGoals.Tips(goal, ex, target.RepMin, target.RepMax, target.RestSeconds);

@@ -2,6 +2,7 @@ using System.Threading.RateLimiting;
 using GymBook.Api;
 using GymBook.Api.Auth;
 using GymBook.Api.Data;
+using GymBook.Api.Plans;
 using GymBook.Api.Swagger;
 using GymBook.Api.Sync;
 using GymBook.Serialization;
@@ -11,6 +12,10 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+
+// Settings from .env next to the project, the same file docker-compose uses (see .env.example). Must run before the
+// builder reads environment variables.
+DotEnv.Load(Path.Combine(Directory.GetCurrentDirectory(), ".env"));
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,6 +76,8 @@ builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
 var authPerMinute = builder.Configuration.GetValue("RateLimiting:AuthPerMinute", 10);
+var planLimit = builder.Configuration.GetValue("RateLimiting:PlanGenerationsLimit", 10);
+var planWindow = RateLimits.ParseWindow(builder.Configuration["RateLimiting:PlanGenerationsWindow"] ?? "1h");
 builder.Services.AddRateLimiter(o =>
 {
     o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -80,10 +87,21 @@ builder.Services.AddRateLimiter(o =>
     o.AddPolicy(RateLimits.Sync, ctx => RateLimitPartition.GetTokenBucketLimiter(
         ctx.User.FindFirst("sub")?.Value ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new TokenBucketRateLimiterOptions { TokenLimit = 30, TokensPerPeriod = 30, ReplenishmentPeriod = TimeSpan.FromMinutes(1) }));
+    // Each AI plan is a paid OpenAI call: PlanGenerationsLimit per user per PlanGenerationsWindow (e.g. 2 per 1d, 5 per 30d).
+    o.AddPolicy(RateLimits.PlanGeneration, ctx => RateLimitPartition.GetFixedWindowLimiter(
+        ctx.User.FindFirst("sub")?.Value ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions { PermitLimit = planLimit, Window = planWindow }));
 });
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<SyncProcessor>();
+var openAi = builder.Configuration.GetSection("OpenAI").Get<OpenAiOptions>() ?? new OpenAiOptions();
+builder.Services.AddSingleton(openAi);
+builder.Services.AddHttpClient<OpenAiPlanGenerator>(c =>
+{
+    c.BaseAddress = new Uri(openAi.BaseUrl);
+    c.Timeout = TimeSpan.FromSeconds(openAi.TimeoutSeconds);
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers(o =>
     {
@@ -103,7 +121,7 @@ foreach (var network in (app.Configuration["ReverseProxy:KnownNetworks"] ?? "").
     forwarded.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
 app.UseForwardedHeaders(forwarded);
 
-// Single-instance deployments apply pending migrations at startup (docker-compose.prod.yml turns this on).
+// Single-instance deployments apply pending migrations at startup (docker-compose.yml turns this on).
 if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 {
     using var scope = app.Services.CreateScope();
@@ -135,5 +153,23 @@ namespace GymBook.Api
     {
         public const string Auth = "auth";
         public const string Sync = "sync";
+        public const string PlanGeneration = "plan-generation";
+
+        /// <summary>A window like "90m", "12h", "1d" or "30d" (minutes, hours, days, weeks with "w").</summary>
+        public static TimeSpan ParseWindow(string value)
+        {
+            var text = value.Trim().ToLowerInvariant();
+            if (text.Length >= 2 && double.TryParse(text[..^1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var n) && n > 0)
+            {
+                switch (text[^1])
+                {
+                    case 'm': return TimeSpan.FromMinutes(n);
+                    case 'h': return TimeSpan.FromHours(n);
+                    case 'd': return TimeSpan.FromDays(n);
+                    case 'w': return TimeSpan.FromDays(n * 7);
+                }
+            }
+            throw new InvalidOperationException($"Rate limit window \"{value}\" isn't valid; use e.g. 90m, 12h, 1d or 30d.");
+        }
     }
 }

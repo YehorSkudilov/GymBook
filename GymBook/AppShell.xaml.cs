@@ -8,6 +8,7 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
         Routing.RegisterRoute(Routes.Workout, typeof(WorkoutPage));
+        Routing.RegisterRoute(Routes.WorkoutMenu, typeof(WorkoutMenuPage));
         Routing.RegisterRoute(Routes.Session, typeof(SessionDetailPage));
         Routing.RegisterRoute(Routes.History, typeof(HistoryPage));
         Routing.RegisterRoute(Routes.Calendar, typeof(CalendarPage));
@@ -24,6 +25,7 @@ public partial class AppShell : Shell
 public static class Routes
 {
     public const string Workout = "workout";
+    public const string WorkoutMenu = "workoutmenu";
     public const string Session = "session";
     public const string History = "history";
     public const string Calendar = "calendar";

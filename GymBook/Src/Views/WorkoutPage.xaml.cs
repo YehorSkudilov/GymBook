@@ -2,18 +2,19 @@ using GymBook.ViewModels;
 
 namespace GymBook.Views;
 
-public partial class WorkoutPage : BasePage
+public partial class WorkoutPage : SheetPage
 {
     public WorkoutPage(WorkoutViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
+        HorizontalMouseScroll.Attach(Strip);
         viewModel.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(WorkoutViewModel.CurrentIndex))
                 Dispatcher.Dispatch(() =>
                 {
-                    _ = ScrollStripTo(viewModel.CurrentIndex);
+                    ScrollStripTo(viewModel.CurrentIndex);
                     // Each exercise starts at its top.
                     _ = ExerciseScroll.ScrollToAsync(0, 0, false);
                 });
@@ -21,9 +22,9 @@ public partial class WorkoutPage : BasePage
     }
 
     // Keeps the current exercise's photo in view as you swipe through the workout.
-    async Task ScrollStripTo(int index)
+    void ScrollStripTo(int index)
     {
-        if (index >= 0 && index < StripItems.Children.Count && StripItems.Children[index] is Element item)
-            await Strip.ScrollToAsync(item, ScrollToPosition.Center, true);
+        if (BindingContext is WorkoutViewModel vm && index >= 0 && index < vm.Exercises.Count)
+            Strip.ScrollTo(index, position: ScrollToPosition.Center, animate: true);
     }
 }

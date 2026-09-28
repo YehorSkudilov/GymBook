@@ -165,7 +165,7 @@ public partial class WorkoutViewModel(
         var index = Exercises.IndexOf(exercise);
         _advanceTo = set.IsCompleted && exercise.IsDone && index == CurrentIndex && index + 1 < Exercises.Count ? index + 1 : null;
         if (set.IsCompleted && store.Profile.AutoRestTimer)
-            StartRest(set.Model.IsWarmup ? Math.Min(60, exercise.Model.RestSeconds) : exercise.Model.RestSeconds);
+            StartRest(set.Model.IsWarmup ? store.Profile.WarmupRestSeconds : exercise.Model.RestSeconds);
         else
             AdvanceIfPending();
     }
@@ -236,26 +236,30 @@ public partial class WorkoutViewModel(
     [RelayCommand]
     void StartRestNow()
     {
-        var rest = Exercises.ElementAtOrDefault(CurrentIndex)?.Model.RestSeconds ?? store.Profile.DefaultRestSeconds;
+        var rest = Exercises.ElementAtOrDefault(CurrentIndex)?.Model.RestSeconds ?? store.Profile.CompoundRestSeconds ?? 120;
         StartRest(rest);
     }
 
-    /// <summary>The ··· in the header: things that apply to the whole workout.</summary>
+    /// <summary>The ··· in the header: a sheet with the workout's name, timing, finishing it and the logging settings.</summary>
     [RelayCommand]
-    async Task WorkoutMenu()
+    Task WorkoutMenu() => GoTo(Routes.WorkoutMenu, new Dictionary<string, object> { ["workout"] = this });
+
+    internal DateTime? StartedAt => _session?.StartedAt;
+
+    internal void SetName(string value)
     {
-        switch (await dialogs.ActionSheet(Name, "Discard workout", "Add exercise", "Rename workout"))
-        {
-            case "Add exercise":
-                await AddExercise();
-                break;
-            case "Rename workout":
-                await Rename();
-                break;
-            case "Discard workout":
-                await Discard();
-                break;
-        }
+        if (_session == null || string.IsNullOrWhiteSpace(value))
+            return;
+        Name = _session.Name = value.Trim();
+        workouts.Save();
+    }
+
+    /// <summary>After the logging settings change: the RIR column comes and goes with them.</summary>
+    internal void RefreshSettings()
+    {
+        OnPropertyChanged(nameof(TrackRir));
+        foreach (var exercise in Exercises)
+            exercise.RefreshSettings();
     }
 
     [RelayCommand]
@@ -280,10 +284,8 @@ public partial class WorkoutViewModel(
     async Task Rename()
     {
         var value = await dialogs.Prompt("Rename workout", "Workout name", Name);
-        if (string.IsNullOrWhiteSpace(value) || _session == null)
-            return;
-        Name = _session.Name = value.Trim();
-        workouts.Save();
+        if (value != null)
+            SetName(value);
     }
 
     [RelayCommand]
@@ -372,6 +374,13 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     public bool TrackRir => _parent.TrackRir;
     public string UnitLabel => _parent.UnitLabel;
 
+    internal void RefreshSettings()
+    {
+        OnPropertyChanged(nameof(TrackRir));
+        foreach (var s in Sets)
+            s.RefreshSettings();
+    }
+
     /// <summary>The set table of the last session with this exercise.</summary>
     public string PreviousTitle { get; } = "";
     public List<PlanDaySetRow> PreviousRows { get; } = [];
@@ -394,6 +403,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(WarmupText))]
     bool showWarmups;
     public bool HasWarmups => Model.Sets.Any(s => s.IsWarmup);
+    public bool HasOpenWarmups => Model.Sets.Any(s => s.IsWarmup && !s.IsCompleted);
     public string WarmupText
     {
         get
@@ -435,6 +445,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         foreach (var s in Sets)
             s.Label = s.Model.IsWarmup ? "W" : (++n).ToString();
         OnPropertyChanged(nameof(HasWarmups));
+        OnPropertyChanged(nameof(HasOpenWarmups));
         OnPropertyChanged(nameof(WarmupText));
         foreach (var s in Sets)
             s.RefreshVisibility();
@@ -470,6 +481,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             if (row.Model.IsWarmup && Model.Sets.Where(s => s.IsWarmup).All(s => s.IsCompleted))
                 ShowWarmups = false;
         }
+        OnPropertyChanged(nameof(HasOpenWarmups));
         UpdateCurrent();
         _parent.OnSetToggled(this, row);
     }
@@ -477,7 +489,13 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     internal async Task SetMenu(SetRowViewModel row)
     {
         var toggle = row.Model.IsWarmup ? "Mark as working set" : "Mark as warm-up";
-        var choice = await _parent.Dialogs.ActionSheet($"Set {row.Label}", "Delete set", toggle);
+        string[] options = row.Model.IsWarmup && !row.IsCompleted ? ["Skip warm-up", toggle] : [toggle];
+        var choice = await _parent.Dialogs.ActionSheet($"Set {row.Label}", "Delete set", options);
+        if (choice == "Skip warm-up")
+        {
+            SkipWarmup(row);
+            return;
+        }
         if (choice == "Delete set")
         {
             Model.Sets.Remove(row.Model);
@@ -491,6 +509,29 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         {
             return;
         }
+        Renumber();
+        _parent.OnStructureChanged();
+    }
+
+    /// <summary>Drops a warm-up that won't be done; "Add warm-up sets" in the menu brings them back.</summary>
+    internal void SkipWarmup(SetRowViewModel row) => RemoveWarmups([row]);
+
+    /// <summary>Drops every warm-up still to do and goes straight to the working sets.</summary>
+    [RelayCommand]
+    void SkipWarmups() => RemoveWarmups(Sets.Where(s => s.Model.IsWarmup && !s.IsCompleted).ToList());
+
+    void RemoveWarmups(List<SetRowViewModel> rows)
+    {
+        if (rows.Count == 0)
+            return;
+        foreach (var row in rows)
+        {
+            Model.Sets.Remove(row.Model);
+            Sets.Remove(row);
+        }
+        // Whatever warm-ups are left are done: fold them away.
+        if (!HasOpenWarmups)
+            ShowWarmups = false;
         Renumber();
         _parent.OnStructureChanged();
     }
@@ -581,7 +622,7 @@ public partial class SetRowViewModel : ObservableObject
     public SetEntry Model { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(LabelColor))]
+    [NotifyPropertyChangedFor(nameof(LabelColor), nameof(ShowSkip), nameof(ShowE1Rm))]
     string label = "";
 
     [ObservableProperty]
@@ -597,17 +638,20 @@ public partial class SetRowViewModel : ObservableObject
     string rirText;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CheckBackground), nameof(CheckIcon), nameof(ValueColor), nameof(ShowDoneTick))]
+    [NotifyPropertyChangedFor(nameof(CheckBackground), nameof(CheckIcon), nameof(ValueColor), nameof(ShowDoneTick), nameof(ShowSkip), nameof(ShowE1Rm))]
     bool isCompleted;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsNotCurrent), nameof(ShowRirInput), nameof(ShowRirValue), nameof(ShowDoneTick), nameof(NumberOpacity))]
+    [NotifyPropertyChangedFor(nameof(IsNotCurrent), nameof(ShowRirInput), nameof(ShowRirValue), nameof(ShowDoneTick), nameof(NumberOpacity), nameof(ShowSkip), nameof(ShowE1Rm))]
     bool isCurrent;
     public bool IsNotCurrent => !IsCurrent;
     public bool ShowRirInput => IsCurrent && TrackRir;
     public bool ShowRirValue => !IsCurrent && TrackRir;
     public bool ShowDoneTick => !IsCurrent && IsCompleted;
     public double NumberOpacity => IsCurrent ? 1 : 0.6;
+    /// <summary>The warm-up being logged offers a skip in place of its E1RM, which warm-ups don't have.</summary>
+    public bool ShowSkip => IsCurrent && Model.IsWarmup && !IsCompleted;
+    public bool ShowE1Rm => !ShowSkip;
 
     [ObservableProperty] bool isVisible = true;
 
@@ -621,6 +665,13 @@ public partial class SetRowViewModel : ObservableObject
     // Done sets stand out in green; the ones still to do are dimmed.
     public Color ValueColor => IsCompleted ? Color.FromArgb("#2ED47A") : Color.FromArgb("#9AA3B5");
     public bool TrackRir => _parent.TrackRir;
+
+    internal void RefreshSettings()
+    {
+        OnPropertyChanged(nameof(TrackRir));
+        OnPropertyChanged(nameof(ShowRirInput));
+        OnPropertyChanged(nameof(ShowRirValue));
+    }
 
     internal void RefreshVisibility() => IsVisible = !Model.IsWarmup || _parent.ShowWarmups;
 
@@ -655,6 +706,9 @@ public partial class SetRowViewModel : ObservableObject
     /// <summary>Tapping a row other than the current one opens it for editing.</summary>
     [RelayCommand]
     void Edit() => _parent.UpdateCurrent(this);
+
+    [RelayCommand]
+    void Skip() => _parent.SkipWarmup(this);
 
     [RelayCommand]
     Task Menu() => _parent.SetMenu(this);

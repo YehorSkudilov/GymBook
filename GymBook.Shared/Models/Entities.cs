@@ -165,7 +165,14 @@ public class UserProfile
     public DateTime? TrainingSince { get; set; }
     /// <summary>Whether generated plans include neck work.</summary>
     public bool TrainNeck { get; set; } = true;
-    public int DefaultRestSeconds { get; set; } = 120;
+    /// <summary>Rest after a working set of a compound or an isolation exercise; null rests as the goal suggests.</summary>
+    [Range(15, 600)]
+    public int? CompoundRestSeconds { get; set; }
+    [Range(15, 600)]
+    public int? IsolationRestSeconds { get; set; }
+    /// <summary>Rest after a warm-up set.</summary>
+    [Range(15, 600)]
+    public int WarmupRestSeconds { get; set; } = 60;
     public bool AutoRestTimer { get; set; } = true;
     public bool WarmupSuggestions { get; set; } = true;
     public bool TrackRir { get; set; } = true;

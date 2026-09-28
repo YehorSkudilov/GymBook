@@ -2,9 +2,9 @@ using GymBook.ViewModels;
 
 namespace GymBook.Views;
 
-public partial class PlanDayPage : SheetPage
+public partial class WorkoutMenuPage : SheetPage
 {
-    public PlanDayPage(PlanDayViewModel viewModel)
+    public WorkoutMenuPage(WorkoutMenuViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;

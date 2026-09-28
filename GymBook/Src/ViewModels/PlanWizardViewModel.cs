@@ -8,13 +8,15 @@ using GymBook.Views;
 namespace GymBook.ViewModels;
 
 /// <summary>Step-by-step questionnaire used both for first-run onboarding and for generating new plans.</summary>
-public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, IServiceProvider services) : BaseViewModel
+public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, AiPlanService ai, IServiceProvider services) : BaseViewModel
 {
     enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, Result }
 
     List<Step> _steps = [];
     int _index;
     WorkoutPlan? _plan;
+    // Bumped on every step change, so a plan that arrives after the user went back is ignored.
+    int _buildRun;
 
     // Answers
     Goal _goal;
@@ -30,7 +32,9 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     [ObservableProperty] bool isWelcome;
     [ObservableProperty] bool isAbout;
     [ObservableProperty] bool isOptions;
-    [ObservableProperty] bool isResult;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPlan), nameof(CanRegenerate))]
+    bool isResult;
     [ObservableProperty] bool canGoBack;
     [ObservableProperty] string nextText = "Continue";
     [ObservableProperty] string userName = "";
@@ -38,6 +42,18 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     [ObservableProperty] string planName = "";
     [ObservableProperty] string planDescription = "";
     [ObservableProperty] List<WorkoutPreviewItem> planWorkouts = [];
+
+    /// <summary>Waiting for the AI to build the plan.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPlan), nameof(CanRegenerate))]
+    bool isGenerating;
+    public bool ShowPlan => IsResult && !IsGenerating;
+    public bool CanRegenerate => IsResult && !IsGenerating && ai.IsAvailable;
+    /// <summary>Where the plan came from: the AI, or the built-in generator and why.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPlanNote))]
+    string planNote = "";
+    public bool HasPlanNote => PlanNote.Length > 0;
 
     public ObservableCollection<OptionItem> Options { get; } = [];
     public ObservableCollection<ChipItem> UnitChips { get; } = [];
@@ -80,6 +96,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
 
     void Show()
     {
+        _buildRun++;
+        IsGenerating = false;
         var step = _steps[_index];
         Progress = (_index + 1.0) / _steps.Count;
         CanGoBack = _index > 0;
@@ -144,9 +162,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
                 AddOptions(Enum.GetValues<EquipmentAccess>(), e => e.Display(), e => e.Description(), _equipment);
                 break;
             case Step.Result:
-                BuildPlan();
-                Title = "Your plan is ready";
-                Subtitle = "You can edit every workout later. Weights and reps adapt automatically as you log.";
+                _ = BuildPlanAsync();
                 break;
         }
     }
@@ -171,17 +187,71 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         }
     }
 
-    void BuildPlan()
+    /// <summary>
+    /// The plan for the answers: made by AI when signed in, otherwise (or if that fails) by the built-in generator.
+    /// </summary>
+    async Task BuildPlanAsync()
     {
-        var profile = new UserProfile
+        var run = _buildRun;
+        var p = store.Profile;
+        var answers = new UserProfile
         {
             Goal = _goal,
             Experience = _experience,
             DaysPerWeek = _days,
             SessionMinutes = _minutes,
             EquipmentAccess = _equipment,
+            TrainNeck = p.TrainNeck,
+            BodyWeightKg = units.TryParse(BodyWeight, out var kg) && kg > 0 ? kg : p.BodyWeightKg,
+            BirthYear = p.BirthYear,
+            TrainingSince = p.TrainingSince,
+            CompoundRestSeconds = p.CompoundRestSeconds,
+            IsolationRestSeconds = p.IsolationRestSeconds,
         };
-        _plan = PlanGenerator.Generate(profile);
+
+        WorkoutPlan plan;
+        if (ai.IsAvailable)
+        {
+            IsGenerating = true;
+            Title = "Building your plan…";
+            Subtitle = "AI is putting together a plan for your answers. This can take up to a minute.";
+            try
+            {
+                plan = await ai.GenerateAsync(answers);
+                PlanNote = "Made by AI for your answers.";
+            }
+            catch (Exception e)
+            {
+                plan = PlanGenerator.Generate(answers);
+                var reason = e is Services.Sync.ApiException or Services.Sync.SessionExpiredException ? e.Message : "Couldn't reach the plan generator.";
+                PlanNote = $"{reason} Here's a standard plan instead.";
+            }
+            if (run != _buildRun)
+                return;
+            IsGenerating = false;
+        }
+        else
+        {
+            plan = PlanGenerator.Generate(answers);
+            PlanNote = "Sign in to have AI build a plan around your answers.";
+        }
+
+        Title = "Your plan is ready";
+        Subtitle = "You can edit every workout later. Weights and reps adapt automatically as you log.";
+        ShowPlanPreview(plan);
+    }
+
+    /// <summary>Asks the AI for a different plan for the same answers.</summary>
+    [RelayCommand]
+    Task Regenerate()
+    {
+        _buildRun++;
+        return BuildPlanAsync();
+    }
+
+    void ShowPlanPreview(WorkoutPlan plan)
+    {
+        _plan = plan;
         PlanName = _plan.Name;
         PlanDescription = _plan.Description;
         PlanWorkouts = _plan.Workouts.Select(w => new WorkoutPreviewItem
@@ -198,6 +268,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     [RelayCommand]
     async Task Next()
     {
+        if (IsGenerating)
+            return;
         var step = _steps[_index];
         if (step == Step.About && !units.TryParse(BodyWeight, out _))
         {
@@ -242,7 +314,6 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
                 p.BodyWeightKg = kg;
                 store.Data.BodyWeights.Add(new BodyWeightEntry { Date = DateTime.Today, WeightKg = kg });
             }
-            p.DefaultRestSeconds = _goal == Goal.Strength ? 180 : _goal == Goal.LoseFat ? 60 : 120;
         }
 
         if (_plan != null)
