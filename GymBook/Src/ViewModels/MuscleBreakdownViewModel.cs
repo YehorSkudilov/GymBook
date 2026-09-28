@@ -132,5 +132,8 @@ public partial class MuscleBreakdownViewModel : ObservableObject
     }
 
     [RelayCommand]
-    static Task Close() => Shell.Current.Navigation.PopModalAsync();
+    // Slides the sheet down before it closes, like the other sheets.
+    static Task Close() => Shell.Current.Navigation.ModalStack.LastOrDefault() is Views.SheetPage sheet
+        ? sheet.CloseAsync()
+        : Shell.Current.Navigation.PopModalAsync();
 }

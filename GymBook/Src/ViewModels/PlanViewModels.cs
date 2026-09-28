@@ -243,7 +243,7 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
         if (plan == null)
             return Task.CompletedTask;
         var page = new Views.MuscleBreakdownPage(new MuscleBreakdownViewModel(store, plan, SelectedWorkout(plan)));
-        return Shell.Current.Navigation.PushModalAsync(page);
+        return Shell.Current.Navigation.PushModalAsync(page, false);
     }
 
     [RelayCommand]

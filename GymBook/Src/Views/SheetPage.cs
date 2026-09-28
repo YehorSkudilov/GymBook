@@ -99,15 +99,35 @@ public class SheetPage : BasePage
         var deferral = e.GetDeferral();
         try
         {
-            this.AbortAnimation("backdrop");
-            var from = BackgroundColor;
-            this.Animate("backdrop", a => BackgroundColor = from.WithAlpha(from.Alpha * (float)(1 - a)), length: OutLength);
-            await Content.TranslateToAsync(0, Height > 0 ? Height : OffScreen, OutLength, Easing.CubicIn);
+            await SlideOutAsync();
         }
         finally
         {
             deferral.Complete();
         }
+    }
+
+    async Task SlideOutAsync()
+    {
+        if (Content == null)
+            return;
+        this.AbortAnimation("backdrop");
+        var from = BackgroundColor;
+        this.Animate("backdrop", a => BackgroundColor = from.WithAlpha(from.Alpha * (float)(1 - a)), length: OutLength);
+        await Content.TranslateToAsync(0, Height > 0 ? Height : OffScreen, OutLength, Easing.CubicIn);
+    }
+
+    /// <summary>
+    /// Slides the sheet down, then closes it. For sheets opened with Navigation.PushModalAsync(page, false) rather than a
+    /// Shell route, whose closing Shell doesn't announce.
+    /// </summary>
+    public async Task CloseAsync()
+    {
+        if (_closing)
+            return;
+        _closing = true;
+        await SlideOutAsync();
+        await Navigation.PopModalAsync(false);
     }
 
     // The topmost modal, which may be wrapped in a NavigationPage; Shell's CurrentPage doesn't count modals pushed directly.

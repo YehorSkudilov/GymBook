@@ -8,5 +8,6 @@ public partial class PlanDetailPage : BasePage
     {
         InitializeComponent();
         BindingContext = viewModel;
+        HorizontalMouseScroll.Attach(DayStrip);
     }
 }

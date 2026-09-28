@@ -8,6 +8,7 @@ public partial class PlanChatPage : SheetPage
     {
         InitializeComponent();
         BindingContext = viewModel;
+        HorizontalMouseScroll.Attach(SuggestionStrip);
         // Keep the newest message in view.
         viewModel.Messages.CollectionChanged += (_, _) => Dispatcher.Dispatch(() =>
         {

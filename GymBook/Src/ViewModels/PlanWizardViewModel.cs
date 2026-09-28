@@ -16,13 +16,15 @@ namespace GymBook.ViewModels;
 public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, AiPlanService ai, IServiceProvider services)
     : BaseViewModel, IQueryAttributable
 {
-    enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, Questions, Result }
+    enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, BuildWith, Questions, Result }
 
     List<Step> _steps = [];
     int _index;
     WorkoutPlan? _plan;
     // Bumped on every step change, so a plan or questions arriving after the user went back are ignored.
     int _buildRun;
+    // The AI request in flight (questions or plan); cancelled when the step changes or the wizard is left.
+    CancellationTokenSource? _aiCts;
     // The saved plan being regenerated, if any.
     WorkoutPlan? _regenerating;
     string? _regenerateId;
@@ -33,6 +35,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     int _days;
     int _minutes;
     EquipmentAccess _equipment;
+    // The last choice: build the plan with AI (follow-up questions, then generation) or with the built-in generator.
+    bool _useAi = true;
 
     // The AI's follow-up questions, for the answers they were asked about (asked again when those change).
     string? _questionsFor;
@@ -66,7 +70,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     [ObservableProperty] string generatingText = "";
     public bool ShowPlan => IsResult && !IsGenerating;
     public bool ShowQuestions => IsQuestions && !IsGenerating;
-    public bool CanRegenerate => IsResult && !IsGenerating && ai.IsAvailable && !ai.IsQuotaUsedUp;
+    public bool CanRegenerate => IsResult && !IsGenerating && _useAi && ai.IsAvailable && !ai.IsQuotaUsedUp;
     // Opened through Shell, which first-run onboarding runs before.
     public bool CanChat => IsResult && !IsGenerating && ai.IsAvailable && _plan != null && Shell.Current != null;
     /// <summary>Where the plan came from: the AI, or the built-in generator and why.</summary>
@@ -105,8 +109,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         }
         UserName = p.Name;
         _steps = onboarding
-            ? [Step.Welcome, Step.About, Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Questions, Step.Result]
-            : [Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Questions, Step.Result];
+            ? [Step.Welcome, Step.About, Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.BuildWith, Step.Questions, Step.Result]
+            : [Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.BuildWith, Step.Questions, Step.Result];
 
         UnitChips.Clear();
         foreach (var u in Enum.GetValues<WeightUnit>())
@@ -134,13 +138,20 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             BodyWeight = units.Format(kg);
     }
 
-    /// <summary>The follow-up questions only exist for the AI, and only when it had some for these answers.</summary>
-    bool Skipped(Step step) => step == Step.Questions
-        && (!ai.IsAvailable || ai.IsQuotaUsedUp || _questionsFor == AnswersKey() && Questions.Count == 0);
+    /// <summary>The AI steps only exist when AI can be used; the questions only when it was chosen, and had some for these answers.</summary>
+    bool Skipped(Step step) => step switch
+    {
+        Step.BuildWith => !AiUsable,
+        Step.Questions => !AiUsable || !_useAi || _questionsFor == AnswersKey() && Questions.Count == 0,
+        _ => false,
+    };
+
+    bool AiUsable => ai.IsAvailable && !ai.IsQuotaUsedUp;
 
     void Show()
     {
         _buildRun++;
+        CancelAi();
         IsGenerating = false;
         var step = _steps[_index];
         QuestionsError = "";
@@ -210,6 +221,13 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
                 Subtitle = "We'll only pick exercises you can actually do.";
                 AddOptions(Enum.GetValues<EquipmentAccess>(), e => e.Display(), e => e.Description(), _equipment);
                 break;
+            case Step.BuildWith:
+                Title = "How should we build your plan?";
+                Subtitle = "AI tailors the plan to you after a few more questions. The standard plan is ready instantly.";
+                AddOptions([true, false], useAi => useAi ? "Build with AI" : "Standard plan", useAi => useAi
+                    ? (ai.Quota is { } q ? $"A few more questions, then a plan made for you. {AiPlanService.Describe(q)}" : "A few more questions, then a plan made for you")
+                    : "Built from your answers straight away, without AI", _useAi);
+                break;
             case Step.Questions:
                 Title = "A few more questions";
                 Subtitle = "Your answers help the AI fit the plan to you. Skip any you like.";
@@ -238,6 +256,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             case EquipmentAccess a: _equipment = a; break;
             case int i when _steps[_index] == Step.Days: _days = i; break;
             case int m: _minutes = m; break;
+            case bool useAi: _useAi = useAi; break;
         }
     }
 
@@ -277,7 +296,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         List<PlanQuestion> questions;
         try
         {
-            questions = await ai.QuestionsAsync(Answers());
+            questions = await ai.QuestionsAsync(Answers(), NewAiToken());
         }
         catch (Exception e)
         {
@@ -311,6 +330,35 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     [RelayCommand]
     Task RetryQuestions() => LoadQuestionsAsync();
 
+    CancellationToken NewAiToken()
+    {
+        CancelAi();
+        _aiCts = new CancellationTokenSource();
+        return _aiCts.Token;
+    }
+
+    void CancelAi()
+    {
+        _aiCts?.Cancel();
+        _aiCts?.Dispose();
+        _aiCts = null;
+    }
+
+    /// <summary>Leaves the wizard from any step, after asking, stopping anything the AI is working on.</summary>
+    [RelayCommand]
+    async Task Cancel()
+    {
+        var what = _regenerating != null ? "regenerating the plan" : "creating the plan";
+        var message = IsGenerating ? "The AI stops, and your answers aren't kept."
+            : IsResult && _plan != null ? "This plan hasn't been saved, and your answers aren't kept."
+            : "Your answers aren't kept.";
+        if (!await dialogs.Confirm($"Stop {what}?", message, "Stop", "Keep going"))
+            return;
+        _buildRun++;
+        CancelAi();
+        await GoBack();
+    }
+
     /// <summary>
     /// The plan for the answers: made by AI when signed in, otherwise (or if that fails) by the built-in generator.
     /// </summary>
@@ -320,7 +368,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         var answers = Answers();
 
         WorkoutPlan plan;
-        if (ai.IsAvailable && !ai.IsQuotaUsedUp)
+        if (AiUsable && _useAi)
         {
             IsGenerating = true;
             GeneratingText = "Picking exercises, sets and rest for you…";
@@ -328,7 +376,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             Subtitle = "AI is putting together a plan for your answers. This can take up to a minute.";
             try
             {
-                plan = await ai.GenerateAsync(answers, _extraAnswers);
+                plan = await ai.GenerateAsync(answers, _extraAnswers, NewAiToken());
                 PlanNote = ai.Quota is { } q ? $"Made by AI for your answers. {AiPlanService.Describe(q)}." : "Made by AI for your answers.";
             }
             catch (Exception e)
@@ -344,7 +392,9 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         else
         {
             plan = PlanGenerator.Generate(answers);
-            PlanNote = ai.IsAvailable && ai.Quota is { } q ? $"{AiPlanService.Describe(q)}. Here's a standard plan instead." : "Sign in to have AI build a plan around your answers.";
+            PlanNote = !ai.IsAvailable ? "Sign in to have AI build a plan around your answers."
+                : AiUsable ? "The standard plan, built without AI. Go back to build one with AI instead."
+                : ai.Quota is { } q ? $"{AiPlanService.Describe(q)}. Here's a standard plan instead." : "Here's a standard plan.";
         }
 
         Title = "Your plan is ready";

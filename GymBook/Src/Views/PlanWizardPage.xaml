@@ -13,10 +13,14 @@
     <Grid RowDefinitions="Auto,*,Auto" Padding="20,16,20,20">
 
         <!-- Top bar -->
-        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
             <Button Text="‹" FontSize="24" Style="{StaticResource StepButton}" WidthRequest="40" HeightRequest="40"
                     BackgroundColor="{StaticResource Surface2}" Command="{Binding BackCommand}" IsVisible="{Binding CanGoBack}" />
             <ProgressBar Grid.Column="1" Progress="{Binding Progress}" VerticalOptions="Center" HeightRequest="6" />
+            <!-- Leave the wizard from any step (not during first-run onboarding), stopping anything the AI is working on -->
+            <ImageButton Grid.Column="2" Source="{StaticResource IconClose}" WidthRequest="40" HeightRequest="40" Padding="9"
+                         BackgroundColor="{StaticResource Surface2}" CornerRadius="20" Command="{Binding CancelCommand}"
+                         IsVisible="{Binding IsOnboarding, Converter={StaticResource Not}}" />
         </Grid>
 
         <ScrollView Grid.Row="1" Margin="0,20,0,12">

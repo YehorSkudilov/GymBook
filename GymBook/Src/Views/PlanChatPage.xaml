@@ -54,7 +54,7 @@
             </CollectionView>
 
             <!-- One-tap starters -->
-            <ScrollView Grid.Row="2" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" IsVisible="{Binding ShowSuggestions}">
+            <ScrollView x:Name="SuggestionStrip" Grid.Row="2" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" IsVisible="{Binding ShowSuggestions}">
                 <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Suggestions}" Spacing="8" Padding="16,6">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vm:SuggestionItem">

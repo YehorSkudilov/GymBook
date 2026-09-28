@@ -10,7 +10,8 @@ namespace GymBook.Views;
 
 /// <summary>
 /// Lets a horizontal list scroll with a mouse on Windows, where only touch pans it: the wheel scrolls it sideways,
-/// and dragging with the button held pans it. Does nothing on other platforms.
+/// and dragging with the button held pans it. It also stops the strip scrolling (or bouncing) vertically. Does
+/// nothing on other platforms.
 /// </summary>
 public static class HorizontalMouseScroll
 {
@@ -32,6 +33,10 @@ public static class HorizontalMouseScroll
 
     static void Hook(FrameworkElement platform)
     {
+        // The inner ScrollViewer only exists once the control is loaded (a list builds it from its template).
+        platform.Loaded += (_, _) => Scroller(platform);
+        Scroller(platform);
+
         double? pressX = null;
         double startOffset = 0;
         var dragging = false;
@@ -39,7 +44,7 @@ public static class HorizontalMouseScroll
         // The list's ScrollViewer marks wheel and pointer events handled, so listen to handled ones too.
         platform.AddHandler(UIElement.PointerWheelChangedEvent, new PointerEventHandler((_, e) =>
         {
-            if (FindScrollViewer(platform) is not { } scroll)
+            if (Scroller(platform) is not { } scroll)
                 return;
             var delta = e.GetCurrentPoint(platform).Properties.MouseWheelDelta;
             scroll.ChangeView(scroll.HorizontalOffset - delta, null, null, false);
@@ -48,7 +53,7 @@ public static class HorizontalMouseScroll
 
         platform.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, e) =>
         {
-            if (e.Pointer.PointerDeviceType != PointerDeviceType.Mouse || FindScrollViewer(platform) is not { } scroll)
+            if (e.Pointer.PointerDeviceType != PointerDeviceType.Mouse || Scroller(platform) is not { } scroll)
                 return;
             pressX = e.GetCurrentPoint(platform).Position.X;
             startOffset = scroll.HorizontalOffset;
@@ -57,7 +62,7 @@ public static class HorizontalMouseScroll
 
         platform.AddHandler(UIElement.PointerMovedEvent, new PointerEventHandler((_, e) =>
         {
-            if (pressX is not { } x || FindScrollViewer(platform) is not { } scroll)
+            if (pressX is not { } x || Scroller(platform) is not { } scroll)
                 return;
             if (!e.GetCurrentPoint(platform).Properties.IsLeftButtonPressed)
             {
@@ -84,6 +89,20 @@ public static class HorizontalMouseScroll
         }
         platform.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(End), true);
         platform.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler((_, _) => { pressX = null; dragging = false; }), true);
+    }
+
+    /// <summary>
+    /// The strip's ScrollViewer, locked to sideways: WinUI leaves vertical scrolling on, so a wheel or touchpad nudge
+    /// would bounce the strip up and down. With it off, vertical scrolling passes to the page instead.
+    /// </summary>
+    static WScrollViewer? Scroller(FrameworkElement platform)
+    {
+        if (FindScrollViewer(platform) is not { } scroll)
+            return null;
+        scroll.VerticalScrollMode = Microsoft.UI.Xaml.Controls.ScrollMode.Disabled;
+        scroll.VerticalScrollBarVisibility = Microsoft.UI.Xaml.Controls.ScrollBarVisibility.Disabled;
+        scroll.IsVerticalRailEnabled = false;
+        return scroll;
     }
 
     static WScrollViewer? FindScrollViewer(DependencyObject root)

@@ -32,7 +32,7 @@
                 </Grid>
 
                 <!-- Day strip -->
-                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                <ScrollView x:Name="DayStrip" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
                     <HorizontalStackLayout Spacing="4" Padding="16,0">
                         <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Days}" Spacing="4">
                             <BindableLayout.ItemTemplate>

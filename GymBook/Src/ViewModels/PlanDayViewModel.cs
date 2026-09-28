@@ -194,7 +194,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var plan = store.GetPlan(_planId);
         if (plan == null || PlanSchedule.Days(plan).ElementAtOrDefault(_day) is not PlanWorkout workout)
             return Task.CompletedTask;
-        return Shell.Current.Navigation.PushModalAsync(new Views.MuscleBreakdownPage(new MuscleBreakdownViewModel(store, plan, workout)));
+        return Shell.Current.Navigation.PushModalAsync(new Views.MuscleBreakdownPage(new MuscleBreakdownViewModel(store, plan, workout)), false);
     }
 
     /// <summary>The ··· beside the day name. Other pages open after the sheet closes.</summary>
