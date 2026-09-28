@@ -11,7 +11,12 @@ public partial class WorkoutPage : BasePage
         viewModel.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(WorkoutViewModel.CurrentIndex))
-                Dispatcher.Dispatch(() => _ = ScrollStripTo(viewModel.CurrentIndex));
+                Dispatcher.Dispatch(() =>
+                {
+                    _ = ScrollStripTo(viewModel.CurrentIndex);
+                    // Each exercise starts at its top.
+                    _ = ExerciseScroll.ScrollToAsync(0, 0, false);
+                });
         };
     }
 

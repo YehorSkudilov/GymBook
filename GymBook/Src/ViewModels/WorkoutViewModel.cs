@@ -30,15 +30,32 @@ public partial class WorkoutViewModel(
     [ObservableProperty] double restProgress;
     [ObservableProperty] bool isEmpty;
 
-    /// <summary>The exercise on screen; the carousel and the photo strip both follow it.</summary>
+    /// <summary>The exercise on screen; the page and the photo strip both follow it.</summary>
     [ObservableProperty] int currentIndex;
     // Set when an exercise's last set is done: move on to the next one once the rest is over.
     int? _advanceTo;
+
+    public WorkoutExerciseViewModel? CurrentExercise => Exercises.ElementAtOrDefault(CurrentIndex);
 
     partial void OnCurrentIndexChanged(int value)
     {
         for (var i = 0; i < Exercises.Count; i++)
             Exercises[i].IsSelected = i == value;
+        OnPropertyChanged(nameof(CurrentExercise));
+    }
+
+    [RelayCommand]
+    void NextExercise()
+    {
+        if (CurrentIndex + 1 < Exercises.Count)
+            CurrentIndex++;
+    }
+
+    [RelayCommand]
+    void PreviousExercise()
+    {
+        if (CurrentIndex > 0)
+            CurrentIndex--;
     }
 
     internal Task SelectExercise(WorkoutExerciseViewModel vm)

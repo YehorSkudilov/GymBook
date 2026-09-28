@@ -66,144 +66,146 @@
                 <Button Text="+ Add exercise" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Accent}" Command="{Binding AddExerciseCommand}" />
             </VerticalStackLayout>
 
-            <CarouselView ItemsSource="{Binding Exercises}" Position="{Binding CurrentIndex, Mode=TwoWay}" Loop="False"
-                          IsBounceEnabled="False" IsVisible="{Binding IsEmpty, Converter={StaticResource Not}}">
-                <CarouselView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:WorkoutExerciseViewModel">
-                        <ScrollView>
-                            <VerticalStackLayout Padding="16,14,16,110" Spacing="14">
+            <!-- One exercise at a time; swipe or tap the strip for another. (A CarouselView of ScrollViews crashes on Windows.) -->
+            <ScrollView x:Name="ExerciseScroll" IsVisible="{Binding IsEmpty, Converter={StaticResource Not}}">
+                <Grid>
+                    <Grid.GestureRecognizers>
+                        <SwipeGestureRecognizer Direction="Left" Command="{Binding NextExerciseCommand}" />
+                        <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousExerciseCommand}" />
+                    </Grid.GestureRecognizers>
+                    <ContentView x:Name="ExerciseBody" BindingContext="{Binding CurrentExercise}">
+                        <VerticalStackLayout x:DataType="vm:WorkoutExerciseViewModel" Padding="16,14,16,110" Spacing="14">
 
-                                <!-- Exercise -->
-                                <VerticalStackLayout Spacing="4">
-                                    <HorizontalStackLayout Spacing="10">
-                                        <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="28" FontAttributes="Bold"
-                                               TextColor="{StaticResource Accent}" VerticalOptions="Center" MaximumWidthRequest="280" />
-                                        <ImageButton Source="{StaticResource IconMore}" WidthRequest="44" HeightRequest="34" Padding="10,5" VerticalOptions="Center"
-                                                     BackgroundColor="{StaticResource Surface2}" CornerRadius="17" Command="{Binding MenuCommand}" />
-                                    </HorizontalStackLayout>
-                                    <Label Text="{Binding TargetText}" Style="{StaticResource Caption}" FontSize="15" />
+                            <!-- Exercise -->
+                            <VerticalStackLayout Spacing="4">
+                                <HorizontalStackLayout Spacing="10">
+                                    <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="28" FontAttributes="Bold"
+                                           TextColor="{StaticResource Accent}" VerticalOptions="Center" MaximumWidthRequest="280" />
+                                    <ImageButton Source="{StaticResource IconMore}" WidthRequest="44" HeightRequest="34" Padding="10,5" VerticalOptions="Center"
+                                                 BackgroundColor="{StaticResource Surface2}" CornerRadius="17" Command="{Binding MenuCommand}" />
+                                </HorizontalStackLayout>
+                                <Label Text="{Binding TargetText}" Style="{StaticResource Caption}" FontSize="15" />
+                            </VerticalStackLayout>
+
+                            <Label IsVisible="{Binding HasRecommendation}" Text="{Binding Recommendation}" FontSize="14" TextColor="#BFD2FF" />
+                            <!-- How to do the exercise for the goal. -->
+                            <Label IsVisible="{Binding HasTip}" Text="{Binding Tip}" Style="{StaticResource Caption}" FontSize="13" />
+                            <!-- After a set outside the rep range. -->
+                            <Border IsVisible="{Binding HasLiveAdvice}" BackgroundColor="{StaticResource WarningSoft}" StrokeShape="RoundRectangle 10" Padding="10,8">
+                                <Label Text="{Binding LiveAdvice}" FontSize="13" TextColor="{StaticResource Warning}" />
+                            </Border>
+
+                            <!-- Warm-ups fold away behind this -->
+                            <Border IsVisible="{Binding HasWarmups}" Style="{StaticResource Pill}" Padding="16,9" HorizontalOptions="Start">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleWarmupsCommand}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="{Binding WarmupText}" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource TextSecondary}" />
+                            </Border>
+
+                            <!-- Set table -->
+                            <VerticalStackLayout Spacing="4">
+                                <Grid ColumnDefinitions="48,*,*,Auto,*,56" ColumnSpacing="8" Padding="0,0,0,4">
+                                    <Label Text="#" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding UnitLabel}" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
+                                    <Label Grid.Column="2" Text="REPS" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
+                                    <Label Grid.Column="3" Text="RIR" WidthRequest="52" HorizontalTextAlignment="Center" IsVisible="{Binding TrackRir}"
+                                           Style="{StaticResource Overline}" FontSize="13" />
+                                    <Label Grid.Column="4" Text="E1RM" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
+                                </Grid>
+
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Sets}" Spacing="6">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SetRowViewModel">
+                                            <Grid IsVisible="{Binding IsVisible}" ColumnDefinitions="48,*,*,Auto,*,56" ColumnSpacing="8" MinimumHeightRequest="52">
+                                                <!-- Tapping a row that isn't being logged opens it for editing. -->
+                                                <Grid.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding EditCommand}" />
+                                                </Grid.GestureRecognizers>
+
+                                                <!-- Set number; tap for delete / warm-up -->
+                                                <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 14" HeightRequest="46" StrokeThickness="0"
+                                                        Opacity="{Binding NumberOpacity}">
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer Command="{Binding MenuCommand}" />
+                                                    </Border.GestureRecognizers>
+                                                    <Label Text="{Binding Label}" TextColor="{Binding LabelColor}" FontFamily="OpenSansSemibold" FontSize="18"
+                                                           HorizontalOptions="Center" VerticalOptions="Center" />
+                                                </Border>
+
+                                                <!-- The current set: edited in place -->
+                                                <Border Grid.Column="1" Style="{StaticResource InputBox}" HeightRequest="46" StrokeShape="RoundRectangle 14" IsVisible="{Binding IsCurrent}">
+                                                    <Entry Text="{Binding WeightText}" Keyboard="Numeric" HorizontalTextAlignment="Center" FontFamily="OpenSansSemibold" FontSize="20" Placeholder="0" />
+                                                </Border>
+                                                <Border Grid.Column="2" Style="{StaticResource InputBox}" HeightRequest="46" StrokeShape="RoundRectangle 14" IsVisible="{Binding IsCurrent}">
+                                                    <Entry Text="{Binding RepsText}" Keyboard="Numeric" HorizontalTextAlignment="Center" FontFamily="OpenSansSemibold" FontSize="20" Placeholder="0" />
+                                                </Border>
+                                                <Border Grid.Column="3" Style="{StaticResource InputBox}" HeightRequest="46" WidthRequest="52" StrokeShape="RoundRectangle 14" IsVisible="{Binding ShowRirInput}">
+                                                    <Entry Text="{Binding RirText}" Keyboard="Numeric" HorizontalTextAlignment="Center" FontSize="18" Placeholder="–" />
+                                                </Border>
+
+                                                <!-- Every other set: plain values -->
+                                                <Label Grid.Column="1" Text="{Binding WeightDisplay}" TextColor="{Binding ValueColor}" FontSize="20" FontFamily="OpenSansSemibold"
+                                                       HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding IsNotCurrent}" />
+                                                <Label Grid.Column="2" Text="{Binding RepsDisplay}" TextColor="{Binding ValueColor}" FontSize="20" FontFamily="OpenSansSemibold"
+                                                       HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding IsNotCurrent}" />
+                                                <Label Grid.Column="3" Text="{Binding RirDisplay}" TextColor="{Binding ValueColor}" FontSize="18" WidthRequest="52"
+                                                       HorizontalTextAlignment="Center" VerticalOptions="Center" IsVisible="{Binding ShowRirValue}" />
+
+                                                <Label Grid.Column="4" Text="{Binding E1Rm}" TextColor="{StaticResource TextSecondary}" FontSize="18"
+                                                       HorizontalOptions="Center" VerticalOptions="Center" />
+
+                                                <!-- Check: big on the current set, a small tick on finished ones -->
+                                                <Border Grid.Column="5" BackgroundColor="{Binding CheckBackground}" StrokeShape="RoundRectangle 14" HeightRequest="46"
+                                                        StrokeThickness="0" IsVisible="{Binding IsCurrent}">
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer Command="{Binding ToggleCommand}" />
+                                                    </Border.GestureRecognizers>
+                                                    <Image Source="{Binding CheckIcon}" WidthRequest="24" HeightRequest="24" />
+                                                </Border>
+                                                <Image Grid.Column="5" Source="{StaticResource IconCheck}" WidthRequest="18" HeightRequest="18" Opacity="0.8" IsVisible="{Binding ShowDoneTick}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
 
-                                <Label IsVisible="{Binding HasRecommendation}" Text="{Binding Recommendation}" FontSize="14" TextColor="#BFD2FF" />
-                                <!-- How to do the exercise for the goal. -->
-                                <Label IsVisible="{Binding HasTip}" Text="{Binding Tip}" Style="{StaticResource Caption}" FontSize="13" />
-                                <!-- After a set outside the rep range. -->
-                                <Border IsVisible="{Binding HasLiveAdvice}" BackgroundColor="{StaticResource WarningSoft}" StrokeShape="RoundRectangle 10" Padding="10,8">
-                                    <Label Text="{Binding LiveAdvice}" FontSize="13" TextColor="{StaticResource Warning}" />
-                                </Border>
+                                <Button Text="+ Add set" Style="{StaticResource GhostButton}" HorizontalOptions="Start" Command="{Binding AddSetCommand}" />
+                            </VerticalStackLayout>
 
-                                <!-- Warm-ups fold away behind this -->
-                                <Border IsVisible="{Binding HasWarmups}" Style="{StaticResource Pill}" Padding="16,9" HorizontalOptions="Start">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding ToggleWarmupsCommand}" />
-                                    </Border.GestureRecognizers>
-                                    <Label Text="{Binding WarmupText}" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource TextSecondary}" />
-                                </Border>
-
-                                <!-- Set table -->
-                                <VerticalStackLayout Spacing="4">
-                                    <Grid ColumnDefinitions="48,*,*,Auto,*,56" ColumnSpacing="8" Padding="0,0,0,4">
-                                        <Label Text="#" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
-                                        <Label Grid.Column="1" Text="{Binding UnitLabel}" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
-                                        <Label Grid.Column="2" Text="REPS" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
-                                        <Label Grid.Column="3" Text="RIR" WidthRequest="52" HorizontalTextAlignment="Center" IsVisible="{Binding TrackRir}"
-                                               Style="{StaticResource Overline}" FontSize="13" />
-                                        <Label Grid.Column="4" Text="E1RM" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
+                            <!-- Last time -->
+                            <Border IsVisible="{Binding HasPrevious}" Style="{StaticResource InnerCard}" StrokeShape="RoundRectangle 20" Padding="18,14">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="{Binding PreviousTitle}" Style="{StaticResource Caption}" FontSize="15" FontFamily="OpenSansSemibold" />
+                                    <Grid ColumnDefinitions="0.6*,*,*,*">
+                                        <Label Text="#" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                                        <Label Grid.Column="1" Text="{Binding UnitLabel}" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                                        <Label Grid.Column="2" Text="REPS" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                                        <Label Grid.Column="3" Text="E1RM" Style="{StaticResource Caption}" HorizontalOptions="Center" />
                                     </Grid>
-
-                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Sets}" Spacing="6">
+                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding PreviousRows}" Spacing="4">
                                         <BindableLayout.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:SetRowViewModel">
-                                                <Grid IsVisible="{Binding IsVisible}" ColumnDefinitions="48,*,*,Auto,*,56" ColumnSpacing="8" MinimumHeightRequest="52">
-                                                    <!-- Tapping a row that isn't being logged opens it for editing. -->
-                                                    <Grid.GestureRecognizers>
-                                                        <TapGestureRecognizer Command="{Binding EditCommand}" />
-                                                    </Grid.GestureRecognizers>
-
-                                                    <!-- Set number; tap for delete / warm-up -->
-                                                    <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 14" HeightRequest="46" StrokeThickness="0"
-                                                            Opacity="{Binding NumberOpacity}">
-                                                        <Border.GestureRecognizers>
-                                                            <TapGestureRecognizer Command="{Binding MenuCommand}" />
-                                                        </Border.GestureRecognizers>
-                                                        <Label Text="{Binding Label}" TextColor="{Binding LabelColor}" FontFamily="OpenSansSemibold" FontSize="18"
-                                                               HorizontalOptions="Center" VerticalOptions="Center" />
-                                                    </Border>
-
-                                                    <!-- The current set: edited in place -->
-                                                    <Border Grid.Column="1" Style="{StaticResource InputBox}" HeightRequest="46" StrokeShape="RoundRectangle 14" IsVisible="{Binding IsCurrent}">
-                                                        <Entry Text="{Binding WeightText}" Keyboard="Numeric" HorizontalTextAlignment="Center" FontFamily="OpenSansSemibold" FontSize="20" Placeholder="0" />
-                                                    </Border>
-                                                    <Border Grid.Column="2" Style="{StaticResource InputBox}" HeightRequest="46" StrokeShape="RoundRectangle 14" IsVisible="{Binding IsCurrent}">
-                                                        <Entry Text="{Binding RepsText}" Keyboard="Numeric" HorizontalTextAlignment="Center" FontFamily="OpenSansSemibold" FontSize="20" Placeholder="0" />
-                                                    </Border>
-                                                    <Border Grid.Column="3" Style="{StaticResource InputBox}" HeightRequest="46" WidthRequest="52" StrokeShape="RoundRectangle 14" IsVisible="{Binding ShowRirInput}">
-                                                        <Entry Text="{Binding RirText}" Keyboard="Numeric" HorizontalTextAlignment="Center" FontSize="18" Placeholder="–" />
-                                                    </Border>
-
-                                                    <!-- Every other set: plain values -->
-                                                    <Label Grid.Column="1" Text="{Binding WeightDisplay}" TextColor="{Binding ValueColor}" FontSize="20" FontFamily="OpenSansSemibold"
-                                                           HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding IsNotCurrent}" />
-                                                    <Label Grid.Column="2" Text="{Binding RepsDisplay}" TextColor="{Binding ValueColor}" FontSize="20" FontFamily="OpenSansSemibold"
-                                                           HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding IsNotCurrent}" />
-                                                    <Label Grid.Column="3" Text="{Binding RirDisplay}" TextColor="{Binding ValueColor}" FontSize="18" WidthRequest="52"
-                                                           HorizontalTextAlignment="Center" VerticalOptions="Center" IsVisible="{Binding ShowRirValue}" />
-
-                                                    <Label Grid.Column="4" Text="{Binding E1Rm}" TextColor="{StaticResource TextSecondary}" FontSize="18"
-                                                           HorizontalOptions="Center" VerticalOptions="Center" />
-
-                                                    <!-- Check: big on the current set, a small tick on finished ones -->
-                                                    <Border Grid.Column="5" BackgroundColor="{Binding CheckBackground}" StrokeShape="RoundRectangle 14" HeightRequest="46"
-                                                            StrokeThickness="0" IsVisible="{Binding IsCurrent}">
-                                                        <Border.GestureRecognizers>
-                                                            <TapGestureRecognizer Command="{Binding ToggleCommand}" />
-                                                        </Border.GestureRecognizers>
-                                                        <Image Source="{Binding CheckIcon}" WidthRequest="24" HeightRequest="24" />
-                                                    </Border>
-                                                    <Image Grid.Column="5" Source="{StaticResource IconCheck}" WidthRequest="18" HeightRequest="18" Opacity="0.8" IsVisible="{Binding ShowDoneTick}" />
+                                            <DataTemplate x:DataType="vm:PlanDaySetRow">
+                                                <Grid ColumnDefinitions="0.6*,*,*,*">
+                                                    <Label Text="{Binding Number}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />
+                                                    <Label Grid.Column="1" Text="{Binding First}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />
+                                                    <Label Grid.Column="2" Text="{Binding Second}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />
+                                                    <Label Grid.Column="3" Text="{Binding Third}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />
                                                 </Grid>
                                             </DataTemplate>
                                         </BindableLayout.ItemTemplate>
                                     </VerticalStackLayout>
-
-                                    <Button Text="+ Add set" Style="{StaticResource GhostButton}" HorizontalOptions="Start" Command="{Binding AddSetCommand}" />
                                 </VerticalStackLayout>
+                            </Border>
 
-                                <!-- Last time -->
-                                <Border IsVisible="{Binding HasPrevious}" Style="{StaticResource InnerCard}" StrokeShape="RoundRectangle 20" Padding="18,14">
-                                    <VerticalStackLayout Spacing="6">
-                                        <Label Text="{Binding PreviousTitle}" Style="{StaticResource Caption}" FontSize="15" FontFamily="OpenSansSemibold" />
-                                        <Grid ColumnDefinitions="0.6*,*,*,*">
-                                            <Label Text="#" Style="{StaticResource Caption}" HorizontalOptions="Center" />
-                                            <Label Grid.Column="1" Text="{Binding UnitLabel}" Style="{StaticResource Caption}" HorizontalOptions="Center" />
-                                            <Label Grid.Column="2" Text="REPS" Style="{StaticResource Caption}" HorizontalOptions="Center" />
-                                            <Label Grid.Column="3" Text="E1RM" Style="{StaticResource Caption}" HorizontalOptions="Center" />
-                                        </Grid>
-                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding PreviousRows}" Spacing="4">
-                                            <BindableLayout.ItemTemplate>
-                                                <DataTemplate x:DataType="vm:PlanDaySetRow">
-                                                    <Grid ColumnDefinitions="0.6*,*,*,*">
-                                                        <Label Text="{Binding Number}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />
-                                                        <Label Grid.Column="1" Text="{Binding First}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />
-                                                        <Label Grid.Column="2" Text="{Binding Second}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />
-                                                        <Label Grid.Column="3" Text="{Binding Third}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />
-                                                    </Grid>
-                                                </DataTemplate>
-                                            </BindableLayout.ItemTemplate>
-                                        </VerticalStackLayout>
-                                    </VerticalStackLayout>
-                                </Border>
-
-                                <Label Text="Help" TextColor="{StaticResource Accent}" FontFamily="OpenSansSemibold" FontSize="18">
-                                    <Label.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding HelpCommand}" />
-                                    </Label.GestureRecognizers>
-                                </Label>
-                            </VerticalStackLayout>
-                        </ScrollView>
-                    </DataTemplate>
-                </CarouselView.ItemTemplate>
-            </CarouselView>
+                            <Label Text="Help" TextColor="{StaticResource Accent}" FontFamily="OpenSansSemibold" FontSize="18">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding HelpCommand}" />
+                                </Label.GestureRecognizers>
+                            </Label>
+                        </VerticalStackLayout>
+                    </ContentView>
+                </Grid>
+            </ScrollView>
 
             <!-- Rest timer button, floating over the exercise -->
             <Border IsVisible="{Binding IsResting, Converter={StaticResource Not}}" WidthRequest="72" HeightRequest="60" StrokeShape="RoundRectangle 20"

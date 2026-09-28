@@ -17,6 +17,24 @@ namespace GymBook.WinUI
         public App()
         {
             this.InitializeComponent();
+            // TEMP diagnostics: dump unhandled exceptions to %LOCALAPPDATA%\GymBook-crash.txt.
+            UnhandledException += (_, e) => DumpCrash("WinUI", e.Exception);
+            AppDomain.CurrentDomain.UnhandledException += (_, e) => DumpCrash("AppDomain", e.ExceptionObject as Exception);
+            TaskScheduler.UnobservedTaskException += (_, e) => DumpCrash("Task", e.Exception);
+        }
+
+        static void DumpCrash(string source, Exception? ex)
+        {
+            var text = $"[{DateTime.Now:O}] {source}\n{ex}\n\n";
+            System.Diagnostics.Debug.WriteLine(text);
+            try
+            {
+                var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "GymBook-crash.txt");
+                File.AppendAllText(path, text);
+            }
+            catch
+            {
+            }
         }
 
         protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
