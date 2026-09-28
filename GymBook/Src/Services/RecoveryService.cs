@@ -2,27 +2,36 @@ using GymBook.Models;
 
 namespace GymBook.Services;
 
+/// <summary>One muscle's recovery at a moment: how fresh it is, when it will be fully recovered, and the workout that tired it most.</summary>
+public record MuscleRecovery(MuscleGroup Muscle, double Recovery, DateTime? ReadyAt, WorkoutSession? LimitingSession, double Sets);
+
 /// <summary>
 /// Estimates how recovered each muscle is (0 = just trained hard, 1 = fully fresh) from recent sets.
-/// More sets means a longer recovery window: 24h base plus 8h per set, capped at 96h.
+/// More sets means a longer recovery window: 24h base plus 8h per set, capped at 96h. Works for any moment:
+/// in the past it only counts workouts finished by then, in the future it lets today's fatigue wear off.
 /// </summary>
 public class RecoveryService(DataStore store)
 {
-    public Dictionary<MuscleGroup, double> Compute(DateTime now)
-    {
-        var result = Enum.GetValues<MuscleGroup>().ToDictionary(m => m, _ => 1.0);
+    const double MaxHours = 96;
 
-        foreach (var session in store.History.TakeWhile(s => (now - s.EndedAt!.Value).TotalHours < 96))
+    public Dictionary<MuscleGroup, double> Compute(DateTime at) => Details(at).ToDictionary(r => r.Muscle, r => r.Recovery);
+
+    public List<MuscleRecovery> Details(DateTime at)
+    {
+        var result = Enum.GetValues<MuscleGroup>().ToDictionary(m => m, m => new MuscleRecovery(m, 1, null, null, 0));
+
+        foreach (var session in store.History.Where(s => s.EndedAt <= at).TakeWhile(s => (at - s.EndedAt!.Value).TotalHours < MaxHours))
         {
-            var hours = (now - session.EndedAt!.Value).TotalHours;
+            var hours = (at - session.EndedAt!.Value).TotalHours;
             foreach (var (muscle, sets) in SetsPerMuscle(session))
             {
-                var needed = Math.Clamp(24 + sets * 8, 24, 96);
+                var needed = Math.Clamp(24 + sets * 8, 24, MaxHours);
                 var recovered = Math.Clamp(hours / needed, 0, 1);
-                result[muscle] = Math.Min(result[muscle], recovered);
+                if (recovered < result[muscle].Recovery)
+                    result[muscle] = new MuscleRecovery(muscle, recovered, session.EndedAt!.Value.AddHours(needed), session, sets);
             }
         }
-        return result;
+        return [.. result.Values];
     }
 
     /// <summary>Primary muscles get one set each; secondary muscles get half a set.</summary>
@@ -51,4 +60,26 @@ public class RecoveryService(DataStore store)
         >= 0.35 => Color.FromArgb("#FFB020"),
         _ => Color.FromArgb("#FF4D5E"),
     };
+
+    public static string StatusFor(double recovery) => recovery switch
+    {
+        >= 0.9 => "Fresh",
+        >= 0.6 => "Almost recovered",
+        >= 0.35 => "Recovering",
+        _ => "Fatigued",
+    };
+
+    // The preview's range: a week back, and far enough ahead that anything trained today has recovered.
+    public const double PreviewPastHours = 7 * 24, PreviewFutureHours = MaxHours;
+
+    /// <summary>"Now", "In 1 d 4 h" or "2 d ago", with the moment itself, for the preview slider.</summary>
+    public static string PreviewLabel(double hours)
+    {
+        var h = (int)Math.Round(hours);
+        if (h == 0)
+            return "Now";
+        var span = Math.Abs(h) >= 24 ? $"{Math.Abs(h) / 24} d{(Math.Abs(h) % 24 > 0 ? $" {Math.Abs(h) % 24} h" : "")}" : $"{Math.Abs(h)} h";
+        var when = DateTime.Now.AddHours(h).ToString("ddd HH:00");
+        return h > 0 ? $"In {span} · {when}" : $"{span} ago · {when}";
+    }
 }

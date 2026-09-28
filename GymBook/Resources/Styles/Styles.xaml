@@ -22,7 +22,8 @@
         <Setter Property="Shell.TabBarUnselectedColor" Value="{StaticResource TextTertiary}" />
     </Style>
 
-    <Style TargetType="Label">
+    <!-- ApplyToDerivedTypes so AppSkeleton's CLabel (a Label subclass) gets the same defaults. -->
+    <Style TargetType="Label" ApplyToDerivedTypes="True">
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
         <Setter Property="FontFamily" Value="OpenSansRegular" />
         <Setter Property="FontSize" Value="15" />

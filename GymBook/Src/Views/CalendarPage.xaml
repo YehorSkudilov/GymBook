@@ -103,6 +103,16 @@
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
                 <Label IsVisible="{Binding SelectedIsEmpty}" Text="No workout on this day." Style="{StaticResource Caption}" />
+
+                <!-- How recovered each muscle was going into the day -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="{Binding RecoveryTitle}" Style="{StaticResource H3}" />
+                        <GraphicsView Drawable="{Binding RecoveryMap}" HeightRequest="220" />
+                        <Label Text="{Binding RecoverySummary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                        <Button Text="Details" Style="{StaticResource GhostButton}" IsVisible="{Binding CanOpenRecovery}" Command="{Binding OpenRecoveryCommand}" />
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
 
             <Label IsVisible="{Binding HasSelection, Converter={StaticResource Not}}" Text="Tap a day to see its workouts."

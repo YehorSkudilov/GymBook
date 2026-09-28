@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.SyncDetailsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton"
+    x:DataType="vm:SyncDetailsViewModel"
+    Title="Sync details"
+    Shell.TabBarIsVisible="False">
+
+    <Grid RowDefinitions="*,Auto">
+        <ScrollView>
+            <VerticalStackLayout Padding="16,8,16,24" Spacing="16">
+
+                <!-- Status, selectable so an error can be copied into a bug report. -->
+                <Border Style="{StaticResource Card}" BackgroundColor="{StaticResource WarningSoft}" IsVisible="{Binding HasProblem}">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Sync problem" Style="{StaticResource H3}" TextColor="{StaticResource Warning}" />
+                        <skeleton:CLabel Text="{Binding Status}" FontSize="14" TextColor="{StaticResource Warning}" />
+                    </VerticalStackLayout>
+                </Border>
+                <skeleton:CLabel Text="{Binding Status}" Style="{StaticResource Caption}" IsVisible="{Binding HasProblem, Converter={StaticResource Not}}" />
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Not synced yet" Style="{StaticResource H3}" />
+                    <Border Style="{StaticResource Card}" Padding="16,6" IsVisible="{Binding IsEmpty, Converter={StaticResource Not}}">
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Items}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SyncDetailItem">
+                                    <VerticalStackLayout Padding="0,10" Spacing="2">
+                                        <skeleton:CLabel Text="{Binding Title}" FontFamily="OpenSansSemibold" LineBreakMode="TailTruncation" />
+                                        <skeleton:CLabel Text="{Binding Detail}" FontSize="13" TextColor="{Binding DetailColor}" />
+                                    </VerticalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </Border>
+                    <Label Text="Everything on this device is on your account." Style="{StaticResource Caption}" IsVisible="{Binding IsEmpty}" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <Button Grid.Row="1" Text="Sync now" Style="{StaticResource PrimaryButton}" Margin="16,8,16,16"
+                IsEnabled="{Binding IsSyncing, Converter={StaticResource Not}}" Command="{Binding SyncNowCommand}" />
+    </Grid>
+</views:BasePage>

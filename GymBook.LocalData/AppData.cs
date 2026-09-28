@@ -20,7 +20,7 @@ public class AppData
 
     public List<WorkoutSession> Sessions { get; set; } = [];
 
-    /// <summary>The workout in progress. Device-only; it syncs once finished and moved to <see cref="Sessions"/>.</summary>
+    /// <summary>The workout in progress. Stored and synced as a session without EndedAt; finishing moves it to <see cref="Sessions"/>.</summary>
     public WorkoutSession? ActiveSession { get; set; }
 
     public List<BodyWeightEntry> BodyWeights { get; set; } = [];

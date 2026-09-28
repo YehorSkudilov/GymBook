@@ -15,14 +15,16 @@ public partial class MainPage : ContentPage
 
     readonly ObservableCollection<CNavItem> _tabs;
     readonly WorkoutService _workouts;
+    readonly DataStore _store;
     CNavItem? _current;
     bool _visible;
     IDispatcherTimer? _activeTimer;
 
-    public MainPage(WorkoutService workouts, HomePage home, PlansPage plans, ExercisesPage exercises, StatsPage stats, ProfilePage profile)
+    public MainPage(WorkoutService workouts, DataStore store, HomePage home, PlansPage plans, ExercisesPage exercises, StatsPage stats, ProfilePage profile)
     {
         InitializeComponent();
         _workouts = workouts;
+        _store = store;
 
         var color = (Color)Application.Current!.Resources["TextPrimary"];
         _tabs =
@@ -70,19 +72,24 @@ public partial class MainPage : ContentPage
         _visible = true;
         _current?.Page.Load();
         UpdateActiveBar();
+        _store.Changed += OnDataChanged;
     }
+
+    // A workout can also arrive (or end) through sync, e.g. after signing in on a fresh install.
+    void OnDataChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(UpdateActiveBar);
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
         _visible = false;
+        _store.Changed -= OnDataChanged;
         _current?.Page.Unload();
         _activeTimer?.Stop();
         _activeTimer = null;
     }
 
-    // Shown whenever a workout is in progress. Starting or finishing one always goes through the workout page,
-    // so checking when this page reappears is enough; the timer just keeps the time ticking.
+    // Shown whenever a workout is in progress: checked when this page reappears (starting or finishing one goes
+    // through the workout page) and when data changes (one synced from another device); the timer keeps the time ticking.
     void UpdateActiveBar()
     {
         var active = _workouts.Active;

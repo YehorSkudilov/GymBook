@@ -50,7 +50,7 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#0B0D12" />
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg"/>
 
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0B0D12" BaseSize="128,128" />
@@ -80,14 +80,18 @@
 		<ProjectReference Include="..\..\AppSkeleton\AppSkeleton\AppSkeleton.csproj" />
 	</ItemGroup>
 
-	<!-- The deployed API that Release builds talk to (see Src/Services/Sync/ApiConfig.cs). Pass it with
-	     -p:ApiBaseUrl=https://... or an API_BASE_URL environment variable; CI sets it from the API_BASE_URL variable. -->
+	<!-- The API the app talks to, in every configuration (see Src/Services/Sync/ApiConfig.cs). Pass it with
+	     -p:ApiBaseUrl=https://..., an API_BASE_URL environment variable, or API_BASE_URL in GymBook/.env
+	     (see .env.example), in that order; CI sets it from the API_BASE_URL variable. -->
 	<PropertyGroup>
 		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == ''">$(API_BASE_URL)</ApiBaseUrl>
+		<_EnvFile>$(MSBuildProjectDirectory)\.env</_EnvFile>
+		<_EnvFileContent Condition="Exists('$(_EnvFile)')">$([System.IO.File]::ReadAllText('$(_EnvFile)'))</_EnvFileContent>
+		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == '' and '$(_EnvFileContent)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvFileContent)', '(?m)^API_BASE_URL=(.*?)\r?$').Groups[1].Value)</ApiBaseUrl>
 	</PropertyGroup>
 
-	<Target Name="ValidateApiBaseUrl" BeforeTargets="BeforeBuild;CoreCompile" Condition="'$(Configuration)' == 'Release'">
-		<Error Condition="'$(ApiBaseUrl)' == ''" Text="ApiBaseUrl is not set. Set it via -p:ApiBaseUrl=https://... or an API_BASE_URL environment variable." />
+	<Target Name="ValidateApiBaseUrl" BeforeTargets="BeforeBuild;CoreCompile">
+		<Error Condition="'$(ApiBaseUrl)' == ''" Text="ApiBaseUrl is not set. Set it via -p:ApiBaseUrl=https://..., an API_BASE_URL environment variable, or GymBook/.env (see .env.example)." />
 	</Target>
 
 	<ItemGroup>

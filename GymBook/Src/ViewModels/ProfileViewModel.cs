@@ -39,6 +39,8 @@ public partial class ProfileViewModel(
     [ObservableProperty] bool isSignedIn;
     [ObservableProperty] string accountEmail = "";
     [ObservableProperty] string syncStatus = "";
+    [ObservableProperty] bool hasSyncDetails;
+    [ObservableProperty] string syncDetailsSummary = "";
 
     UserProfile P => store.Profile;
 
@@ -63,6 +65,11 @@ public partial class ProfileViewModel(
         IsSignedIn = account.IsSignedIn;
         AccountEmail = account.Email ?? "";
         SyncStatus = sync.LastSyncedAt is { } at && sync.State == SyncState.UpToDate ? $"Synced {at:t}" : sync.Status;
+        // While a sync runs, pending changes are about to go up; only a failure or leftovers are worth a look.
+        var failed = sync.State is SyncState.Failed or SyncState.Offline or SyncState.SignInRequired;
+        var pending = sync.State != SyncState.Syncing && store.Local.HasPendingChanges ? sync.PendingItems().Count : 0;
+        HasSyncDetails = account.IsSignedIn && (failed || pending > 0);
+        SyncDetailsSummary = failed ? "Sync failed" + (pending > 0 ? $" · {pending} not synced" : "") : $"{pending} not synced yet";
 
         _loading = true;
         Name = string.IsNullOrWhiteSpace(P.Name) ? "Athlete" : P.Name;
@@ -203,6 +210,9 @@ public partial class ProfileViewModel(
 
     [RelayCommand]
     Task OpenHistory() => GoTo(Routes.History);
+
+    [RelayCommand]
+    Task OpenSyncDetails() => GoTo(Routes.SyncDetails);
 
     [RelayCommand]
     Task SignIn() => AccountPage.ShowAsync(services);

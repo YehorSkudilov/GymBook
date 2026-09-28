@@ -8,12 +8,14 @@ namespace GymBook.LocalData;
 /// Keeps <see cref="AppData"/> in memory and persists it to the device database. The app mutates
 /// <see cref="Data"/> freely and calls <see cref="Save"/>; each record's JSON is compared with what was last
 /// written, and only changed records are written, stamped with UpdatedAt and marked dirty for sync. Removed
-/// records become tombstones so the deletion syncs too.
+/// records become tombstones so the deletion syncs too. The workout in progress is stored and synced as a session
+/// without EndedAt, so it follows the account to other devices and reinstalls.
 /// </summary>
 /// <remarks>Mutating calls (<see cref="Save"/>, <see cref="ApplySync"/>, ...) must run on the UI thread, like the rest of the app's access to <see cref="Data"/>.</remarks>
 public sealed class LocalStore
 {
-    const string ActiveSessionKey = "active_session";
+    /// <summary>Where the workout in progress was kept before it synced; read once to carry it over.</summary>
+    const string LegacyActiveSessionKey = "active_session";
     const string CursorKey = "sync.cursor";
     const string AccountKey = "sync.account";
 
@@ -74,10 +76,10 @@ public sealed class LocalStore
                 StageProfile(db, LocalJson.Deserialize<UserProfile>(profileJson), profileJson, dirty: true, commit);
             }
             StageTable(db, _plans, Data.Plans, now, commit);
-            StageTable(db, _sessions, Data.Sessions, now, commit);
+            StageTable(db, _sessions, WithActive(Data), now, commit);
             StageTable(db, _exercises, Data.CustomExercises, now, commit);
             StageTable(db, _weights, Data.BodyWeights, now, commit);
-            StageSetting(db, ActiveSessionKey, Data.ActiveSession == null ? null : LocalJson.Serialize(Data.ActiveSession), commit);
+            StageSetting(db, LegacyActiveSessionKey, null, commit);
 
             db.SaveChanges();
             commit.ForEach(a => a());
@@ -177,7 +179,11 @@ public sealed class LocalStore
             var changed = false;
 
             changed |= Merge(db, _plans, Data.Plans, pushed.Plans, response.Changes.Plans, commit);
-            changed |= Merge(db, _sessions, Data.Sessions, pushed.Sessions, response.Changes.Sessions, commit);
+            // Merged together with the workout in progress, then split again: the server may have finished it,
+            // discarded it, or sent one started on another device.
+            var sessions = WithActive(Data);
+            changed |= Merge(db, _sessions, sessions, pushed.Sessions, response.Changes.Sessions, commit);
+            commit.Add(() => SplitActive(Data, sessions));
             changed |= Merge(db, _exercises, Data.CustomExercises, pushed.CustomExercises, response.Changes.CustomExercises, commit);
             changed |= Merge(db, _weights, Data.BodyWeights, pushed.BodyWeights, response.Changes.BodyWeights, commit);
 
@@ -231,10 +237,12 @@ public sealed class LocalStore
         foreach (var s in db.Settings.AsNoTracking())
             if (s.Value != null)
                 _settings[s.Key] = s.Value;
-        if (_settings.GetValueOrDefault(ActiveSessionKey) is { } active)
+        SplitActive(data, [.. data.Sessions]);
+        if (data.ActiveSession == null && _settings.GetValueOrDefault(LegacyActiveSessionKey) is { } active)
         {
             try
             {
+                // Saved into the sessions table (and so synced) on the next save.
                 data.ActiveSession = LocalJson.Deserialize<WorkoutSession>(active);
             }
             catch (System.Text.Json.JsonException)
@@ -258,6 +266,35 @@ public sealed class LocalStore
                     t.Live[e.Id] = LocalJson.Serialize(e);
                 }
             }
+        }
+    }
+
+    /// <summary>Finished sessions plus the workout in progress: every session record that's stored and synced.</summary>
+    static List<WorkoutSession> WithActive(AppData data) =>
+        data.ActiveSession is { } active && data.Sessions.All(s => s.Id != active.Id) ? [.. data.Sessions, active] : [.. data.Sessions];
+
+    /// <summary>
+    /// Sorts <paramref name="all"/> into the finished sessions and the workout in progress. The one already in progress
+    /// on this device stays current; if another device started a different one meanwhile, its completed sets are kept
+    /// as a finished workout (and an empty one is dropped), since only one workout can be in progress.
+    /// </summary>
+    static void SplitActive(AppData data, List<WorkoutSession> all)
+    {
+        var running = all.Where(s => s.EndedAt == null).OrderByDescending(s => s.StartedAt).ToList();
+        data.Sessions.Clear();
+        data.Sessions.AddRange(all.Where(s => s.EndedAt != null));
+        var current = running.FirstOrDefault(s => s.Id == data.ActiveSession?.Id) ?? running.FirstOrDefault();
+        data.ActiveSession = current;
+        foreach (var other in running.Where(s => s != current))
+        {
+            var completed = other.Exercises.SelectMany(e => e.Sets).Where(s => s.IsCompleted).ToList();
+            if (completed.Count == 0)
+                continue;
+            other.EndedAt = completed.Max(s => s.CompletedAt) ?? other.StartedAt;
+            foreach (var e in other.Exercises)
+                e.Sets.RemoveAll(s => !s.IsCompleted);
+            other.Exercises.RemoveAll(e => e.Sets.Count == 0);
+            data.Sessions.Add(other);
         }
     }
 

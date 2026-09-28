@@ -34,7 +34,6 @@ public static class MauiProgram
         builder.Services.AddSingleton<AuthSession>();
         builder.Services.AddSingleton(sp => new ApiClient(ApiConfig.CreateClient(), sp.GetRequiredService<AuthSession>()));
         builder.Services.AddSingleton<SyncService>();
-        builder.Services.AddSingleton<SyncIndicator>();
         builder.Services.AddSingleton<AccountService>();
 
         builder.Services.AddTransient<MainPage>();
@@ -54,6 +53,8 @@ public static class MauiProgram
         AddPage<ExerciseDetailPage, ExerciseDetailViewModel>(builder.Services);
         AddPage<ExercisePickerPage, ExercisePickerViewModel>(builder.Services);
         AddPage<AccountPage, AccountViewModel>(builder.Services);
+        AddPage<SyncDetailsPage, SyncDetailsViewModel>(builder.Services);
+        AddPage<RecoveryPage, RecoveryViewModel>(builder.Services);
 
 #if DEBUG
         builder.Logging.AddDebug();

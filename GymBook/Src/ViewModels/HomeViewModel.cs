@@ -13,11 +13,9 @@ public partial class HomeViewModel(
     StatsService stats,
     Units units,
     DialogService dialogs,
-    SyncIndicator syncIndicator,
     WorkoutEstimator estimator,
     ProgressionEngine progression) : BaseViewModel
 {
-    public SyncIndicator Sync => syncIndicator;
 
     [ObservableProperty] string greeting = "";
     [ObservableProperty] string dateText = "";
@@ -36,7 +34,6 @@ public partial class HomeViewModel(
     [ObservableProperty] string weekSets = "";
     [ObservableProperty] string streak = "";
     [ObservableProperty] string planWeek = "";
-    [ObservableProperty] string planWeekDone = "";
     [ObservableProperty] string nextLabel = "UP NEXT";
     [ObservableProperty] List<PlanDayItem> planDays = [];
     [ObservableProperty]
@@ -99,12 +96,7 @@ public partial class HomeViewModel(
             ? $"It's been {away} days since your last workout. Your weights are set lighter for a safe return and build back up over the next few sessions."
             : "";
 
-        var rec = recovery.Compute(DateTime.Now);
-        MuscleMap = MuscleMapDrawable.ForRecovery(rec);
-        var tired = rec.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
-        RecoverySummary = tired.Count == 0
-            ? "All muscle groups are recovered and ready to train."
-            : $"Still recovering: {string.Join(", ", tired)}";
+        UpdateRecovery();
 
         var weekStart = StatsService.WeekStart(DateTime.Today);
         var history = store.History.ToList();
@@ -128,7 +120,6 @@ public partial class HomeViewModel(
     {
         var week = _week;
         PlanWeek = $"Week {week}";
-        PlanWeekDone = $"{progress.WorkoutsDone(week)}/{plan.Workouts.Count} done";
         var next = progress.NextWorkout(week);
         PlanDays = progress.Days.Select((w, day) =>
         {
@@ -231,4 +222,39 @@ public partial class HomeViewModel(
 
     [RelayCommand]
     Task OpenCalendar() => GoTo(Routes.Calendar);
+
+    // Recovery preview: hours from now, negative for the past.
+    [ObservableProperty] double recoveryHours;
+    [ObservableProperty] string recoveryWhen = "Now";
+    [ObservableProperty] bool isRecoveryPreview;
+
+    partial void OnRecoveryHoursChanged(double value)
+    {
+        // Snap to whole hours so the label and map move in clean steps.
+        var snapped = Math.Round(value);
+        if (Math.Abs(snapped - value) > 0.001)
+        {
+            RecoveryHours = snapped;
+            return;
+        }
+        UpdateRecovery();
+    }
+
+    void UpdateRecovery()
+    {
+        var at = DateTime.Now.AddHours(RecoveryHours);
+        var rec = recovery.Compute(at);
+        MuscleMap = MuscleMapDrawable.ForRecovery(rec);
+        RecoveryWhen = RecoveryService.PreviewLabel(RecoveryHours);
+        IsRecoveryPreview = RecoveryHours != 0;
+        var tired = rec.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
+        var fresh = RecoveryHours == 0 ? "All muscle groups are recovered and ready to train." : "All muscle groups are recovered at this point.";
+        RecoverySummary = tired.Count == 0 ? fresh : $"{(RecoveryHours == 0 ? "Still recovering" : "Recovering")}: {string.Join(", ", tired)}";
+    }
+
+    [RelayCommand]
+    void RecoveryNow() => RecoveryHours = 0;
+
+    [RelayCommand]
+    Task OpenRecovery() => GoTo($"{Routes.Recovery}?hours={RecoveryHours}");
 }

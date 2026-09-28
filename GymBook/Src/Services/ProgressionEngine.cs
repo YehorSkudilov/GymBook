@@ -14,7 +14,8 @@ public class ProgressionEngine(DataStore store, Units units)
     public SessionExercise? LastPerformance(string exerciseId, string? excludeSessionId = null) =>
         LastSession(exerciseId, excludeSessionId)?.Exercise;
 
-    (WorkoutSession Session, SessionExercise Exercise)? LastSession(string exerciseId, string? excludeSessionId = null) =>
+    /// <summary>The most recent finished session with working sets of <paramref name="exerciseId"/>, and that exercise in it.</summary>
+    public (WorkoutSession Session, SessionExercise Exercise)? LastSession(string exerciseId, string? excludeSessionId = null) =>
         store.History
             .Where(s => s.Id != excludeSessionId)
             .Select(s => (s, e: s.Exercises.FirstOrDefault(e => e.ExerciseId == exerciseId && e.Sets.Any(x => x.IsCompleted && !x.IsWarmup))))

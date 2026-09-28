@@ -5,6 +5,9 @@ namespace GymBook.Services.Sync;
 
 public enum SyncState { SignedOut, Syncing, UpToDate, Offline, Failed, SignInRequired }
 
+/// <summary>A change still waiting to upload. <paramref name="Blocked"/>: the server would reject it (e.g. a name that's too long).</summary>
+public record SyncPendingItem(string Kind, string Name, bool IsDeletion, bool Blocked);
+
 /// <summary>
 /// Pushes local changes and pulls the account's changes whenever the app starts or resumes, the network
 /// comes back, or the user edits something (debounced). Everything works offline; this catches up later.
@@ -126,6 +129,24 @@ public class SyncService
             }
         }
         return false;
+    }
+
+    /// <summary>Local changes not on the server yet, for the sync details list; <c>Blocked</c> ones won't sync until fixed.</summary>
+    public List<SyncPendingItem> PendingItems()
+    {
+        var pending = _store.Local.GetPendingChanges(1000);
+        var items = new List<SyncPendingItem>();
+        if (pending.Profile != null)
+            items.Add(Item("Profile", "Profile and settings", pending.Profile, deleted: false));
+        items.AddRange(pending.Plans.Select(p => Item("Plan", p.Name, p, p.IsDeleted)));
+        items.AddRange(pending.Sessions.Select(s => Item(s.EndedAt == null ? "Workout in progress" : "Workout",
+            $"{s.Name} · {s.StartedAt:ddd d MMM, HH:mm}", s, s.IsDeleted)));
+        items.AddRange(pending.CustomExercises.Select(e => Item("Custom exercise", e.Name, e, e.IsDeleted)));
+        items.AddRange(pending.BodyWeights.Select(b => Item("Body weight", $"{b.Date:d MMM yyyy}", b, b.IsDeleted)));
+        return items;
+
+        static SyncPendingItem Item(string kind, string name, object record, bool deleted) =>
+            new(kind, string.IsNullOrWhiteSpace(name) ? "(unnamed)" : name, deleted, !ModelValidator.IsValid(record));
     }
 
     /// <summary>

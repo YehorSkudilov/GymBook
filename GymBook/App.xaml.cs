@@ -31,7 +31,11 @@ public partial class App : Application
         window.Height = 760;
 #endif
         // Catch up with changes made on other devices.
-        window.Created += (_, _) => _sync.Schedule(TimeSpan.Zero);
+        window.Created += (_, _) =>
+        {
+            window.AddOverlay(new Controls.SyncToast(window, _sync));
+            _sync.Schedule(TimeSpan.Zero);
+        };
         window.Resumed += (_, _) => _sync.Schedule(TimeSpan.Zero);
         return window;
     }

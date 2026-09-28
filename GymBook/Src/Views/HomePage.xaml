@@ -10,27 +10,10 @@
         <VerticalStackLayout Spacing="16">
 
             <!-- Header -->
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                <VerticalStackLayout Spacing="2">
-                    <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
-                    <Label Text="{Binding Greeting}" Style="{StaticResource Title}" />
-                </VerticalStackLayout>
-                <!-- Sync status; tap to sync now (or sign in again). Hidden while signed out. -->
-                <Border Grid.Column="1" Style="{StaticResource Pill}" Padding="10,5" VerticalOptions="Start" Margin="0,2,0,0"
-                        IsVisible="{Binding Sync.IsVisible}">
-                    <Border.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding Sync.TapCommand}" />
-                    </Border.GestureRecognizers>
-                    <HorizontalStackLayout Spacing="6">
-                        <ActivityIndicator IsRunning="{Binding Sync.IsSyncing}" IsVisible="{Binding Sync.IsSyncing}" Color="{StaticResource Accent}"
-                                           WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
-                        <Ellipse Fill="{Binding Sync.DotColor}" WidthRequest="8" HeightRequest="8" VerticalOptions="Center"
-                                 IsVisible="{Binding Sync.IsSyncing, Converter={StaticResource Not}}" />
-                        <Label Text="{Binding Sync.Text}" Style="{StaticResource Caption}" FontSize="12" FontFamily="OpenSansSemibold"
-                               VerticalOptions="Center" />
-                    </HorizontalStackLayout>
-                </Border>
-            </Grid>
+            <VerticalStackLayout Spacing="2">
+                <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
+                <Label Text="{Binding Greeting}" Style="{StaticResource Title}" />
+            </VerticalStackLayout>
 
             <!-- Back after a break: weights are scaled down automatically. -->
             <Border IsVisible="{Binding HasWelcomeBack}" Style="{StaticResource Card}" BackgroundColor="{StaticResource AccentSoft}" Padding="16,14">
@@ -132,21 +115,19 @@
 
             <!-- This week's plan -->
             <VerticalStackLayout IsVisible="{Binding HasPlan}" Spacing="10">
-                <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="10">
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                     <Label Text="{Binding PlanName}" Style="{StaticResource H2}" TextColor="{StaticResource Accent}"
-                           VerticalOptions="Center" LineBreakMode="TailTruncation" MaximumWidthRequest="220" />
-                    <ImageButton Grid.Column="1" Source="ic_more.png" WidthRequest="36" HeightRequest="30" Padding="6,3"
+                           VerticalOptions="Center" LineBreakMode="TailTruncation" />
+                    <!-- Tap to view another unlocked week. -->
+                    <Label Grid.Column="1" Text="{Binding PlanWeek, StringFormat='{0} ▾'}" Style="{StaticResource H3}" TextColor="{StaticResource Accent}"
+                           VerticalOptions="Center">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ChooseWeekCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <ImageButton Grid.Column="2" Source="ic_more.png" WidthRequest="36" HeightRequest="30" Padding="6,3"
                                  BackgroundColor="{StaticResource Surface2}" CornerRadius="15" VerticalOptions="Center"
                                  Command="{Binding PlanOptionsCommand}" />
-                    <!-- Tap to view another unlocked week. -->
-                    <HorizontalStackLayout Grid.Column="2" Spacing="8" HorizontalOptions="End" VerticalOptions="Center" BackgroundColor="Transparent">
-                        <HorizontalStackLayout.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding ChooseWeekCommand}" />
-                        </HorizontalStackLayout.GestureRecognizers>
-                        <Label Text="{Binding PlanWeekDone}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
-                        <Label Text="{Binding PlanWeek, StringFormat='{0} ▾'}" Style="{StaticResource H3}" TextColor="{StaticResource Accent}"
-                               VerticalOptions="Center" />
-                    </HorizontalStackLayout>
                 </Grid>
 
                 <Border Style="{StaticResource Card}" Padding="16,6">
@@ -227,7 +208,23 @@
                             <Label Text="Fresh" Style="{StaticResource Caption}" FontSize="12" />
                         </HorizontalStackLayout>
                     </HorizontalStackLayout>
+                    <!-- Preview: drag back to see past recovery, forward to see when muscles will be fresh. -->
+                    <VerticalStackLayout Spacing="2">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="{Binding RecoveryWhen}" FontFamily="OpenSansSemibold" FontSize="13" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Text="Now" Style="{StaticResource SmallButton}" IsVisible="{Binding IsRecoveryPreview}"
+                                    Command="{Binding RecoveryNowCommand}" />
+                        </Grid>
+                        <!-- Maximum before Minimum: the minimum can only go negative once the maximum allows the range. -->
+                        <Slider Maximum="96" Minimum="-168" Value="{Binding RecoveryHours}"
+                                MinimumTrackColor="{StaticResource Accent}" MaximumTrackColor="{StaticResource Surface3}" ThumbColor="{StaticResource Accent}" />
+                        <Grid ColumnDefinitions="*,*">
+                            <Label Text="7 days ago" Style="{StaticResource Caption}" FontSize="11" />
+                            <Label Grid.Column="1" Text="In 4 days" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End" />
+                        </Grid>
+                    </VerticalStackLayout>
                     <Label Text="{Binding RecoverySummary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                    <Button Text="Details" Style="{StaticResource GhostButton}" Command="{Binding OpenRecoveryCommand}" />
                 </VerticalStackLayout>
             </Border>
 

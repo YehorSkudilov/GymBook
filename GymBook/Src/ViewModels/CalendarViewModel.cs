@@ -1,13 +1,14 @@
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GymBook.Controls;
 using GymBook.Models;
 using GymBook.Services;
 
 namespace GymBook.ViewModels;
 
 /// <summary>Month-by-month view of finished workouts; tap a day to list what was done on it.</summary>
-public partial class CalendarViewModel(DataStore store, StatsService stats, Units units) : BaseViewModel
+public partial class CalendarViewModel(DataStore store, StatsService stats, Units units, RecoveryService recovery) : BaseViewModel
 {
     DateTime _month = FirstOfMonth(DateTime.Today);
     DateTime? _selected = DateTime.Today;
@@ -25,6 +26,13 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     [ObservableProperty] bool hasSelection;
     [ObservableProperty] List<SessionItem> selectedSessions = [];
     [ObservableProperty] bool selectedIsEmpty;
+
+    // Muscle recovery on the selected day: now for today, that morning for any other day.
+    [ObservableProperty] IDrawable recoveryMap = MuscleMapDrawable.Empty;
+    [ObservableProperty] string recoveryTitle = "";
+    [ObservableProperty] string recoverySummary = "";
+    [ObservableProperty] bool canOpenRecovery;
+    double _recoveryHours;
 
     public override Task OnAppearingAsync()
     {
@@ -79,6 +87,7 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
             var day = _selected!.Value;
             SelectedTitle = day.ToString("dddd, d MMMM");
             SelectedSessions = _byDay[day].OrderBy(s => s.StartedAt).Select(s => SessionItem.Create(s, store, stats, units)).ToList();
+            UpdateRecovery(day);
         }
         else
         {
@@ -86,6 +95,29 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
         }
         SelectedIsEmpty = HasSelection && SelectedSessions.Count == 0;
     }
+
+    void UpdateRecovery(DateTime day)
+    {
+        // On a training day, how recovered you were going into the first workout; otherwise now (today) or that morning.
+        var first = _byDay[day].OrderBy(s => s.StartedAt).FirstOrDefault();
+        var at = first != null ? first.StartedAt : day == DateTime.Today ? DateTime.Now : day.AddHours(9);
+        var rec = recovery.Compute(at);
+        RecoveryMap = MuscleMapDrawable.ForRecovery(rec);
+        RecoveryTitle = first != null ? $"Muscle recovery before {first.Name} ({first.StartedAt:HH:mm})"
+            : day == DateTime.Today ? "Muscle recovery now"
+            : day > DateTime.Today ? "Muscle recovery that morning (forecast)"
+            : "Muscle recovery that morning";
+        var tired = rec.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
+        RecoverySummary = tired.Count == 0
+            ? $"Every muscle group {(day < DateTime.Today ? "was" : "is")} fresh."
+            : $"Recovering: {string.Join(", ", tired)}";
+        // The details page previews a week back and four days ahead.
+        _recoveryHours = Math.Round((at - DateTime.Now).TotalHours);
+        CanOpenRecovery = _recoveryHours >= -RecoveryService.PreviewPastHours && _recoveryHours <= RecoveryService.PreviewFutureHours;
+    }
+
+    [RelayCommand]
+    Task OpenRecovery() => GoTo($"{Routes.Recovery}?hours={_recoveryHours.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
 
     void Select(DateTime day)
     {

@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton"
     x:DataType="vm:ProfileViewModel">
 
     <ContentView.Resources>
@@ -68,9 +69,20 @@
                         <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding SyncNowCommand}" /></Grid.GestureRecognizers>
                         <VerticalStackLayout VerticalOptions="Center">
                             <Label Text="{Binding AccountEmail}" LineBreakMode="TailTruncation" />
-                            <Label Text="{Binding SyncStatus}" Style="{StaticResource Caption}" FontSize="12" />
+                            <!-- Selectable so a sync error can be copied into a bug report. -->
+                            <skeleton:CLabel Text="{Binding SyncStatus}" Style="{StaticResource Caption}" FontSize="12" />
                         </VerticalStackLayout>
                         <Label Grid.Column="1" Text="Sync now" TextColor="{StaticResource Accent}" FontSize="14" VerticalOptions="Center" />
+                    </Grid>
+                    <!-- Only when something hasn't synced yet or the last sync failed. -->
+                    <BoxView Style="{StaticResource Divider}" IsVisible="{Binding HasSyncDetails}" />
+                    <Grid Style="{StaticResource Row}" IsVisible="{Binding HasSyncDetails}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenSyncDetailsCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="View details" />
+                            <Label Text="{Binding SyncDetailsSummary}" Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource Warning}" />
+                        </VerticalStackLayout>
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}">

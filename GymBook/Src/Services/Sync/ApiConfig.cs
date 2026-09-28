@@ -6,14 +6,11 @@ namespace GymBook.Services.Sync;
 /// <summary>Where the app finds the GymBook API.</summary>
 public static class ApiConfig
 {
-#if DEBUG
-    // The local API from GymBook.Api (https profile). The Android emulator reaches the host machine at 10.0.2.2.
-    public static Uri BaseAddress { get; } = new(DeviceInfo.Platform == DevicePlatform.Android ? "https://10.0.2.2:7292/" : "https://localhost:7292/");
-#else
-    // Baked in at build time from the ApiBaseUrl MSBuild property (see GymBook.csproj).
+    // Baked in at build time from the ApiBaseUrl MSBuild property / API_BASE_URL environment variable /
+    // GymBook/.env, via [AssemblyMetadata] - see GymBook.csproj. No fallback: the build itself fails if it's unset.
     public static Uri BaseAddress { get; } = new(
-        typeof(ApiConfig).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().First(a => a.Key == "ApiBaseUrl").Value!);
-#endif
+        typeof(ApiConfig).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == "ApiBaseUrl")?.Value
+        ?? throw new InvalidOperationException("ApiBaseUrl assembly metadata is missing - this build should have failed at compile time."));
 
     public static HttpClient CreateClient()
     {
