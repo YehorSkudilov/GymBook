@@ -38,6 +38,8 @@ public class PlanGeneration
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public string UserId { get; set; } = "";
+    /// <summary>What was generated: "plan" or "chat" (a message to the plan chat), each with its own quota.</summary>
+    public string Kind { get; set; } = "";
     public DateTimeOffset CreatedAt { get; set; }
 }
 
@@ -97,7 +99,8 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
         model.Entity<PlanGeneration>(b =>
         {
             b.ToTable("plan_generations");
-            b.HasIndex(g => new { g.UserId, g.CreatedAt });
+            b.Property(g => g.Kind).HasMaxLength(16);
+            b.HasIndex(g => new { g.UserId, g.Kind, g.CreatedAt });
             b.HasOne<AppUser>().WithMany().HasForeignKey(g => g.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }

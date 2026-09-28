@@ -17,6 +17,7 @@ namespace GymBook.Api.Data.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<string>(type: "text", nullable: false),
+                    Kind = table.Column<string>(type: "character varying(16)", maxLength: 16, nullable: false),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -31,9 +32,9 @@ namespace GymBook.Api.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_plan_generations_UserId_CreatedAt",
+                name: "IX_plan_generations_UserId_Kind_CreatedAt",
                 table: "plan_generations",
-                columns: new[] { "UserId", "CreatedAt" });
+                columns: new[] { "UserId", "Kind", "CreatedAt" });
         }
 
         /// <inheritdoc />

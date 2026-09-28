@@ -6,44 +6,95 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace GymBook.Api.Controllers;
 
+/// <summary>
+/// AI plans (ChatGPT): follow-up questions, generating, importing, and chatting about a plan. Signed-in users only.
+/// Every paid call is counted against the user's quota: plans and imports share one, chat messages have their own.
+/// </summary>
 [ApiController]
 [Route("api/plans")]
 [EnableRateLimiting(RateLimits.Sync)]
 public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, ICurrentUser currentUser) : ControllerBase
 {
+    /// <summary>A photo or PDF of a plan, base64-encoded, plus the exercise list.</summary>
+    const long MaxImportBytes = 12 * 1024 * 1024;
+
+    string UserId => currentUser.UserId!;
+
     /// <summary>How many AI plans the user has left, for the Plans tab.</summary>
     [HttpGet("quota")]
-    public Task<PlanQuotaResponse> Quota(CancellationToken ct) => quota.GetAsync(currentUser.UserId!, ct);
+    public Task<PlanQuotaResponse> Quota(CancellationToken ct) => quota.GetAsync(UserId, QuotaKind.Plan, ct);
 
-    /// <summary>Generates a plan with AI from the wizard's answers. Signed-in users only; each call costs money, so it's counted against a quota.</summary>
-    [HttpPost("generate")]
-    public async Task<ActionResult<GeneratePlanResponse>> Generate(GeneratePlanRequest request, CancellationToken ct)
+    /// <summary>
+    /// Follow-up questions for the wizard's answers, asked before the plan is generated. They don't count against the
+    /// quota (they're cheap next to a plan), but are only offered while there's a plan left to generate with them.
+    /// </summary>
+    [HttpPost("questions")]
+    public async Task<ActionResult<PlanQuestionsResponse>> Questions(PlanAnswers answers, CancellationToken ct)
     {
         if (!generator.IsConfigured)
-            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "AI plans aren't available right now.");
-
-        var userId = currentUser.UserId!;
-        if (await quota.TryReserveAsync(userId, ct) is not { } reservation)
-        {
-            var left = await quota.GetAsync(userId, ct);
-            return Problem(statusCode: StatusCodes.Status429TooManyRequests,
-                title: $"You've used all {left.Limit} AI plans you get per {left.Period}.");
-        }
-
-        GeneratePlanResponse plan;
+            return Unavailable();
+        var left = await quota.GetAsync(UserId, QuotaKind.Plan, ct);
+        if (left.Remaining == 0)
+            return UsedUp(left, "AI plans");
         try
         {
-            plan = await generator.GenerateAsync(request, ct);
+            return await generator.QuestionsAsync(answers, ct);
+        }
+        catch (PlanGenerationException e)
+        {
+            return Problem(statusCode: StatusCodes.Status502BadGateway, title: e.Message);
+        }
+    }
+
+    /// <summary>Generates a plan with AI from the wizard's answers and the answers to the follow-up questions.</summary>
+    [HttpPost("generate")]
+    public Task<ActionResult<GeneratePlanResponse>> Generate(GeneratePlanRequest request, CancellationToken ct) =>
+        Counted(QuotaKind.Plan, "AI plans", () => generator.GenerateAsync(request, ct), (plan, left) => plan.Quota = left, ct);
+
+    /// <summary>Turns a plan from text, an image or a file into a GymBook plan. Counts as an AI plan.</summary>
+    [HttpPost("import")]
+    [RequestSizeLimit(MaxImportBytes)]
+    public Task<ActionResult<GeneratePlanResponse>> Import(ImportPlanRequest request, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(request.Text) && string.IsNullOrWhiteSpace(request.ImageUrl) && request.File == null)
+            return Task.FromResult<ActionResult<GeneratePlanResponse>>(Problem(statusCode: StatusCodes.Status400BadRequest, title: "Add the plan as text, an image link or a file."));
+        if (request.ImageUrl is { Length: > 0 } url && !(Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http"))
+            return Task.FromResult<ActionResult<GeneratePlanResponse>>(Problem(statusCode: StatusCodes.Status400BadRequest, title: "The image link must be a web address (https://…)."));
+        return Counted(QuotaKind.Plan, "AI plans", () => generator.ImportAsync(request, ct), (plan, left) => plan.Quota = left, ct);
+    }
+
+    /// <summary>A message to the plan's AI coach, which may change the plan. Counts against the chat quota.</summary>
+    [HttpPost("chat")]
+    public Task<ActionResult<PlanChatResponse>> Chat(PlanChatRequest request, CancellationToken ct) =>
+        Counted(QuotaKind.Chat, "AI chat messages", () => generator.ChatAsync(request, ct), (reply, left) => reply.Quota = left, ct);
+
+    /// <summary>Runs a paid AI call against the <paramref name="kind"/> quota: refused when it's used up, given back when the call fails.</summary>
+    async Task<ActionResult<T>> Counted<T>(string kind, string what, Func<Task<T>> call, Action<T, PlanQuotaResponse> withQuota, CancellationToken ct)
+    {
+        if (!generator.IsConfigured)
+            return Unavailable();
+        if (await quota.TryReserveAsync(UserId, kind, ct) is not { } reservation)
+            return UsedUp(await quota.GetAsync(UserId, kind, ct), what);
+
+        T result;
+        try
+        {
+            result = await call();
         }
         catch (Exception e)
         {
-            // A plan that never arrived doesn't count against the quota.
+            // A call that produced nothing doesn't count against the quota.
             await quota.ReleaseAsync(reservation);
             if (e is PlanGenerationException)
                 return Problem(statusCode: StatusCodes.Status502BadGateway, title: e.Message);
             throw;
         }
-        plan.Quota = await quota.GetAsync(userId, ct);
-        return plan;
+        withQuota(result, await quota.GetAsync(UserId, kind, ct));
+        return result;
     }
+
+    ObjectResult Unavailable() => Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "AI plans aren't available right now.");
+
+    ObjectResult UsedUp(PlanQuotaResponse left, string what) =>
+        Problem(statusCode: StatusCodes.Status429TooManyRequests, title: $"You've used all {left.Limit} {what} you get per {left.Period}.");
 }

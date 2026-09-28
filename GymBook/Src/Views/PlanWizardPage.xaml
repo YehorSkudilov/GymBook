@@ -94,13 +94,47 @@
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
 
-                <!-- Result -->
-                <!-- While the AI builds the plan -->
+                <!-- While the AI thinks of questions or builds the plan -->
                 <VerticalStackLayout IsVisible="{Binding IsGenerating}" Spacing="14" Margin="0,40,0,0" HorizontalOptions="Center">
                     <ActivityIndicator IsRunning="{Binding IsGenerating}" Color="{StaticResource Accent}" WidthRequest="44" HeightRequest="44" />
-                    <Label Text="Picking exercises, sets and rest for you…" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                    <Label Text="{Binding GeneratingText}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
 
+                <!-- The AI's follow-up questions: tap to answer, or leave blank -->
+                <VerticalStackLayout IsVisible="{Binding ShowQuestions}" Spacing="18" Margin="0,6,0,0">
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Questions}" Spacing="18">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AiQuestionItem">
+                                <VerticalStackLayout Spacing="8">
+                                    <Label Text="{Binding Text}" FontFamily="OpenSansSemibold" FontSize="16" />
+                                    <Label Text="{Binding Hint}" Style="{StaticResource Caption}" FontSize="12" IsVisible="{Binding HasHint}" />
+                                    <FlexLayout BindableLayout.ItemsSource="{Binding Options}" Wrap="Wrap" JustifyContent="Start" AlignItems="Start">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ChipItem">
+                                                <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 12" StrokeThickness="0"
+                                                        Padding="14,10" Margin="0,0,8,8">
+                                                    <Border.GestureRecognizers>
+                                                        <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                                    </Border.GestureRecognizers>
+                                                    <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontFamily="OpenSansSemibold" FontSize="14" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </FlexLayout>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Anything else the AI should know?" FontFamily="OpenSansSemibold" FontSize="16" />
+                        <Border Style="{StaticResource InputBox}" Padding="12,4">
+                            <Editor Text="{Binding ExtraNote}" Placeholder="e.g. a bad left shoulder, training for a marathon, love deadlifts" AutoSize="TextChanges"
+                                    MinimumHeightRequest="80" MaxLength="500" />
+                        </Border>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Result -->
                 <VerticalStackLayout IsVisible="{Binding ShowPlan}" Spacing="12" Margin="0,6,0,0">
                     <!-- Where the plan came from, and a way to get another -->
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" IsVisible="{Binding HasPlanNote}">
@@ -108,6 +142,13 @@
                         <Button Grid.Column="1" Text="Regenerate" Style="{StaticResource GhostButton}" VerticalOptions="Center"
                                 IsVisible="{Binding CanRegenerate}" Command="{Binding RegenerateCommand}" />
                     </Grid>
+                    <!-- Tell the AI what to change before saving -->
+                    <Button Text="Change it with AI" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Accent}"
+                            IsVisible="{Binding CanChat}" Command="{Binding ChatCommand}">
+                        <Button.ImageSource>
+                            <FontImageSource FontFamily="OutlinedIcons" Glyph="auto_awesome" Color="{StaticResource Accent}" Size="20" />
+                        </Button.ImageSource>
+                    </Button>
                     <Border Background="{StaticResource AccentGradient}" Style="{StaticResource Card}" Padding="18">
                         <VerticalStackLayout Spacing="4">
                             <Label Text="{Binding PlanName}" FontFamily="OpenSansSemibold" FontSize="20" TextColor="White" />

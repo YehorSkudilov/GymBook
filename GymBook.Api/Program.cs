@@ -96,11 +96,17 @@ builder.Services.AddHttpClient<OpenAiPlanGenerator>(c =>
     c.BaseAddress = new Uri(openAi.BaseUrl);
     c.Timeout = TimeSpan.FromSeconds(openAi.TimeoutSeconds);
 });
-// Each AI plan is a paid OpenAI call: PlanGenerationsLimit per user in any PlanGenerationsWindow (e.g. 2 per 1d, 5 per 30d),
+// Each AI plan and plan chat message is a paid OpenAI call: a limit per user in any window (e.g. 2 per 1d, 5 per 30d),
 // counted in the database so it survives restarts.
-builder.Services.AddSingleton(PlanQuota.Parse(
-    builder.Configuration.GetValue("RateLimiting:PlanGenerationsLimit", 10),
-    builder.Configuration["RateLimiting:PlanGenerationsWindow"] ?? "1h"));
+builder.Services.AddSingleton(new PlanQuotaSettings
+{
+    Plan = PlanQuotaOptions.Parse(
+        builder.Configuration.GetValue("RateLimiting:PlanGenerationsLimit", 10),
+        builder.Configuration["RateLimiting:PlanGenerationsWindow"] ?? "1h"),
+    Chat = PlanQuotaOptions.Parse(
+        builder.Configuration.GetValue("RateLimiting:PlanChatLimit", 30),
+        builder.Configuration["RateLimiting:PlanChatWindow"] ?? "1d"),
+});
 builder.Services.AddScoped<PlanQuota>();
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers(o =>

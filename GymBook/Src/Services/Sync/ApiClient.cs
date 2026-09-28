@@ -53,6 +53,18 @@ public class ApiClient(HttpClient http, AuthSession session)
     public Task<GeneratePlanResponse> GeneratePlanAsync(GeneratePlanRequest request, CancellationToken ct = default) =>
         SendAuthorizedAsync<GeneratePlanRequest, GeneratePlanResponse>("api/plans/generate", request, ct, PlanGenerationTimeout);
 
+    /// <summary>The AI's follow-up questions for the wizard's answers.</summary>
+    public Task<PlanQuestionsResponse> GetPlanQuestionsAsync(PlanAnswers answers, CancellationToken ct = default) =>
+        SendAuthorizedAsync<PlanAnswers, PlanQuestionsResponse>("api/plans/questions", answers, ct, PlanGenerationTimeout);
+
+    /// <summary>A plan read by the AI from text, an image or a file.</summary>
+    public Task<GeneratePlanResponse> ImportPlanAsync(ImportPlanRequest request, CancellationToken ct = default) =>
+        SendAuthorizedAsync<ImportPlanRequest, GeneratePlanResponse>("api/plans/import", request, ct, PlanGenerationTimeout);
+
+    /// <summary>A message to the AI about a plan; the reply may carry a changed plan.</summary>
+    public Task<PlanChatResponse> ChatAboutPlanAsync(PlanChatRequest request, CancellationToken ct = default) =>
+        SendAuthorizedAsync<PlanChatRequest, PlanChatResponse>("api/plans/chat", request, ct, PlanGenerationTimeout);
+
     /// <summary>How many AI plans the user has left.</summary>
     public async Task<PlanQuotaResponse> GetPlanQuotaAsync(CancellationToken ct = default)
     {

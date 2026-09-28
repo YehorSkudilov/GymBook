@@ -73,6 +73,9 @@ jobs:
             # AI plans per user: LIMIT per WINDOW (90m, 12h, 1d, 30d, 1w)
             RateLimiting__PlanGenerationsLimit=${{ vars.PLAN_GENERATIONS_LIMIT || '10' }}
             RateLimiting__PlanGenerationsWindow=${{ vars.PLAN_GENERATIONS_WINDOW || '1h' }}
+            # AI plan chat messages per user: LIMIT per WINDOW
+            RateLimiting__PlanChatLimit=${{ vars.PLAN_CHAT_LIMIT || '30' }}
+            RateLimiting__PlanChatWindow=${{ vars.PLAN_CHAT_WINDOW || '1d' }}
 
             # Host-side port the reverse proxy forwards to (consumed by docker-compose.yml)
             API_PORT=${{ vars.API_PORT }}
