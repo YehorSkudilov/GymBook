@@ -48,9 +48,24 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
+	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'android'">
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="0.6" />
+	</ItemGroup>
+	<!-- iOS -->
+	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'ios'">
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="1" />
+	</ItemGroup>
+	<!-- macOS (MacCatalyst) -->
+	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'maccatalyst'">
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="1" />
+	</ItemGroup>
+	<!-- WINDOWS (no scaling, no adaptive layers) -->
+	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'windows'">
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="1" />
+	</ItemGroup>
+
 	<ItemGroup>
-		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" />
+		
 
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0B0D12" BaseSize="128,128" />
@@ -68,9 +83,7 @@
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <MauiImage Remove="Resources\Images\logo.svg" />
-	</ItemGroup>
+
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.90" />
