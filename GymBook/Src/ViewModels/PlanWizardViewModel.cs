@@ -72,6 +72,11 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     [NotifyPropertyChangedFor(nameof(HasPlanNote))]
     string planNote = "";
     public bool HasPlanNote => PlanNote.Length > 0;
+    /// <summary>Why the follow-up questions didn't come, shown on their step with Try again.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasQuestionsError))]
+    string questionsError = "";
+    public bool HasQuestionsError => QuestionsError.Length > 0;
     /// <summary>Anything else the user wants the AI to know, under the follow-up questions.</summary>
     [ObservableProperty] string extraNote = "";
 
@@ -136,6 +141,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         _buildRun++;
         IsGenerating = false;
         var step = _steps[_index];
+        QuestionsError = "";
         Progress = (_index + 1.0) / _steps.Count;
         CanGoBack = _index > 0;
         IsWelcome = step == Step.Welcome;
@@ -255,14 +261,15 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     string AnswersKey() => $"{_goal}|{_experience}|{_days}|{_minutes}|{_equipment}";
 
     /// <summary>
-    /// Asks the AI what else it wants to know. The questions are kept while the answers stay the same; if the AI
-    /// can't be reached the step is skipped and the plan is built from the answers alone.
+    /// Asks the AI what else it wants to know. The questions are kept while the answers stay the same. If the AI can't
+    /// be reached the step says why, with Try again, and Continue builds the plan from the answers alone.
     /// </summary>
     async Task LoadQuestionsAsync()
     {
         if (_questionsFor == AnswersKey())
             return;
         var run = _buildRun;
+        QuestionsError = "";
         IsGenerating = true;
         GeneratingText = "Thinking of a few questions for you…";
         List<PlanQuestion> questions;
@@ -270,13 +277,22 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         {
             questions = await ai.QuestionsAsync(Answers());
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            questions = [];
+            if (run != _buildRun)
+                return;
+            IsGenerating = false;
+            Questions.Clear();
+            QuestionsError = e is Services.Sync.ApiException or Services.Sync.SessionExpiredException
+                ? $"The AI couldn't come up with questions: {e.Message}"
+                : "Couldn't reach the AI for follow-up questions. Check your connection.";
+            NextText = "Continue without";
+            return;
         }
         if (run != _buildRun)
             return;
         IsGenerating = false;
+        NextText = "Build my plan";
 
         Questions.Clear();
         foreach (var q in questions)
@@ -289,6 +305,9 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             Show();
         }
     }
+
+    [RelayCommand]
+    Task RetryQuestions() => LoadQuestionsAsync();
 
     /// <summary>
     /// The plan for the answers: made by AI when signed in, otherwise (or if that fails) by the built-in generator.

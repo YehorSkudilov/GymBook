@@ -102,6 +102,15 @@
 
                 <!-- The AI's follow-up questions: tap to answer, or leave blank -->
                 <VerticalStackLayout IsVisible="{Binding ShowQuestions}" Spacing="18" Margin="0,6,0,0">
+                    <!-- The questions didn't come: say why, and let them try again (Continue builds the plan without) -->
+                    <Border IsVisible="{Binding HasQuestionsError}" BackgroundColor="{StaticResource DangerSoft}" StrokeShape="RoundRectangle 16"
+                            StrokeThickness="0" Padding="16,12">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="{Binding QuestionsError}" TextColor="{StaticResource Danger}" FontSize="14" />
+                            <Button Text="Try again" Style="{StaticResource GhostButton}" HorizontalOptions="Start" Padding="0,4"
+                                    Command="{Binding RetryQuestionsCommand}" />
+                        </VerticalStackLayout>
+                    </Border>
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Questions}" Spacing="18">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="vm:AiQuestionItem">
