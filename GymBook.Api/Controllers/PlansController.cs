@@ -13,7 +13,7 @@ namespace GymBook.Api.Controllers;
 [ApiController]
 [Route("api/plans")]
 [EnableRateLimiting(RateLimits.Sync)]
-public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, ICurrentUser currentUser) : ControllerBase
+public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, LinkFetcher links, ICurrentUser currentUser) : ControllerBase
 {
     /// <summary>A photo or PDF of a plan, base64-encoded, plus the exercise list.</summary>
     const long MaxImportBytes = 12 * 1024 * 1024;
