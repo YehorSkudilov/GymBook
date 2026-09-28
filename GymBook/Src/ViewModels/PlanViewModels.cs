@@ -82,6 +82,18 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     [RelayCommand]
     Task Generate() => GoTo(Routes.Wizard);
 
+    /// <summary>A plan from text, an image or a file, read by AI; needs an account.</summary>
+    [RelayCommand]
+    async Task Import()
+    {
+        if (!ai.IsAvailable)
+        {
+            await dialogs.Alert("Sign in to import plans", "Importing reads the plan with AI, which needs an account. Sign in from the Profile tab.");
+            return;
+        }
+        await GoTo(Routes.ImportPlan);
+    }
+
     [RelayCommand]
     async Task CreateEmpty()
     {
@@ -104,7 +116,7 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     }
 }
 
-public partial class PlanDetailViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, WorkoutEstimator estimator)
+public partial class PlanDetailViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, WorkoutEstimator estimator, AiPlanService ai)
     : BaseViewModel, IQueryAttributable
 {
     string? _id;
@@ -375,9 +387,22 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
         var plan = store.GetPlan(_id);
         if (plan == null)
             return;
-        var choice = await dialogs.ActionSheet(plan.Name, "Delete plan", "Training goal", "Rename plan", "Duplicate plan");
+        var choice = await dialogs.ActionSheet(plan.Name, "Delete plan", "Change with AI", "Regenerate plan", "Training goal", "Rename plan", "Duplicate plan");
         switch (choice)
         {
+            case "Change with AI":
+                if (!ai.IsAvailable)
+                {
+                    await dialogs.Alert("Sign in to use AI", "Changing a plan with AI needs an account. Sign in from the Profile tab.");
+                    break;
+                }
+                // Changes are saved as the AI makes them; this page reloads when the chat closes.
+                await PlanChatViewModel.OpenAsync(plan, ai.AnswersFor(plan), save: true);
+                break;
+            case "Regenerate plan":
+                // The questionnaire, filled in from this plan; saving replaces its workouts.
+                await GoTo($"{Routes.Wizard}?regenerate={plan.Id}");
+                break;
             case "Training goal":
                 await ChangeGoal(plan);
                 break;

@@ -84,7 +84,7 @@ public class OpenAiPlanGenerator(HttpClient http, OpenAiOptions options, ILogger
     }
 
     /// <summary>Reads a plan from text, an image or a file, and rebuilds it from the app's exercises.</summary>
-    public async Task<GeneratePlanResponse> ImportAsync(ImportPlanRequest request, CancellationToken ct)
+    public async Task<GeneratePlanResponse> ImportAsync(ImportPlanRequest request, FetchedLink? link, CancellationToken ct)
     {
         var text = new StringBuilder(AnswersPrompt(request));
         text.AppendLine();
@@ -123,8 +123,20 @@ public class OpenAiPlanGenerator(HttpClient http, OpenAiOptions options, ILogger
                 text.AppendLine(Truncate(content, PlanLimits.ImportTextLength));
             }
         }
-        if (!string.IsNullOrWhiteSpace(request.ImageUrl))
-            parts.Add(new JsonObject { ["type"] = "image_url", ["image_url"] = new JsonObject { ["url"] = request.ImageUrl } });
+        // What the link pointed at, downloaded by the API: a page's text, or an image or PDF passed on as a file would be.
+        if (link?.Text is { } pageText)
+        {
+            text.AppendLine();
+            text.AppendLine($"The plan to import, from the page at {request.Link}:");
+            text.AppendLine(Truncate(pageText, PlanLimits.ImportTextLength));
+        }
+        else if (link?.Bytes is { } bytes)
+        {
+            var dataUrl = $"data:{link.ContentType};base64,{Convert.ToBase64String(bytes)}";
+            parts.Add(link.ContentType == "application/pdf"
+                ? new JsonObject { ["type"] = "file", ["file"] = new JsonObject { ["filename"] = "linked.pdf", ["file_data"] = dataUrl } }
+                : new JsonObject { ["type"] = "image_url", ["image_url"] = new JsonObject { ["url"] = dataUrl } });
+        }
         parts.Insert(0, new JsonObject { ["type"] = "text", ["text"] = text.ToString() });
 
         var messages = new JsonArray(Message("system", ImportPrompt), new JsonObject { ["role"] = "user", ["content"] = parts });
@@ -249,8 +261,9 @@ public class OpenAiPlanGenerator(HttpClient http, OpenAiOptions options, ILogger
         """;
 
     const string ImportPrompt = """
-        You convert a workout plan the user found elsewhere (pasted text, a photo or screenshot, or a document) into a
-        GymBook plan. Keep the plan's structure: one workout per training day in its order, the same exercises, sets,
+        You convert a workout plan the user found elsewhere (pasted text, a web page, a photo or screenshot, or a document)
+        into a GymBook plan. It can be in any format or language, handwritten, or mixed in with other content (a page's
+        menus, ads or comments): find the plan in it and ignore the rest. Keep the plan's structure: one workout per training day in its order, the same exercises, sets,
         reps and rest where it gives them. Map every exercise to the closest one in the provided list by its exact id
         (same movement pattern and muscles, then the same equipment); leave out an exercise only if nothing is close.
         Where the source gives a single rep count, use it for both repMin and repMax; where it gives no reps in reserve,

@@ -150,7 +150,7 @@ public class PlanChatResponse
 }
 
 /// <summary>
-/// A plan from somewhere else for the AI to turn into a GymBook plan: pasted text, an image's URL, or a file
+/// A plan from somewhere else for the AI to turn into a GymBook plan: pasted text, a link (to a web page, image or document), or a file
 /// (a photo or screenshot, a PDF, or a text file). At least one of them is set.
 /// </summary>
 public class ImportPlanRequest : PlanAnswers
@@ -158,7 +158,7 @@ public class ImportPlanRequest : PlanAnswers
     [MaxLength(PlanLimits.ImportTextLength)]
     public string? Text { get; set; }
     [MaxLength(2000)]
-    public string? ImageUrl { get; set; }
+    public string? Link { get; set; }
     public ImportFile? File { get; set; }
     [Required, MinLength(1), MaxItems(PlanLimits.MaxCandidates)]
     public List<PlanCandidate> Exercises { get; set; } = [];

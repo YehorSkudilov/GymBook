@@ -96,6 +96,9 @@ builder.Services.AddHttpClient<OpenAiPlanGenerator>(c =>
     c.BaseAddress = new Uri(openAi.BaseUrl);
     c.Timeout = TimeSpan.FromSeconds(openAi.TimeoutSeconds);
 });
+// Fetches links to import plans from; the handler keeps it off private networks.
+builder.Services.AddHttpClient<LinkFetcher>(c => c.Timeout = TimeSpan.FromSeconds(15))
+    .ConfigurePrimaryHttpMessageHandler(LinkFetcher.CreateHandler);
 // Each AI plan and plan chat message is a paid OpenAI call: a limit per user in any window (e.g. 2 per 1d, 5 per 30d),
 // counted in the database so it survives restarts.
 builder.Services.AddSingleton(new PlanQuotaSettings

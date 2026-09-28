@@ -51,16 +51,24 @@ public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, ICu
     public Task<ActionResult<GeneratePlanResponse>> Generate(GeneratePlanRequest request, CancellationToken ct) =>
         Counted(QuotaKind.Plan, "AI plans", () => generator.GenerateAsync(request, ct), (plan, left) => plan.Quota = left, ct);
 
-    /// <summary>Turns a plan from text, an image or a file into a GymBook plan. Counts as an AI plan.</summary>
+    /// <summary>
+    /// Turns a plan in any format into a GymBook plan with AI: pasted text, a link (a web page, image or PDF, downloaded
+    /// here) or a file. Counts as an AI plan.
+    /// </summary>
     [HttpPost("import")]
     [RequestSizeLimit(MaxImportBytes)]
     public Task<ActionResult<GeneratePlanResponse>> Import(ImportPlanRequest request, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(request.Text) && string.IsNullOrWhiteSpace(request.ImageUrl) && request.File == null)
-            return Task.FromResult<ActionResult<GeneratePlanResponse>>(Problem(statusCode: StatusCodes.Status400BadRequest, title: "Add the plan as text, an image link or a file."));
-        if (request.ImageUrl is { Length: > 0 } url && !(Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http"))
-            return Task.FromResult<ActionResult<GeneratePlanResponse>>(Problem(statusCode: StatusCodes.Status400BadRequest, title: "The image link must be a web address (https://…)."));
-        return Counted(QuotaKind.Plan, "AI plans", () => generator.ImportAsync(request, ct), (plan, left) => plan.Quota = left, ct);
+        if (string.IsNullOrWhiteSpace(request.Text) && string.IsNullOrWhiteSpace(request.Link) && request.File == null)
+            return Task.FromResult<ActionResult<GeneratePlanResponse>>(Problem(statusCode: StatusCodes.Status400BadRequest, title: "Add the plan as text, a link or a file."));
+        if (request.Link is { Length: > 0 } url && !(Uri.TryCreate(url.Trim(), UriKind.Absolute, out var uri) && uri.Scheme is "https" or "http"))
+            return Task.FromResult<ActionResult<GeneratePlanResponse>>(Problem(statusCode: StatusCodes.Status400BadRequest, title: "The link must be a web address (https://…)."));
+        // The link is downloaded inside the counted call, so one that doesn't open doesn't use up a plan.
+        return Counted(QuotaKind.Plan, "AI plans", async () =>
+        {
+            var link = string.IsNullOrWhiteSpace(request.Link) ? null : await links.FetchAsync(request.Link, ct);
+            return await generator.ImportAsync(request, link, ct);
+        }, (plan, left) => plan.Quota = left, ct);
     }
 
     /// <summary>A message to the plan's AI coach, which may change the plan. Counts against the chat quota.</summary>

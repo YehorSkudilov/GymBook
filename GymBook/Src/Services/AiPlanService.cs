@@ -99,13 +99,13 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
         return plan;
     }
 
-    /// <summary>A plan read by the AI from pasted text, an image link or a file, rebuilt from the app's exercises.</summary>
-    public async Task<WorkoutPlan> ImportAsync(string? text, string? imageUrl, ImportFile? file, CancellationToken ct = default)
+    /// <summary>A plan read by the AI from pasted text, a link or a file, rebuilt from the app's exercises.</summary>
+    public async Task<WorkoutPlan> ImportAsync(string? text, string? link, ImportFile? file, CancellationToken ct = default)
     {
         var answers = store.Profile;
         var request = Fill(new ImportPlanRequest(), answers);
         request.Text = string.IsNullOrWhiteSpace(text) ? null : text.Trim();
-        request.ImageUrl = string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl.Trim();
+        request.Link = string.IsNullOrWhiteSpace(link) ? null : link.Trim();
         request.File = file;
         // Any exercise can appear in someone else's plan, so the whole library is offered, not just the user's equipment.
         request.Exercises = Candidates(new UserProfile { EquipmentAccess = EquipmentAccess.FullGym, TrainNeck = true });

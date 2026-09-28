@@ -65,7 +65,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     public bool ShowPlan => IsResult && !IsGenerating;
     public bool ShowQuestions => IsQuestions && !IsGenerating;
     public bool CanRegenerate => IsResult && !IsGenerating && ai.IsAvailable && !ai.IsQuotaUsedUp;
-    public bool CanChat => IsResult && !IsGenerating && ai.IsAvailable && _plan != null;
+    // Opened through Shell, which first-run onboarding runs before.
+    public bool CanChat => IsResult && !IsGenerating && ai.IsAvailable && _plan != null && Shell.Current != null;
     /// <summary>Where the plan came from: the AI, or the built-in generator and why.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasPlanNote))]
@@ -340,7 +341,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
 
     /// <summary>Chat with the AI about the plan before saving it; changes show up here.</summary>
     [RelayCommand]
-    Task Chat() => _plan == null ? Task.CompletedTask : PlanChatViewModel.OpenAsync(_plan, Answers(), save: false, onChanged: () => ShowPlanPreview(_plan));
+    Task Chat() => _plan is not { } plan ? Task.CompletedTask : PlanChatViewModel.OpenAsync(plan, Answers(), save: false, onChanged: () => ShowPlanPreview(plan));
 
     void ShowPlanPreview(WorkoutPlan plan)
     {
