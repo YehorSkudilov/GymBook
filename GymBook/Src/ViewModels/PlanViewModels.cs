@@ -39,8 +39,14 @@ public class PlanDayExercise
     public required IAsyncRelayCommand OpenCommand { get; init; }
 }
 
-public partial class PlansViewModel(DataStore store, DialogService dialogs) : BaseViewModel
+public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPlanService ai) : BaseViewModel
 {
+    /// <summary>How many AI plans are left, under "Build a new plan"; empty when signed out.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasAiQuota))]
+    string aiQuotaText = "";
+    public bool HasAiQuota => AiQuotaText.Length > 0;
+
     [ObservableProperty] PlanItem? activePlan;
     [ObservableProperty] bool hasActivePlan;
     [ObservableProperty] List<PlanItem> otherPlans = [];
@@ -60,8 +66,18 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs) : Ba
         HasActivePlan = ActivePlan != null;
         OtherPlans = items.Where(i => !i.IsActive).ToList();
         HasOtherPlans = OtherPlans.Count > 0;
+        ShowQuota();
+        _ = RefreshQuotaAsync();
         return Task.CompletedTask;
     }
+
+    async Task RefreshQuotaAsync()
+    {
+        await ai.RefreshQuotaAsync();
+        ShowQuota();
+    }
+
+    void ShowQuota() => AiQuotaText = !ai.IsAvailable ? "" : ai.Quota is { } q ? AiPlanService.Describe(q) : "";
 
     [RelayCommand]
     Task Generate() => GoTo(Routes.Wizard);

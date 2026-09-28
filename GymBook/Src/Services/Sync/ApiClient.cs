@@ -53,6 +53,13 @@ public class ApiClient(HttpClient http, AuthSession session)
     public Task<GeneratePlanResponse> GeneratePlanAsync(GeneratePlanRequest request, CancellationToken ct = default) =>
         SendAuthorizedAsync<GeneratePlanRequest, GeneratePlanResponse>("api/plans/generate", request, ct, PlanGenerationTimeout);
 
+    /// <summary>How many AI plans the user has left.</summary>
+    public async Task<PlanQuotaResponse> GetPlanQuotaAsync(CancellationToken ct = default)
+    {
+        using var response = await SendWithTokenAsync(() => new HttpRequestMessage(HttpMethod.Get, "api/plans/quota"), ct);
+        return await ReadAsync<PlanQuotaResponse>(response);
+    }
+
     public async Task DeleteAccountAsync(string password, CancellationToken ct = default)
     {
         using var response = await SendWithTokenAsync("api/account/delete", new DeleteAccountRequest { Password = password }, ct);
@@ -65,17 +72,20 @@ public class ApiClient(HttpClient http, AuthSession session)
         return await ReadAsync<TResponse>(response);
     }
 
-    async Task<HttpResponseMessage> SendWithTokenAsync<TRequest>(string path, TRequest body, CancellationToken ct, TimeSpan? timeout = null)
+    Task<HttpResponseMessage> SendWithTokenAsync<TRequest>(string path, TRequest body, CancellationToken ct, TimeSpan? timeout = null) =>
+        SendWithTokenAsync(() => new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body, TypeInfo<TRequest>()) }, ct, timeout);
+
+    async Task<HttpResponseMessage> SendWithTokenAsync(Func<HttpRequestMessage> create, CancellationToken ct, TimeSpan? timeout = null)
     {
         var token = await GetAccessTokenAsync(forceRefresh: false, ct);
-        var response = await PostAsync(path, body, token, ct, timeout);
+        var response = await SendAsync(create(), token, ct, timeout);
         if (response.StatusCode != HttpStatusCode.Unauthorized)
             return response;
 
         // The access token was rejected (expired early, revoked, account gone): renew once and retry.
         response.Dispose();
         token = await GetAccessTokenAsync(forceRefresh: true, ct);
-        response = await PostAsync(path, body, token, ct, timeout);
+        response = await SendAsync(create(), token, ct, timeout);
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
             response.Dispose();
@@ -122,9 +132,11 @@ public class ApiClient(HttpClient http, AuthSession session)
 
     // Each call has its own timeout (the HttpClient's is only the upper bound). The response body is buffered before
     // SendAsync returns, so it can still be read after the timeout is disposed.
-    async Task<HttpResponseMessage> PostAsync<TRequest>(string path, TRequest body, string? token, CancellationToken ct, TimeSpan? timeout = null)
+    Task<HttpResponseMessage> PostAsync<TRequest>(string path, TRequest body, string? token, CancellationToken ct, TimeSpan? timeout = null) =>
+        SendAsync(new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body, TypeInfo<TRequest>()) }, token, ct, timeout);
+
+    async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, string? token, CancellationToken ct, TimeSpan? timeout = null)
     {
-        var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body, TypeInfo<TRequest>()) };
         if (token != null)
             request.Headers.Authorization = new("Bearer", token);
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);

@@ -12,6 +12,39 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
 {
     public bool IsAvailable => account.IsSignedIn;
 
+    /// <summary>The last known quota, from <see cref="RefreshQuotaAsync"/> or the last generated plan; null when unknown.</summary>
+    public PlanQuotaResponse? Quota { get; private set; }
+
+    /// <summary>All AI plans used up, and none frees up yet.</summary>
+    public bool IsQuotaUsedUp => Quota is { Remaining: 0 } q && (q.NextAvailableAt is not { } next || next > DateTimeOffset.UtcNow);
+
+    /// <summary>Fetches how many AI plans are left. Keeps the last known value when offline.</summary>
+    public async Task<PlanQuotaResponse?> RefreshQuotaAsync()
+    {
+        if (!IsAvailable)
+            return Quota = null;
+        try
+        {
+            Quota = await api.GetPlanQuotaAsync();
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException or ApiException or SessionExpiredException)
+        {
+        }
+        return Quota;
+    }
+
+    /// <summary>"3 of 5 AI plans left per day", or when the next one frees up.</summary>
+    public static string Describe(PlanQuotaResponse q)
+    {
+        if (q.Remaining > 0)
+            return $"{q.Remaining} of {q.Limit} AI plan{(q.Limit == 1 ? "" : "s")} left per {q.Period}";
+        if (q.NextAvailableAt is not { } next)
+            return "No AI plans left";
+        var local = next.ToLocalTime().DateTime;
+        var when = local.Date == DateTime.Today ? $"at {local:t}" : local.Date == DateTime.Today.AddDays(1) ? $"tomorrow at {local:t}" : $"on {local:ddd d MMM}";
+        return $"No AI plans left. Your next one is available {when}";
+    }
+
     /// <summary>A plan for <paramref name="answers"/>, with the user's own rest times applied. Throws on any failure.</summary>
     public async Task<WorkoutPlan> GenerateAsync(UserProfile answers, CancellationToken ct = default)
     {
@@ -41,7 +74,18 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
             })],
         };
 
-        var response = await api.GeneratePlanAsync(request, ct);
+        GeneratePlanResponse response;
+        try
+        {
+            response = await api.GeneratePlanAsync(request, ct);
+        }
+        catch (ApiException e) when (e.Status == System.Net.HttpStatusCode.TooManyRequests)
+        {
+            // Quota used up (e.g. on another device): pick up when the next one is available.
+            await RefreshQuotaAsync();
+            throw;
+        }
+        Quota = response.Quota ?? Quota;
 
         var plan = new WorkoutPlan
         {

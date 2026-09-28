@@ -48,7 +48,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     [NotifyPropertyChangedFor(nameof(ShowPlan), nameof(CanRegenerate))]
     bool isGenerating;
     public bool ShowPlan => IsResult && !IsGenerating;
-    public bool CanRegenerate => IsResult && !IsGenerating && ai.IsAvailable;
+    public bool CanRegenerate => IsResult && !IsGenerating && ai.IsAvailable && !ai.IsQuotaUsedUp;
     /// <summary>Where the plan came from: the AI, or the built-in generator and why.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasPlanNote))]
@@ -61,6 +61,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     public void Start(bool onboarding)
     {
         IsOnboarding = onboarding;
+        // Ready by the last step, so a used-up quota skips straight to the standard plan.
+        _ = ai.RefreshQuotaAsync();
         var p = store.Profile;
         (_goal, _experience, _days, _minutes, _equipment) = (p.Goal, p.Experience, p.DaysPerWeek, p.SessionMinutes, p.EquipmentAccess);
         UserName = p.Name;
@@ -210,7 +212,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         };
 
         WorkoutPlan plan;
-        if (ai.IsAvailable)
+        if (ai.IsAvailable && !ai.IsQuotaUsedUp)
         {
             IsGenerating = true;
             Title = "Building your plan…";
@@ -218,7 +220,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             try
             {
                 plan = await ai.GenerateAsync(answers);
-                PlanNote = "Made by AI for your answers.";
+                PlanNote = ai.Quota is { } q ? $"Made by AI for your answers. {AiPlanService.Describe(q)}." : "Made by AI for your answers.";
             }
             catch (Exception e)
             {
@@ -233,7 +235,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         else
         {
             plan = PlanGenerator.Generate(answers);
-            PlanNote = "Sign in to have AI build a plan around your answers.";
+            PlanNote = ai.IsAvailable && ai.Quota is { } q ? $"{AiPlanService.Describe(q)}. Here's a standard plan instead." : "Sign in to have AI build a plan around your answers.";
         }
 
         Title = "Your plan is ready";
