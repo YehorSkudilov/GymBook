@@ -114,6 +114,10 @@ public class ApiClient(HttpClient http, AuthSession session)
     public Task<PlanChatResponse> ChatAboutPlanAsync(PlanChatRequest request, CancellationToken ct = default) =>
         SendAuthorizedAsync<PlanChatRequest, PlanChatResponse>("api/plans/chat", request, ct, PlanGenerationTimeout);
 
+    /// <summary>Suggestions to improve a plan from how the user has been doing on it.</summary>
+    public Task<PlanReviewResponse> ReviewPlanAsync(PlanReviewRequest request, CancellationToken ct = default) =>
+        SendAuthorizedAsync<PlanReviewRequest, PlanReviewResponse>("api/plans/review", request, ct, PlanGenerationTimeout);
+
     /// <summary>How many AI plans the user has left.</summary>
     public async Task<PlanQuotaResponse> GetPlanQuotaAsync(CancellationToken ct = default)
     {

@@ -9,8 +9,9 @@ namespace GymBook.Services;
 /// them, and a chat that changes a plan. Only for signed-in users; the wizard falls back to <see cref="PlanGenerator"/>
 /// otherwise, or when this fails.
 /// </summary>
-public class AiPlanService(ApiClient api, AccountService account, DataStore store)
+public class AiPlanService(ApiClient api, AccountService account, DataStore store, StatsService stats)
 {
+    readonly Dictionary<string, (PlanReviewResponse Review, DateTime At)> _reviews = [];
     public bool IsAvailable => account.IsSignedIn;
 
     /// <summary>The last known quota, from <see cref="RefreshQuotaAsync"/> or the last generated plan; null when unknown.</summary>
@@ -158,6 +159,129 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
         if (!restDaysMatch)
             plan.RestDays = [.. PlanSchedule.DefaultRestDays(workouts.Count).Order()];
         return (response.Reply, true);
+    }
+
+    /// <summary>Finished workouts of <paramref name="plan"/>, newest first: what a review has to go on.</summary>
+    public List<WorkoutSession> SessionsOf(WorkoutPlan plan) => [.. store.History.Where(s => s.PlanId == plan.Id)];
+
+    /// <summary>The last review of <paramref name="plan"/> this app run, so reopening it doesn't spend another request.</summary>
+    public (PlanReviewResponse Review, DateTime At)? LastReview(WorkoutPlan plan) => _reviews.TryGetValue(plan.Id, out var r) ? r : null;
+
+    /// <summary>The AI's suggestions for <paramref name="plan"/>, from a summary of the workouts logged on it.</summary>
+    public async Task<PlanReviewResponse> ReviewAsync(WorkoutPlan plan, CancellationToken ct = default)
+    {
+        var answers = AnswersFor(plan);
+        var request = Fill(new PlanReviewRequest(), answers);
+        request.Plan = ToResponse(plan);
+        request.Exercises = Candidates(answers, plan);
+        request.Performance = Performance(plan);
+
+        var response = await api.ReviewPlanAsync(request, ct);
+        ChatQuota = response.Quota ?? ChatQuota;
+        _reviews[plan.Id] = (response, DateTime.Now);
+        return response;
+    }
+
+    /// <summary>
+    /// What the AI needs to know about the training on the plan: attendance, workout length, weekly volume per muscle,
+    /// and the recent sets of each of its exercises (on any plan, since the same lift carries over).
+    /// </summary>
+    PlanPerformance Performance(WorkoutPlan plan)
+    {
+        var sessions = SessionsOf(plan);
+        var weeks = sessions.Count == 0 ? 0 : Math.Max(1, (int)Math.Ceiling((DateTime.Now - sessions[^1].StartedAt).TotalDays / 7));
+        var recent = sessions.Take(10).ToList();
+        var from = DateTime.Today.AddDays(-28);
+
+        var ids = plan.Workouts.SelectMany(w => w.Exercises).Select(e => e.ExerciseId).Distinct().Take(PlanReviewLimits.MaxExercises);
+        var history = ids.Select(id => new ExerciseHistory
+        {
+            ExerciseId = id,
+            Sessions = [.. store.History
+                .SelectMany(s => s.Exercises.Where(e => e.ExerciseId == id && e.Sets.Any(x => !x.IsWarmup)).Take(1).Select(e => (s, e)))
+                .Take(PlanReviewLimits.MaxSessionsPerExercise)
+                .Select(x => new ExerciseSessionSummary
+                {
+                    DaysAgo = Math.Max(0, (DateTime.Today - x.s.StartedAt.Date).Days),
+                    RepMin = x.e.RepMin,
+                    RepMax = x.e.RepMax,
+                    TargetRir = x.e.TargetRir,
+                    SkippedSets = Math.Min(100, x.e.Sets.Count(set => !set.IsWarmup && !set.IsCompleted)),
+                    Sets = [.. x.e.Sets.Where(set => set.IsCompleted && !set.IsWarmup).Take(PlanReviewLimits.MaxSetsPerSession).Select(set => new LoggedSet
+                    {
+                        WeightKg = Math.Clamp(Math.Round(set.WeightKg, 2), 0, 2000),
+                        Reps = Math.Clamp(set.Reps, 0, 1000),
+                        Rir = set.Rir is { } rir ? Math.Clamp(rir, 0, 10) : null,
+                    })],
+                })],
+        }).ToList();
+
+        return new PlanPerformance
+        {
+            WeeksOnPlan = Math.Min(weeks, 1000),
+            WorkoutsDone = Math.Min(sessions.Count, 10000),
+            WorkoutsPlanned = Math.Min(weeks * plan.Workouts.Count, 10000),
+            AverageSessionMinutes = recent.Count == 0 ? null : Math.Clamp((int)recent.Average(s => s.Duration.TotalMinutes), 0, 600),
+            WeeklySets = [.. stats.SetsPerMuscleSince(from).Where(m => m.Value > 0)
+                .Select(m => new MuscleVolume { Muscle = m.Key, Sets = Math.Min(200, Math.Round(m.Value / 4, 1)) })],
+            History = history,
+        };
+    }
+
+    /// <summary>
+    /// Makes the edits of <paramref name="suggestion"/> to <paramref name="plan"/> (the caller saves). Edits that no
+    /// longer fit, e.g. the plan was changed since the review, are skipped. Returns how many were made.
+    /// </summary>
+    public int Apply(WorkoutPlan plan, PlanSuggestion suggestion)
+    {
+        var applied = 0;
+        foreach (var c in suggestion.Changes)
+        {
+            if (c.WorkoutIndex < 0 || c.WorkoutIndex >= plan.Workouts.Count)
+                continue;
+            var workout = plan.Workouts[c.WorkoutIndex];
+            var current = workout.Exercises.FirstOrDefault(e => e.ExerciseId == c.ExerciseId);
+            var incoming = store.GetExercise(c.NewExerciseId);
+            var alreadyThere = workout.Exercises.Any(e => e.ExerciseId == c.NewExerciseId);
+            switch (c.Action)
+            {
+                case PlanChangeActions.Update when current != null:
+                    SetNumbers(current, c);
+                    break;
+                case PlanChangeActions.Replace when current != null && incoming != null && !alreadyThere:
+                    current.ExerciseId = incoming.Id;
+                    SetNumbers(current, c);
+                    break;
+                case PlanChangeActions.Add when incoming != null && !alreadyThere:
+                    // Anything the AI left out comes from the goal's usual prescription.
+                    var added = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, incoming, store.Profile);
+                    SetNumbers(added, c);
+                    workout.Exercises.Add(added);
+                    break;
+                case PlanChangeActions.Remove when current != null:
+                    workout.Exercises.Remove(current);
+                    break;
+                default:
+                    continue;
+            }
+            applied++;
+        }
+        return applied;
+    }
+
+    static void SetNumbers(PlanExercise e, PlanChange c)
+    {
+        if (c.Sets > 0)
+            e.Sets = c.Sets;
+        if (c.RepMin > 0)
+            e.RepMin = c.RepMin;
+        if (c.RepMax > 0)
+            e.RepMax = c.RepMax;
+        e.RepMax = Math.Max(e.RepMax, e.RepMin);
+        if (c.TargetRir >= 0)
+            e.TargetRir = c.TargetRir;
+        if (c.RestSeconds > 0)
+            e.RestSeconds = c.RestSeconds;
     }
 
     /// <summary>The wizard's answers the AI needs, for a saved plan: its own goal and days, the rest from the profile.</summary>

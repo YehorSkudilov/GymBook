@@ -17,6 +17,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(Routes.PlanWorkout, typeof(PlanWorkoutEditPage));
         Routing.RegisterRoute(Routes.Wizard, typeof(PlanWizardPage));
         Routing.RegisterRoute(Routes.PlanChat, typeof(PlanChatPage));
+        Routing.RegisterRoute(Routes.PlanReview, typeof(PlanReviewPage));
         Routing.RegisterRoute(Routes.ImportPlan, typeof(ImportPlanPage));
         Routing.RegisterRoute(Routes.RecoveryWarning, typeof(RecoveryWarningPage));
         Routing.RegisterRoute(Routes.Exercise, typeof(ExerciseDetailPage));
@@ -37,6 +38,7 @@ public static class Routes
     public const string PlanWorkout = "planworkout";
     public const string Wizard = "wizard";
     public const string PlanChat = "planchat";
+    public const string PlanReview = "planreview";
     public const string ImportPlan = "importplan";
     public const string RecoveryWarning = "recoverywarning";
     public const string Exercise = "exercise";

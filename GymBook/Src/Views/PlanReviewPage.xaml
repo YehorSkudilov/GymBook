@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:SheetPage
+    x:Class="GymBook.Views.PlanReviewPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PlanReviewViewModel"
+    Shell.PresentationMode="ModalNotAnimated"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
+
+    <!-- The AI's verdict on the plan from the logged workouts, and suggestions to apply one by one. -->
+    <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
+        <Grid RowDefinitions="Auto,*,Auto">
+
+            <!-- Header -->
+            <Grid ColumnDefinitions="*,Auto" Padding="20,14,8,6">
+                <VerticalStackLayout VerticalOptions="Center">
+                    <HorizontalStackLayout Spacing="8">
+                        <Image WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
+                            <Image.Source>
+                                <FontImageSource FontFamily="OutlinedIcons" Glyph="auto_awesome" Color="{StaticResource Accent}" Size="32" />
+                            </Image.Source>
+                        </Image>
+                        <Label Text="AI suggestions" FontFamily="OpenSansSemibold" FontSize="18" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding Title}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" />
+                </VerticalStackLayout>
+                <Button Grid.Column="1" Text="Done" Style="{StaticResource GhostButton}" FontSize="17" VerticalOptions="Center"
+                        Command="{Binding CloseCommand}" />
+            </Grid>
+
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Padding="16,8,16,16" Spacing="12">
+
+                    <!-- Working on it -->
+                    <VerticalStackLayout Spacing="12" Padding="0,48" IsVisible="{Binding IsLoading}" HorizontalOptions="Center">
+                        <ActivityIndicator IsRunning="{Binding IsLoading}" Color="{StaticResource Accent}" HeightRequest="32" />
+                        <Label Text="Looking at your workouts…" Style="{StaticResource Caption}" FontSize="15" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+
+                    <!-- Nothing to go on yet -->
+                    <Border Style="{StaticResource Card}" Padding="20,28" IsVisible="{Binding NeedsWorkouts}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="No workouts on this plan yet" Style="{StaticResource H3}" HorizontalOptions="Center" />
+                            <Label Text="Log a few workouts from it, and the AI will suggest changes based on how they went."
+                                   Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Label Text="{Binding Error}" TextColor="{StaticResource Danger}" FontSize="14" IsVisible="{Binding HasError}" />
+
+                    <!-- The verdict -->
+                    <Border Style="{StaticResource Card}" Padding="16" IsVisible="{Binding HasResult}">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="HOW IT'S GOING" Style="{StaticResource Overline}" />
+                            <Label Text="{Binding Summary}" FontSize="15" LineHeight="1.25" />
+                            <Label Text="{Binding UpdatedText}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Label Text="Nothing to change right now. Keep logging and check back in a week or two." Style="{StaticResource Caption}"
+                           HorizontalTextAlignment="Center" Margin="0,8" IsVisible="{Binding HasNoSuggestions}" />
+
+                    <!-- Suggestions -->
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Suggestions}" Spacing="12" IsVisible="{Binding HasResult}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PlanSuggestionItem">
+                                <Border Style="{StaticResource Card}" Padding="16">
+                                    <VerticalStackLayout Spacing="8">
+                                        <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="17" />
+                                        <Label Text="{Binding Reason}" Style="{StaticResource Caption}" FontSize="14" LineHeight="1.2" />
+                                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Changes}" Spacing="4" IsVisible="{Binding HasChanges}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="x:String">
+                                                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                                        <Label Text="•" TextColor="{StaticResource Accent}" FontSize="14" />
+                                                        <Label Grid.Column="1" Text="{Binding .}" FontSize="14" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </VerticalStackLayout>
+                                        <Label Text="{Binding Note}" Style="{StaticResource Caption}" FontSize="13" IsVisible="{Binding HasNote}" />
+                                        <Button Text="Apply to plan" Style="{StaticResource SmallButton}" HorizontalOptions="Start" Margin="0,4,0,0"
+                                                Command="{Binding ApplyCommand}" IsVisible="{Binding CanApply}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Ask again, e.g. after a few more workouts or after applying some -->
+            <VerticalStackLayout Grid.Row="2" Padding="16,6,16,16" Spacing="4" IsVisible="{Binding CanAsk}">
+                <Button Text="Get new suggestions" Style="{StaticResource SecondaryButton}" Command="{Binding LoadCommand}"
+                        IsEnabled="{Binding IsLoading, Converter={StaticResource Not}}" />
+                <Label Text="{Binding QuotaText}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+        </Grid>
+    </Border>
+</views:SheetPage>

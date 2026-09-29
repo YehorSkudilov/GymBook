@@ -381,15 +381,32 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
         await OnAppearingAsync();
     }
 
+    /// <summary>The AI's suggestions from the workouts logged on the plan; applied ones are saved, and this page reloads when it closes.</summary>
+    [RelayCommand]
+    async Task ImproveWithAi()
+    {
+        if (store.GetPlan(_id) is not { } plan)
+            return;
+        if (!ai.IsAvailable)
+        {
+            await dialogs.Alert("Sign in to use AI", "AI suggestions need an account. Sign in from the Profile tab.");
+            return;
+        }
+        await PlanReviewViewModel.OpenAsync(plan);
+    }
+
     [RelayCommand]
     async Task More()
     {
         var plan = store.GetPlan(_id);
         if (plan == null)
             return;
-        var choice = await dialogs.ActionSheet(plan.Name, "Delete plan", "Change with AI", "Regenerate plan", "Training goal", "Rename plan", "Duplicate plan");
+        var choice = await dialogs.ActionSheet(plan.Name, "Delete plan", "AI suggestions", "Change with AI", "Regenerate plan", "Training goal", "Rename plan", "Duplicate plan");
         switch (choice)
         {
+            case "AI suggestions":
+                await ImproveWithAi();
+                break;
             case "Change with AI":
                 if (!ai.IsAvailable)
                 {

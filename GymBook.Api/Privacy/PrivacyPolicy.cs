@@ -63,6 +63,7 @@ public static class PrivacyPolicy
         <ul>
           <li><strong>Exercise photos</strong> are loaded from GitHub (raw.githubusercontent.com), which receives your device's IP address when it serves them.
           No account information is sent.</li>
+          <li><strong>AI features</strong> (AI plans, importing a plan, the AI coach and AI suggestions) send what they need to OpenAI to generate an answer: your training profile (goal, experience, days, session length, equipment, and age, body weight and training years if set), the plan, what you type or attach, and for AI suggestions a summary of your recent sets on the plan. Your name and email are not sent. They are used only when you use these features.</li>
           <li><strong>Email:</strong> password reset and email change codes are sent through our email provider, which receives the address and the message.</li>
           <li><strong>"Watch video"</strong> on an exercise opens a YouTube search in your browser. What YouTube collects is covered by Google's privacy policy.</li>
         </ul>

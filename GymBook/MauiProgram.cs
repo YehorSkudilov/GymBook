@@ -58,6 +58,7 @@ public static class MauiProgram
         AddPage<PlanWorkoutEditPage, PlanWorkoutEditViewModel>(builder.Services);
         AddPage<PlanWizardPage, PlanWizardViewModel>(builder.Services);
         AddPage<PlanChatPage, PlanChatViewModel>(builder.Services);
+        AddPage<PlanReviewPage, PlanReviewViewModel>(builder.Services);
         AddPage<ImportPlanPage, ImportPlanViewModel>(builder.Services);
         AddPage<RecoveryWarningPage, RecoveryWarningViewModel>(builder.Services);
         AddPage<ExerciseDetailPage, ExerciseDetailViewModel>(builder.Services);

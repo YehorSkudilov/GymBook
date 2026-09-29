@@ -174,3 +174,131 @@ public class ImportFile
     [Required, MaxLength(PlanLimits.ImportFileBase64Length)]
     public string Base64 { get; set; } = "";
 }
+
+public static class PlanReviewLimits
+{
+    public const int MaxExercises = 100;
+    public const int MaxSessionsPerExercise = 8;
+    public const int MaxSetsPerSession = 20;
+    public const int MaxSuggestions = 6;
+    public const int MaxChangesPerSuggestion = 12;
+}
+
+/// <summary>A plan and how the user has actually been doing on it, for the AI to suggest improvements.</summary>
+public class PlanReviewRequest : PlanAnswers
+{
+    [Required]
+    public GeneratePlanResponse Plan { get; set; } = new();
+    [Required]
+    public PlanPerformance Performance { get; set; } = new();
+    /// <summary>What the AI may swap in or add.</summary>
+    [Required, MinLength(1), MaxItems(PlanLimits.MaxCandidates)]
+    public List<PlanCandidate> Exercises { get; set; } = [];
+}
+
+/// <summary>A summary of the logged workouts, worked out on the device so only what matters is sent.</summary>
+public class PlanPerformance
+{
+    /// <summary>Weeks since the plan was started (its first logged workout).</summary>
+    [Range(0, 1000)]
+    public int WeeksOnPlan { get; set; }
+    /// <summary>Workouts of this plan finished in that time, and how many the plan called for.</summary>
+    [Range(0, 10000)]
+    public int WorkoutsDone { get; set; }
+    [Range(0, 10000)]
+    public int WorkoutsPlanned { get; set; }
+    [Range(0, 600)]
+    public int? AverageSessionMinutes { get; set; }
+    /// <summary>Hard sets per muscle per week, over the last 4 weeks.</summary>
+    [MaxItems(40)]
+    public List<MuscleVolume> WeeklySets { get; set; } = [];
+    /// <summary>The recent sessions of each exercise in the plan.</summary>
+    [MaxItems(PlanReviewLimits.MaxExercises)]
+    public List<ExerciseHistory> History { get; set; } = [];
+}
+
+public class MuscleVolume
+{
+    public MuscleGroup Muscle { get; set; }
+    [Range(0, 200)]
+    public double Sets { get; set; }
+}
+
+public class ExerciseHistory
+{
+    [Required, MaxLength(SyncLimits.IdLength)]
+    public string ExerciseId { get; set; } = "";
+    /// <summary>Newest first.</summary>
+    [MaxItems(PlanReviewLimits.MaxSessionsPerExercise)]
+    public List<ExerciseSessionSummary> Sessions { get; set; } = [];
+}
+
+public class ExerciseSessionSummary
+{
+    [Range(0, 10000)]
+    public int DaysAgo { get; set; }
+    /// <summary>The target that day.</summary>
+    public int RepMin { get; set; }
+    public int RepMax { get; set; }
+    public int TargetRir { get; set; }
+    /// <summary>Working sets that were planned but not done.</summary>
+    [Range(0, 100)]
+    public int SkippedSets { get; set; }
+    /// <summary>Completed working sets, warm-ups left out.</summary>
+    [MaxItems(PlanReviewLimits.MaxSetsPerSession)]
+    public List<LoggedSet> Sets { get; set; } = [];
+}
+
+public class LoggedSet
+{
+    [Range(0, 2000)]
+    public double WeightKg { get; set; }
+    [Range(0, 1000)]
+    public int Reps { get; set; }
+    [Range(0, 10)]
+    public int? Rir { get; set; }
+}
+
+/// <summary>What the AI makes of the user's training on the plan, and what it would change.</summary>
+public class PlanReviewResponse
+{
+    /// <summary>A few sentences on how it's going.</summary>
+    public string Summary { get; set; } = "";
+    public List<PlanSuggestion> Suggestions { get; set; } = [];
+    public PlanQuotaResponse? Quota { get; set; }
+}
+
+public class PlanSuggestion
+{
+    public string Title { get; set; } = "";
+    /// <summary>Why, pointing at the data.</summary>
+    public string Reason { get; set; } = "";
+    /// <summary>The edits that carry it out; empty for advice with nothing to change in the plan.</summary>
+    public List<PlanChange> Changes { get; set; } = [];
+}
+
+/// <summary>One edit to one exercise of the plan. Numbers of 0 keep the current value (for TargetRir, -1 does, since 0 is a real target).</summary>
+public class PlanChange
+{
+    /// <summary>Index of the workout in the plan.</summary>
+    public int WorkoutIndex { get; set; }
+    /// <summary>"update", "replace", "add" or "remove".</summary>
+    public string Action { get; set; } = "";
+    /// <summary>The exercise in that workout it applies to; empty for "add".</summary>
+    public string ExerciseId { get; set; } = "";
+    /// <summary>For "replace" and "add": the exercise to put in.</summary>
+    public string NewExerciseId { get; set; } = "";
+    public int Sets { get; set; }
+    public int RepMin { get; set; }
+    public int RepMax { get; set; }
+    public int TargetRir { get; set; }
+    public int RestSeconds { get; set; }
+}
+
+public static class PlanChangeActions
+{
+    public const string Update = "update";
+    public const string Replace = "replace";
+    public const string Add = "add";
+    public const string Remove = "remove";
+}

@@ -76,6 +76,14 @@ public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, Lin
     public Task<ActionResult<PlanChatResponse>> Chat(PlanChatRequest request, CancellationToken ct) =>
         Counted(QuotaKind.Chat, "AI chat messages", () => generator.ChatAsync(request, ct), (reply, left) => reply.Quota = left, ct);
 
+    /// <summary>
+    /// Suggestions to improve the plan from how the user has been doing on it, each as edits the app can apply.
+    /// Counts against the chat quota: it's one message to the same AI coach.
+    /// </summary>
+    [HttpPost("review")]
+    public Task<ActionResult<PlanReviewResponse>> Review(PlanReviewRequest request, CancellationToken ct) =>
+        Counted(QuotaKind.Chat, "AI coach messages", () => generator.ReviewAsync(request, ct), (review, left) => review.Quota = left, ct);
+
     /// <summary>Runs a paid AI call against the <paramref name="kind"/> quota: refused when it's used up, given back when the call fails.</summary>
     async Task<ActionResult<T>> Counted<T>(string kind, string what, Func<Task<T>> call, Action<T, PlanQuotaResponse> withQuota, CancellationToken ct)
     {
