@@ -45,7 +45,7 @@ public static class PrivacyPolicy
 
         <h2>Data we collect when you create an account</h2>
         <ul>
-          <li><strong>Account details:</strong> your email address and password. Passwords are stored only as a secure hash, never in readable form.</li>
+          <li><strong>Account details:</strong> your email address and password. Passwords are stored only as a secure hash, never in readable form. If you sign in with Google, we receive your Google account's email address and account ID from Google, and nothing else.</li>
           <li><strong>Your training data:</strong> the data listed above, including a workout in progress, is uploaded so it can be restored and synced to your other devices.</li>
           <li><strong>Sign-in sessions:</strong> sign-in tokens that keep you signed in on each device, stored only as hashes.</li>
           <li><strong>Server logs:</strong> the server may record IP addresses and request times in its logs, used only to keep the service secure and to fix problems.</li>
@@ -59,10 +59,11 @@ public static class PrivacyPolicy
         <h2>Who we share data with</h2>
         <p>We don't sell or share your personal data with third parties. Your account data is stored on a server we operate,
         run by our hosting provider, which processes it only on our behalf. We disclose data only if required by law.</p>
-        <p>GymBook contains no advertising, analytics or tracking software. Two features load content from other services:</p>
+        <p>GymBook contains no advertising, analytics or tracking software. A few features use other services:</p>
         <ul>
           <li><strong>Exercise photos</strong> are loaded from GitHub (raw.githubusercontent.com), which receives your device's IP address when it serves them.
           No account information is sent.</li>
+          <li><strong>Email:</strong> password reset and email change codes are sent through our email provider, which receives the address and the message.</li>
           <li><strong>"Watch video"</strong> on an exercise opens a YouTube search in your browser. What YouTube collects is covered by Google's privacy policy.</li>
         </ul>
 

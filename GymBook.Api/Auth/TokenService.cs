@@ -79,6 +79,7 @@ public class TokenService(JwtOptions options, ApiDbContext db, TimeProvider cloc
             AccessTokenExpiresAt = accessExpires,
             RefreshToken = refreshToken,
             RefreshTokenExpiresAt = refreshExpires,
+            HasPassword = user.PasswordHash != null,
         };
     }
 
@@ -123,6 +124,15 @@ public class TokenService(JwtOptions options, ApiDbContext db, TimeProvider cloc
         var familyId = await db.RefreshTokens.Where(t => t.TokenHash == hash).Select(t => (Guid?)t.FamilyId).FirstOrDefaultAsync(ct);
         if (familyId != null)
             await RevokeFamilyAsync(familyId.Value, ct);
+    }
+
+    /// <summary>Signs the user out everywhere, e.g. after the password changed.</summary>
+    public Task RevokeAllAsync(string userId, CancellationToken ct = default)
+    {
+        var now = clock.GetUtcNow();
+        return db.RefreshTokens
+            .Where(t => t.UserId == userId && t.RevokedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, now), ct);
     }
 
     Task RevokeFamilyAsync(Guid familyId, CancellationToken ct)

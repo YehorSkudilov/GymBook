@@ -91,6 +91,11 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 	</ItemGroup>
 
+	<!-- Google sign-in on Android (Platforms/Android/GoogleSignInService.cs). -->
+	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'android'">
+		<PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.6.0.1" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\GymBook.Shared\GymBook.Shared.csproj" />
 		<ProjectReference Include="..\GymBook.LocalData\GymBook.LocalData.csproj" />
@@ -107,12 +112,21 @@
 		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == '' and '$(_EnvFileContent)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvFileContent)', '(?m)^API_BASE_URL=(.*?)\r?$').Groups[1].Value)</ApiBaseUrl>
 	</PropertyGroup>
 
+	<!-- The Web application OAuth client ID Google sign-in asks tokens for, the same value as the API's Google__ClientId.
+	     Found the same ways as ApiBaseUrl (-p:GoogleWebClientId, GOOGLE_WEB_CLIENT_ID, GymBook/.env). Optional: without it
+	     the Google button is hidden. -->
+	<PropertyGroup>
+		<GoogleWebClientId Condition="'$(GoogleWebClientId)' == ''">$(GOOGLE_WEB_CLIENT_ID)</GoogleWebClientId>
+		<GoogleWebClientId Condition="'$(GoogleWebClientId)' == '' and '$(_EnvFileContent)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvFileContent)', '(?m)^GOOGLE_WEB_CLIENT_ID=(.*?)\r?$').Groups[1].Value)</GoogleWebClientId>
+	</PropertyGroup>
+
 	<Target Name="ValidateApiBaseUrl" BeforeTargets="BeforeBuild;CoreCompile">
 		<Error Condition="'$(ApiBaseUrl)' == ''" Text="ApiBaseUrl is not set. Set it via -p:ApiBaseUrl=https://..., an API_BASE_URL environment variable, or GymBook/.env (see .env.example)." />
 	</Target>
 
 	<ItemGroup>
 		<AssemblyMetadata Include="ApiBaseUrl" Value="$(ApiBaseUrl)" />
+		<AssemblyMetadata Include="GoogleWebClientId" Value="$(GoogleWebClientId)" />
 	</ItemGroup>
 
 </Project>

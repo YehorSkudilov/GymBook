@@ -19,4 +19,7 @@ public class DialogService
 
     public Task<string?> Prompt(string title, string message, string? initial = null, Keyboard? keyboard = null, string accept = "Save") =>
         DialogSheet.Prompt(title, message, initial ?? "", keyboard ?? Keyboard.Text, accept);
+
+    /// <summary>A hidden password box, with a button to show what was typed.</summary>
+    public Task<string?> PasswordPrompt(string title, string message, string accept) => DialogSheet.PasswordPrompt(title, message, accept);
 }

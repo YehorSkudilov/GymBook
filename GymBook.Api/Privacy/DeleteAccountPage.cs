@@ -34,7 +34,7 @@ public static class DeleteAccountPage
         <ol>
           <li>Open GymBook and go to the <strong>Profile</strong> tab.</li>
           <li>Tap <strong>Delete account</strong>.</li>
-          <li>Enter your password to confirm.</li>
+          <li>Enter your password to confirm, or confirm with Google if you signed up with Google.</li>
         </ol>
         <p>Your account and its data are deleted from our server straight away.</p>
 

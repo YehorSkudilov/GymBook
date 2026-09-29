@@ -34,6 +34,11 @@ public static class MauiProgram
         builder.Services.AddSingleton<AuthSession>();
         builder.Services.AddSingleton(sp => new ApiClient(ApiConfig.CreateClient(), sp.GetRequiredService<AuthSession>()));
         builder.Services.AddSingleton<SyncService>();
+#if ANDROID
+        builder.Services.AddSingleton<IGoogleSignIn, GoogleSignInService>();
+#else
+        builder.Services.AddSingleton<IGoogleSignIn, NoGoogleSignIn>();
+#endif
         builder.Services.AddSingleton<AccountService>();
         builder.Services.AddSingleton<AiPlanService>();
 
@@ -58,6 +63,7 @@ public static class MauiProgram
         AddPage<ExerciseDetailPage, ExerciseDetailViewModel>(builder.Services);
         AddPage<ExercisePickerPage, ExercisePickerViewModel>(builder.Services);
         AddPage<AccountPage, AccountViewModel>(builder.Services);
+        AddPage<ManageAccountPage, ManageAccountViewModel>(builder.Services);
         AddPage<SyncDetailsPage, SyncDetailsViewModel>(builder.Services);
         AddPage<RecoveryPage, RecoveryViewModel>(builder.Services);
 

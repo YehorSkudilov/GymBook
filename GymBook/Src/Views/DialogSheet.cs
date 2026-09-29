@@ -116,6 +116,40 @@ public class DialogSheet : SheetPage
         return Show(sheet);
     }
 
+    /// <summary>Like <see cref="Prompt"/>, for a password: hidden as it's typed, with a button to show it.</summary>
+    public static Task<string?> PasswordPrompt(string title, string message, string accept)
+    {
+        AppSkeleton.CPasswordEntry? entry = null;
+        var sheet = new DialogSheet(title, message, s =>
+        {
+            entry = new AppSkeleton.CPasswordEntry
+            {
+                ReturnType = ReturnType.Done,
+                TextColor = Resource<Color>("TextPrimary"),
+                PlaceholderColor = Resource<Color>("TextTertiary"),
+                Placeholder = "Password",
+            };
+            entry.Completed += (_, _) => s.Choose(entry.Text ?? "");
+            var box = new Border { Style = Resource<Style>("InputBox"), HeightRequest = 52, Padding = new Thickness(12, 0), Content = entry };
+            var layout = new VerticalStackLayout { Spacing = 8 };
+            layout.Add(box);
+            var main = new Button { Text = accept, Style = Resource<Style>("PrimaryButton"), Margin = new Thickness(0, 8, 0, 0) };
+            if (DestructiveWords.Any(w => accept.StartsWith(w, StringComparison.OrdinalIgnoreCase)))
+                main.BackgroundColor = Resource<Color>("Danger");
+            main.Clicked += (_, _) => s.Choose(entry.Text ?? "");
+            layout.Add(main);
+            layout.Add(s.Button("Cancel", "SecondaryButton", null));
+            return layout;
+        });
+        // Ready to type once it has slid up.
+        sheet.Appearing += async (_, _) =>
+        {
+            await Task.Delay(350);
+            entry?.Focus();
+        };
+        return Show(sheet);
+    }
+
     View Row(string text, bool destructive)
     {
         var label = new Label

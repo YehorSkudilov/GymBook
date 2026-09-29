@@ -46,9 +46,20 @@ builder.Services.AddIdentityCore<AppUser>(o =>
         o.Lockout.AllowedForNewUsers = true;
         o.Lockout.MaxFailedAccessAttempts = 5;
         o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        // Password reset and email change codes are six digits to type from an email, not links. They're derived
+        // from the security stamp, so nothing is stored and a used code stops working once the change is made.
+        o.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultEmailProvider;
+        o.Tokens.ChangeEmailTokenProvider = TokenOptions.DefaultEmailProvider;
     })
     .AddSignInManager()
-    .AddEntityFrameworkStores<ApiDbContext>();
+    .AddEntityFrameworkStores<ApiDbContext>()
+    .AddTokenProvider<EmailTokenProvider<AppUser>>(TokenOptions.DefaultEmailProvider);
+
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton(builder.Configuration.GetSection("Smtp").Get<SmtpOptions>() ?? new SmtpOptions());
+builder.Services.AddSingleton<EmailSender>();
+builder.Services.AddSingleton(builder.Configuration.GetSection("Google").Get<GoogleOptions>() ?? new GoogleOptions());
+builder.Services.AddSingleton<GoogleTokenVerifier>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>

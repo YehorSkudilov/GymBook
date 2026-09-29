@@ -11,6 +11,7 @@ public class AuthSession
     const string RefreshTokenKey = "auth.refresh_token";
     const string UserIdKey = "auth.user_id";
     const string EmailKey = "auth.email";
+    const string HasPasswordKey = "auth.has_password";
 
     readonly Lazy<Task> _load;
 
@@ -18,6 +19,9 @@ public class AuthSession
 
     public string? UserId { get; private set; }
     public string? Email { get; private set; }
+
+    /// <summary>False for a Google account without a password: it confirms with Google where others type the password.</summary>
+    public bool HasPassword { get; private set; } = true;
     public string? RefreshToken { get; private set; }
     public string? AccessToken { get; private set; }
     public DateTimeOffset AccessTokenExpiresAt { get; private set; }
@@ -35,6 +39,8 @@ public class AuthSession
             RefreshToken = await SecureStorage.Default.GetAsync(RefreshTokenKey);
             UserId = await SecureStorage.Default.GetAsync(UserIdKey);
             Email = await SecureStorage.Default.GetAsync(EmailKey);
+            // Sessions from before Google sign-in existed have no entry, and they all have a password.
+            HasPassword = await SecureStorage.Default.GetAsync(HasPasswordKey) != "false";
         }
         catch (Exception)
         {
@@ -49,8 +55,17 @@ public class AuthSession
         await SecureStorage.Default.SetAsync(RefreshTokenKey, auth.RefreshToken);
         await SecureStorage.Default.SetAsync(UserIdKey, auth.UserId);
         await SecureStorage.Default.SetAsync(EmailKey, auth.Email);
-        (RefreshToken, UserId, Email) = (auth.RefreshToken, auth.UserId, auth.Email);
+        await SecureStorage.Default.SetAsync(HasPasswordKey, auth.HasPassword ? "true" : "false");
+        (RefreshToken, UserId, Email, HasPassword) = (auth.RefreshToken, auth.UserId, auth.Email, auth.HasPassword);
         (AccessToken, AccessTokenExpiresAt) = (auth.AccessToken, auth.AccessTokenExpiresAt);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>After the account moved to another address; the tokens stay valid.</summary>
+    public async Task SetEmailAsync(string email)
+    {
+        await SecureStorage.Default.SetAsync(EmailKey, email);
+        Email = email;
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
@@ -59,6 +74,7 @@ public class AuthSession
         SecureStorage.Default.Remove(RefreshTokenKey);
         SecureStorage.Default.Remove(UserIdKey);
         SecureStorage.Default.Remove(EmailKey);
+        SecureStorage.Default.Remove(HasPasswordKey);
         RefreshToken = UserId = Email = AccessToken = null;
         Changed?.Invoke(this, EventArgs.Empty);
     }

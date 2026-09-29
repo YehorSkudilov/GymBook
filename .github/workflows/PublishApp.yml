@@ -198,7 +198,8 @@ jobs:
             "/p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEYALIAS_NAME }}" `
             "/p:AndroidSigningKeyPass=${{ secrets.ANDROID_KEYALIAS_PASS }}" `
             "/p:AndroidSigningStorePass=${{ secrets.ANDROID_KEYSTORE_PASS }}" `
-            "/p:ApiBaseUrl=${{ vars.API_BASE_URL }}"
+            "/p:ApiBaseUrl=${{ vars.API_BASE_URL }}" `
+            "/p:GoogleWebClientId=${{ vars.GOOGLE_WEB_CLIENT_ID }}"
 
       # =========================
       # FIND AAB

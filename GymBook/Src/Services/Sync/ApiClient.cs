@@ -28,6 +28,39 @@ public class ApiClient(HttpClient http, AuthSession session)
     public Task<AuthResponse> RegisterAsync(string email, string password, CancellationToken ct = default) =>
         SendAsync<RegisterRequest, AuthResponse>("api/auth/register", new() { Email = email, Password = password }, null, ct);
 
+    public Task<AuthResponse> GoogleSignInAsync(string idToken, CancellationToken ct = default) =>
+        SendAsync<GoogleSignInRequest, AuthResponse>("api/auth/google", new() { IdToken = idToken }, null, ct);
+
+    /// <summary>Asks for a password reset code by email.</summary>
+    public async Task ForgotPasswordAsync(string email, CancellationToken ct = default)
+    {
+        using var response = await PostAsync("api/auth/password/forgot", new ForgotPasswordRequest { Email = email }, null, ct);
+        await EnsureSuccessAsync(response);
+    }
+
+    public Task<AuthResponse> ResetPasswordAsync(string email, string code, string newPassword, CancellationToken ct = default) =>
+        SendAsync<ResetPasswordRequest, AuthResponse>("api/auth/password/reset", new() { Email = email, Code = code, NewPassword = newPassword }, null, ct);
+
+    public async Task<AccountResponse> GetAccountAsync(CancellationToken ct = default)
+    {
+        using var response = await SendWithTokenAsync(() => new HttpRequestMessage(HttpMethod.Get, "api/account"), ct);
+        return await ReadAsync<AccountResponse>(response);
+    }
+
+    /// <summary>Changes (or adds) the password. Other devices are signed out; the result is this device's new session.</summary>
+    public Task<AuthResponse> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct = default) =>
+        SendAuthorizedAsync<ChangePasswordRequest, AuthResponse>("api/account/password", new() { CurrentPassword = currentPassword, NewPassword = newPassword }, ct);
+
+    /// <summary>Emails a code to <paramref name="newEmail"/> for <see cref="ConfirmEmailChangeAsync"/>.</summary>
+    public async Task ChangeEmailAsync(string newEmail, string password, CancellationToken ct = default)
+    {
+        using var response = await SendWithTokenAsync("api/account/email", new ChangeEmailRequest { NewEmail = newEmail, Password = password }, ct);
+        await EnsureSuccessAsync(response);
+    }
+
+    public Task<AccountResponse> ConfirmEmailChangeAsync(string newEmail, string code, CancellationToken ct = default) =>
+        SendAuthorizedAsync<ConfirmEmailChangeRequest, AccountResponse>("api/account/email/confirm", new() { NewEmail = newEmail, Code = code }, ct);
+
     public Task<AuthResponse> LoginAsync(string email, string password, CancellationToken ct = default) =>
         SendAsync<LoginRequest, AuthResponse>("api/auth/login", new() { Email = email, Password = password }, null, ct);
 
@@ -72,9 +105,10 @@ public class ApiClient(HttpClient http, AuthSession session)
         return await ReadAsync<PlanQuotaResponse>(response);
     }
 
-    public async Task DeleteAccountAsync(string password, CancellationToken ct = default)
+    /// <summary>Confirmed with the password, or for an account without one, a fresh Google ID token.</summary>
+    public async Task DeleteAccountAsync(string password, string? googleIdToken = null, CancellationToken ct = default)
     {
-        using var response = await SendWithTokenAsync("api/account/delete", new DeleteAccountRequest { Password = password }, ct);
+        using var response = await SendWithTokenAsync("api/account/delete", new DeleteAccountRequest { Password = password, GoogleIdToken = googleIdToken }, ct);
         await EnsureSuccessAsync(response);
     }
 

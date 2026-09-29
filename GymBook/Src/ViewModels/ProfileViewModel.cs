@@ -40,6 +40,7 @@ public partial class ProfileViewModel(
     [ObservableProperty] string version = "";
     [ObservableProperty] bool isSignedIn;
     [ObservableProperty] string accountEmail = "";
+    [ObservableProperty] string passwordRowText = "";
     [ObservableProperty] string syncStatus = "";
     [ObservableProperty] bool hasSyncDetails;
     [ObservableProperty] string syncDetailsSummary = "";
@@ -50,6 +51,7 @@ public partial class ProfileViewModel(
     {
         sync.StatusChanged += OnSyncChanged;
         store.Changed += OnSyncChanged;
+        account.Changed += OnSyncChanged;
         Refresh();
         return Task.CompletedTask;
     }
@@ -58,6 +60,7 @@ public partial class ProfileViewModel(
     {
         sync.StatusChanged -= OnSyncChanged;
         store.Changed -= OnSyncChanged;
+        account.Changed -= OnSyncChanged;
     }
 
     void OnSyncChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(Refresh);
@@ -66,6 +69,7 @@ public partial class ProfileViewModel(
     {
         IsSignedIn = account.IsSignedIn;
         AccountEmail = account.Email ?? "";
+        PasswordRowText = account.HasPassword ? "Change password" : "Set a password";
         SyncStatus = sync.LastSyncedAt is { } at && sync.State == SyncState.UpToDate ? $"Synced {at:t}" : sync.Status;
         // While a sync runs, pending changes are about to go up; only a failure or leftovers are worth a look.
         var failed = sync.State is SyncState.Failed or SyncState.Offline or SyncState.SignInRequired;
@@ -291,17 +295,35 @@ public partial class ProfileViewModel(
     }
 
     [RelayCommand]
+    Task ChangeEmail() => ManageAccountPage.ShowAsync(services, AccountChange.Email);
+
+    [RelayCommand]
+    Task ChangePassword() => ManageAccountPage.ShowAsync(services, AccountChange.Password);
+
+    [RelayCommand]
     async Task DeleteAccount()
     {
-        var password = await dialogs.Prompt("Delete account?",
-            "This permanently deletes your account and all synced data. Enter your password to confirm.", accept: "Delete");
-        if (string.IsNullOrEmpty(password))
-            return;
         try
         {
-            await account.DeleteAccountAsync(password);
+            if (account.HasPassword)
+            {
+                var password = await dialogs.PasswordPrompt("Delete account?",
+                    "This permanently deletes your account and all synced data. Enter your password to confirm.", "Delete");
+                if (string.IsNullOrEmpty(password))
+                    return;
+                await account.DeleteAccountAsync(password);
+            }
+            else
+            {
+                // A Google account without a password confirms by picking the Google account again.
+                if (!await dialogs.Confirm("Delete account?",
+                        "This permanently deletes your account and all synced data. Choose your Google account to confirm.", "Delete"))
+                    return;
+                if (!await account.DeleteAccountWithGoogleAsync())
+                    return;
+            }
         }
-        catch (Exception e) when (e is ApiException or SessionExpiredException)
+        catch (Exception e) when (e is ApiException or SessionExpiredException or GoogleSignInException)
         {
             await dialogs.Alert("Couldn't delete account", e.Message);
             return;
