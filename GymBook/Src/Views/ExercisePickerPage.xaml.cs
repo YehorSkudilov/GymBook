@@ -2,7 +2,7 @@ using GymBook.ViewModels;
 
 namespace GymBook.Views;
 
-public partial class ExercisePickerPage : BasePage
+public partial class ExercisePickerPage : SheetPage
 {
     readonly ExercisePickerViewModel _viewModel;
 

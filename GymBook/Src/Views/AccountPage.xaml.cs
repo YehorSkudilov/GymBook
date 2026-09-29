@@ -2,7 +2,7 @@ using GymBook.ViewModels;
 
 namespace GymBook.Views;
 
-public partial class AccountPage : BasePage
+public partial class AccountPage : SheetPage
 {
     public AccountPage(AccountViewModel viewModel)
     {
@@ -10,11 +10,18 @@ public partial class AccountPage : BasePage
         BindingContext = viewModel;
     }
 
-    /// <summary>Opens the page modally over whatever is showing, inside or outside the shell.</summary>
+    /// <summary>Opens the page as a sheet over whatever is showing, inside or outside the shell.</summary>
+    // The hardware back button slides it down too.
+    protected override bool OnBackButtonPressed()
+    {
+        _ = CloseAsync();
+        return true;
+    }
+
     public static Task ShowAsync(IServiceProvider services, bool register = false)
     {
         var page = services.GetRequiredService<AccountPage>();
         ((AccountViewModel)page.BindingContext).IsRegister = register;
-        return Application.Current!.Windows[0].Page!.Navigation.PushModalAsync(page);
+        return Application.Current!.Windows[0].Page!.Navigation.PushModalAsync(page, false);
     }
 }

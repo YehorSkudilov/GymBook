@@ -73,5 +73,8 @@ public partial class AccountViewModel(AccountService account, DataStore store) :
     }
 
     [RelayCommand]
-    static Task Close() => Application.Current!.Windows[0].Page!.Navigation.PopModalAsync();
+    // The page is a sheet: it slides down before it closes.
+    static Task Close() => Application.Current!.Windows[0].Page!.Navigation.ModalStack.LastOrDefault() is Views.SheetPage sheet
+        ? sheet.CloseAsync()
+        : Application.Current.Windows[0].Page!.Navigation.PopModalAsync();
 }

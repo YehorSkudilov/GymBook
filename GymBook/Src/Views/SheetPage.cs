@@ -38,7 +38,9 @@ public class SheetPage : BasePage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        Shell.Current.Navigating += OnShellNavigating;
+        // No Shell during first-run onboarding: then only CloseAsync closes the sheet.
+        if (Shell.Current is { } shell)
+            shell.Navigating += OnShellNavigating;
         if (Content == null)
             return;
         if (_shown)
@@ -81,7 +83,8 @@ public class SheetPage : BasePage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        Shell.Current.Navigating -= OnShellNavigating;
+        if (Shell.Current is { } shell)
+            shell.Navigating -= OnShellNavigating;
     }
 
     // Holds up any navigation that takes this page off the stack (back, close, or replacing it) until the sheet is down.
@@ -133,7 +136,7 @@ public class SheetPage : BasePage
     // The topmost modal, which may be wrapped in a NavigationPage; Shell's CurrentPage doesn't count modals pushed directly.
     bool IsOnTop()
     {
-        var top = Shell.Current.Navigation.ModalStack.LastOrDefault();
+        var top = (Shell.Current?.Navigation ?? Navigation).ModalStack.LastOrDefault();
         return top == this || (top is NavigationPage nav && nav.CurrentPage == this);
     }
 

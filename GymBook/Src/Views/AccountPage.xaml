@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<views:BasePage
+<views:SheetPage
     x:Class="GymBook.Views.AccountPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:AccountViewModel"
-    Shell.NavBarIsVisible="False">
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
 
+    <!-- A sheet over whatever is showing, like the other sheets -->
+    <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
     <Grid RowDefinitions="Auto,*" Padding="20,16,20,20">
         <Button Text="✕" FontSize="18" Style="{StaticResource StepButton}" WidthRequest="40" HeightRequest="40"
                 BackgroundColor="{StaticResource Surface2}" HorizontalOptions="Start" Command="{Binding CloseCommand}" />
@@ -40,4 +43,5 @@
             </VerticalStackLayout>
         </ScrollView>
     </Grid>
-</views:BasePage>
+    </Border>
+</views:SheetPage>

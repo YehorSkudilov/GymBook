@@ -1,21 +1,22 @@
+using GymBook.Views;
+
 namespace GymBook.Services;
 
-/// <summary>Thin wrapper over page dialogs so view models don't reach into the visual tree.</summary>
+/// <summary>
+/// Dialogs for view models, so they don't reach into the visual tree. Shown as the app's own bottom sheets
+/// (<see cref="DialogSheet"/>) rather than the platform's alert boxes, so they look like the rest of the app.
+/// </summary>
 public class DialogService
 {
-    static Page Page => Shell.Current?.CurrentPage ?? Application.Current!.Windows[0].Page!;
-
-    public Task Alert(string title, string message) => Page.DisplayAlertAsync(title, message, "OK");
+    public Task Alert(string title, string message) => DialogSheet.Alert(title, message);
 
     public Task<bool> Confirm(string title, string message, string accept = "Yes", string cancel = "Cancel") =>
-        Page.DisplayAlertAsync(title, message, accept, cancel);
+        DialogSheet.Confirm(title, message, accept, cancel);
 
-    public async Task<string?> ActionSheet(string title, string? destructive, params string[] options)
-    {
-        var result = await Page.DisplayActionSheetAsync(title, "Cancel", destructive, options);
-        return result is null or "Cancel" ? null : result;
-    }
+    /// <summary>A menu of <paramref name="options"/>, with <paramref name="destructive"/> (if any) last and in red. Null when cancelled.</summary>
+    public Task<string?> ActionSheet(string title, string? destructive, params string[] options) =>
+        DialogSheet.Menu(title, destructive, options);
 
     public Task<string?> Prompt(string title, string message, string? initial = null, Keyboard? keyboard = null, string accept = "Save") =>
-        Page.DisplayPromptAsync(title, message, accept, "Cancel", initialValue: initial ?? "", keyboard: keyboard ?? Keyboard.Text);
+        DialogSheet.Prompt(title, message, initial ?? "", keyboard ?? Keyboard.Text, accept);
 }

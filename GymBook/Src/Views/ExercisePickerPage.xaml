@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<views:BasePage
+<views:SheetPage
     x:Class="GymBook.Views.ExercisePickerPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
-    x:DataType="vm:ExercisePickerViewModel">
+    x:DataType="vm:ExercisePickerViewModel"
+    Backdrop="#B3000000">
 
+    <!-- A sheet over the workout or plan it adds to, like the other sheets -->
+    <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
     <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="0,16,0,0">
         <Grid ColumnDefinitions="Auto,*,Auto" Padding="12,0" ColumnSpacing="8">
             <Button Text="Cancel" Style="{StaticResource GhostButton}" TextColor="{StaticResource TextSecondary}" Command="{Binding CancelCommand}" />
@@ -32,4 +35,5 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
     </Grid>
-</views:BasePage>
+    </Border>
+</views:SheetPage>

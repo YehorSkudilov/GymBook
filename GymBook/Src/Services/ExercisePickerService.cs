@@ -15,10 +15,10 @@ public class ExercisePickerService(IServiceProvider services)
         vm.Completed = list => tcs.TrySetResult(list);
         vm.Reset();
 
-        var navigation = Shell.Current.Navigation;
-        await navigation.PushModalAsync(page);
+        // A sheet: it slides up, and slides down again before the exercises are handed back.
+        await Shell.Current.Navigation.PushModalAsync(page, false);
         var result = await tcs.Task;
-        await navigation.PopModalAsync();
+        await page.CloseAsync();
         return result;
     }
 }
