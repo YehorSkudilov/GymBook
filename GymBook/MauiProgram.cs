@@ -69,6 +69,20 @@ public static class MauiProgram
         AddPage<SyncDetailsPage, SyncDetailsViewModel>(builder.Services);
         AddPage<RecoveryPage, RecoveryViewModel>(builder.Services);
 
+#if ANDROID
+        // The tabs swipe sideways (AppSkeleton's CView takes over any mostly-horizontal drag), which would steal the
+        // drag from a slider on a tab, like Home's recovery preview. A slider claims the gesture as soon as it's
+        // touched, the standard Android way, so its parents leave it alone until the finger lifts.
+        Microsoft.Maui.Handlers.SliderHandler.Mapper.AppendToMapping("KeepDrag", (handler, _) =>
+            handler.PlatformView.Touch += (_, e) =>
+            {
+                if (e.Event?.Action == Android.Views.MotionEventActions.Down)
+                    handler.PlatformView.Parent?.RequestDisallowInterceptTouchEvent(true);
+                // Still let the slider itself handle the touch.
+                e.Handled = false;
+            });
+#endif
+
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
