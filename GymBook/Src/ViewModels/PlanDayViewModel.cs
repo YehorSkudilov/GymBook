@@ -9,6 +9,26 @@ namespace GymBook.ViewModels;
 /// <summary>One row of an exercise's set table on the day sheet.</summary>
 public record PlanDaySetRow(string Number, string First, string Second, string Third);
 
+/// <summary>A number on a finished workout's sheet, with how it compares with last time (<paramref name="Note"/>, empty the first time).</summary>
+public record StatTile(string Value, string Label, string Note, Color NoteColor)
+{
+    public static StatTile Empty { get; } = new("", "", "", Colors.Transparent);
+    public bool HasNote => Note.Length > 0;
+}
+
+/// <summary>An exercise of a finished workout against the last time it was done, with its recent trend.</summary>
+public class ExerciseProgressItem
+{
+    public required string Name { get; init; }
+    public required string Headline { get; init; }
+    public required string Detail { get; init; }
+    /// <summary>Green when it went up, red when it went down.</summary>
+    public required Color Color { get; init; }
+    /// <summary>Its estimated 1RM (or reps, for bodyweight) over the last sessions; null with fewer than two.</summary>
+    public IDrawable? Chart { get; init; }
+    public bool HasChart => Chart != null;
+}
+
 /// <summary>An exercise on the day sheet: what was logged once the day is finished, otherwise the plan's targets.</summary>
 public class PlanDaySheetExercise
 {
@@ -39,12 +59,21 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
 
     // A finished workout: its numbers, and the fatigue it left.
     [ObservableProperty] bool hasStats;
-    [ObservableProperty] string statDuration = "";
-    [ObservableProperty] string statVolume = "";
-    [ObservableProperty] string statSets = "";
-    [ObservableProperty] string statRecords = "";
+    [ObservableProperty] StatTile statTime = StatTile.Empty;
+    [ObservableProperty] StatTile statVolume = StatTile.Empty;
+    [ObservableProperty] StatTile statSets = StatTile.Empty;
+    [ObservableProperty] StatTile statRecords = StatTile.Empty;
+    /// <summary>Each exercise against the last time it was done.</summary>
+    [ObservableProperty] List<ExerciseProgressItem> improvements = [];
+    [ObservableProperty] bool hasImprovements;
+    /// <summary>This workout's volume and length over its last sessions, up to this one.</summary>
+    [ObservableProperty] IDrawable? volumeTrend;
+    [ObservableProperty] IDrawable? durationTrend;
+    [ObservableProperty] bool hasTrends;
     [ObservableProperty] IDrawable fatigueMap = MuscleMapDrawable.Empty;
     [ObservableProperty] string fatigueSummary = "";
+    /// <summary>The muscles it worked, most fatigued first, with when each is fresh again.</summary>
+    [ObservableProperty] List<MuscleRecoveryItem> fatigueMuscles = [];
 
     [ObservableProperty] string dayName = "";
     [ObservableProperty] string subtitle = "";
@@ -130,7 +159,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         return Task.CompletedTask;
     }
 
-    /// <summary>The ··· of a finished workout: its full summary page, or the plan it came from.</summary>
+    /// <summary>The ··· of a finished workout: the plan it came from, or deleting it.</summary>
     async Task SessionOptions()
     {
         var session = store.History.FirstOrDefault(s => s.Id == _sessionId);
@@ -138,18 +167,27 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             return;
         var plan = store.GetPlan(session.PlanId);
         var day = plan == null ? -1 : PlanSchedule.Days(plan).FindIndex(w => w?.Id == session.PlanWorkoutId);
-        var options = day >= 0 ? new[] { "View workout summary", "View in plan" } : new[] { "View workout summary" };
-        switch (await dialogs.ActionSheet(DayName, null, options))
+        var options = day >= 0 ? new[] { "Edit in plan" } : Array.Empty<string>();
+        switch (await dialogs.ActionSheet(DayName, "Delete workout", options))
         {
-            case "View workout summary":
-                await Close();
-                await GoTo($"{Routes.Session}?id={session.Id}");
+            case "Edit in plan":
+                // One navigation: the sheet slides away as the plan comes in, with nothing in between.
+                await GoTo($"../{Routes.Plan}?id={plan!.Id}&day={day}");
                 break;
-            case "View in plan":
-                await Close();
-                await GoTo($"{Routes.Plan}?id={plan!.Id}&day={day}");
+            case "Delete workout":
+                await DeleteSession(session);
                 break;
         }
+    }
+
+    /// <summary>Removes a finished workout from the history and statistics, after asking.</summary>
+    async Task DeleteSession(WorkoutSession session)
+    {
+        if (!await dialogs.Confirm("Delete workout?", "This removes it from your history and statistics.", "Delete"))
+            return;
+        store.Data.Sessions.Remove(session);
+        store.Save();
+        await Close();
     }
 
     /// <summary>One finished workout (from the calendar), plan or not: what was done, its stats and the fatigue it left.</summary>
@@ -182,14 +220,131 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     void ShowFinished(WorkoutSession session)
     {
         HasStats = true;
-        StatDuration = Units.Duration(session.Duration);
-        StatVolume = units.FormatVolume(stats.SessionVolume(session));
-        StatSets = session.WorkingSets.Count().ToString();
-        StatRecords = stats.RecordsIn(session).Count.ToString();
-        var after = recovery.Compute(session.EndedAt ?? session.StartedAt);
-        FatigueMap = MuscleMapDrawable.ForRecovery(after);
-        var tired = after.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
+        // The same workout the time before: a plan workout by its id, a free one by its name.
+        var earlier = store.History
+            .Where(s => s.Id != session.Id && s.StartedAt < session.StartedAt)
+            .Where(s => session.PlanWorkoutId != null ? s.PlanWorkoutId == session.PlanWorkoutId : s.PlanWorkoutId == null && s.Name == session.Name)
+            .ToList();
+        var previous = earlier.FirstOrDefault();
+
+        // Tiles: this workout, and how it compares with last time (shorter is better for time).
+        var minutes = session.Duration.TotalMinutes;
+        var volume = stats.SessionVolume(session);
+        var sets = session.WorkingSets.Count();
+        var records = stats.RecordsIn(session).Count;
+        StatTime = new StatTile(Units.Duration(session.Duration), "TIME", previous == null ? "" : Change(previous.Duration.TotalMinutes - minutes, 1,
+            d => $"{Math.Abs(d):0} min {(d > 0 ? "faster" : "slower")}"), Better(previous == null ? 0 : previous.Duration.TotalMinutes - minutes, 1));
+        StatVolume = new StatTile(units.FormatVolume(volume), "VOLUME", previous == null ? "" : Change(volume - stats.SessionVolume(previous), 1,
+            d => $"{(d > 0 ? "+" : "−")}{units.FormatVolume(Math.Abs(d))}"), Better(previous == null ? 0 : volume - stats.SessionVolume(previous), 1));
+        StatSets = new StatTile(sets.ToString(), "WORKING SETS", previous == null ? "" : Change(sets - previous.WorkingSets.Count(), 0.5,
+            d => $"{d:+0;−0} vs last time"), Better(previous == null ? 0 : sets - previous.WorkingSets.Count(), 0.5));
+        StatRecords = new StatTile(records.ToString(), records == 1 ? "PR" : "PRS", records > 0 ? "New personal bests" : "", records > 0 ? Up : Neutral);
+
+        Improvements = session.Exercises.Where(e => e.Sets.Any(s => !s.IsWarmup))
+            .DistinctBy(e => e.ExerciseId).Select(e => Progress(session, e)).OfType<ExerciseProgressItem>().ToList();
+        HasImprovements = Improvements.Count > 0;
+
+        // The last few times this workout was done, up to this one: volume and how long it took.
+        var trend = earlier.Take(7).Reverse().Append(session).ToList();
+        HasTrends = trend.Count >= 2;
+        VolumeTrend = HasTrends ? new BarChartDrawable(trend.Select(s => new ChartPoint(s.StartedAt.ToString("d MMM"), units.ToDisplay(stats.SessionVolume(s)))).ToList(),
+            Color.FromArgb("#3F7DFF"), v => units.FormatVolume(units.FromDisplay(v))) : null;
+        DurationTrend = HasTrends ? new BarChartDrawable(trend.Select(s => new ChartPoint(s.StartedAt.ToString("d MMM"), Math.Round(s.Duration.TotalMinutes))).ToList(),
+            Color.FromArgb("#8B5CF6"), v => $"{v:0} min") : null;
+
+        // Fatigue the moment it ended: the map, and each muscle it worked with when it'll be fresh.
+        var at = session.EndedAt ?? session.StartedAt;
+        var details = recovery.Details(at);
+        FatigueMap = MuscleMapDrawable.ForRecovery(details.ToDictionary(d => d.Muscle, d => d.Recovery));
+        var worked = session.Exercises.Select(e => store.GetExercise(e.ExerciseId)).OfType<Exercise>()
+            .SelectMany(ex => ex.SecondaryMuscles.Prepend(ex.PrimaryMuscle)).ToHashSet();
+        FatigueMuscles = [.. details.Where(d => worked.Contains(d.Muscle) && d.Recovery < 1).OrderBy(d => d.Recovery).Select(d => new MuscleRecoveryItem
+        {
+            Name = d.Muscle.Display(),
+            Progress = d.Recovery,
+            Percent = $"{d.Recovery:P0}",
+            Status = RecoveryService.StatusFor(d.Recovery),
+            Color = RecoveryService.ColorFor(d.Recovery),
+            Detail = d.ReadyAt is { } ready ? $"Fresh {Relative(ready - at)} after it · {d.Sets:0.#} sets" : $"{d.Sets:0.#} sets",
+        })];
+        var tired = details.Where(d => d.Recovery < 0.6).OrderBy(d => d.Recovery).Select(d => d.Muscle.Display()).ToList();
         FatigueSummary = tired.Count == 0 ? "No muscle group was worked hard." : $"Fatigued: {string.Join(", ", tired)}";
+    }
+
+    static readonly Color Up = Color.FromArgb("#2ED47A"), Down = Color.FromArgb("#FF4D5E"), Neutral = Color.FromArgb("#9AA3B5");
+
+    /// <summary>The change in words, or "Same as last time" when it's within <paramref name="noise"/>.</summary>
+    static string Change(double delta, double noise, Func<double, string> text) => Math.Abs(delta) < noise ? "Same as last time" : text(delta);
+
+    static Color Better(double delta, double noise) => delta >= noise ? Up : delta <= -noise ? Down : Neutral;
+
+    static string Relative(TimeSpan span)
+    {
+        var h = Math.Max(1, (int)Math.Ceiling(span.TotalHours));
+        return h >= 24 ? $"in {h / 24} d {h % 24} h" : $"in {h} h";
+    }
+
+    /// <summary>
+    /// How an exercise went against the last time it was done (in any workout): the best set's estimated 1RM, total
+    /// reps and volume, with its 1RM over the last sessions for a small chart.
+    /// </summary>
+    ExerciseProgressItem? Progress(WorkoutSession session, SessionExercise se)
+    {
+        var ex = store.GetExercise(se.ExerciseId);
+        if (ex == null)
+            return null;
+        static IEnumerable<SetEntry> Working(IEnumerable<SessionExercise> es) => es.SelectMany(e => e.Sets).Where(s => s.IsCompleted && !s.IsWarmup);
+        var now = Working(session.Exercises.Where(e => e.ExerciseId == ex.Id)).ToList();
+        if (now.Count == 0)
+            return null;
+        // Sessions with this exercise, newest first, up to and including this one.
+        var history = store.History.Where(s => s.StartedAt <= session.StartedAt && s.Exercises.Any(e => e.ExerciseId == ex.Id)).ToList();
+        var before = history.FirstOrDefault(s => s.Id != session.Id);
+        var then = before == null ? [] : Working(before.Exercises.Where(e => e.ExerciseId == ex.Id)).ToList();
+
+        double Best(List<SetEntry> sets) => sets.Count == 0 ? 0 : sets.Max(s => ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir));
+        var top = now.MaxBy(s => ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir))!;
+        var bestNow = Best(now);
+        var reps = now.Sum(s => s.Reps);
+        var volume = now.Sum(s => stats.SetVolume(ex, s));
+        var topText = ex.IsBodyweight && top.WeightKg <= 0 ? $"{top.Reps} reps" : $"{units.FormatWithUnit(top.WeightKg)} × {top.Reps}";
+
+        string headline, detail;
+        Color color;
+        if (then.Count == 0)
+        {
+            headline = $"Best set {topText}";
+            detail = $"{reps} reps · {units.FormatVolume(volume)} · first time";
+            color = Neutral;
+        }
+        else
+        {
+            var e1Change = bestNow - Best(then);
+            var repsChange = reps - then.Sum(s => s.Reps);
+            var volumeChange = volume - then.Sum(s => stats.SetVolume(ex, s));
+            headline = ex.IsBodyweight && bestNow <= 0
+                ? $"Best set {topText} · {repsChange:+0;−0;±0} reps"
+                : $"Best set {topText} · est. 1RM {units.FormatWithUnit(bestNow)} ({(e1Change >= 0 ? "+" : "−")}{units.Format(Math.Abs(e1Change))})";
+            detail = $"{reps} reps ({repsChange:+0;−0;±0}) · {units.FormatVolume(volume)} ({(volumeChange >= 0 ? "+" : "−")}{units.FormatVolume(Math.Abs(volumeChange))}) vs last time";
+            var score = ex.IsBodyweight && bestNow <= 0 ? repsChange : e1Change;
+            color = score > 0.05 ? Up : score < -0.05 ? Down : Neutral;
+        }
+
+        // The estimated 1RM (or reps, for bodyweight) of its last few sessions, oldest first.
+        var points = history.Take(8).Reverse().Select(s =>
+        {
+            var sets = Working(s.Exercises.Where(e => e.ExerciseId == ex.Id)).ToList();
+            var value = ex.IsBodyweight && Best(sets) <= 0 ? sets.Sum(x => x.Reps) : units.ToDisplay(Best(sets));
+            return new ChartPoint(s.StartedAt.ToString("d MMM"), Math.Round(value, 1));
+        }).ToList();
+        return new ExerciseProgressItem
+        {
+            Name = ex.Name,
+            Headline = headline,
+            Detail = detail,
+            Color = color,
+            Chart = points.Count >= 2 ? new LineChartDrawable(points, color == Neutral ? Color.FromArgb("#3F7DFF") : color, v => $"{v:0.#}") : null,
+        };
     }
 
     /// <summary>A finished exercise: every logged set with its weight, reps and, for working sets, estimated one-rep max.</summary>
@@ -292,21 +447,15 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             return;
         var workout = PlanSchedule.Days(plan).ElementAtOrDefault(_day);
         var session = workout == null ? null : new PlanProgress(plan, store.History).SessionFor(workout, _week);
-        var options = new List<string>();
-        if (session != null)
-            options.Add("View workout summary");
-        // Opens the plan page on this day (where its exercises can also be changed).
-        options.Add("View in plan");
-
-        switch (await dialogs.ActionSheet(DayName, null, [.. options]))
+        // Edit in plan opens the plan page on this day; a finished day's workout can also be deleted.
+        switch (await dialogs.ActionSheet(DayName, session != null ? "Delete workout" : null, "Edit in plan"))
         {
-            case "View workout summary":
-                await Close();
-                await GoTo($"{Routes.Session}?id={session!.Id}");
+            case "Edit in plan":
+                // One navigation: the sheet slides away as the plan comes in, with nothing in between.
+                await GoTo($"../{Routes.Plan}?id={plan.Id}&day={_day}");
                 break;
-            case "View in plan":
-                await Close();
-                await GoTo($"{Routes.Plan}?id={plan.Id}&day={_day}");
+            case "Delete workout":
+                await DeleteSession(session!);
                 break;
         }
     }

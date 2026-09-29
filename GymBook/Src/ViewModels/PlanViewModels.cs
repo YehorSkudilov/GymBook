@@ -20,26 +20,18 @@ public class PlanItem
     public required IAsyncRelayCommand OpenCommand { get; init; }
 }
 
-/// <summary>A day in the plan page's day strip: a workout or a rest day. Long-press and drag it onto another day to move it there.</summary>
-public partial class PlanDayChip : ObservableObject
+/// <summary>A day in the plan page's day strip: a workout or a rest day. Hold and drag it along the strip to move it.</summary>
+public class PlanDayChip
 {
     public required string Title { get; init; }
     public required bool IsSelected { get; init; }
     public bool IsRest { get; init; }
     public required IRelayCommand SelectCommand { get; init; }
-    public required IRelayCommand DragCommand { get; init; }
-    public required IRelayCommand DropCommand { get; init; }
+    /// <summary>Moves the day to the position it was dragged to (see <see cref="Controls.ReorderItem"/>).</summary>
+    public required IRelayCommand<int> MoveCommand { get; init; }
 
-    /// <summary>A dragged day is over this one.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Background))]
-    bool isDropTarget;
-
-    public Color Background => IsDropTarget ? Color.FromArgb("#1A2A4F") : IsSelected ? Color.FromArgb("#272C39") : Colors.Transparent;
+    public Color Background => IsSelected ? Color.FromArgb("#272C39") : Colors.Transparent;
     public Color TextColor => IsSelected ? Color.FromArgb("#F4F6FB") : IsRest ? Color.FromArgb("#626B7E") : Color.FromArgb("#9AA3B5");
-
-    [RelayCommand] void DragOver() => IsDropTarget = true;
-    [RelayCommand] void DragLeave() => IsDropTarget = false;
 }
 
 /// <summary>
@@ -65,21 +57,12 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, boo
 
     public required IAsyncRelayCommand OpenCommand { get; init; }
     public required IRelayCommand RemoveCommand { get; init; }
-    public required IRelayCommand DragCommand { get; init; }
-    public required IRelayCommand DropCommand { get; init; }
+    /// <summary>Moves the exercise to the position it was dragged to (see <see cref="Controls.ReorderItem"/>).</summary>
+    public required IRelayCommand<int> MoveCommand { get; init; }
 
     [ObservableProperty] bool isExpanded;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DropBackground))]
-    bool isDropTarget;
-
-    /// <summary>Where a dragged exercise would land.</summary>
-    public Color DropBackground => IsDropTarget ? Color.FromArgb("#1A2A4F") : Colors.Transparent;
-
     [RelayCommand] void Toggle() => IsExpanded = !IsExpanded;
-    [RelayCommand] void DragOver() => IsDropTarget = true;
-    [RelayCommand] void DragLeave() => IsDropTarget = false;
 
     void Changed()
     {
@@ -189,17 +172,14 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
 /// Edits go into a draft copy: nothing reaches the saved plan until Save (in the plan's ··· menu), and leaving with
 /// unsaved changes asks whether to keep them.
 /// </summary>
-public partial class PlanDetailViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, WorkoutEstimator estimator, AiPlanService ai,
-    RecoveryService recovery, ExercisePickerService picker)
+public partial class PlanDetailViewModel(DataStore store, DialogService dialogs, WorkoutEstimator estimator, AiPlanService ai,
+    ExercisePickerService picker)
     : BaseViewModel, IQueryAttributable
 {
     string? _id;
     int _selected;
     // Set when opened from a plan week on Home: the day is shown, started and marked finished for that week.
     int? _week;
-    // What's being dragged: an exercise of the selected day, or a day of the strip.
-    PlanDayExercise? _draggedExercise;
-    int? _draggedDay;
     // Exercises opened for editing stay open when the list is rebuilt (e.g. after a drag).
     readonly HashSet<PlanExercise> _expanded = [];
     // The plan as being edited. The page always shows this; Save copies it into the saved plan.
@@ -218,13 +198,10 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
     [ObservableProperty] string dayMeta = "";
     [ObservableProperty] bool isRestDay;
     [ObservableProperty] bool isWorkoutDay;
-    [ObservableProperty] bool isNextDay;
     [ObservableProperty] bool isEmptyDay;
     [ObservableProperty] IDrawable dayMap = MuscleMapDrawable.Empty;
     [ObservableProperty] List<PlanDayExercise> dayExercises = [];
     [ObservableProperty] bool isDayDone;
-    [ObservableProperty] string dayActionText = "";
-    [ObservableProperty] bool hasDayAction;
 
     // The weekly AI check found ways to improve this (active) plan.
     [ObservableProperty] bool hasSuggestions;
@@ -300,23 +277,15 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
             IsRest = w == null,
             IsSelected = i == _selected,
             SelectCommand = new RelayCommand(() => Select(i)),
-            DragCommand = new RelayCommand(() => { _draggedDay = i; _draggedExercise = null; }),
-            DropCommand = new RelayCommand(() => DropDay(i)),
+            MoveCommand = new RelayCommand<int>(to => MoveDay(i, to)),
         }).ToList();
 
         var day = schedule.ElementAtOrDefault(_selected);
         var shownWeek = _week ?? progress.CurrentWeek;
-        var next = progress.NextWorkout(shownWeek);
         DayLabel = _week == null ? $"Day {_selected + 1}" : $"Week {_week} · Day {_selected + 1}";
         IsDayDone = _week != null && schedule.Count > 0 && progress.IsDayDone(_selected, shownWeek);
-        // Workouts start (or show the finished session); in a week, rest days are marked finished instead.
-        DayActionText = day != null
-            ? IsDayDone ? "View finished workout" : $"▶  Start {day.Name}"
-            : IsDayDone ? "Mark as not finished" : "✓  Mark rest day finished";
-        HasDayAction = day != null || (_week != null && schedule.Count > 0);
         IsRestDay = day == null;
         IsWorkoutDay = day != null;
-        IsNextDay = IsActive && day != null && day.Id == next?.Id && !IsDayDone;
         DayName = day?.Name ?? "Rest";
 
         var exercises = day?.Exercises.Select(pe => (pe, ex: store.GetExercise(pe.ExerciseId))).ToList() ?? [];
@@ -331,8 +300,7 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
                 IsExpanded = _expanded.Contains(x.pe),
                 OpenCommand = new AsyncRelayCommand(() => x.ex == null ? Task.CompletedTask : GoTo($"{Routes.Exercise}?id={x.ex.Id}")),
                 RemoveCommand = new RelayCommand(() => RemoveExercise(item!)),
-                DragCommand = new RelayCommand(() => { _draggedExercise = item; _draggedDay = null; }),
-                DropCommand = new RelayCommand(() => DropExercise(item!)),
+                MoveCommand = new RelayCommand<int>(to => MoveExercise(item!, to)),
             };
             item.PropertyChanged += (_, e) =>
             {
@@ -467,39 +435,37 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
         Edited();
     }
 
-    /// <summary>A dragged exercise dropped on <paramref name="target"/> takes its place; the ones in between shift over.</summary>
-    void DropExercise(PlanDayExercise target)
+    /// <summary>An exercise dragged to position <paramref name="to"/>; the ones in between shift over.</summary>
+    void MoveExercise(PlanDayExercise item, int to)
     {
-        target.IsDropTarget = false;
-        var source = _draggedExercise;
-        _draggedExercise = null;
-        if (source == null || source == target || _draft is not { } plan || SelectedWorkout(plan) is not { } workout)
+        if (_draft is not { } plan || SelectedWorkout(plan) is not { } workout)
             return;
-        var from = workout.Exercises.IndexOf(source.Model);
-        var to = workout.Exercises.IndexOf(target.Model);
-        if (from < 0 || to < 0)
+        var from = workout.Exercises.IndexOf(item.Model);
+        if (from < 0 || to < 0 || to >= workout.Exercises.Count || from == to)
             return;
         workout.Exercises.RemoveAt(from);
-        workout.Exercises.Insert(to, source.Model);
+        workout.Exercises.Insert(to, item.Model);
         Edited();
     }
 
-    /// <summary>A dragged day dropped on day <paramref name="target"/> moves there, and stays selected.</summary>
-    void DropDay(int target)
+    /// <summary>A day dragged from position <paramref name="from"/> to <paramref name="to"/>; it stays selected if it was.</summary>
+    void MoveDay(int from, int to)
     {
-        foreach (var chip in Days)
-            chip.IsDropTarget = false;
-        var from = _draggedDay;
-        _draggedDay = null;
-        if (from is not { } source || source == target || _draft is not { } plan)
+        if (_draft is not { } plan)
             return;
         var days = PlanSchedule.Days(plan);
-        if (source >= days.Count || target >= days.Count)
+        if (from == to || from >= days.Count || to < 0 || to >= days.Count)
             return;
-        var day = days[source];
-        days.RemoveAt(source);
-        days.Insert(target, day);
-        _selected = target;
+        var day = days[from];
+        days.RemoveAt(from);
+        days.Insert(to, day);
+        // The selection follows whichever day it was on.
+        if (_selected == from)
+            _selected = to;
+        else if (from < _selected && to >= _selected)
+            _selected--;
+        else if (from > _selected && to <= _selected)
+            _selected++;
         SetDays(plan, days);
     }
 
@@ -530,43 +496,6 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
     {
         PlanSchedule.SetDays(plan, days);
         Edited();
-    }
-
-    /// <summary>The button under the day: start the workout or open its finished session, or mark the rest day.</summary>
-    [RelayCommand]
-    async Task DayAction()
-    {
-        if (_draft is not { } plan || store.GetPlan(_id) is not { } saved)
-            return;
-        if (SelectedWorkout(plan) is not PlanWorkout w)
-        {
-            // Progress, not an edit: straight to the saved plan (the draft follows it).
-            if (_week is { } week)
-            {
-                PlanProgress.SetRestDone(saved, _selected, week, !IsDayDone);
-                store.Save();
-                CopyProgress(saved, plan);
-            }
-            Refresh();
-            return;
-        }
-        if (_week is { } shown && new PlanProgress(saved, store.History).SessionFor(w, shown) is { } done)
-        {
-            await GoTo($"{Routes.Session}?id={done.Id}");
-            return;
-        }
-        // Workouts start from the saved plan.
-        if (!await SettleChangesAsync("Save your changes before starting?"))
-            return;
-        var workout = saved.Workouts.FirstOrDefault(x => x.Id == w.Id);
-        if (workout == null)
-            return;
-        if (workout.Exercises.Count == 0)
-        {
-            await dialogs.Alert("Empty workout", "Add exercises to this workout first.");
-            return;
-        }
-        await StartPlannedWorkoutAsync(workouts, dialogs, recovery, saved, workout, _week);
     }
 
     /// <summary>Opens the muscle breakdown for the selected day, with a switch to the whole plan.</summary>

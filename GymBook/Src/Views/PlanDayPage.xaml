@@ -52,33 +52,70 @@
                         </Border>
                     </HorizontalStackLayout>
 
-                    <!-- A finished workout's numbers -->
-                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8" IsVisible="{Binding HasStats}">
-                        <Border Style="{StaticResource InnerCard}" Padding="8,10">
+                    <!-- A finished workout's numbers, 2 by 2 so they fit, each with how it compares with last time -->
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10" IsVisible="{Binding HasStats}">
+                        <Border Style="{StaticResource InnerCard}" Padding="12,10">
                             <VerticalStackLayout Spacing="2">
-                                <Label Text="{Binding StatDuration}" Style="{StaticResource StatValue}" FontSize="17" HorizontalOptions="Center" />
-                                <Label Text="TIME" Style="{StaticResource Overline}" FontSize="10" HorizontalOptions="Center" />
+                                <Label Text="{Binding StatTime.Label}" Style="{StaticResource Overline}" FontSize="10" />
+                                <Label Text="{Binding StatTime.Value}" Style="{StaticResource StatValue}" FontSize="20" />
+                                <Label Text="{Binding StatTime.Note}" TextColor="{Binding StatTime.NoteColor}" FontSize="12" IsVisible="{Binding StatTime.HasNote}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="8,10">
+                        <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="12,10">
                             <VerticalStackLayout Spacing="2">
-                                <Label Text="{Binding StatVolume}" Style="{StaticResource StatValue}" FontSize="17" HorizontalOptions="Center" LineBreakMode="TailTruncation" />
-                                <Label Text="VOLUME" Style="{StaticResource Overline}" FontSize="10" HorizontalOptions="Center" />
+                                <Label Text="{Binding StatVolume.Label}" Style="{StaticResource Overline}" FontSize="10" />
+                                <Label Text="{Binding StatVolume.Value}" Style="{StaticResource StatValue}" FontSize="20" />
+                                <Label Text="{Binding StatVolume.Note}" TextColor="{Binding StatVolume.NoteColor}" FontSize="12" IsVisible="{Binding StatVolume.HasNote}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="2" Style="{StaticResource InnerCard}" Padding="8,10">
+                        <Border Grid.Row="1" Style="{StaticResource InnerCard}" Padding="12,10">
                             <VerticalStackLayout Spacing="2">
-                                <Label Text="{Binding StatSets}" Style="{StaticResource StatValue}" FontSize="17" HorizontalOptions="Center" />
-                                <Label Text="SETS" Style="{StaticResource Overline}" FontSize="10" HorizontalOptions="Center" />
+                                <Label Text="{Binding StatSets.Label}" Style="{StaticResource Overline}" FontSize="10" />
+                                <Label Text="{Binding StatSets.Value}" Style="{StaticResource StatValue}" FontSize="20" />
+                                <Label Text="{Binding StatSets.Note}" TextColor="{Binding StatSets.NoteColor}" FontSize="12" IsVisible="{Binding StatSets.HasNote}" />
                             </VerticalStackLayout>
                         </Border>
-                        <Border Grid.Column="3" Style="{StaticResource InnerCard}" Padding="8,10">
+                        <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource InnerCard}" Padding="12,10">
                             <VerticalStackLayout Spacing="2">
-                                <Label Text="{Binding StatRecords}" Style="{StaticResource StatValue}" FontSize="17" HorizontalOptions="Center" />
-                                <Label Text="PRS" Style="{StaticResource Overline}" FontSize="10" HorizontalOptions="Center" />
+                                <Label Text="{Binding StatRecords.Label}" Style="{StaticResource Overline}" FontSize="10" />
+                                <Label Text="{Binding StatRecords.Value}" Style="{StaticResource StatValue}" FontSize="20" />
+                                <Label Text="{Binding StatRecords.Note}" TextColor="{Binding StatRecords.NoteColor}" FontSize="12" IsVisible="{Binding StatRecords.HasNote}" />
                             </VerticalStackLayout>
                         </Border>
                     </Grid>
+
+                    <!-- Each exercise against the last time it was done, with its recent trend -->
+                    <Border Style="{StaticResource Card}" Padding="14" IsVisible="{Binding HasImprovements}">
+                        <VerticalStackLayout Spacing="14">
+                            <Label Text="Compared with last time" Style="{StaticResource H3}" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Improvements}" Spacing="16">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ExerciseProgressItem">
+                                        <VerticalStackLayout Spacing="4">
+                                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                                                <Ellipse Fill="{Binding Color}" WidthRequest="8" HeightRequest="8" VerticalOptions="Center" />
+                                                <Label Grid.Column="1" Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" LineBreakMode="TailTruncation" />
+                                            </Grid>
+                                            <Label Text="{Binding Headline}" TextColor="{Binding Color}" FontSize="14" />
+                                            <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                            <GraphicsView Drawable="{Binding Chart}" HeightRequest="90" IsVisible="{Binding HasChart}" Margin="0,4,0,0" />
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- This workout over its last sessions -->
+                    <Border Style="{StaticResource Card}" Padding="14" IsVisible="{Binding HasTrends}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="This workout over time" Style="{StaticResource H3}" />
+                            <Label Text="VOLUME" Style="{StaticResource Overline}" FontSize="10" />
+                            <GraphicsView Drawable="{Binding VolumeTrend}" HeightRequest="130" />
+                            <Label Text="DURATION" Style="{StaticResource Overline}" FontSize="10" Margin="0,6,0,0" />
+                            <GraphicsView Drawable="{Binding DurationTrend}" HeightRequest="130" />
+                        </VerticalStackLayout>
+                    </Border>
 
                     <!-- Exercises, each with its set table -->
                     <Border Style="{StaticResource Card}" Padding="14" IsVisible="{Binding IsWorkoutDay}">
@@ -139,12 +176,45 @@
                         </VerticalStackLayout>
                     </Border>
 
-                    <!-- A finished workout: how fatigued each muscle was right after it -->
+                    <!-- A finished workout: how fatigued each muscle was right after it, in detail -->
                     <Border Style="{StaticResource Card}" IsVisible="{Binding HasStats}">
-                        <VerticalStackLayout Spacing="10">
+                        <VerticalStackLayout Spacing="12">
                             <Label Text="Fatigue after this workout" Style="{StaticResource H3}" />
-                            <GraphicsView Drawable="{Binding FatigueMap}" HeightRequest="220" />
+                            <GraphicsView Drawable="{Binding FatigueMap}" HeightRequest="340" />
+                            <HorizontalStackLayout Spacing="14" HorizontalOptions="Center">
+                                <HorizontalStackLayout Spacing="5">
+                                    <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="#FF4D5E" VerticalOptions="Center" />
+                                    <Label Text="Fatigued" Style="{StaticResource Caption}" FontSize="12" />
+                                </HorizontalStackLayout>
+                                <HorizontalStackLayout Spacing="5">
+                                    <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="#FFB020" VerticalOptions="Center" />
+                                    <Label Text="Recovering" Style="{StaticResource Caption}" FontSize="12" />
+                                </HorizontalStackLayout>
+                                <HorizontalStackLayout Spacing="5">
+                                    <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="#2ED47A" VerticalOptions="Center" />
+                                    <Label Text="Fresh" Style="{StaticResource Caption}" FontSize="12" />
+                                </HorizontalStackLayout>
+                            </HorizontalStackLayout>
                             <Label Text="{Binding FatigueSummary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                            <!-- Every muscle it worked, most fatigued first -->
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding FatigueMuscles}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:MuscleRecoveryItem">
+                                        <VerticalStackLayout Padding="0,10" Spacing="6">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                                <Ellipse Fill="{Binding Color}" WidthRequest="10" HeightRequest="10" VerticalOptions="Center" />
+                                                <Label Grid.Column="1" Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" VerticalOptions="Center" />
+                                                <HorizontalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
+                                                    <Label Text="{Binding Status}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                                                    <Label Text="{Binding Percent}" TextColor="{Binding Color}" FontFamily="OpenSansSemibold" FontSize="15" VerticalOptions="Center" />
+                                                </HorizontalStackLayout>
+                                            </Grid>
+                                            <ProgressBar Progress="{Binding Progress}" ProgressColor="{Binding Color}" HeightRequest="6" />
+                                            <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
                     </Border>
 

@@ -193,13 +193,13 @@ public partial class HomeViewModel(
         if (plan == null)
             return;
         var others = store.Data.Plans.Where(p => p != plan).ToList();
-        var options = new List<string> { "View plan" };
+        var options = new List<string> { "Edit plan" };
         if (others.Count > 0)
             options.Add("Switch plan");
 
         switch (await dialogs.ActionSheet(plan.Name, null, [.. options]))
         {
-            case "View plan":
+            case "Edit plan":
                 await GoTo($"{Routes.Plan}?id={plan.Id}");
                 break;
             case "Switch plan":

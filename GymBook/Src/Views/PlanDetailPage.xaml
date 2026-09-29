@@ -3,10 +3,11 @@
     x:Class="GymBook.Views.PlanDetailPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:GymBook.Controls"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:PlanDetailViewModel"
-    Title="Plan"
+    Title="Edit plan"
     Shell.TabBarIsVisible="False">
 
     <!-- Leaving with unsaved changes asks to save or discard them first. -->
@@ -70,17 +71,16 @@
                         <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Days}" Spacing="4">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="vm:PlanDayChip">
-                                    <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 14" StrokeThickness="0" Padding="12,8">
-                                        <!-- Tap to show the day; long-press and drag onto another day to move it there. -->
-                                        <Border.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding SelectCommand}" />
-                                            <DragGestureRecognizer DragStartingCommand="{Binding DragCommand}" />
-                                            <DropGestureRecognizer DropCommand="{Binding DropCommand}" DragOverCommand="{Binding DragOverCommand}"
-                                                                   DragLeaveCommand="{Binding DragLeaveCommand}" />
-                                        </Border.GestureRecognizers>
-                                        <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontFamily="OpenSansSemibold" FontSize="15"
-                                               MaximumWidthRequest="110" LineBreakMode="TailTruncation" />
-                                    </Border>
+                                    <!-- Tap to show the day; hold and drag along the strip to move it. -->
+                                    <controls:ReorderItem Orientation="Horizontal" MoveCommand="{Binding MoveCommand}">
+                                        <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 14" StrokeThickness="0" Padding="12,8">
+                                            <Border.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                            </Border.GestureRecognizers>
+                                            <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontFamily="OpenSansSemibold" FontSize="15"
+                                                   MaximumWidthRequest="110" LineBreakMode="TailTruncation" />
+                                        </Border>
+                                    </controls:ReorderItem>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </HorizontalStackLayout>
@@ -107,10 +107,6 @@
                         </Grid>
                         <HorizontalStackLayout Spacing="8">
                             <Label Text="{Binding DayLabel}" Style="{StaticResource Caption}" FontSize="15" VerticalOptions="Center" />
-                            <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource AccentSoft}" IsVisible="{Binding IsNextDay}"
-                                    Padding="8,2" VerticalOptions="Center">
-                                <Label Text="Up next" TextColor="{StaticResource Accent}" FontSize="11" FontFamily="OpenSansSemibold" />
-                            </Border>
                             <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource SuccessSoft}" IsVisible="{Binding IsDayDone}"
                                     Padding="8,2" VerticalOptions="Center">
                                 <Label Text="Finished" TextColor="{StaticResource Success}" FontSize="11" FontFamily="OpenSansSemibold" />
@@ -132,27 +128,19 @@
                     </Border>
                 </Grid>
 
-                <!-- Exercises: tap one to change it here, long-press and drag onto another to move it there -->
+                <!-- Exercises: tap one to change it here, hold and drag it up or down to move it -->
                 <Border Style="{StaticResource Card}" Margin="16,0" Padding="14" IsVisible="{Binding IsWorkoutDay}">
                     <VerticalStackLayout Spacing="10">
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding DayExercises}" Spacing="6">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="vm:PlanDayExercise">
-                                    <Border BackgroundColor="{Binding DropBackground}" StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="0,4">
-                                        <!-- Drop anywhere on the row, opened or not. -->
-                                        <Border.GestureRecognizers>
-                                            <DropGestureRecognizer DropCommand="{Binding DropCommand}" DragOverCommand="{Binding DragOverCommand}"
-                                                                   DragLeaveCommand="{Binding DragLeaveCommand}" />
-                                        </Border.GestureRecognizers>
+                                    <!-- The row itself follows the finger; the others slide aside. A solid background so it covers them. -->
+                                    <controls:ReorderItem MoveCommand="{Binding MoveCommand}">
+                                    <Border BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="0,4">
                                         <VerticalStackLayout Spacing="12">
-                                            <!-- Drag from the same place as the tap: on Android the innermost element with a gesture gets the
-                                                 touch, so a drag on the outer row never saw the long-press. -->
                                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                                 <Grid.GestureRecognizers>
                                                     <TapGestureRecognizer Command="{Binding ToggleCommand}" />
-                                                    <DragGestureRecognizer DragStartingCommand="{Binding DragCommand}" />
-                                                    <DropGestureRecognizer DropCommand="{Binding DropCommand}" DragOverCommand="{Binding DragOverCommand}"
-                                                                           DragLeaveCommand="{Binding DragLeaveCommand}" />
                                                 </Grid.GestureRecognizers>
                                                 <Border WidthRequest="88" HeightRequest="66" StrokeShape="RoundRectangle 14" StrokeThickness="0"
                                                         BackgroundColor="{Binding Thumb.Soft}" VerticalOptions="Start">
@@ -242,6 +230,7 @@
                                             </VerticalStackLayout>
                                         </VerticalStackLayout>
                                     </Border>
+                                    </controls:ReorderItem>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
@@ -261,8 +250,6 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- Start the selected workout -->
-        <Button Grid.Row="1" Text="{Binding DayActionText}" Style="{StaticResource PrimaryButton}"
-                Margin="16,8,16,16" IsVisible="{Binding HasDayAction}" Command="{Binding DayActionCommand}" />
+        <!-- No Start here: this page is for editing the plan. Workouts start from the Workout tab. -->
     </Grid>
 </views:BasePage>

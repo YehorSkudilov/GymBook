@@ -50,7 +50,6 @@ public static class MauiProgram
         AddPage<ProfilePage, ProfileViewModel>(builder.Services);
         AddPage<WorkoutPage, WorkoutViewModel>(builder.Services);
         AddPage<WorkoutMenuPage, WorkoutMenuViewModel>(builder.Services);
-        AddPage<SessionDetailPage, SessionDetailViewModel>(builder.Services);
         AddPage<HistoryPage, HistoryViewModel>(builder.Services);
         AddPage<CalendarPage, CalendarViewModel>(builder.Services);
         AddPage<PlanDetailPage, PlanDetailViewModel>(builder.Services);
@@ -69,6 +68,9 @@ public static class MauiProgram
         AddPage<RecoveryPage, RecoveryViewModel>(builder.Services);
 
 #if ANDROID
+        // Hold-and-drag reordering (plan exercises and days), with a native long-press so quick swipes still scroll.
+        builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.ReorderItem, ReorderItemHandler>());
+
         // The tabs swipe sideways (AppSkeleton's CView takes over any mostly-horizontal drag), which would steal the
         // drag from a slider on a tab, like Home's recovery preview. A slider claims the gesture as soon as it's
         // touched, the standard Android way, so its parents leave it alone until the finger lifts.

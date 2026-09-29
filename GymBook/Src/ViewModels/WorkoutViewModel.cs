@@ -340,7 +340,8 @@ public partial class WorkoutViewModel(
                 "Update plan", "Keep plan as is"))
             workouts.ApplyPlanUpdate(update);
         if (session != null)
-            await GoTo($"../{Routes.Session}?id={session.Id}&finished=true");
+            // Straight to the finished workout: what was done, how it compares, and the fatigue it left.
+            await GoTo($"../{Routes.PlanDay}?session={session.Id}");
         else
             await GoBack();
     }

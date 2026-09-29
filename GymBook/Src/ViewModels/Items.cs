@@ -21,7 +21,7 @@ public class SessionItem
     public bool HasMore => More.Length > 0;
     public string Time { get; init; } = "";
 
-    /// <summary><paramref name="open"/>: what tapping it does; by default the workout's summary page.</summary>
+    /// <summary><paramref name="open"/>: what tapping it does; by default the finished-workout sheet.</summary>
     public static SessionItem Create(WorkoutSession s, DataStore store, StatsService stats, Units units, ICommand? open = null)
     {
         var photos = s.Exercises.Select(e => ExerciseLibrary.Details(e.ExerciseId)?.Images.FirstOrDefault()).OfType<string>().ToList();
@@ -33,7 +33,7 @@ public class SessionItem
             Time = s.StartedAt.ToString("HH:mm"),
             Meta = $"{Units.Duration(s.Duration)} · {units.FormatVolume(stats.SessionVolume(s))} · {s.WorkingSets.Count()} sets",
             Muscles = string.Join(", ", s.Exercises.Select(e => store.GetExercise(e.ExerciseId)?.PrimaryMuscle).OfType<MuscleGroup>().Distinct().Take(4).Select(m => m.Display())),
-            OpenCommand = open ?? new AsyncRelayCommand(() => Shell.Current.GoToAsync($"{Routes.Session}?id={s.Id}")),
+            OpenCommand = open ?? new AsyncRelayCommand(() => Shell.Current.GoToAsync($"{Routes.PlanDay}?session={s.Id}")),
             Thumbnails = photos.Take(3).ToList(),
             More = s.Exercises.Count > 3 ? $"+{s.Exercises.Count - 3}" : "",
         };
