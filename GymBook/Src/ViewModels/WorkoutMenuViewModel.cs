@@ -18,6 +18,8 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
     [ObservableProperty] string startText = "";
     [ObservableProperty] string durationText = "";
     [ObservableProperty] bool trackRir;
+    /// <summary>False in a workout of a plan with RIR switched off: the switch would do nothing there.</summary>
+    [ObservableProperty] bool canTrackRir = true;
     [ObservableProperty] bool autoRest;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) => _workout = query.TryGetValue("workout", out var w) ? w as WorkoutViewModel : null;
@@ -33,6 +35,7 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
         Name = _workout.Name;
         StartText = started.Date == DateTime.Today ? $"Today, {started:t}" : $"{started:ddd d MMM}, {started:t}";
         TrackRir = store.Profile.TrackRir;
+        CanTrackRir = store.GetPlan(store.Data.ActiveSession?.PlanId)?.UseRir != false;
         AutoRest = store.Profile.AutoRestTimer;
         _loading = false;
         Tick();

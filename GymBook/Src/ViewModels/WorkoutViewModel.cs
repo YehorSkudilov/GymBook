@@ -95,7 +95,8 @@ public partial class WorkoutViewModel(
     }
 
     public string UnitLabel => units.Label.ToUpperInvariant();
-    public bool TrackRir => store.Profile.TrackRir;
+    /// <summary>RIR is logged when the profile asks for it, except in workouts of a plan that doesn't use RIR.</summary>
+    public bool TrackRir => store.Profile.TrackRir && store.GetPlan(_session?.PlanId)?.UseRir != false;
 
     internal Units Units => units;
     internal ProgressionEngine Engine => engine;
@@ -327,9 +328,17 @@ public partial class WorkoutViewModel(
         if (!await dialogs.Confirm(title, message, "Finish", "Cancel"))
             return;
 
+        // Worked out before finishing, which drops the sets that weren't done (not getting to one isn't a plan change).
+        var update = _session == null ? null : workouts.ProposePlanUpdate(_session);
         IsResting = false;
         var session = workouts.Finish();
         _session = null;
+        // Changes made during the workout stay in it; the plan only takes them over when asked to.
+        if (session != null && update != null && await dialogs.Confirm($"Update {update.Workout.Name} in your plan?",
+                "You changed this workout:\n• " + string.Join("\n• ", update.Changes) +
+                "\n\nUse these changes next time too? This workout's record keeps what you did either way.",
+                "Update plan", "Keep plan as is"))
+            workouts.ApplyPlanUpdate(update);
         if (session != null)
             await GoTo($"../{Routes.Session}?id={session.Id}&finished=true");
         else
@@ -411,7 +420,9 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     internal Units Units => _parent.Units;
 
     public string Name => Exercise.Name;
-    public string TargetText => $"{Exercise.Equipment.Display()} · {Model.RepMin}–{Model.RepMax} reps · {Model.TargetRir} RIR · rest {Units.Rest(Model.RestSeconds)}";
+    public string TargetText => TrackRir
+        ? $"{Exercise.Equipment.Display()} · {Model.RepMin}–{Model.RepMax} reps · {Model.TargetRir} RIR · rest {Units.Rest(Model.RestSeconds)}"
+        : $"{Exercise.Equipment.Display()} · {Model.RepMin}–{Model.RepMax} reps · rest {Units.Rest(Model.RestSeconds)}";
     public string Recommendation => Model.Recommendation ?? "";
     public bool HasRecommendation => !string.IsNullOrEmpty(Model.Recommendation);
     /// <summary>The main coaching cue for this exercise and goal; the rest are on the exercise's page.</summary>
@@ -423,6 +434,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     internal void RefreshSettings()
     {
         OnPropertyChanged(nameof(TrackRir));
+        OnPropertyChanged(nameof(TargetText));
         foreach (var s in Sets)
             s.RefreshSettings();
     }

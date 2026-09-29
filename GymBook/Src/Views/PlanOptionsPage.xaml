@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:SheetPage
+    x:Class="GymBook.Views.PlanOptionsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PlanOptionsViewModel"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
+
+    <!-- The plan's training options, switched here and saved with the plan's other changes -->
+    <Grid>
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnBackdropTapped" />
+        </Grid.GestureRecognizers>
+        <Border VerticalOptions="End" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="20,22,20,18">
+            <!-- Swallows taps, so only the dimmed area above closes the sheet. -->
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer />
+            </Border.GestureRecognizers>
+            <VerticalStackLayout Spacing="16">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Training options" Style="{StaticResource H2}" FontSize="20" />
+                    <Label Text="How this plan runs week to week. Saved with the plan's other changes." Style="{StaticResource Caption}" FontSize="15" />
+                </VerticalStackLayout>
+
+                <Border Style="{StaticResource Card}" Padding="0">
+                    <VerticalStackLayout>
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout VerticalOptions="Center" Spacing="2">
+                                <Label Text="Reps in reserve (RIR)" />
+                                <Label Text="A target effort for each exercise, and logged with each set. Off: just weight and reps."
+                                       Style="{StaticResource Caption}" FontSize="12" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding UseRir}" VerticalOptions="Center" />
+                        </Grid>
+                        <BoxView Style="{StaticResource Divider}" />
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout VerticalOptions="Center" Spacing="2">
+                                <Label Text="Deload weeks" />
+                                <Label Text="After every 4 weeks, a lighter week: about half the sets and easier effort, to recover and come back stronger."
+                                       Style="{StaticResource Caption}" FontSize="12" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding Deloads}" VerticalOptions="Center" />
+                        </Grid>
+                        <BoxView Style="{StaticResource Divider}" />
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout VerticalOptions="Center" Spacing="2">
+                                <Label Text="Periodization" />
+                                <Label Text="Each 4-week block builds: an easier first week, then an extra set in weeks 3 and 4, and the hardest effort in week 4."
+                                       Style="{StaticResource Caption}" FontSize="12" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding Periodization}" VerticalOptions="Center" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Button Text="Done" Style="{StaticResource PrimaryButton}" Clicked="OnDoneClicked" />
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</views:SheetPage>

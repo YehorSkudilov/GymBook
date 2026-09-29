@@ -32,13 +32,31 @@ public partial class VerifyEmailViewModel(AccountService account, DialogService 
             Done?.Invoke(this, EventArgs.Empty);
             return;
         }
-        // A code for this address (registration sends one): send it now unless one already went out a moment ago.
+        // The code is only emailed once the user is looking at this: the first time it opens, and again only when the
+        // last one is old enough to have expired. Reopening it (every start and resume) doesn't send another.
         if (!_codeRequested)
         {
             _codeRequested = true;
-            await SendCodeAsync(quiet: true);
+            if (RecentlySent(Email))
+                Info = $"We sent a code to {Email}. Didn't get it? Resend it.";
+            else
+                await SendCodeAsync(quiet: true);
         }
     }
+
+    // A code sent automatically lasts about this long, so there's no point sending another before then.
+    static readonly TimeSpan AutoResendAfter = TimeSpan.FromMinutes(10);
+    const string SentKey = "verify.code_sent";
+
+    // "address|ticks" of the last code sent from here, for the same address only.
+    static bool RecentlySent(string email)
+    {
+        var parts = Preferences.Default.Get(SentKey, "").Split('|');
+        return parts.Length == 2 && string.Equals(parts[0], email, StringComparison.OrdinalIgnoreCase)
+            && long.TryParse(parts[1], out var ticks) && DateTime.UtcNow - new DateTime(ticks, DateTimeKind.Utc) < AutoResendAfter;
+    }
+
+    static void MarkSent(string email) => Preferences.Default.Set(SentKey, $"{email}|{DateTime.UtcNow.Ticks}");
 
     public override void OnDisappearing() => account.Changed -= OnAccountChanged;
 
@@ -84,6 +102,7 @@ public partial class VerifyEmailViewModel(AccountService account, DialogService 
             try
             {
                 await account.SendVerificationCodeAsync();
+                MarkSent(Email);
                 Info = $"We sent a code to {Email}.";
             }
             catch (ApiException e) when (quiet && e.Status == System.Net.HttpStatusCode.TooManyRequests)

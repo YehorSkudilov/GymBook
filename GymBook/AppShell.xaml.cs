@@ -14,7 +14,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(Routes.Calendar, typeof(CalendarPage));
         Routing.RegisterRoute(Routes.Plan, typeof(PlanDetailPage));
         Routing.RegisterRoute(Routes.PlanDay, typeof(PlanDayPage));
-        Routing.RegisterRoute(Routes.PlanWorkout, typeof(PlanWorkoutEditPage));
         Routing.RegisterRoute(Routes.Wizard, typeof(PlanWizardPage));
         Routing.RegisterRoute(Routes.PlanChat, typeof(PlanChatPage));
         Routing.RegisterRoute(Routes.PlanReview, typeof(PlanReviewPage));
@@ -35,7 +34,6 @@ public static class Routes
     public const string Calendar = "calendar";
     public const string Plan = "plan";
     public const string PlanDay = "planday";
-    public const string PlanWorkout = "planworkout";
     public const string Wizard = "wizard";
     public const string PlanChat = "planchat";
     public const string PlanReview = "planreview";

@@ -115,6 +115,9 @@ public partial class PlanReviewViewModel(DataStore store, AiPlanService ai) : Ba
         store.Save();
         item.IsApplied = true;
         item.Note = "Applied to your plan";
+        // Everything done: nothing left to point at until the next weekly check.
+        if (Suggestions.All(s => !s.HasChanges || s.IsApplied))
+            ai.Dismiss(plan);
     }
 
     /// <summary>Each edit in words, e.g. "Upper A: swap Bench Press for Incline Dumbbell Press · 3 sets · 8–10 reps".</summary>

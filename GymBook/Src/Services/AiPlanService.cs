@@ -11,7 +11,21 @@ namespace GymBook.Services;
 /// </summary>
 public class AiPlanService(ApiClient api, AccountService account, DataStore store, StatsService stats)
 {
-    readonly Dictionary<string, (PlanReviewResponse Review, DateTime At)> _reviews = [];
+    // The active plan is looked at again once a week, and only when there's something new to look at.
+    static readonly TimeSpan CheckInterval = TimeSpan.FromDays(7);
+    // A failed check (offline, quota used up) is retried after this, not on every resume.
+    static readonly TimeSpan RetryInterval = TimeSpan.FromHours(6);
+    const int MinSessionsForCheck = 3;
+    // Reviews are kept per plan on this device, so the weekly check's result (and a "Not now") survives restarts.
+    const string ReviewKey = "ai.review.";
+    const string ReviewedPlansKey = "ai.review.plans";
+
+    readonly Dictionary<string, DateTime> _lastTry = [];
+    bool _checking;
+
+    /// <summary>A review was stored or dismissed: badges should refresh.</summary>
+    public event EventHandler? SuggestionsChanged;
+
     public bool IsAvailable => account.IsSignedIn;
 
     /// <summary>The last known quota, from <see cref="RefreshQuotaAsync"/> or the last generated plan; null when unknown.</summary>
@@ -164,8 +178,40 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     /// <summary>Finished workouts of <paramref name="plan"/>, newest first: what a review has to go on.</summary>
     public List<WorkoutSession> SessionsOf(WorkoutPlan plan) => [.. store.History.Where(s => s.PlanId == plan.Id)];
 
-    /// <summary>The last review of <paramref name="plan"/> this app run, so reopening it doesn't spend another request.</summary>
-    public (PlanReviewResponse Review, DateTime At)? LastReview(WorkoutPlan plan) => _reviews.TryGetValue(plan.Id, out var r) ? r : null;
+    /// <summary>The last review of <paramref name="plan"/> on this device, so reopening it doesn't spend another request.</summary>
+    public (PlanReviewResponse Review, DateTime At)? LastReview(WorkoutPlan plan)
+    {
+        var json = Preferences.Default.Get(Key(plan, "json"), "");
+        if (json.Length == 0)
+            return null;
+        try
+        {
+            var review = System.Text.Json.JsonSerializer.Deserialize(json, ReviewJson);
+            return review == null ? null : (review, new DateTime(Preferences.Default.Get(Key(plan, "at"), 0L)));
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// How many suggestions that change the plan are waiting for the active plan: the weekly check found them and the
+    /// user hasn't said "Not now" or applied them all. 0 for any other plan, which only gets reviews when asked.
+    /// </summary>
+    public int PendingSuggestions(WorkoutPlan plan)
+    {
+        if (plan.Id != store.Data.ActivePlanId || !IsAvailable || Preferences.Default.Get(Key(plan, "dismissed"), false))
+            return 0;
+        return LastReview(plan)?.Review.Suggestions.Count(s => s.Changes.Count > 0) ?? 0;
+    }
+
+    /// <summary>"Not now", or everything applied: no badge until the next weekly check finds something.</summary>
+    public void Dismiss(WorkoutPlan plan)
+    {
+        Preferences.Default.Set(Key(plan, "dismissed"), true);
+        SuggestionsChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     /// <summary>The AI's suggestions for <paramref name="plan"/>, from a summary of the workouts logged on it.</summary>
     public async Task<PlanReviewResponse> ReviewAsync(WorkoutPlan plan, CancellationToken ct = default)
@@ -178,9 +224,72 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
 
         var response = await api.ReviewPlanAsync(request, ct);
         ChatQuota = response.Quota ?? ChatQuota;
-        _reviews[plan.Id] = (response, DateTime.Now);
+        Store(plan, response);
         return response;
     }
+
+    /// <summary>
+    /// The weekly check of the active plan, run when the app opens or comes back: at most once a week, only with
+    /// workouts logged since the last one, and quietly (a failure just waits for a later try). Any suggestions that
+    /// change the plan show up as a badge.
+    /// </summary>
+    public async Task CheckActivePlanAsync()
+    {
+        await account.EnsureLoadedAsync();
+        // Unverified accounts are refused by the API anyway.
+        if (_checking || !IsAvailable || account.NeedsEmailVerification || store.ActivePlan is not { } plan)
+            return;
+        if (_lastTry.TryGetValue(plan.Id, out var tried) && DateTime.Now - tried < RetryInterval)
+            return;
+        var sessions = SessionsOf(plan).Count;
+        if (sessions < MinSessionsForCheck)
+            return;
+        if (LastReview(plan) is { } last && (DateTime.Now - last.At < CheckInterval || sessions <= Preferences.Default.Get(Key(plan, "sessions"), 0)))
+            return;
+
+        _checking = true;
+        _lastTry[plan.Id] = DateTime.Now;
+        try
+        {
+            await ReviewAsync(plan);
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException or ApiException or SessionExpiredException)
+        {
+        }
+        finally
+        {
+            _checking = false;
+        }
+    }
+
+    /// <summary>Forgets every stored review, e.g. on signing out: they belong to the account.</summary>
+    public void ClearReviews()
+    {
+        foreach (var id in Preferences.Default.Get(ReviewedPlansKey, "").Split(',', StringSplitOptions.RemoveEmptyEntries))
+            foreach (var part in new[] { "json", "at", "sessions", "dismissed" })
+                Preferences.Default.Remove($"{ReviewKey}{id}.{part}");
+        Preferences.Default.Remove(ReviewedPlansKey);
+        _lastTry.Clear();
+        SuggestionsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    void Store(WorkoutPlan plan, PlanReviewResponse review)
+    {
+        Preferences.Default.Set(Key(plan, "json"), System.Text.Json.JsonSerializer.Serialize(review, ReviewJson));
+        Preferences.Default.Set(Key(plan, "at"), DateTime.Now.Ticks);
+        Preferences.Default.Set(Key(plan, "sessions"), SessionsOf(plan).Count);
+        // A new review is new news, even if the last one was dismissed.
+        Preferences.Default.Set(Key(plan, "dismissed"), false);
+        var ids = Preferences.Default.Get(ReviewedPlansKey, "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+        if (ids.Add(plan.Id))
+            Preferences.Default.Set(ReviewedPlansKey, string.Join(',', ids));
+        SuggestionsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    static string Key(WorkoutPlan plan, string part) => $"{ReviewKey}{plan.Id}.{part}";
+
+    static System.Text.Json.Serialization.Metadata.JsonTypeInfo<PlanReviewResponse> ReviewJson =>
+        (System.Text.Json.Serialization.Metadata.JsonTypeInfo<PlanReviewResponse>)GymBook.Serialization.GymBookJson.Options.GetTypeInfo(typeof(PlanReviewResponse));
 
     /// <summary>
     /// What the AI needs to know about the training on the plan: attendance, workout length, weekly volume per muscle,

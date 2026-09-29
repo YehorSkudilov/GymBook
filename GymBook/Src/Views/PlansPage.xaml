@@ -19,6 +19,18 @@
                     <Label Text="{Binding ActivePlan.Name}" FontFamily="OpenSansSemibold" FontSize="20" TextColor="White" />
                     <Label Text="{Binding ActivePlan.Description}" FontSize="13" TextColor="#DDE6FF" />
                     <Label Text="{Binding ActivePlan.Meta}" FontSize="13" TextColor="White" Margin="0,8,0,0" />
+                    <!-- The weekly AI check found ways to improve it: open the plan to review them. -->
+                    <Border IsVisible="{Binding ActivePlan.HasSuggestions}" BackgroundColor="#33FFFFFF" StrokeShape="RoundRectangle 12"
+                            StrokeThickness="0" Padding="10,4" HorizontalOptions="Start" Margin="0,10,0,0">
+                        <HorizontalStackLayout Spacing="6">
+                            <Image WidthRequest="14" HeightRequest="14" VerticalOptions="Center">
+                                <Image.Source>
+                                    <FontImageSource FontFamily="OutlinedIcons" Glyph="auto_awesome" Color="White" Size="28" />
+                                </Image.Source>
+                            </Image>
+                            <Label Text="{Binding ActivePlan.SuggestionsText}" FontSize="12" FontFamily="OpenSansSemibold" TextColor="White" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
                 </VerticalStackLayout>
             </Border>
 

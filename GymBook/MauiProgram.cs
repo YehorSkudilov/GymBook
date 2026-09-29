@@ -55,7 +55,6 @@ public static class MauiProgram
         AddPage<CalendarPage, CalendarViewModel>(builder.Services);
         AddPage<PlanDetailPage, PlanDetailViewModel>(builder.Services);
         AddPage<PlanDayPage, PlanDayViewModel>(builder.Services);
-        AddPage<PlanWorkoutEditPage, PlanWorkoutEditViewModel>(builder.Services);
         AddPage<PlanWizardPage, PlanWizardViewModel>(builder.Services);
         AddPage<PlanChatPage, PlanChatViewModel>(builder.Services);
         AddPage<PlanReviewPage, PlanReviewViewModel>(builder.Services);

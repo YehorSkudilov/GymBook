@@ -136,7 +136,7 @@
                     <Label Text="Settings" Style="{StaticResource Title}" FontSize="26" Margin="0,14,0,0" />
                     <Border Style="{StaticResource MenuCard}">
                         <VerticalStackLayout>
-                            <Grid Style="{StaticResource MenuRow}">
+                            <Grid Style="{StaticResource MenuRow}" IsVisible="{Binding CanTrackRir}">
                                 <Image Style="{StaticResource MenuIcon}">
                                     <Image.Source>
                                         <FontImageSource FontFamily="OutlinedIcons" Glyph="local_fire_department" Color="{StaticResource TextSecondary}" Size="32" />

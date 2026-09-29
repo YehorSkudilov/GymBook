@@ -14,16 +14,30 @@ public class SessionItem
     public required string Meta { get; init; }
     public required string Muscles { get; init; }
     public required ICommand OpenCommand { get; init; }
+    /// <summary>Photos of its first exercises, and "+N" for the rest, like the plan days on the Workout tab.</summary>
+    public List<string> Thumbnails { get; init; } = [];
+    public string More { get; init; } = "";
+    public bool HasThumbnails => Thumbnails.Count > 0;
+    public bool HasMore => More.Length > 0;
+    public string Time { get; init; } = "";
 
-    public static SessionItem Create(WorkoutSession s, DataStore store, StatsService stats, Units units) => new()
+    /// <summary><paramref name="open"/>: what tapping it does; by default the workout's summary page.</summary>
+    public static SessionItem Create(WorkoutSession s, DataStore store, StatsService stats, Units units, ICommand? open = null)
     {
-        Id = s.Id,
-        Name = s.Name,
-        DateText = s.StartedAt.ToString("ddd, d MMM · HH:mm"),
-        Meta = $"{Units.Duration(s.Duration)} · {units.FormatVolume(stats.SessionVolume(s))} · {s.WorkingSets.Count()} sets",
-        Muscles = string.Join(", ", s.Exercises.Select(e => store.GetExercise(e.ExerciseId)?.PrimaryMuscle).OfType<MuscleGroup>().Distinct().Take(4).Select(m => m.Display())),
-        OpenCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync($"{Routes.Session}?id={s.Id}")),
-    };
+        var photos = s.Exercises.Select(e => ExerciseLibrary.Details(e.ExerciseId)?.Images.FirstOrDefault()).OfType<string>().ToList();
+        return new()
+        {
+            Id = s.Id,
+            Name = s.Name,
+            DateText = s.StartedAt.ToString("ddd, d MMM · HH:mm"),
+            Time = s.StartedAt.ToString("HH:mm"),
+            Meta = $"{Units.Duration(s.Duration)} · {units.FormatVolume(stats.SessionVolume(s))} · {s.WorkingSets.Count()} sets",
+            Muscles = string.Join(", ", s.Exercises.Select(e => store.GetExercise(e.ExerciseId)?.PrimaryMuscle).OfType<MuscleGroup>().Distinct().Take(4).Select(m => m.Display())),
+            OpenCommand = open ?? new AsyncRelayCommand(() => Shell.Current.GoToAsync($"{Routes.Session}?id={s.Id}")),
+            Thumbnails = photos.Take(3).ToList(),
+            More = s.Exercises.Count > 3 ? $"+{s.Exercises.Count - 3}" : "",
+        };
+    }
 }
 
 public class DayItem

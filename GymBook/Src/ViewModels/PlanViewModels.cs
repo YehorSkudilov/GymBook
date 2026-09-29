@@ -13,30 +13,91 @@ public class PlanItem
     public required string Description { get; init; }
     public required string Meta { get; init; }
     public required bool IsActive { get; init; }
+    /// <summary>Waiting suggestions from the weekly AI check (the active plan only); 0 when none.</summary>
+    public int Suggestions { get; init; }
+    public bool HasSuggestions => Suggestions > 0;
+    public string SuggestionsText => Suggestions == 1 ? "1 AI suggestion" : $"{Suggestions} AI suggestions";
     public required IAsyncRelayCommand OpenCommand { get; init; }
 }
 
-/// <summary>A day in the plan page's day strip: a workout or a rest day.</summary>
-public class PlanDayChip
+/// <summary>A day in the plan page's day strip: a workout or a rest day. Long-press and drag it onto another day to move it there.</summary>
+public partial class PlanDayChip : ObservableObject
 {
     public required string Title { get; init; }
     public required bool IsSelected { get; init; }
     public bool IsRest { get; init; }
     public required IRelayCommand SelectCommand { get; init; }
+    public required IRelayCommand DragCommand { get; init; }
+    public required IRelayCommand DropCommand { get; init; }
 
-    public Color Background => IsSelected ? Color.FromArgb("#272C39") : Colors.Transparent;
+    /// <summary>A dragged day is over this one.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Background))]
+    bool isDropTarget;
+
+    public Color Background => IsDropTarget ? Color.FromArgb("#1A2A4F") : IsSelected ? Color.FromArgb("#272C39") : Colors.Transparent;
     public Color TextColor => IsSelected ? Color.FromArgb("#F4F6FB") : IsRest ? Color.FromArgb("#626B7E") : Color.FromArgb("#9AA3B5");
+
+    [RelayCommand] void DragOver() => IsDropTarget = true;
+    [RelayCommand] void DragLeave() => IsDropTarget = false;
 }
 
-/// <summary>An exercise of the selected day on the plan page.</summary>
-public class PlanDayExercise
+/// <summary>
+/// An exercise of the selected day on the plan page. Tap it to change its sets, rep range, reps in reserve and rest
+/// right there; long-press and drag it onto another exercise to move it there.
+/// </summary>
+public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, bool showRir, Action changed) : ObservableObject
 {
-    public required ExerciseThumb Thumb { get; init; }
-    public required string Name { get; init; }
-    public required string Equipment { get; init; }
-    public required string Sets { get; init; }
-    public required string Reps { get; init; }
+    public PlanExercise Model { get; } = model;
+    public ExerciseThumb Thumb { get; } = exercise == null ? new ExerciseThumb(null, "?", Colors.Gray, Colors.Gray.WithAlpha(0.16f)) : ExerciseThumb.For(exercise);
+    public string Name => exercise?.Name ?? "Unknown exercise";
+    public string Equipment => exercise?.Equipment.Display() ?? "";
+    public bool HasInfo => exercise != null;
+    /// <summary>The plan uses reps in reserve; otherwise its target isn't shown or changed.</summary>
+    public bool ShowRir { get; } = showRir;
+
+    public string Sets => Model.Sets == 1 ? "1 set" : $"{Model.Sets} sets";
+    public string Reps => Model.RepMin == Model.RepMax ? $"{Model.RepMin} reps" : $"{Model.RepMin}–{Model.RepMax} reps";
+    public string SetsText => Model.Sets.ToString();
+    public string RepsText => $"{Model.RepMin}–{Model.RepMax}";
+    public string RirText => Model.TargetRir.ToString();
+    public string RestText => Units.Rest(Model.RestSeconds);
+
     public required IAsyncRelayCommand OpenCommand { get; init; }
+    public required IRelayCommand RemoveCommand { get; init; }
+    public required IRelayCommand DragCommand { get; init; }
+    public required IRelayCommand DropCommand { get; init; }
+
+    [ObservableProperty] bool isExpanded;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DropBackground))]
+    bool isDropTarget;
+
+    /// <summary>Where a dragged exercise would land.</summary>
+    public Color DropBackground => IsDropTarget ? Color.FromArgb("#1A2A4F") : Colors.Transparent;
+
+    [RelayCommand] void Toggle() => IsExpanded = !IsExpanded;
+    [RelayCommand] void DragOver() => IsDropTarget = true;
+    [RelayCommand] void DragLeave() => IsDropTarget = false;
+
+    void Changed()
+    {
+        foreach (var p in new[] { nameof(Sets), nameof(Reps), nameof(SetsText), nameof(RepsText), nameof(RirText), nameof(RestText) })
+            OnPropertyChanged(p);
+        changed();
+    }
+
+    [RelayCommand] void SetsUp() { Model.Sets = Math.Min(10, Model.Sets + 1); Changed(); }
+    [RelayCommand] void SetsDown() { Model.Sets = Math.Max(1, Model.Sets - 1); Changed(); }
+    [RelayCommand] void RepsUp() { Model.RepMin = Math.Min(40, Model.RepMin + 1); Model.RepMax = Math.Max(Model.RepMax, Model.RepMin); Changed(); }
+    [RelayCommand] void RepsDown() { Model.RepMin = Math.Max(1, Model.RepMin - 1); Changed(); }
+    [RelayCommand] void RangeUp() { Model.RepMax = Math.Min(50, Model.RepMax + 1); Changed(); }
+    [RelayCommand] void RangeDown() { Model.RepMax = Math.Max(Model.RepMin, Model.RepMax - 1); Changed(); }
+    [RelayCommand] void RirUp() { Model.TargetRir = Math.Min(5, Model.TargetRir + 1); Changed(); }
+    [RelayCommand] void RirDown() { Model.TargetRir = Math.Max(0, Model.TargetRir - 1); Changed(); }
+    [RelayCommand] void RestUp() { Model.RestSeconds = Math.Min(600, Model.RestSeconds + 15); Changed(); }
+    [RelayCommand] void RestDown() { Model.RestSeconds = Math.Max(15, Model.RestSeconds - 15); Changed(); }
 }
 
 public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPlanService ai) : BaseViewModel
@@ -54,12 +115,16 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
 
     public override Task OnAppearingAsync()
     {
+        // The weekly AI check can finish while the tab is showing.
+        ai.SuggestionsChanged -= OnSuggestionsChanged;
+        ai.SuggestionsChanged += OnSuggestionsChanged;
         var items = store.Data.Plans.OrderByDescending(p => p.CreatedAt).Select(p => new PlanItem
         {
             Name = p.Name,
             Description = p.Description,
             Meta = $"{p.Workouts.Count} workouts · {p.Workouts.Sum(w => w.Exercises.Count)} exercises · {p.DaysPerWeek}x/week",
             IsActive = p.Id == store.Data.ActivePlanId,
+            Suggestions = ai.PendingSuggestions(p),
             OpenCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Plan}?id={p.Id}")),
         }).ToList();
         ActivePlan = items.FirstOrDefault(i => i.IsActive);
@@ -70,6 +135,8 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
         _ = RefreshQuotaAsync();
         return Task.CompletedTask;
     }
+
+    void OnSuggestionsChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(() => _ = OnAppearingAsync());
 
     async Task RefreshQuotaAsync()
     {
@@ -116,18 +183,34 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     }
 }
 
-public partial class PlanDetailViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, WorkoutEstimator estimator, AiPlanService ai, RecoveryService recovery)
+/// <summary>
+/// A plan: its days, and the selected day's exercises, all edited right here. Tap an exercise to change it, drag
+/// exercises and days to reorder them, add exercises under the list, and rename or delete a day from its ··· menu.
+/// Edits go into a draft copy: nothing reaches the saved plan until Save (in the plan's ··· menu), and leaving with
+/// unsaved changes asks whether to keep them.
+/// </summary>
+public partial class PlanDetailViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, WorkoutEstimator estimator, AiPlanService ai,
+    RecoveryService recovery, ExercisePickerService picker)
     : BaseViewModel, IQueryAttributable
 {
     string? _id;
     int _selected;
     // Set when opened from a plan week on Home: the day is shown, started and marked finished for that week.
     int? _week;
+    // What's being dragged: an exercise of the selected day, or a day of the strip.
+    PlanDayExercise? _draggedExercise;
+    int? _draggedDay;
+    // Exercises opened for editing stay open when the list is rebuilt (e.g. after a drag).
+    readonly HashSet<PlanExercise> _expanded = [];
+    // The plan as being edited. The page always shows this; Save copies it into the saved plan.
+    WorkoutPlan? _draft;
 
     [ObservableProperty] string name = "";
     [ObservableProperty] string meta = "";
     [ObservableProperty] bool isActive;
     [ObservableProperty] List<PlanDayChip> days = [];
+    /// <summary>The draft differs from the saved plan.</summary>
+    [ObservableProperty] bool hasChanges;
 
     // The selected day
     [ObservableProperty] string dayName = "";
@@ -143,6 +226,33 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
     [ObservableProperty] string dayActionText = "";
     [ObservableProperty] bool hasDayAction;
 
+    // The weekly AI check found ways to improve this (active) plan.
+    [ObservableProperty] bool hasSuggestions;
+    [ObservableProperty] string suggestionsTitle = "";
+
+    public override void OnDisappearing() => ai.SuggestionsChanged -= OnSuggestionsChanged;
+
+    void OnSuggestionsChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(() =>
+    {
+        if (store.GetPlan(_id) is { } plan)
+            ShowSuggestions(plan);
+    });
+
+    void ShowSuggestions(WorkoutPlan plan)
+    {
+        var count = ai.PendingSuggestions(plan);
+        HasSuggestions = count > 0;
+        SuggestionsTitle = count == 1 ? "AI found a way to improve this plan" : $"AI found {count} ways to improve this plan";
+    }
+
+    /// <summary>"Not now" on the suggestions card: hidden until the next weekly check finds something.</summary>
+    [RelayCommand]
+    void DismissSuggestions()
+    {
+        if (store.GetPlan(_id) is { } plan)
+            ai.Dismiss(plan);
+    }
+
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         _id = query["id"]?.ToString();
@@ -153,14 +263,35 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
 
     public override Task OnAppearingAsync()
     {
-        var plan = store.GetPlan(_id);
-        if (plan == null)
+        var saved = store.GetPlan(_id);
+        if (saved == null)
             return GoBack();
+        // Without unsaved edits, pick up whatever changed the saved plan meanwhile (the AI, another device, a workout).
+        if (_draft == null || !HasChanges)
+            _draft = LocalJson.Clone(saved);
+        else
+            CopyProgress(saved, _draft);
+        Refresh();
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Rebuilds the page from the draft.</summary>
+    void Refresh()
+    {
+        if (_draft is not { } plan || store.GetPlan(_id) is not { } saved)
+            return;
+        HasChanges = !SameEdits(plan, saved);
         Name = plan.Name;
         IsActive = plan.Id == store.Data.ActivePlanId;
+        ai.SuggestionsChanged -= OnSuggestionsChanged;
+        ai.SuggestionsChanged += OnSuggestionsChanged;
+        ShowSuggestions(saved);
         var progress = new PlanProgress(plan, store.History);
         var schedule = progress.Days;
         Meta = $"{plan.Goal.Display()} · {plan.Workouts.Count} training days · {schedule.Count - plan.Workouts.Count} rest";
+        // Where the plan is in its cycle this week (deload, block week); nothing for a plan run the same every week.
+        if (PlanCycle.Describe(plan, _week ?? progress.CurrentWeek) is { } phase)
+            Meta += $"\nWeek {_week ?? progress.CurrentWeek} · {phase}";
         _selected = Math.Clamp(_selected, 0, Math.Max(0, schedule.Count - 1));
 
         Days = schedule.Select((w, i) => new PlanDayChip
@@ -169,6 +300,8 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
             IsRest = w == null,
             IsSelected = i == _selected,
             SelectCommand = new RelayCommand(() => Select(i)),
+            DragCommand = new RelayCommand(() => { _draggedDay = i; _draggedExercise = null; }),
+            DropCommand = new RelayCommand(() => DropDay(i)),
         }).ToList();
 
         var day = schedule.ElementAtOrDefault(_selected);
@@ -183,126 +316,334 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
         HasDayAction = day != null || (_week != null && schedule.Count > 0);
         IsRestDay = day == null;
         IsWorkoutDay = day != null;
-        IsNextDay = IsActive && day != null && day == next && !IsDayDone;
+        IsNextDay = IsActive && day != null && day.Id == next?.Id && !IsDayDone;
         DayName = day?.Name ?? "Rest";
 
         var exercises = day?.Exercises.Select(pe => (pe, ex: store.GetExercise(pe.ExerciseId))).ToList() ?? [];
+        UpdateDayMeta(plan, day);
+        DayMap = MuscleMapDrawable.ForWorkout(exercises.Select(x => x.ex).OfType<Exercise>());
+        _expanded.IntersectWith(exercises.Select(x => x.pe));
+        DayExercises = exercises.Select(x =>
+        {
+            PlanDayExercise? item = null;
+            item = new PlanDayExercise(x.pe, x.ex, plan.UseRir, () => ExerciseChanged(plan, day))
+            {
+                IsExpanded = _expanded.Contains(x.pe),
+                OpenCommand = new AsyncRelayCommand(() => x.ex == null ? Task.CompletedTask : GoTo($"{Routes.Exercise}?id={x.ex.Id}")),
+                RemoveCommand = new RelayCommand(() => RemoveExercise(item!)),
+                DragCommand = new RelayCommand(() => { _draggedExercise = item; _draggedDay = null; }),
+                DropCommand = new RelayCommand(() => DropExercise(item!)),
+            };
+            item.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName != nameof(PlanDayExercise.IsExpanded))
+                    return;
+                if (item.IsExpanded)
+                    _expanded.Add(item.Model);
+                else
+                    _expanded.Remove(item.Model);
+            };
+            return item;
+        }).ToList();
+    }
+
+    // ---- The draft ----
+
+    /// <summary>What an edit changes: everything but progress (which week, rest days done) and bookkeeping.</summary>
+    static string Edits(WorkoutPlan p) => LocalJson.Serialize(new WorkoutPlan
+    {
+        Id = p.Id,
+        Name = p.Name,
+        Description = p.Description,
+        Goal = p.Goal,
+        DaysPerWeek = p.DaysPerWeek,
+        Workouts = p.Workouts,
+        RestDays = p.RestDays,
+        UseRir = p.UseRir,
+        Deloads = p.Deloads,
+        Periodization = p.Periodization,
+        CreatedAt = default,
+    });
+
+    static bool SameEdits(WorkoutPlan a, WorkoutPlan b) => Edits(a) == Edits(b);
+
+    static string WorkoutJson(PlanWorkout w) => LocalJson.Serialize(new WorkoutPlan { Id = "", CreatedAt = default, Workouts = [w] });
+
+    // Progress isn't edited here, so the draft always follows the saved plan's.
+    static void CopyProgress(WorkoutPlan from, WorkoutPlan to)
+    {
+        to.NextWorkoutIndex = from.NextWorkoutIndex;
+        to.RestDaysDone = from.RestDaysDone == null ? null : [.. from.RestDaysDone];
+    }
+
+    /// <summary>After any edit: nothing is saved, the page just shows it (and that there are unsaved changes).</summary>
+    void Edited() => Refresh();
+
+    /// <summary>"Save changes" in the plan's ··· menu: the draft becomes the plan.</summary>
+    [RelayCommand]
+    void Save()
+    {
+        if (_draft is not { } draft || store.GetPlan(_id) is not { } saved)
+            return;
+        var copy = LocalJson.Clone(draft);
+        saved.Name = copy.Name;
+        saved.Description = copy.Description;
+        saved.Goal = copy.Goal;
+        saved.DaysPerWeek = copy.DaysPerWeek;
+        saved.Workouts = copy.Workouts;
+        saved.RestDays = copy.RestDays;
+        saved.UseRir = copy.UseRir;
+        saved.Deloads = copy.Deloads;
+        saved.Periodization = copy.Periodization;
+        store.Save();
+        Refresh();
+    }
+
+    /// <summary>"Discard changes": back to the saved plan.</summary>
+    void Discard()
+    {
+        if (store.GetPlan(_id) is not { } saved)
+            return;
+        _draft = LocalJson.Clone(saved);
+        _expanded.Clear();
+        Refresh();
+    }
+
+    /// <summary>
+    /// With unsaved changes, asks what to do with them first (before leaving, starting a workout, or anything that works
+    /// on the saved plan). False when the user backed out, so whatever was about to happen shouldn't.
+    /// </summary>
+    async Task<bool> SettleChangesAsync(string title = "Save your changes?")
+    {
+        if (!HasChanges)
+            return true;
+        switch (await dialogs.ActionSheet(title, "Discard changes", "Save changes"))
+        {
+            case "Save changes":
+                Save();
+                return true;
+            case "Discard changes":
+                Discard();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>The back arrow and the back button: unsaved changes are saved or discarded first.</summary>
+    [RelayCommand]
+    async Task Back()
+    {
+        if (await SettleChangesAsync("Save changes to this plan?"))
+        {
+            HasChanges = false;
+            await GoBack();
+        }
+    }
+
+    // ---- Editing ----
+
+    void UpdateDayMeta(WorkoutPlan plan, PlanWorkout? day)
+    {
         DayMeta = day == null
             ? "Recovery day. Muscles grow between sessions."
-            : $"{exercises.Count} exercises · {exercises.Sum(x => x.pe.Sets)} sets · {WorkoutEstimator.Format(estimator.Minutes(day, plan.Goal))}";
-        IsEmptyDay = day != null && exercises.Count == 0;
-        DayMap = MuscleMapDrawable.ForWorkout(exercises.Select(x => x.ex).OfType<Exercise>());
-        DayExercises = exercises.Select(x => new PlanDayExercise
-        {
-            Thumb = x.ex == null ? new ExerciseThumb(null, "?", Colors.Gray, Colors.Gray.WithAlpha(0.16f)) : ExerciseThumb.For(x.ex),
-            Name = x.ex?.Name ?? "Unknown exercise",
-            Equipment = x.ex?.Equipment.Display() ?? "",
-            Sets = x.pe.Sets == 1 ? "1 set" : $"{x.pe.Sets} sets",
-            Reps = x.pe.RepMin == x.pe.RepMax ? $"{x.pe.RepMin} reps" : $"{x.pe.RepMin}–{x.pe.RepMax} reps",
-            OpenCommand = new AsyncRelayCommand(() => x.ex == null ? Task.CompletedTask : GoTo($"{Routes.Exercise}?id={x.ex.Id}")),
-        }).ToList();
-        return Task.CompletedTask;
+            : $"{day.Exercises.Count} exercises · {day.Exercises.Sum(e => e.Sets)} sets · {WorkoutEstimator.Format(estimator.Minutes(day, plan.Goal))}";
+        IsEmptyDay = day != null && day.Exercises.Count == 0;
+    }
+
+    // A stepper on an open exercise: the totals under the day name follow; the list itself stays as it is.
+    void ExerciseChanged(WorkoutPlan plan, PlanWorkout? day)
+    {
+        UpdateDayMeta(plan, day);
+        if (store.GetPlan(_id) is { } saved)
+            HasChanges = !SameEdits(plan, saved);
+    }
+
+    void RemoveExercise(PlanDayExercise item)
+    {
+        if (_draft is not { } plan || SelectedWorkout(plan) is not { } workout)
+            return;
+        workout.Exercises.Remove(item.Model);
+        Edited();
+    }
+
+    /// <summary>A dragged exercise dropped on <paramref name="target"/> takes its place; the ones in between shift over.</summary>
+    void DropExercise(PlanDayExercise target)
+    {
+        target.IsDropTarget = false;
+        var source = _draggedExercise;
+        _draggedExercise = null;
+        if (source == null || source == target || _draft is not { } plan || SelectedWorkout(plan) is not { } workout)
+            return;
+        var from = workout.Exercises.IndexOf(source.Model);
+        var to = workout.Exercises.IndexOf(target.Model);
+        if (from < 0 || to < 0)
+            return;
+        workout.Exercises.RemoveAt(from);
+        workout.Exercises.Insert(to, source.Model);
+        Edited();
+    }
+
+    /// <summary>A dragged day dropped on day <paramref name="target"/> moves there, and stays selected.</summary>
+    void DropDay(int target)
+    {
+        foreach (var chip in Days)
+            chip.IsDropTarget = false;
+        var from = _draggedDay;
+        _draggedDay = null;
+        if (from is not { } source || source == target || _draft is not { } plan)
+            return;
+        var days = PlanSchedule.Days(plan);
+        if (source >= days.Count || target >= days.Count)
+            return;
+        var day = days[source];
+        days.RemoveAt(source);
+        days.Insert(target, day);
+        _selected = target;
+        SetDays(plan, days);
+    }
+
+    /// <summary>The button under the selected day's exercises.</summary>
+    [RelayCommand]
+    async Task AddExercise()
+    {
+        if (_draft is not { } plan || SelectedWorkout(plan) is not { } workout)
+            return;
+        var picked = await picker.PickAsync();
+        // Set up for the plan's goal straight away; tap one to adjust. The same exercise can be in a workout more than
+        // once (e.g. a heavy and a light block).
+        foreach (var ex in picked)
+            workout.Exercises.Add(TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, ex, store.Profile));
+        if (picked.Count > 0)
+            Edited();
     }
 
     void Select(int index)
     {
         _selected = index;
-        _ = OnAppearingAsync();
+        Refresh();
     }
 
     PlanWorkout? SelectedWorkout(WorkoutPlan plan) => PlanSchedule.Days(plan).ElementAtOrDefault(_selected);
 
+    void SetDays(WorkoutPlan plan, List<PlanWorkout?> days)
+    {
+        PlanSchedule.SetDays(plan, days);
+        Edited();
+    }
+
     /// <summary>The button under the day: start the workout or open its finished session, or mark the rest day.</summary>
     [RelayCommand]
-    Task DayAction()
+    async Task DayAction()
     {
-        var plan = store.GetPlan(_id);
-        if (plan == null)
-            return Task.CompletedTask;
+        if (_draft is not { } plan || store.GetPlan(_id) is not { } saved)
+            return;
         if (SelectedWorkout(plan) is not PlanWorkout w)
         {
+            // Progress, not an edit: straight to the saved plan (the draft follows it).
             if (_week is { } week)
             {
-                PlanProgress.SetRestDone(plan, _selected, week, !IsDayDone);
+                PlanProgress.SetRestDone(saved, _selected, week, !IsDayDone);
                 store.Save();
+                CopyProgress(saved, plan);
             }
-            return OnAppearingAsync();
+            Refresh();
+            return;
         }
-        if (_week is { } shown && new PlanProgress(plan, store.History).SessionFor(w, shown) is { } done)
-            return GoTo($"{Routes.Session}?id={done.Id}");
-        if (w.Exercises.Count == 0)
-            return dialogs.Alert("Empty workout", "Add exercises to this workout first.");
-        return StartPlannedWorkoutAsync(workouts, dialogs, recovery, plan, w, _week);
+        if (_week is { } shown && new PlanProgress(saved, store.History).SessionFor(w, shown) is { } done)
+        {
+            await GoTo($"{Routes.Session}?id={done.Id}");
+            return;
+        }
+        // Workouts start from the saved plan.
+        if (!await SettleChangesAsync("Save your changes before starting?"))
+            return;
+        var workout = saved.Workouts.FirstOrDefault(x => x.Id == w.Id);
+        if (workout == null)
+            return;
+        if (workout.Exercises.Count == 0)
+        {
+            await dialogs.Alert("Empty workout", "Add exercises to this workout first.");
+            return;
+        }
+        await StartPlannedWorkoutAsync(workouts, dialogs, recovery, saved, workout, _week);
     }
 
     /// <summary>Opens the muscle breakdown for the selected day, with a switch to the whole plan.</summary>
     [RelayCommand]
     Task OpenMuscles()
     {
-        var plan = store.GetPlan(_id);
-        if (plan == null)
+        if (_draft is not { } plan)
             return Task.CompletedTask;
         var page = new Views.MuscleBreakdownPage(new MuscleBreakdownViewModel(store, plan, SelectedWorkout(plan)));
         return Shell.Current.Navigation.PushModalAsync(page, false);
     }
 
-    [RelayCommand]
-    Task EditDay()
-    {
-        var plan = store.GetPlan(_id);
-        return plan != null && SelectedWorkout(plan) is PlanWorkout w
-            ? GoTo($"{Routes.PlanWorkout}?plan={plan.Id}&workout={w.Id}")
-            : Task.CompletedTask;
-    }
-
+    /// <summary>
+    /// The ··· beside the day name: rename or delete the workout, remove the rest day, or undo this day's unsaved
+    /// changes. Days move by dragging.
+    /// </summary>
     [RelayCommand]
     async Task DayOptions()
     {
-        var plan = store.GetPlan(_id);
-        if (plan == null)
+        if (_draft is not { } plan)
             return;
         var days = PlanSchedule.Days(plan);
-        var day = days.ElementAtOrDefault(_selected);
+        if (_selected >= days.Count)
+            return;
+        var day = days[_selected];
+        var saved = store.GetPlan(_id)?.Workouts.FirstOrDefault(w => w.Id == day?.Id);
+        // A workout edited since the last save, or added since (then discarding removes it).
+        var dayChanged = day != null && (saved == null || WorkoutJson(saved) != WorkoutJson(day));
         var options = new List<string>();
+        if (dayChanged)
+            options.Add("Discard changes to this day");
         if (day != null)
-            options.Add("Edit exercises");
-        if (_selected > 0)
-            options.Add("Move earlier");
-        if (_selected < days.Count - 1)
-            options.Add("Move later");
-        var remove = day == null ? "Remove rest day" : null;
-        switch (await dialogs.ActionSheet(DayName, remove, [.. options]))
+            options.Add("Rename workout");
+        switch (await dialogs.ActionSheet(DayName, day == null ? "Remove rest day" : "Delete workout", [.. options]))
         {
-            case "Edit exercises":
-                await EditDay();
+            case "Discard changes to this day":
+                if (saved == null)
+                {
+                    days.RemoveAt(_selected);
+                    SetDays(plan, days);
+                }
+                else
+                {
+                    var original = LocalJson.Clone(new WorkoutPlan { Workouts = [saved] }).Workouts[0];
+                    day!.Name = original.Name;
+                    day.Exercises = original.Exercises;
+                    Edited();
+                }
                 break;
-            case "Move earlier":
-                MoveSelected(plan, days, -1);
+            case "Rename workout":
+                var name = await dialogs.Prompt("Rename workout", "Workout name", day!.Name);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    day.Name = name.Trim();
+                    Edited();
+                }
                 break;
-            case "Move later":
-                MoveSelected(plan, days, 1);
+            case "Delete workout":
+                if (await dialogs.Confirm("Delete workout?", $"Remove \"{day!.Name}\" from the plan? Your workout history is kept.", "Delete"))
+                {
+                    // Through the schedule, so the rest days around it stay where they were.
+                    days.RemoveAt(_selected);
+                    SetDays(plan, days);
+                }
                 break;
             case "Remove rest day":
                 days.RemoveAt(_selected);
-                SaveDays(plan, days);
+                SetDays(plan, days);
                 break;
         }
-    }
-
-    void MoveSelected(WorkoutPlan plan, List<PlanWorkout?> days, int delta)
-    {
-        var target = _selected + delta;
-        (days[_selected], days[target]) = (days[target], days[_selected]);
-        _selected = target;
-        SaveDays(plan, days);
     }
 
     /// <summary>The "+" at the end of the day strip.</summary>
     [RelayCommand]
     async Task AddDay()
     {
-        var plan = store.GetPlan(_id);
-        if (plan == null)
+        if (_draft is not { } plan)
             return;
         switch (await dialogs.ActionSheet("Add a day", null, "Workout", "Rest day"))
         {
@@ -318,24 +659,9 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
                 }
                 days.Add(null);
                 _selected = days.Count - 1;
-                SaveDays(plan, days);
+                SetDays(plan, days);
                 break;
         }
-    }
-
-    void SaveDays(WorkoutPlan plan, List<PlanWorkout?> days)
-    {
-        PlanSchedule.SetDays(plan, days);
-        store.Save();
-        _ = OnAppearingAsync();
-    }
-
-    [RelayCommand]
-    async Task SetActive()
-    {
-        store.Data.ActivePlanId = _id;
-        store.Save();
-        await OnAppearingAsync();
     }
 
     async Task AddWorkout(WorkoutPlan plan)
@@ -343,13 +669,21 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
         var name = await dialogs.Prompt("New workout", "Workout name", $"Workout {(char)('A' + plan.Workouts.Count)}", accept: "Add");
         if (string.IsNullOrWhiteSpace(name))
             return;
-        var w = new PlanWorkout { Name = name.Trim() };
         var days = PlanSchedule.Days(plan);
-        days.Add(w);
+        days.Add(new PlanWorkout { Name = name.Trim() });
+        // Shown straight away, empty, with the button to add its exercises.
         _selected = days.Count - 1;
-        PlanSchedule.SetDays(plan, days);
+        SetDays(plan, days);
+        await AddExercise();
+    }
+
+    /// <summary>Not an edit of the plan: which plan is active applies straight away.</summary>
+    [RelayCommand]
+    void SetActive()
+    {
+        store.Data.ActivePlanId = _id;
         store.Save();
-        await GoTo($"{Routes.PlanWorkout}?plan={plan.Id}&workout={w.Id}");
+        Refresh();
     }
 
     /// <summary>
@@ -377,9 +711,12 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
                 (pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir, pe.RestSeconds) = (p.Sets, p.RepMin, p.RepMax, p.TargetRir, p.RestSeconds);
             }
         }
-        store.Save();
-        await OnAppearingAsync();
+        Edited();
     }
+
+    /// <summary>RIR, deloads and periodization for this plan, switched on a sheet; part of the draft like any edit.</summary>
+    Task TrainingOptions(WorkoutPlan plan) =>
+        Shell.Current.Navigation.PushModalAsync(new Views.PlanOptionsPage(new PlanOptionsViewModel(plan, Edited)), false);
 
     /// <summary>The AI's suggestions from the workouts logged on the plan; applied ones are saved, and this page reloads when it closes.</summary>
     [RelayCommand]
@@ -392,18 +729,33 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
             await dialogs.Alert("Sign in to use AI", "AI suggestions need an account. Sign in from the Profile tab.");
             return;
         }
+        // Suggestions are made for, and applied to, the saved plan.
+        if (!await SettleChangesAsync("Save your changes first?"))
+            return;
         await PlanReviewViewModel.OpenAsync(plan);
     }
 
     [RelayCommand]
     async Task More()
     {
-        var plan = store.GetPlan(_id);
-        if (plan == null)
+        if (_draft is not { } plan || store.GetPlan(_id) is not { } saved)
             return;
-        var choice = await dialogs.ActionSheet(plan.Name, "Delete plan", "AI suggestions", "Change with AI", "Regenerate plan", "Training goal", "Rename plan", "Duplicate plan");
-        switch (choice)
+        var options = new List<string>();
+        if (HasChanges)
+            options.AddRange(["Save changes", "Discard changes"]);
+        options.AddRange(["Training options", "AI suggestions", "Change with AI", "Regenerate plan", "Training goal", "Rename plan", "Duplicate plan"]);
+        switch (await dialogs.ActionSheet(plan.Name, "Delete plan", [.. options]))
         {
+            case "Save changes":
+                Save();
+                break;
+            case "Discard changes":
+                if (await dialogs.Confirm("Discard changes?", "Your unsaved changes to this plan will be lost.", "Discard"))
+                    Discard();
+                break;
+            case "Training options":
+                await TrainingOptions(plan);
+                break;
             case "AI suggestions":
                 await ImproveWithAi();
                 break;
@@ -413,12 +765,16 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
                     await dialogs.Alert("Sign in to use AI", "Changing a plan with AI needs an account. Sign in from the Profile tab.");
                     break;
                 }
+                if (!await SettleChangesAsync("Save your changes first?"))
+                    break;
                 // Changes are saved as the AI makes them; this page reloads when the chat closes.
-                await PlanChatViewModel.OpenAsync(plan, ai.AnswersFor(plan), save: true);
+                await PlanChatViewModel.OpenAsync(saved, ai.AnswersFor(saved), save: true);
                 break;
             case "Regenerate plan":
+                if (!await SettleChangesAsync("Save your changes first?"))
+                    break;
                 // The questionnaire, filled in from this plan; saving replaces its workouts.
-                await GoTo($"{Routes.Wizard}?regenerate={plan.Id}");
+                await GoTo($"{Routes.Wizard}?regenerate={saved.Id}");
                 break;
             case "Training goal":
                 await ChangeGoal(plan);
@@ -428,12 +784,13 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
                 if (!string.IsNullOrWhiteSpace(name))
                 {
                     plan.Name = name.Trim();
-                    store.Save();
-                    await OnAppearingAsync();
+                    Edited();
                 }
                 break;
             case "Duplicate plan":
-                var copy = LocalJson.Clone(plan);
+                if (!await SettleChangesAsync("Save your changes first?"))
+                    break;
+                var copy = LocalJson.Clone(saved);
                 copy.Id = Guid.NewGuid().ToString("N");
                 copy.Name += " (copy)";
                 copy.CreatedAt = DateTime.Now;
@@ -443,12 +800,13 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
                 await GoBack();
                 break;
             case "Delete plan":
-                if (await dialogs.Confirm("Delete plan?", $"\"{plan.Name}\" will be deleted. Your workout history is kept.", "Delete"))
+                if (await dialogs.Confirm("Delete plan?", $"\"{saved.Name}\" will be deleted. Your workout history is kept.", "Delete"))
                 {
-                    store.Data.Plans.Remove(plan);
-                    if (store.Data.ActivePlanId == plan.Id)
+                    store.Data.Plans.Remove(saved);
+                    if (store.Data.ActivePlanId == saved.Id)
                         store.Data.ActivePlanId = store.Data.Plans.FirstOrDefault()?.Id;
                     store.Save();
+                    HasChanges = false;
                     await GoBack();
                 }
                 break;
@@ -456,136 +814,34 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
     }
 }
 
-public partial class PlanWorkoutEditViewModel(DataStore store, DialogService dialogs, ExercisePickerService picker)
-    : BaseViewModel, IQueryAttributable
+/// <summary>
+/// The plan's training options: reps in reserve, deload weeks and periodization (see <see cref="PlanCycle"/>). They
+/// change the plan being edited, which is saved with the rest of its changes.
+/// </summary>
+public partial class PlanOptionsViewModel : ObservableObject
 {
-    string? _planId, _workoutId;
-    PlanWorkout? _workout;
+    readonly WorkoutPlan _plan;
+    readonly Action _changed;
 
-    [ObservableProperty] string name = "";
-    [ObservableProperty] bool isEmpty;
-    public ObservableCollection<PlanExerciseItem> Exercises { get; } = [];
-
-    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    public PlanOptionsViewModel(WorkoutPlan plan, Action changed)
     {
-        _planId = query["plan"]?.ToString();
-        _workoutId = query["workout"]?.ToString();
+        (_plan, _changed) = (plan, changed);
+        useRir = plan.UseRir;
+        deloads = plan.Deloads;
+        periodization = plan.Periodization;
     }
 
-    public override Task OnAppearingAsync()
+    [ObservableProperty] bool useRir;
+    [ObservableProperty] bool deloads;
+    [ObservableProperty] bool periodization;
+
+    partial void OnUseRirChanged(bool value) => Set(() => _plan.UseRir = value);
+    partial void OnDeloadsChanged(bool value) => Set(() => _plan.Deloads = value);
+    partial void OnPeriodizationChanged(bool value) => Set(() => _plan.Periodization = value);
+
+    void Set(Action apply)
     {
-        _workout = store.GetPlan(_planId)?.Workouts.FirstOrDefault(w => w.Id == _workoutId);
-        if (_workout == null)
-            return GoBack();
-        Name = _workout.Name;
-        Exercises.Clear();
-        foreach (var pe in _workout.Exercises)
-            Exercises.Add(new PlanExerciseItem(this, pe, store.GetExercise(pe.ExerciseId)));
-        IsEmpty = Exercises.Count == 0;
-        return Task.CompletedTask;
+        apply();
+        _changed();
     }
-
-    internal void Save() => store.Save();
-
-    internal void Remove(PlanExerciseItem item)
-    {
-        _workout?.Exercises.Remove(item.Model);
-        Exercises.Remove(item);
-        IsEmpty = Exercises.Count == 0;
-        Save();
-    }
-
-    internal void Move(PlanExerciseItem item, int delta)
-    {
-        var i = Exercises.IndexOf(item);
-        var j = i + delta;
-        if (_workout == null || i < 0 || j < 0 || j >= Exercises.Count)
-            return;
-        Exercises.Move(i, j);
-        _workout.Exercises.RemoveAt(i);
-        _workout.Exercises.Insert(j, item.Model);
-        Save();
-    }
-
-    [RelayCommand]
-    async Task AddExercise()
-    {
-        var picked = await picker.PickAsync();
-        if (_workout == null)
-            return;
-        foreach (var ex in picked)
-        {
-            // Set up for the plan's goal straight away.
-            var goal = store.GetPlan(_planId)?.Goal ?? store.Profile.Goal;
-            var pe = TrainingGoals.Prescription(goal, store.Profile.Experience, ex, store.Profile);
-            _workout.Exercises.Add(pe);
-            Exercises.Add(new PlanExerciseItem(this, pe, ex));
-        }
-        IsEmpty = Exercises.Count == 0;
-        Save();
-    }
-
-    [RelayCommand]
-    async Task More()
-    {
-        if (_workout == null)
-            return;
-        var choice = await dialogs.ActionSheet(_workout.Name, "Delete workout", "Rename workout");
-        if (choice == "Rename workout")
-        {
-            var name = await dialogs.Prompt("Rename workout", "Workout name", _workout.Name);
-            if (!string.IsNullOrWhiteSpace(name))
-            {
-                Name = _workout.Name = name.Trim();
-                Save();
-            }
-        }
-        else if (choice == "Delete workout" && await dialogs.Confirm("Delete workout?", $"Remove \"{_workout.Name}\" from the plan?", "Delete"))
-        {
-            var plan = store.GetPlan(_planId);
-            if (plan != null)
-            {
-                // Through the schedule so the rest days around it stay where they were.
-                var days = PlanSchedule.Days(plan);
-                days.Remove(_workout);
-                PlanSchedule.SetDays(plan, days);
-            }
-            Save();
-            await GoBack();
-        }
-    }
-}
-
-public partial class PlanExerciseItem(PlanWorkoutEditViewModel parent, PlanExercise model, Exercise? exercise) : ObservableObject
-{
-    public PlanExercise Model { get; } = model;
-    public string Name => exercise?.Name ?? "Unknown exercise";
-    public string Subtitle => exercise?.Subtitle ?? "";
-    public string SetsText => Model.Sets.ToString();
-    public string RepsText => $"{Model.RepMin}–{Model.RepMax}";
-    public string RirText => Model.TargetRir.ToString();
-    public string RestText => Units.Rest(Model.RestSeconds);
-
-    void Changed()
-    {
-        OnPropertyChanged(nameof(SetsText));
-        OnPropertyChanged(nameof(RepsText));
-        OnPropertyChanged(nameof(RirText));
-        OnPropertyChanged(nameof(RestText));
-        parent.Save();
-    }
-
-    [RelayCommand] void SetsUp() { Model.Sets = Math.Min(10, Model.Sets + 1); Changed(); }
-    [RelayCommand] void SetsDown() { Model.Sets = Math.Max(1, Model.Sets - 1); Changed(); }
-    [RelayCommand] void RepsUp() { Model.RepMin = Math.Min(40, Model.RepMin + 1); Model.RepMax = Math.Max(Model.RepMax + 1, Model.RepMin); Changed(); }
-    [RelayCommand] void RepsDown() { Model.RepMin = Math.Max(1, Model.RepMin - 1); Model.RepMax = Math.Max(Model.RepMin, Model.RepMax - 1); Changed(); }
-    [RelayCommand] void RangeUp() { Model.RepMax = Math.Min(50, Model.RepMax + 1); Changed(); }
-    [RelayCommand] void RangeDown() { Model.RepMax = Math.Max(Model.RepMin, Model.RepMax - 1); Changed(); }
-    [RelayCommand] void RirUp() { Model.TargetRir = Math.Min(5, Model.TargetRir + 1); Changed(); }
-    [RelayCommand] void RirDown() { Model.TargetRir = Math.Max(0, Model.TargetRir - 1); Changed(); }
-    [RelayCommand] void RestUp() { Model.RestSeconds = Math.Min(600, Model.RestSeconds + 15); Changed(); }
-    [RelayCommand] void RestDown() { Model.RestSeconds = Math.Max(15, Model.RestSeconds - 15); Changed(); }
-    [RelayCommand] void Remove() => parent.Remove(this);
-    [RelayCommand] void MoveUp() => parent.Move(this, -1);
-    [RelayCommand] void MoveDown() => parent.Move(this, 1);
 }

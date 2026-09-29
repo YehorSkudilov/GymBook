@@ -22,13 +22,14 @@
                     <!-- Day -->
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                         <VerticalStackLayout Spacing="4" VerticalOptions="Center">
-                            <HorizontalStackLayout Spacing="10">
+                            <!-- A grid, not a stack: a long name shortens instead of pushing the ··· under the diagram. -->
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                                 <Label Text="{Binding DayName}" Style="{StaticResource Title}" FontSize="32" VerticalOptions="Center"
-                                       MaximumWidthRequest="200" LineBreakMode="TailTruncation" />
-                                <ImageButton Source="{StaticResource IconMore}" WidthRequest="44" HeightRequest="34" Padding="10,5"
-                                             BackgroundColor="{StaticResource Surface2}" CornerRadius="17" VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation" />
+                                <ImageButton Grid.Column="1" Source="{StaticResource IconMore}" WidthRequest="44" HeightRequest="36" Padding="10,6"
+                                             BackgroundColor="{StaticResource Surface2}" CornerRadius="18" VerticalOptions="Center"
                                              Command="{Binding OptionsCommand}" />
-                            </HorizontalStackLayout>
+                            </Grid>
                             <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="17" />
                             <Label Text="{Binding Meta}" Style="{StaticResource Caption}" FontSize="17" />
                             <Label Text="{Binding When}" IsVisible="{Binding HasWhen}" Style="{StaticResource Caption}" FontSize="17" />
@@ -50,6 +51,34 @@
                             <Label Text="✓  Finished" TextColor="{StaticResource Success}" FontSize="13" FontFamily="OpenSansSemibold" />
                         </Border>
                     </HorizontalStackLayout>
+
+                    <!-- A finished workout's numbers -->
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="8" IsVisible="{Binding HasStats}">
+                        <Border Style="{StaticResource InnerCard}" Padding="8,10">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding StatDuration}" Style="{StaticResource StatValue}" FontSize="17" HorizontalOptions="Center" />
+                                <Label Text="TIME" Style="{StaticResource Overline}" FontSize="10" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="8,10">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding StatVolume}" Style="{StaticResource StatValue}" FontSize="17" HorizontalOptions="Center" LineBreakMode="TailTruncation" />
+                                <Label Text="VOLUME" Style="{StaticResource Overline}" FontSize="10" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="2" Style="{StaticResource InnerCard}" Padding="8,10">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding StatSets}" Style="{StaticResource StatValue}" FontSize="17" HorizontalOptions="Center" />
+                                <Label Text="SETS" Style="{StaticResource Overline}" FontSize="10" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="3" Style="{StaticResource InnerCard}" Padding="8,10">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="{Binding StatRecords}" Style="{StaticResource StatValue}" FontSize="17" HorizontalOptions="Center" />
+                                <Label Text="PRS" Style="{StaticResource Overline}" FontSize="10" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
 
                     <!-- Exercises, each with its set table -->
                     <Border Style="{StaticResource Card}" Padding="14" IsVisible="{Binding IsWorkoutDay}">
@@ -107,6 +136,15 @@
                             </VerticalStackLayout>
                             <Label Text="No exercises yet. Add some from the ··· menu." Style="{StaticResource Caption}" HorizontalOptions="Center"
                                    IsVisible="{Binding IsEmptyDay}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- A finished workout: how fatigued each muscle was right after it -->
+                    <Border Style="{StaticResource Card}" IsVisible="{Binding HasStats}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Fatigue after this workout" Style="{StaticResource H3}" />
+                            <GraphicsView Drawable="{Binding FatigueMap}" HeightRequest="220" />
+                            <Label Text="{Binding FatigueSummary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
                         </VerticalStackLayout>
                     </Border>
 

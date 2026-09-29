@@ -18,7 +18,13 @@ public partial class App : Application
         _sync = sync;
         _services = services;
         // An unverified email blocks the app until it's verified, whenever that's found out (sign-in, token renewal).
-        session.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(() => _ = VerifyEmailPage.ShowIfNeededAsync(_services));
+        session.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(() =>
+        {
+            // The AI's plan reviews belong to the account that asked for them.
+            if (!session.IsSignedIn)
+                _services.GetRequiredService<AiPlanService>().ClearReviews();
+            _ = VerifyEmailPage.ShowIfNeededAsync(_services);
+        });
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
@@ -38,11 +44,14 @@ public partial class App : Application
             window.AddOverlay(new Controls.SyncToast(window, _sync));
             _sync.Schedule(TimeSpan.Zero);
             _ = VerifyEmailPage.ShowIfNeededAsync(_services);
+            // The weekly AI look at the active plan; does nothing most of the time.
+            _ = _services.GetRequiredService<AiPlanService>().CheckActivePlanAsync();
         };
         window.Resumed += (_, _) =>
         {
             _sync.Schedule(TimeSpan.Zero);
             _ = VerifyEmailPage.ShowIfNeededAsync(_services);
+            _ = _services.GetRequiredService<AiPlanService>().CheckActivePlanAsync();
         };
         return window;
     }

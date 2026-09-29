@@ -59,6 +59,13 @@ public class WorkoutPlan : ISyncEntity
     /// </summary>
     [MaxItems(1000)]
     public List<int>? RestDaysDone { get; set; }
+    // How the plan is run week to week (see the app's PlanCycle). All on by default; switched in the plan's ··· menu.
+    /// <summary>Reps in reserve: a target per exercise, and logged with each set. Off: weight and reps only.</summary>
+    public bool UseRir { get; set; } = true;
+    /// <summary>A lighter week (about half the sets, easier effort) after every 4 weeks of training.</summary>
+    public bool Deloads { get; set; } = true;
+    /// <summary>Effort and volume build over each 4-week block, instead of the same prescription every week.</summary>
+    public bool Periodization { get; set; } = true;
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
 }

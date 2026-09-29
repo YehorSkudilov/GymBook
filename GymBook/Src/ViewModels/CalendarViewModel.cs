@@ -86,7 +86,10 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
         {
             var day = _selected!.Value;
             SelectedTitle = day.ToString("dddd, d MMMM");
-            SelectedSessions = _byDay[day].OrderBy(s => s.StartedAt).Select(s => SessionItem.Create(s, store, stats, units)).ToList();
+            // Tapping one opens the finished-workout sheet: what was done, its stats and the fatigue it left.
+            SelectedSessions = _byDay[day].OrderBy(s => s.StartedAt)
+                .Select(s => SessionItem.Create(s, store, stats, units, new AsyncRelayCommand(() => GoTo($"{Routes.PlanDay}?session={s.Id}"))))
+                .ToList();
             UpdateRecovery(day);
         }
         else

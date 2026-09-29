@@ -17,8 +17,10 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             PlanWorkoutId = workout.Id,
             PlanWeek = week ?? new PlanProgress(plan, store.History).FirstOpenWeek(workout),
         };
-        foreach (var pe in workout.Exercises)
+        foreach (var planned in workout.Exercises)
         {
+            // This week's version of it: a deload, or the block's build-up (see PlanCycle).
+            var pe = PlanCycle.ForWeek(plan, planned, session.PlanWeek ?? 1);
             var ex = store.GetExercise(pe.ExerciseId);
             if (ex != null)
                 session.Exercises.Add(CreateExercise(ex, pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir, pe.RestSeconds));
@@ -98,4 +100,82 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         store.Data.ActiveSession = null;
         store.Save();
     }
+
+    /// <summary>
+    /// How a workout started from a plan was changed while doing it (exercises added, removed or moved, sets added or
+    /// removed, rest times changed), as a new version of the plan workout; null when nothing about its layout changed.
+    /// Call it before <see cref="Finish"/>, which drops the sets that weren't done: not getting to a set isn't a change
+    /// to the plan. Set counts are compared with what this week called for (a deload or block week), and the difference
+    /// is applied to the plan as written.
+    /// </summary>
+    public PlanUpdate? ProposePlanUpdate(WorkoutSession session)
+    {
+        var plan = store.GetPlan(session.PlanId);
+        var workout = plan?.Workouts.FirstOrDefault(w => w.Id == session.PlanWorkoutId);
+        if (plan == null || workout == null)
+            return null;
+
+        var week = session.PlanWeek ?? 1;
+        var unused = workout.Exercises.ToList();
+        var proposed = new List<PlanExercise>();
+        var changes = new List<string>();
+        string Name(string id) => store.GetExercise(id)?.Name ?? "an exercise";
+
+        foreach (var se in session.Exercises)
+        {
+            var sets = se.Sets.Count(s => !s.IsWarmup);
+            if (sets == 0)
+                continue;
+            var planned = unused.FirstOrDefault(pe => pe.ExerciseId == se.ExerciseId);
+            if (planned == null)
+            {
+                proposed.Add(new PlanExercise { ExerciseId = se.ExerciseId, Sets = sets, RepMin = se.RepMin, RepMax = se.RepMax, TargetRir = se.TargetRir, RestSeconds = se.RestSeconds });
+                changes.Add($"Add {Name(se.ExerciseId)} ({sets} sets)");
+                continue;
+            }
+            unused.Remove(planned);
+            var expected = PlanCycle.ForWeek(plan, planned, week).Sets;
+            var updated = new PlanExercise
+            {
+                ExerciseId = planned.ExerciseId,
+                Sets = Math.Clamp(planned.Sets + sets - expected, 1, 10),
+                RepMin = planned.RepMin,
+                RepMax = planned.RepMax,
+                TargetRir = planned.TargetRir,
+                RestSeconds = se.RestSeconds,
+            };
+            if (updated.Sets != planned.Sets)
+                changes.Add($"{Name(planned.ExerciseId)}: {planned.Sets} → {updated.Sets} sets");
+            if (updated.RestSeconds != planned.RestSeconds)
+                changes.Add($"{Name(planned.ExerciseId)}: rest {Units.Rest(planned.RestSeconds)} → {Units.Rest(updated.RestSeconds)}");
+            proposed.Add(updated);
+        }
+        // Planned exercises the workout ended up without: removed from it, or all their sets were.
+        foreach (var pe in unused)
+        {
+            if (store.GetExercise(pe.ExerciseId) == null)
+                // Couldn't be started (e.g. a deleted custom exercise): left in the plan as it was.
+                proposed.Add(pe);
+            else
+                changes.Add($"Remove {Name(pe.ExerciseId)}");
+        }
+        // The exercises both have, in the plan's order and in the workout's.
+        var both = proposed.Select(p => p.ExerciseId).ToHashSet();
+        var planOrder = workout.Exercises.Select(pe => pe.ExerciseId).Where(both.Contains);
+        var doneOrder = proposed.Select(p => p.ExerciseId).Where(id => workout.Exercises.Any(pe => pe.ExerciseId == id));
+        if (!planOrder.SequenceEqual(doneOrder))
+            changes.Add("New exercise order");
+
+        return changes.Count == 0 ? null : new PlanUpdate(plan, workout, proposed, changes);
+    }
+
+    /// <summary>Makes <paramref name="update"/> the plan workout, for next time. The finished workout keeps what was done.</summary>
+    public void ApplyPlanUpdate(PlanUpdate update)
+    {
+        update.Workout.Exercises = update.Exercises;
+        store.Save();
+    }
 }
+
+/// <summary>A plan workout as it would be after taking over the changes made while doing it, and those changes in words.</summary>
+public record PlanUpdate(WorkoutPlan Plan, PlanWorkout Workout, List<PlanExercise> Exercises, List<string> Changes);

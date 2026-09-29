@@ -24,14 +24,27 @@ public class PlanDaySheetExercise
 
 /// <summary>
 /// A single day of a plan week, opened from Home: its exercises with their sets, and the action to start it,
-/// view it or mark the rest day finished.
+/// view it or mark the rest day finished. Also a finished workout on its own (?session=, from the calendar), plan or
+/// not: what was done, its stats, and how fatigued each muscle was right after it.
 /// </summary>
-public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, Units units, ProgressionEngine progression, WorkoutEstimator estimator, RecoveryService recovery)
+public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, Units units, ProgressionEngine progression,
+    WorkoutEstimator estimator, RecoveryService recovery, StatsService stats)
     : BaseViewModel, IQueryAttributable
 {
     string? _planId;
     int _day;
     int _week = 1;
+    // Opened for one finished workout rather than a plan day.
+    string? _sessionId;
+
+    // A finished workout: its numbers, and the fatigue it left.
+    [ObservableProperty] bool hasStats;
+    [ObservableProperty] string statDuration = "";
+    [ObservableProperty] string statVolume = "";
+    [ObservableProperty] string statSets = "";
+    [ObservableProperty] string statRecords = "";
+    [ObservableProperty] IDrawable fatigueMap = MuscleMapDrawable.Empty;
+    [ObservableProperty] string fatigueSummary = "";
 
     [ObservableProperty] string dayName = "";
     [ObservableProperty] string subtitle = "";
@@ -50,21 +63,25 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        _planId = query["id"]?.ToString();
+        _planId = query.TryGetValue("id", out var id) ? id?.ToString() : null;
+        _sessionId = query.TryGetValue("session", out var session) ? session?.ToString() : null;
         _day = query.TryGetValue("day", out var day) && int.TryParse(day?.ToString(), out var d) ? d : 0;
         _week = query.TryGetValue("week", out var week) && int.TryParse(week?.ToString(), out var w) ? w : 1;
     }
 
     public override Task OnAppearingAsync()
     {
+        if (_sessionId != null)
+            return ShowSession();
         var plan = store.GetPlan(_planId);
         var progress = plan == null ? null : new PlanProgress(plan, store.History);
         if (plan == null || progress == null || _day >= progress.Days.Count)
             return Close();
 
         var workout = progress.Days[_day];
+        HasStats = false;
         var session = workout == null ? null : progress.SessionFor(workout, _week);
-        Subtitle = $"{plan.Name} · Week {_week}";
+        Subtitle = PlanCycle.Describe(plan, _week) is { } phase ? $"{plan.Name} · Week {_week} · {phase}" : $"{plan.Name} · Week {_week}";
         IsDone = progress.IsDayDone(_day, _week);
         IsNext = workout != null && !IsDone && plan.Id == store.Data.ActivePlanId && workout == progress.NextWorkout(_week);
         IsRestDay = workout == null;
@@ -84,7 +101,8 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             return Task.CompletedTask;
         }
 
-        var planned = workout.Exercises.Select(pe => (pe, ex: store.GetExercise(pe.ExerciseId))).ToList();
+        // As it will be done this week: a deload has fewer sets, a block week may have more.
+        var planned = workout.Exercises.Select(pe => (pe: PlanCycle.ForWeek(plan, pe, _week), ex: store.GetExercise(pe.ExerciseId))).ToList();
         DayMap = MuscleMapDrawable.ForWorkout(planned.Select(x => x.ex).OfType<Exercise>());
         IsEmptyDay = planned.Count == 0;
 
@@ -98,6 +116,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             Exercises = logged.Select(Logged).ToList();
             ActionText = "";
             HasAction = false;
+            ShowFinished(session);
         }
         else
         {
@@ -109,6 +128,68 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         }
         HasWhen = When.Length > 0;
         return Task.CompletedTask;
+    }
+
+    /// <summary>The ··· of a finished workout: its full summary page, or the plan it came from.</summary>
+    async Task SessionOptions()
+    {
+        var session = store.History.FirstOrDefault(s => s.Id == _sessionId);
+        if (session == null)
+            return;
+        var plan = store.GetPlan(session.PlanId);
+        var day = plan == null ? -1 : PlanSchedule.Days(plan).FindIndex(w => w?.Id == session.PlanWorkoutId);
+        var options = day >= 0 ? new[] { "View workout summary", "View in plan" } : new[] { "View workout summary" };
+        switch (await dialogs.ActionSheet(DayName, null, options))
+        {
+            case "View workout summary":
+                await Close();
+                await GoTo($"{Routes.Session}?id={session.Id}");
+                break;
+            case "View in plan":
+                await Close();
+                await GoTo($"{Routes.Plan}?id={plan!.Id}&day={day}");
+                break;
+        }
+    }
+
+    /// <summary>One finished workout (from the calendar), plan or not: what was done, its stats and the fatigue it left.</summary>
+    Task ShowSession()
+    {
+        var session = store.History.FirstOrDefault(s => s.Id == _sessionId);
+        if (session == null)
+            return Close();
+        var plan = store.GetPlan(session.PlanId);
+        var logged = session.Exercises.Where(e => e.Sets.Count > 0).ToList();
+        DayName = session.Name;
+        Subtitle = plan == null ? "Workout" : session.PlanWeek is { } week ? $"{plan.Name} · Week {week}" : plan.Name;
+        IsDone = true;
+        IsNext = false;
+        IsRestDay = false;
+        IsWorkoutDay = true;
+        IsEmptyDay = false;
+        DayMap = MuscleMapDrawable.ForWorkout(logged.Select(e => store.GetExercise(e.ExerciseId)).OfType<Exercise>());
+        Meta = $"{logged.Count} exercises · {logged.Sum(e => e.Sets.Count)} sets";
+        When = session.StartedAt.ToString("dddd d MMM, h:mm tt");
+        HasWhen = true;
+        Exercises = logged.Select(Logged).ToList();
+        ActionText = "";
+        HasAction = false;
+        ShowFinished(session);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>The stats of a finished workout, and how fatigued each muscle was the moment it ended.</summary>
+    void ShowFinished(WorkoutSession session)
+    {
+        HasStats = true;
+        StatDuration = Units.Duration(session.Duration);
+        StatVolume = units.FormatVolume(stats.SessionVolume(session));
+        StatSets = session.WorkingSets.Count().ToString();
+        StatRecords = stats.RecordsIn(session).Count.ToString();
+        var after = recovery.Compute(session.EndedAt ?? session.StartedAt);
+        FatigueMap = MuscleMapDrawable.ForRecovery(after);
+        var tired = after.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
+        FatigueSummary = tired.Count == 0 ? "No muscle group was worked hard." : $"Fatigued: {string.Join(", ", tired)}";
     }
 
     /// <summary>A finished exercise: every logged set with its weight, reps and, for working sets, estimated one-rep max.</summary>
@@ -201,6 +282,11 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     [RelayCommand]
     async Task Options()
     {
+        if (_sessionId != null)
+        {
+            await SessionOptions();
+            return;
+        }
         var plan = store.GetPlan(_planId);
         if (plan == null)
             return;
@@ -209,9 +295,8 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var options = new List<string>();
         if (session != null)
             options.Add("View workout summary");
-        if (workout != null)
-            options.Add("Edit exercises");
-        options.Add("View plan");
+        // Opens the plan page on this day (where its exercises can also be changed).
+        options.Add("View in plan");
 
         switch (await dialogs.ActionSheet(DayName, null, [.. options]))
         {
@@ -219,11 +304,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
                 await Close();
                 await GoTo($"{Routes.Session}?id={session!.Id}");
                 break;
-            case "Edit exercises":
-                await Close();
-                await GoTo($"{Routes.PlanWorkout}?plan={plan.Id}&workout={workout!.Id}");
-                break;
-            case "View plan":
+            case "View in plan":
                 await Close();
                 await GoTo($"{Routes.Plan}?id={plan.Id}&day={_day}");
                 break;
