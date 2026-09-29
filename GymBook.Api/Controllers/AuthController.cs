@@ -114,8 +114,12 @@ public class AuthController(
         var code = await users.GeneratePasswordResetTokenAsync(user);
         try
         {
-            await email.SendCodeAsync(user.Email, "reset-password", "Your GymBook password reset code",
-                $"Your GymBook password reset code is {code}. It's valid for 5 minutes.\n\nIf you didn't ask to reset your password, you can ignore this email.", ct);
+            await email.SendCodeAsync(user.Email, "reset-password", new CodeEmail(
+                "Your GymBook password reset code",
+                "Reset your password",
+                "Enter this code in GymBook, then choose a new password.",
+                code,
+                "If you didn't ask to reset your password, you can ignore this email. Your password stays as it is."), ct);
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {

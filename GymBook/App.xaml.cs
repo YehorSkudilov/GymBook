@@ -55,6 +55,18 @@ public partial class App : Application
             window.Page = new AppShell();
     }
 
+    /// <summary>
+    /// Still on the first-run screens but the profile is already finished (it came down from the account, e.g. after
+    /// signing in or verifying the email): skip the wizard. Does nothing otherwise, so it's safe to call more than once.
+    /// </summary>
+    public static void ShowMainShellIfOnboarded()
+    {
+        var window = Current?.Windows.FirstOrDefault();
+        // Not while a sheet is still up over the welcome screen: swapping the root page would strand it.
+        if (Current is App app && app._store.Profile.OnboardingDone && Shell.Current == null && window?.Page?.Navigation.ModalStack.Count == 0)
+            ShowMainShell();
+    }
+
     /// <summary>Back to the first-run welcome screen, e.g. after signing out.</summary>
     public static void ShowOnboarding()
     {

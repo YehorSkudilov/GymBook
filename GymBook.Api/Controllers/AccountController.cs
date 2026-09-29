@@ -89,8 +89,12 @@ public class AccountController(
         var code = await users.GenerateEmailConfirmationTokenAsync(user);
         try
         {
-            return await email.SendCodeAsync(user.Email, "verify-email", "Verify your GymBook email",
-                $"Your GymBook verification code is {code}. Enter it in the app to finish setting up your account. It's valid for 5 minutes.\n\nIf you didn't create a GymBook account, you can ignore this email.", ct);
+            return await email.SendCodeAsync(user.Email, "verify-email", new CodeEmail(
+                "Verify your GymBook email",
+                "Verify your email",
+                "Enter this code in GymBook to finish setting up your account.",
+                code,
+                "If you didn't create a GymBook account, you can ignore this email."), ct);
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {
@@ -156,8 +160,12 @@ public class AccountController(
         var code = await users.GenerateChangeEmailTokenAsync(user, newEmail);
         try
         {
-            if (!await email.SendCodeAsync(newEmail, "change-email", "Confirm your new GymBook email",
-                    $"Your GymBook code is {code}. Enter it in the app to use this address for your account. It's valid for 5 minutes.\n\nIf you didn't ask for this, you can ignore this email.", ct))
+            if (!await email.SendCodeAsync(newEmail, "change-email", new CodeEmail(
+                    "Confirm your new GymBook email",
+                    "Confirm your new email",
+                    "Enter this code in GymBook to sign in with this address from now on.",
+                    code,
+                    "If you didn't ask for this, you can ignore this email. Your account stays as it is."), ct))
                 return Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "A code was just sent. Wait a minute before asking for another.");
         }
         catch (Exception e) when (e is not OperationCanceledException)

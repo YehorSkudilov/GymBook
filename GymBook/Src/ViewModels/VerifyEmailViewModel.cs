@@ -61,8 +61,14 @@ public partial class VerifyEmailViewModel(AccountService account, DialogService 
         }
         await RunAsync(async () =>
         {
+            // Also syncs, which brings down the account's profile; sync was refused until now.
             await account.VerifyEmailAsync(Code);
             Done?.Invoke(this, EventArgs.Empty);
+            // Signed in from the welcome screen to an account that's already set up: go to the app, not the wizard.
+            // The sheet may still be sliding away, so give it a moment first.
+            for (var i = 0; i < 20 && Application.Current?.Windows.FirstOrDefault()?.Page?.Navigation.ModalStack.Any(p => p is VerifyEmailPage) == true; i++)
+                await Task.Delay(150);
+            App.ShowMainShellIfOnboarded();
         });
     }
 

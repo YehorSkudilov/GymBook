@@ -20,6 +20,8 @@ public partial class VerifyEmailPage : SheetPage
             await Task.Delay(300);
         if (Navigation.ModalStack.Contains(this))
             await CloseAsync();
+        // Verified from the welcome screen: the account's profile may already be here (see VerifyEmailViewModel.Verify).
+        App.ShowMainShellIfOnboarded();
     }
 
     // Back doesn't get around it.
