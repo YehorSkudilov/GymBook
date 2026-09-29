@@ -9,7 +9,7 @@
     Title="History"
     Shell.TabBarIsVisible="False">
 
-    <CollectionView ItemsSource="{Binding Items}" Margin="20,0">
+    <CollectionView ItemsSource="{Binding Items}" Margin="10,0">
         <CollectionView.Header>
             <VerticalStackLayout Padding="0,8,0,14">
                 <Label Text="{Binding Summary}" Style="{StaticResource Caption}" />

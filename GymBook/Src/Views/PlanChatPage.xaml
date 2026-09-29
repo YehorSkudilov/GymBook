@@ -15,7 +15,7 @@
         <Grid RowDefinitions="Auto,*,Auto,Auto">
 
             <!-- Header -->
-            <Grid ColumnDefinitions="*,Auto" Padding="20,14,8,6">
+            <Grid ColumnDefinitions="*,Auto" Padding="10,14,4,6">
                 <VerticalStackLayout VerticalOptions="Center">
                     <HorizontalStackLayout Spacing="8">
                         <Image WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
@@ -32,7 +32,7 @@
             </Grid>
 
             <!-- Messages -->
-            <CollectionView x:Name="MessageList" Grid.Row="1" ItemsSource="{Binding Messages}" Margin="16,0">
+            <CollectionView x:Name="MessageList" Grid.Row="1" ItemsSource="{Binding Messages}" Margin="10,0">
                 <CollectionView.ItemsLayout>
                     <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
                 </CollectionView.ItemsLayout>
@@ -55,7 +55,7 @@
 
             <!-- One-tap starters -->
             <ScrollView x:Name="SuggestionStrip" Grid.Row="2" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" IsVisible="{Binding ShowSuggestions}">
-                <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Suggestions}" Spacing="8" Padding="16,6">
+                <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Suggestions}" Spacing="8" Padding="10,6">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vm:SuggestionItem">
                             <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="14,8">
@@ -70,7 +70,7 @@
             </ScrollView>
 
             <!-- Compose -->
-            <VerticalStackLayout Grid.Row="3" Padding="16,6,16,16" Spacing="6">
+            <VerticalStackLayout Grid.Row="3" Padding="10,6,10,16" Spacing="6">
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                     <Border Style="{StaticResource InputBox}" Padding="12,2" HeightRequest="-1" MinimumHeightRequest="48">
                         <Editor Text="{Binding Draft}" Placeholder="Ask for a change…" AutoSize="TextChanges" MaximumHeightRequest="120" MaxLength="2000" />

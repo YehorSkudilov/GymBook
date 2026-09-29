@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!-- Picks the moment a recovery map shows: a timeline of the day zoomed in on its workouts, one stop per exercise, with the
-     moments around them. Slide along it or tap a stop. Used on the calendar's day card and on the recovery details page,
-     bound to a RecoveryMoment. -->
+<!-- Picks the moment the recovery details page's map shows, bound to a RecoveryMoment. From a calendar day: the same
+     Before this day | After this day toggle as the day card. From the Workout tab: a timeline from now into the next
+     few days; slide along it or tap a stop. -->
 <ContentView
     x:Class="GymBook.Views.RecoveryMomentView"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -12,12 +12,30 @@
     <VerticalStackLayout Spacing="8">
         <Label Text="{Binding When}" FontFamily="OpenSansSemibold" FontSize="13" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
 
+        <!-- Before this day | After this day: two halves of one toggle -->
+        <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="3" IsVisible="{Binding HasToggle}">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="2">
+                <Border BackgroundColor="{Binding BeforeBackground}" StrokeShape="RoundRectangle 9" StrokeThickness="0" Padding="0,8">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding BeforeDayCommand}" />
+                    </Border.GestureRecognizers>
+                    <Label Text="Before this day" TextColor="{Binding BeforeText}" FontFamily="OpenSansSemibold" FontSize="13" HorizontalOptions="Center" />
+                </Border>
+                <Border Grid.Column="1" BackgroundColor="{Binding AfterBackground}" StrokeShape="RoundRectangle 9" StrokeThickness="0" Padding="0,8">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding AfterDayCommand}" />
+                    </Border.GestureRecognizers>
+                    <Label Text="After this day" TextColor="{Binding AfterText}" FontFamily="OpenSansSemibold" FontSize="13" HorizontalOptions="Center" />
+                </Border>
+            </Grid>
+        </Border>
+
         <!-- Stop to stop -->
         <Slider Minimum="0" Maximum="{Binding MaxIndex}" Value="{Binding Index}" IsVisible="{Binding HasSteps}"
                 MinimumTrackColor="{StaticResource Accent}" MaximumTrackColor="{StaticResource Surface3}" ThumbColor="{StaticResource Accent}" />
 
         <!-- Every stop by name; the one shown is highlighted and kept in view -->
-        <ScrollView x:Name="Strip" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+        <ScrollView x:Name="Strip" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" IsVisible="{Binding HasSteps}">
             <HorizontalStackLayout x:Name="StripItems" BindableLayout.ItemsSource="{Binding Steps}" Spacing="6">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="vm:RecoveryStep">

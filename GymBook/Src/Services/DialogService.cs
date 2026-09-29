@@ -17,6 +17,10 @@ public class DialogService
     public Task<string?> ActionSheet(string title, string? destructive, params string[] options) =>
         DialogSheet.Menu(title, destructive, options);
 
+    /// <summary>A menu as above, with on/off <paramref name="switches"/> above the options, applied as they're flipped.</summary>
+    public Task<string?> ActionSheet(string title, string? destructive, IReadOnlyList<MenuSwitch> switches, params string[] options) =>
+        DialogSheet.Menu(title, destructive, options, switches);
+
     public Task<string?> Prompt(string title, string message, string? initial = null, Keyboard? keyboard = null, string accept = "Save") =>
         DialogSheet.Prompt(title, message, initial ?? "", keyboard ?? Keyboard.Text, accept);
 

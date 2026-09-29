@@ -85,7 +85,7 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
 
     /// <summary>Closes the sheet, then finishes the workout as the Finish button does.</summary>
     [RelayCommand]
-    async Task Complete()
+    async Task Finish()
     {
         var workout = _workout;
         await GoBack();

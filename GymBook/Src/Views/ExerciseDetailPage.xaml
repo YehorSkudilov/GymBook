@@ -10,7 +10,7 @@
     Shell.TabBarIsVisible="False">
 
     <ScrollView>
-        <VerticalStackLayout Padding="20,8,20,32" Spacing="14">
+        <VerticalStackLayout Padding="10,8,10,32" Spacing="14">
             <VerticalStackLayout Spacing="2">
                 <Label Text="{Binding Name}" Style="{StaticResource Title}" FontSize="26" />
                 <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" />

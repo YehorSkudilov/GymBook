@@ -24,7 +24,7 @@
             <VerticalStackLayout Padding="0,4,0,24" Spacing="18">
 
                 <!-- Plan -->
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="20,0">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="14,0">
                     <VerticalStackLayout Spacing="2">
                         <Label Text="{Binding Name}" Style="{StaticResource H2}" TextColor="{StaticResource Accent}" LineBreakMode="TailTruncation" />
                         <Label Text="{Binding Meta}" Style="{StaticResource Caption}" FontSize="12" />
@@ -43,7 +43,7 @@
                 </Grid>
 
                 <!-- Only when the weekly AI check found something to improve in this (active) plan. Otherwise it's in the ··· menu. -->
-                <Border BackgroundColor="{StaticResource AccentSoft}" StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="14,12" Margin="16,0"
+                <Border BackgroundColor="{StaticResource AccentSoft}" StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="14,12" Margin="10,0"
                         IsVisible="{Binding HasSuggestions}">
                     <VerticalStackLayout Spacing="10">
                         <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
@@ -67,7 +67,7 @@
 
                 <!-- Day strip -->
                 <ScrollView x:Name="DayStrip" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
-                    <HorizontalStackLayout Spacing="4" Padding="16,0">
+                    <HorizontalStackLayout Spacing="4" Padding="10,0">
                         <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Days}" Spacing="4">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="vm:PlanDayChip">
@@ -95,7 +95,7 @@
                 </ScrollView>
 
                 <!-- Selected day -->
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="20,0">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="14,0">
                     <VerticalStackLayout Spacing="4" VerticalOptions="Center">
                         <!-- A grid, not a stack: a long name shortens instead of pushing the ··· under the diagram. -->
                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
@@ -128,8 +128,8 @@
                     </Border>
                 </Grid>
 
-                <!-- Exercises: tap one to change it here, hold and drag it up or down to move it -->
-                <Border Style="{StaticResource Card}" Margin="16,0" Padding="14" IsVisible="{Binding IsWorkoutDay}">
+                <!-- Exercises: tap one to change it here, drag its grip up or down to move it -->
+                <Border Style="{StaticResource Card}" Margin="10,0" Padding="14" IsVisible="{Binding IsWorkoutDay}">
                     <VerticalStackLayout Spacing="10">
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding DayExercises}" Spacing="6">
                             <BindableLayout.ItemTemplate>
@@ -164,8 +164,10 @@
                                                         </Border>
                                                     </Grid>
                                                 </VerticalStackLayout>
-                                                <!-- A grip, so it's clear the row can be dragged -->
-                                                <Label Grid.Column="2" Text="⋮⋮" TextColor="{StaticResource TextTertiary}" FontSize="16" VerticalOptions="Center" />
+                                                <!-- The grip: drag the row from here (at once, no hold). Anywhere else on the row scrolls the list.
+                                                     The whole row height and a bit either side, so it is easy to hit. -->
+                                                <Label Grid.Column="2" Text="⋮⋮" TextColor="{StaticResource TextTertiary}" FontSize="18" controls:ReorderItem.IsHandle="True"
+                                                       VerticalOptions="Fill" VerticalTextAlignment="Center" Padding="12,0" Margin="-12,0,0,0" />
                                             </Grid>
 
                                             <!-- Opened: change it right here -->
@@ -241,7 +243,7 @@
                 </Border>
 
                 <!-- Rest -->
-                <Border Style="{StaticResource Card}" Margin="16,0" Padding="20,28" IsVisible="{Binding IsRestDay}">
+                <Border Style="{StaticResource Card}" Margin="10,0" Padding="20,28" IsVisible="{Binding IsRestDay}">
                     <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
                         <Label Text="Rest day" Style="{StaticResource H3}" HorizontalOptions="Center" />
                         <Label Text="Drag it in the day strip to move it, or remove it from the ··· menu." Style="{StaticResource Caption}" HorizontalOptions="Center" HorizontalTextAlignment="Center" />

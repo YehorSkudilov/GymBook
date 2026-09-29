@@ -33,6 +33,18 @@ public partial class HomeViewModel(
     [ObservableProperty] Color nextTint = Color.FromArgb("#3F7DFF");
     [ObservableProperty] Color startColor = Color.FromArgb("#3F7DFF");
     [ObservableProperty] Color startTextColor = Colors.White;
+    /// <summary>How lively the card's glow is: the readiness, or full while a workout is running.</summary>
+    [ObservableProperty] double nextGlow = 1;
+
+    /// <summary>
+    /// A workout is in progress: the Up next card shows it instead (and its day in the week below), and tapping either
+    /// opens it rather than starting anything new.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowNextCard))]
+    bool isWorkoutRunning;
+    [ObservableProperty] string startText = "▶  Start";
+    public bool ShowNextCard => HasPlan || IsWorkoutRunning;
 
     static readonly Color Muted = Color.FromArgb("#2C3240"), Amber = Color.FromArgb("#FFB020"),
         Blue = Color.FromArgb("#3F7DFF"), Green = Color.FromArgb("#2ED47A");
@@ -40,6 +52,7 @@ public partial class HomeViewModel(
     void ShowReadiness(double readiness, List<MuscleRecovery> tired, PlanWorkout? fresher)
     {
         NextReadiness = Math.Clamp(readiness, 0, 1);
+        NextGlow = NextReadiness;
         NextReadyText = tired.Count == 0
             ? $"{NextReadiness:P0} recovered · ready to go"
             : $"{NextReadiness:P0} recovered · {string.Join(", ", tired.Take(2).Select(t => t.Muscle.Display()))} still recovering"
@@ -74,7 +87,9 @@ public partial class HomeViewModel(
         ConnectionText = IsOnline ? "Online" : "Offline";
         ConnectionColor = IsOnline ? Color.FromArgb("#2ED47A") : Color.FromArgb("#FFB020");
     }
-    [ObservableProperty] bool hasPlan;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowNextCard))]
+    bool hasPlan;
     [ObservableProperty] string planName = "";
     [ObservableProperty] string nextWorkoutName = "";
     [ObservableProperty] string nextWorkoutMeta = "";
@@ -166,6 +181,8 @@ public partial class HomeViewModel(
             PlanDays = [];
         }
 
+        ShowActiveWorkout();
+
         WelcomeBack = progression.DaysAway() is { } away
             ? $"It's been {away} days since your last workout. Your weights are set lighter for a safe return and build back up over the next few sessions."
             : "";
@@ -189,15 +206,47 @@ public partial class HomeViewModel(
         Streak = streakWeeks == 1 ? "1 week streak" : $"{streakWeeks} week streak";
     }
 
+    // The workout in progress, if any, in place of Up next: how far along it is, and Resume to jump back in.
+    void ShowActiveWorkout()
+    {
+        var active = workouts.Active;
+        IsWorkoutRunning = active != null;
+        StartText = active != null ? "▶  Resume" : "▶  Start";
+        if (active == null)
+            return;
+        var sets = active.Exercises.SelectMany(e => e.Sets).Where(s => !s.IsWarmup).ToList();
+        var done = sets.Count(s => s.IsCompleted);
+        var exercises = active.Exercises.Select(e => store.GetExercise(e.ExerciseId)).OfType<Exercise>().ToList();
+        NextLabel = "IN PROGRESS";
+        NextWorkoutName = active.Name;
+        NextWorkoutMuscles = string.Join(" · ", exercises.Select(x => x.PrimaryMuscle).Distinct().Select(m => m.Display()));
+        NextThumbs = exercises.Take(5).Select(x => ExerciseThumb.For(x)).ToList();
+        NextMore = exercises.Count > 5 ? $"+{exercises.Count - 5}" : "";
+        NextWorkoutMeta = $"{done}/{sets.Count} sets done\nStarted {active.StartedAt:HH:mm} · {Units.Duration(DateTime.Now - active.StartedAt)} in";
+        // The ring shows how much of it is done; the card is lit up, it's happening now.
+        NextReadiness = sets.Count == 0 ? 0 : (double)done / sets.Count;
+        NextReadyText = "Running now · tap to jump back in";
+        NextTint = Green;
+        NextGlow = 1;
+        StartColor = Green;
+        StartTextColor = Color.FromArgb("#06200F");
+    }
+
     /// <summary>The shown plan week's days in order. Tapping a day opens it in the day sheet, where it can be started or marked finished.</summary>
     void BuildPlanWeek(WorkoutPlan plan, PlanProgress progress)
     {
         var week = _week;
         PlanWeek = $"Week {week}";
         var next = progress.NextWorkout(week);
+        // The day being done right now: marked as such, and it opens the running workout.
+        var active = workouts.Active;
+        var running = active?.PlanId == plan.Id && (active.PlanWeek ?? week) == week ? active.PlanWorkoutId : null;
         PlanDays = progress.Days.Select((w, day) =>
         {
-            var open = new AsyncRelayCommand(() => GoTo($"{Routes.PlanDay}?id={plan.Id}&day={day}&week={week}"));
+            var isRunning = w != null && w.Id == running;
+            var open = isRunning
+                ? new AsyncRelayCommand(() => GoTo(Routes.Workout))
+                : new AsyncRelayCommand(() => GoTo($"{Routes.PlanDay}?id={plan.Id}&day={day}&week={week}"));
             if (w == null)
                 return new PlanDayItem { Name = "Rest", Number = "–", IsRest = true, IsDone = progress.IsRestDone(day, week), Thumbnails = [], More = "", OpenCommand = open };
             var photos = w.Exercises.Select(e => ExerciseLibrary.Details(e.ExerciseId)?.Images.FirstOrDefault()).OfType<string>().ToList();
@@ -206,7 +255,8 @@ public partial class HomeViewModel(
                 Name = w.Name,
                 Number = (plan.Workouts.IndexOf(w) + 1).ToString(),
                 IsDone = progress.SessionFor(w, week) != null,
-                IsNext = w == next,
+                IsNext = w == next && !isRunning && running == null,
+                IsRunning = isRunning,
                 Thumbnails = photos.Take(3).ToList(),
                 More = w.Exercises.Count > 3 ? $"+{w.Exercises.Count - 3}" : "",
                 OpenCommand = open,
@@ -238,6 +288,11 @@ public partial class HomeViewModel(
     [RelayCommand]
     async Task StartNext()
     {
+        if (workouts.Active != null)
+        {
+            await GoTo(Routes.Workout);
+            return;
+        }
         var plan = store.ActivePlan;
         if (plan == null || _next is not { } next)
             return;
@@ -249,6 +304,8 @@ public partial class HomeViewModel(
     [RelayCommand]
     Task OpenNext()
     {
+        if (workouts.Active != null)
+            return GoTo(Routes.Workout);
         var plan = store.ActivePlan;
         if (plan == null || _next is not { } next)
             return Task.CompletedTask;

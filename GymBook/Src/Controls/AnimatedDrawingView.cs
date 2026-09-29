@@ -19,7 +19,7 @@ public abstract class AnimatedDrawingView : GraphicsView
         set => SetValue(IsRunningProperty, value);
     }
 
-    readonly DateTime _started = DateTime.Now;
+    DateTime _started = DateTime.Now;
     IDispatcherTimer? _timer;
 
     protected AnimatedDrawingView()
@@ -29,6 +29,9 @@ public abstract class AnimatedDrawingView : GraphicsView
         Loaded += (_, _) => OnRunningChanged(IsRunning);
         Unloaded += (_, _) => _timer?.Stop();
     }
+
+    /// <summary>Plays the animation again from its start (e.g. another burst of confetti).</summary>
+    public void Restart() => _started = DateTime.Now;
 
     /// <summary>Draws the picture as it is <paramref name="seconds"/> into the animation.</summary>
     protected abstract void DrawFrame(ICanvas canvas, RectF rect, float seconds);

@@ -10,7 +10,7 @@
     Shell.NavBarIsVisible="False"
     Shell.TabBarIsVisible="False">
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="20,16,20,20">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="10,16,10,20">
 
         <!-- Top bar -->
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">

@@ -18,6 +18,10 @@ public class PlanItem
     public bool HasSuggestions => Suggestions > 0;
     public string SuggestionsText => Suggestions == 1 ? "1 AI suggestion" : $"{Suggestions} AI suggestions";
     public required IAsyncRelayCommand OpenCommand { get; init; }
+    /// <summary>For the active plan's card: where it is this week, e.g. "Week 3 · 2 of 5 workouts done".</summary>
+    public string WeekText { get; init; } = "";
+    /// <summary>This week's share of its workouts done, 0 to 1, for the card's ring.</summary>
+    public double WeekProgress { get; init; }
 }
 
 /// <summary>A day in the plan page's day strip: a workout or a rest day. Hold and drag it along the strip to move it.</summary>
@@ -96,8 +100,25 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     [ObservableProperty] List<PlanItem> otherPlans = [];
     [ObservableProperty] bool hasOtherPlans;
 
+    /// <summary>The Plans tab is the one on screen: the active plan card animates only then.</summary>
+    [ObservableProperty] bool isShowing;
+
+    public override void OnDisappearing() => IsShowing = false;
+
+    /// <summary>The plan's current week and how much of it is done.</summary>
+    (string Text, double Progress) WeekOf(WorkoutPlan plan)
+    {
+        if (plan.Workouts.Count == 0)
+            return ("", 0);
+        var progress = new PlanProgress(plan, store.History);
+        var week = progress.CurrentWeek;
+        var done = progress.WorkoutsDone(week);
+        return ($"Week {week} · {done} of {plan.Workouts.Count} workouts done", (double)done / plan.Workouts.Count);
+    }
+
     public override Task OnAppearingAsync()
     {
+        IsShowing = true;
         // The weekly AI check can finish while the tab is showing.
         ai.SuggestionsChanged -= OnSuggestionsChanged;
         ai.SuggestionsChanged += OnSuggestionsChanged;
@@ -109,6 +130,8 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
             Meta = $"{p.Workouts.Count} workouts a week · {p.Workouts.Sum(w => w.Exercises.Count)} exercises",
             IsActive = p.Id == store.Data.ActivePlanId,
             Suggestions = ai.PendingSuggestions(p),
+            WeekText = WeekOf(p).Text,
+            WeekProgress = WeekOf(p).Progress,
             OpenCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Plan}?id={p.Id}")),
         }).ToList();
         ActivePlan = items.FirstOrDefault(i => i.IsActive);
@@ -647,9 +670,16 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         Edited();
     }
 
-    /// <summary>RIR, deloads and periodization for this plan, switched on a sheet; part of the draft like any edit.</summary>
-    Task TrainingOptions(WorkoutPlan plan) =>
-        Shell.Current.Navigation.PushModalAsync(new Views.PlanOptionsPage(new PlanOptionsViewModel(plan, Edited)), false);
+    /// <summary>RIR, deloads and periodization for this plan, switched right in the ··· menu; part of the draft like any edit.</summary>
+    Views.MenuSwitch[] TrainingSwitches(WorkoutPlan plan) =>
+    [
+        new("Reps in reserve (RIR)", "A target effort for each exercise, logged with each set. Off: just weight and reps.",
+            plan.UseRir, on => { plan.UseRir = on; Edited(); }),
+        new("Deload weeks", "After every 4 weeks, a lighter week to recover: about half the sets, easier effort.",
+            plan.Deloads, on => { plan.Deloads = on; Edited(); }),
+        new("Periodization", "Each 4-week block builds: an easier first week, an extra set in weeks 3 and 4, hardest in week 4.",
+            plan.Periodization, on => { plan.Periodization = on; Edited(); }),
+    ];
 
     /// <summary>The AI's suggestions from the workouts logged on the plan; applied ones are saved, and this page reloads when it closes.</summary>
     [RelayCommand]
@@ -676,8 +706,8 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         var options = new List<string>();
         if (HasChanges)
             options.AddRange(["Save changes", "Discard changes"]);
-        options.AddRange(["Training options", "AI suggestions", "Change with AI", "Regenerate plan", "Training goal", "Rename plan", "Duplicate plan"]);
-        switch (await dialogs.ActionSheet(plan.Name, "Delete plan", [.. options]))
+        options.AddRange(["AI suggestions", "Change with AI", "Regenerate plan", "Training goal", "Rename plan", "Duplicate plan"]);
+        switch (await dialogs.ActionSheet(plan.Name, "Delete plan", TrainingSwitches(plan), [.. options]))
         {
             case "Save changes":
                 Save();
@@ -685,9 +715,6 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
             case "Discard changes":
                 if (await dialogs.Confirm("Discard changes?", "Your unsaved changes to this plan will be lost.", "Discard"))
                     Discard();
-                break;
-            case "Training options":
-                await TrainingOptions(plan);
                 break;
             case "AI suggestions":
                 await ImproveWithAi();
@@ -744,37 +771,5 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
                 }
                 break;
         }
-    }
-}
-
-/// <summary>
-/// The plan's training options: reps in reserve, deload weeks and periodization (see <see cref="PlanCycle"/>). They
-/// change the plan being edited, which is saved with the rest of its changes.
-/// </summary>
-public partial class PlanOptionsViewModel : ObservableObject
-{
-    readonly WorkoutPlan _plan;
-    readonly Action _changed;
-
-    public PlanOptionsViewModel(WorkoutPlan plan, Action changed)
-    {
-        (_plan, _changed) = (plan, changed);
-        useRir = plan.UseRir;
-        deloads = plan.Deloads;
-        periodization = plan.Periodization;
-    }
-
-    [ObservableProperty] bool useRir;
-    [ObservableProperty] bool deloads;
-    [ObservableProperty] bool periodization;
-
-    partial void OnUseRirChanged(bool value) => Set(() => _plan.UseRir = value);
-    partial void OnDeloadsChanged(bool value) => Set(() => _plan.Deloads = value);
-    partial void OnPeriodizationChanged(bool value) => Set(() => _plan.Periodization = value);
-
-    void Set(Action apply)
-    {
-        apply();
-        _changed();
     }
 }

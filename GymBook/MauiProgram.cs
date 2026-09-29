@@ -66,14 +66,17 @@ public static class MauiProgram
         AddPage<VerifyEmailPage, VerifyEmailViewModel>(builder.Services);
         AddPage<SyncDetailsPage, SyncDetailsViewModel>(builder.Services);
         AddPage<RecoveryPage, RecoveryViewModel>(builder.Services);
+        AddPage<WorkoutDonePage, WorkoutDoneViewModel>(builder.Services);
 
 #if ANDROID
-        // Hold-and-drag reordering (plan exercises and days), with a native long-press so quick swipes still scroll.
+        // Drag reordering (plan exercises from their grip, days with a long-press), so swipes elsewhere still scroll.
         builder.ConfigureMauiHandlers(handlers =>
         {
             handlers.AddHandler<Controls.ReorderItem, ReorderItemHandler>();
             // Sideways strips on a tab (the exercise filter chips) keep their drag from the swiping tabs.
             handlers.AddHandler<Controls.HorizontalDragArea, HorizontalDragAreaHandler>();
+            // Maps and charts only draw: a swipe that starts on one scrolls the page.
+            handlers.AddHandler<GraphicsView, PassiveGraphicsViewHandler>();
         });
 
         // The tabs swipe sideways (AppSkeleton's CView takes over any mostly-horizontal drag), which would steal the
@@ -89,11 +92,37 @@ public static class MauiProgram
             });
 #endif
 
+        // Every button gives a little under the finger and springs back, so taps feel alive.
+        Microsoft.Maui.Handlers.ButtonHandler.Mapper.AppendToMapping("PressAnimation", (_, view) =>
+        {
+            if (view is not Button button)
+                return;
+            button.Pressed -= OnButtonPressed;
+            button.Released -= OnButtonReleased;
+            button.Pressed += OnButtonPressed;
+            button.Released += OnButtonReleased;
+        });
+
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
 
         return builder.Build();
+    }
+
+    static void OnButtonPressed(object? sender, EventArgs e)
+    {
+        if (sender is Button button)
+        {
+            button.AbortAnimation("ScaleTo");
+            _ = button.ScaleTo(0.95, 90, Easing.CubicOut);
+        }
+    }
+
+    static void OnButtonReleased(object? sender, EventArgs e)
+    {
+        if (sender is Button button)
+            _ = button.ScaleTo(1, 260, Easing.SpringOut);
     }
 
     static void AddPage<TPage, TViewModel>(IServiceCollection services)

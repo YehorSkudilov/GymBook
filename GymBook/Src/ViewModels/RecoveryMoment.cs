@@ -26,23 +26,40 @@ public partial class RecoveryStep(string title, string time, DateTime at, bool i
 }
 
 /// <summary>
-/// The moment a muscle recovery map shows, picked on the calendar's day card and on the recovery details page (see
-/// <see cref="Views.RecoveryMomentView"/>): a timeline of the day zoomed in on its workouts, one stop per exercise, with
-/// the moments around them (that morning, before and after each workout, that evening, the next morning). Slide along
-/// it, or tap a stop.
+/// The moment a muscle recovery map shows on the recovery details page (see <see cref="Views.RecoveryMomentView"/>).
+/// Opened from a calendar day, the same Before this day | After this day toggle as the day card: going into the day,
+/// or right after its last workout. Opened from the Workout tab, a timeline from now into the next few days: slide
+/// along it, or tap a stop.
 /// </summary>
 public partial class RecoveryMoment : ObservableObject
 {
-    // Asks SetDay for the stop right after the day's last workout.
-    const int AfterLastWorkout = -1;
+    // The toggle, lit up like the calendar's.
+    static readonly Color ToggleOn = Color.FromArgb("#3F7DFF"), ToggleOnText = Colors.White, ToggleOffText = Color.FromArgb("#9AA3B5");
 
     DateTime _day = DateTime.Today;
-    // Anchored at the current time rather than a day (the recovery page opened from the Workout tab).
-    bool _fromNow;
+    // When the day's last workout ended; null on a day without one.
+    DateTime? _lastEnd;
     bool _loading;
 
     /// <summary>Something changed the moment: the map should be redrawn.</summary>
     public event EventHandler? Changed;
+
+    /// <summary>A calendar day, with the Before | After toggle; otherwise the timeline from now.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFromNow), nameof(HasSteps), nameof(HasToggle))]
+    bool isDay;
+
+    public bool IsFromNow => !IsDay;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(BeforeBackground), nameof(AfterBackground), nameof(BeforeText), nameof(AfterText))]
+    bool isAfterDay;
+
+    public bool HasToggle => IsDay && _lastEnd != null;
+    public Color BeforeBackground => IsAfterDay ? Colors.Transparent : ToggleOn;
+    public Color AfterBackground => IsAfterDay ? ToggleOn : Colors.Transparent;
+    public Color BeforeText => IsAfterDay ? ToggleOffText : ToggleOnText;
+    public Color AfterText => IsAfterDay ? ToggleOnText : ToggleOffText;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(MaxIndex), nameof(HasSteps))]
@@ -54,67 +71,43 @@ public partial class RecoveryMoment : ObservableObject
     [ObservableProperty] string when = "";
 
     public double MaxIndex => Math.Max(1, Steps.Count - 1);
-    public bool HasSteps => Steps.Count > 1;
+    public bool HasSteps => !IsDay && Steps.Count > 1;
     public RecoveryStep? Current => Steps.ElementAtOrDefault((int)Math.Round(Index));
 
     /// <summary>The moment the map shows.</summary>
-    public DateTime At => Current?.At ?? DateTime.Now;
+    public DateTime At => IsDay ? (IsAfterDay && _lastEnd is { } end ? end : _day) : Current?.At ?? DateTime.Now;
 
-    /// <summary>
-    /// A day's timeline: that morning, then for each workout "Before", one stop per exercise (after its last set) and
-    /// "After", then that evening and the next morning. <paramref name="stop"/> picks one by position; by default the
-    /// moment before the first workout, or that morning.
-    /// </summary>
-    public void SetDay(DateTime day, IEnumerable<WorkoutSession> sessions, Func<string, Exercise?> exercise, int? stop = null)
+    /// <summary>A calendar day: going into it, or (<paramref name="after"/>) right after its last workout.</summary>
+    public void SetDay(DateTime day, IEnumerable<WorkoutSession> sessions, bool after)
     {
+        _loading = true;
         _day = day.Date;
-        _fromNow = false;
-        var list = new List<RecoveryStep>();
-        void Add(string title, DateTime at, bool exercise = false) => list.Add(new RecoveryStep(title, at.ToString("HH:mm"), at, exercise, Select));
-
-        var workouts = sessions.Where(s => s.EndedAt != null).OrderBy(s => s.StartedAt).ToList();
-        var morning = _day.AddHours(7);
-        if (workouts.Count == 0 || workouts[0].StartedAt > morning)
-            Add("Morning", morning);
-        foreach (var s in workouts)
-        {
-            Add($"Before {s.Name}", s.StartedAt);
-            // Each exercise once its last working set was done; without set times, spread evenly over the workout.
-            var done = s.Exercises.Where(e => e.Sets.Any(x => x.IsCompleted && !x.IsWarmup)).ToList();
-            for (var i = 0; i < done.Count; i++)
-            {
-                var times = done[i].Sets.Where(x => x.IsCompleted && !x.IsWarmup).Select(x => x.CompletedAt).OfType<DateTime>().ToList();
-                var at = times.Count > 0 ? times.Max() : s.StartedAt + (s.EndedAt!.Value - s.StartedAt) * ((i + 1.0) / done.Count);
-                var name = exercise(done[i].ExerciseId)?.Name ?? "Exercise";
-                Add(name, at, exercise: true);
-            }
-            Add($"After {s.Name}", s.EndedAt!.Value);
-        }
-        var evening = _day.AddHours(21);
-        if (workouts.Count == 0 || workouts[^1].EndedAt < evening)
-            Add("Evening", evening);
-        Add("Next morning", _day.AddDays(1).AddHours(7));
-        // Today, "Now" goes in where it falls (and is where it starts, without workouts).
-        var nowIndex = -1;
-        if (_day == DateTime.Today)
-        {
-            nowIndex = list.FindIndex(x => x.At > DateTime.Now);
-            nowIndex = nowIndex < 0 ? list.Count : nowIndex;
-            list.Insert(nowIndex, new RecoveryStep("Now", DateTime.Now.ToString("HH:mm"), DateTime.Now, false, Select));
-        }
-        var last = workouts.Count > 0 ? list.FindLastIndex(x => x.Title == $"After {workouts[^1].Name}") : -1;
-        var start = stop == AfterLastWorkout ? Math.Max(0, last) : stop ?? (workouts.Count > 0 ? list.FindIndex(x => x.Title == $"Before {workouts[0].Name}") : Math.Max(0, nowIndex));
-        Load(list, start);
+        _lastEnd = sessions.Select(s => s.EndedAt).Max();
+        Steps = [];
+        IsDay = true;
+        OnPropertyChanged(nameof(HasToggle));
+        IsAfterDay = after && _lastEnd != null;
+        _loading = false;
+        Update();
     }
 
-    /// <summary>Around now, with no day to follow (the recovery page from the Workout tab): a few days back and ahead.</summary>
+    partial void OnIsAfterDayChanged(bool value) => Update();
+
+    [RelayCommand]
+    void BeforeDay() => IsAfterDay = false;
+
+    [RelayCommand]
+    void AfterDay() => IsAfterDay = true;
+
+    /// <summary>Around now, with no day to follow (the recovery page from the Workout tab): the next few days.</summary>
     public void SetFromNow(double hours)
     {
-        _fromNow = true;
+        IsDay = false;
         var now = DateTime.Now;
-        var offsets = new[] { -72, -48, -24, -12, 0, 6, 12, 24, 48, 72, 96 };
+        // From now on only: how the muscles will recover. What happened before is in the calendar.
+        var offsets = new[] { 0, 6, 12, 24, 36, 48, 72, 96 };
         var list = offsets.Select(h => new RecoveryStep(
-            h == 0 ? "Now" : h % 24 == 0 ? $"{(h > 0 ? "+" : "−")}{Math.Abs(h) / 24} d" : $"{(h > 0 ? "+" : "−")}{Math.Abs(h)} h",
+            h == 0 ? "Now" : h % 24 == 0 ? $"+{h / 24} d" : $"+{h} h",
             now.AddHours(h).ToString("ddd HH:mm"), now.AddHours(h), false, Select)).ToList();
         // The offset closest to the one asked for.
         var start = Array.IndexOf(offsets, offsets.MinBy(o => Math.Abs(o - hours)));
@@ -130,20 +123,12 @@ public partial class RecoveryMoment : ObservableObject
         Update();
     }
 
-    /// <summary>For the recovery page's link: the same day and stop.</summary>
-    public string Query => _fromNow
-        ? $"hours={Math.Round((At - DateTime.Now).TotalHours).ToString(CultureInfo.InvariantCulture)}"
-        : $"day={_day:yyyy-MM-dd}&stop={(int)Math.Round(Index)}";
-
-    /// <summary>Reads <see cref="Query"/> back (or a plain "hours" from now).</summary>
-    public void Apply(IDictionary<string, object> query, Func<DateTime, IEnumerable<WorkoutSession>> sessionsOn, Func<string, Exercise?> exercise)
+    /// <summary>Reads the page's query: a calendar "day" (with "stop=after" for after its last workout), or "hours" from now.</summary>
+    public void Apply(IDictionary<string, object> query, Func<DateTime, IEnumerable<WorkoutSession>> sessionsOn)
     {
         if (query.TryGetValue("day", out var d) && DateTime.TryParseExact(d?.ToString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
         {
-            // A position, or "after": the stop right after the day's last workout.
-            var text = query.TryGetValue("stop", out var s) ? s?.ToString() : null;
-            int? stop = text == "after" ? AfterLastWorkout : int.TryParse(text, out var i) ? i : null;
-            SetDay(day, sessionsOn(day), exercise, stop);
+            SetDay(day, sessionsOn(day), after: query.TryGetValue("stop", out var s) && s?.ToString() == "after");
             return;
         }
         SetFromNow(query.TryGetValue("hours", out var h) && double.TryParse(h?.ToString(), CultureInfo.InvariantCulture, out var hours) ? hours : 0);
@@ -167,10 +152,15 @@ public partial class RecoveryMoment : ObservableObject
     {
         if (_loading)
             return;
-        var current = Current;
-        foreach (var step in Steps)
-            step.IsSelected = step == current;
-        When = current == null ? "" : current.IsExercise ? $"After {current.Title} · {current.At:ddd d MMM, HH:mm}" : $"{current.Title} · {current.At:ddd d MMM, HH:mm}";
+        if (IsDay)
+            When = IsAfterDay && _lastEnd is { } end ? $"After the last workout · {end:ddd d MMM, HH:mm}" : $"Going into {_day:ddd d MMM}";
+        else
+        {
+            var current = Current;
+            foreach (var step in Steps)
+                step.IsSelected = step == current;
+            When = current == null ? "" : $"{current.Title} · {current.At:ddd d MMM, HH:mm}";
+        }
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

@@ -56,6 +56,8 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     int _week = 1;
     // Opened for one finished workout rather than a plan day.
     string? _sessionId;
+    // Opened right after finishing the workout (from the celebration): it was just saved, so no Discard.
+    bool _justFinished;
     // The finished workout on show, however it was opened; null for a day still to do.
     WorkoutSession? _finished;
 
@@ -98,6 +100,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     {
         _planId = query.TryGetValue("id", out var id) ? id?.ToString() : null;
         _sessionId = query.TryGetValue("session", out var session) ? session?.ToString() : null;
+        _justFinished = query.TryGetValue("finished", out var finished) && finished?.ToString() == "1";
         _day = query.TryGetValue("day", out var day) && int.TryParse(day?.ToString(), out var d) ? d : 0;
         _week = query.TryGetValue("week", out var week) && int.TryParse(week?.ToString(), out var w) ? w : 1;
     }
@@ -208,7 +211,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     void ShowFinishedWorkout(WorkoutSession session)
     {
         _finished = session;
-        CanDiscard = true;
+        CanDiscard = !_justFinished;
         var plan = store.GetPlan(session.PlanId);
         var logged = session.Exercises.Where(e => e.Sets.Count > 0).ToList();
         DayName = session.Name;

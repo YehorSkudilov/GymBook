@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.WorkoutDonePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:GymBook.Controls"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:WorkoutDoneViewModel"
+    Shell.PresentationMode="ModalNotAnimated"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False"
+    BackgroundColor="{StaticResource Bg}">
+
+    <!-- Right after finishing a workout: confetti, the trophy, the numbers counting up, then on to the workout itself. -->
+    <Grid x:Name="Root" RowDefinitions="*,Auto" Opacity="0">
+        <controls:ConfettiView Grid.RowSpan="2" />
+
+        <VerticalStackLayout Spacing="22" VerticalOptions="Center" Padding="10,0">
+            <!-- The trophy in a glowing circle -->
+            <Grid x:Name="Trophy" HorizontalOptions="Center" WidthRequest="150" HeightRequest="150" Scale="0">
+                <controls:ReadinessGlowView Shape="Button" Readiness="1" Tint="#3F7DFF" />
+                <Border x:Name="TrophyCircle" WidthRequest="112" HeightRequest="112" StrokeShape="RoundRectangle 56" StrokeThickness="0"
+                        Background="{StaticResource AccentGradient}" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image x:Name="TrophyIcon" WidthRequest="58" HeightRequest="58" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image.Source>
+                            <FontImageSource FontFamily="OutlinedIcons" Glyph="emoji_events" Color="White" Size="96" />
+                        </Image.Source>
+                    </Image>
+                </Border>
+            </Grid>
+
+            <VerticalStackLayout x:Name="Heading" Spacing="6" Opacity="0" TranslationY="16">
+                <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="30" HorizontalTextAlignment="Center" />
+                <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="15" HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <!-- The numbers, counted up -->
+            <Grid x:Name="Stats" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10" Opacity="0" TranslationY="24">
+                <Border Style="{StaticResource Card}" Padding="14,12">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding DurationText}" FontFamily="OpenSansSemibold" FontSize="24" HorizontalOptions="Center" />
+                        <Label Text="TIME" Style="{StaticResource Overline}" FontSize="11" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="14,12">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding VolumeText}" FontFamily="OpenSansSemibold" FontSize="24" HorizontalOptions="Center" />
+                        <Label Text="VOLUME" Style="{StaticResource Overline}" FontSize="11" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="1" Style="{StaticResource Card}" Padding="14,12">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding SetsText}" FontFamily="OpenSansSemibold" FontSize="24" HorizontalOptions="Center" />
+                        <Label Text="SETS" Style="{StaticResource Overline}" FontSize="11" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}" Padding="14,12">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding ExercisesText}" FontFamily="OpenSansSemibold" FontSize="24" HorizontalOptions="Center" />
+                        <Label Text="EXERCISES" Style="{StaticResource Overline}" FontSize="11" HorizontalOptions="Center" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+
+            <!-- New personal bests, if any -->
+            <Border x:Name="RecordsPill" IsVisible="{Binding HasRecords}" Style="{StaticResource Pill}" BackgroundColor="#33FFB020"
+                    HorizontalOptions="Center" Padding="14,8" Scale="0">
+                <HorizontalStackLayout Spacing="8">
+                    <Image WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
+                        <Image.Source>
+                            <FontImageSource FontFamily="OutlinedIcons" Glyph="military_tech" Color="#FFB020" Size="32" />
+                        </Image.Source>
+                    </Image>
+                    <Label Text="{Binding RecordsText}" TextColor="#FFB020" FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+
+        <Button x:Name="ContinueButton" Grid.Row="1" Text="Continue" Style="{StaticResource PrimaryButton}" Margin="10,8,10,24"
+                Command="{Binding ContinueCommand}" Opacity="0" TranslationY="20" />
+    </Grid>
+</views:BasePage>

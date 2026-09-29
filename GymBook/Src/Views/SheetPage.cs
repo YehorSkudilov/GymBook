@@ -22,6 +22,9 @@ public class SheetPage : BasePage
 
     bool _shown, _closing;
 
+    // It slides up on its own.
+    protected override bool AnimatesIn => false;
+
     public SheetPage()
     {
         BackgroundColor = Colors.Transparent;

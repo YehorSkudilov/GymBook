@@ -49,7 +49,7 @@
                     Command="{Binding CloseCommand}" />
 
             <ScrollView Grid.Row="1">
-                <VerticalStackLayout Padding="20,4,20,24" Spacing="14">
+                <VerticalStackLayout Padding="10,4,10,24" Spacing="14">
 
                     <!-- Name; the pencil renames it -->
                     <HorizontalStackLayout Spacing="12" Margin="0,8,0,6">
@@ -97,14 +97,14 @@
                         <VerticalStackLayout>
                             <Grid Style="{StaticResource MenuRow}">
                                 <Grid.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding CompleteCommand}" />
+                                    <TapGestureRecognizer Command="{Binding FinishCommand}" />
                                 </Grid.GestureRecognizers>
                                 <Image Style="{StaticResource MenuIcon}">
                                     <Image.Source>
-                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="military_tech" Color="{StaticResource Accent}" Size="32" />
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="military_tech" Color="{StaticResource Success}" Size="32" />
                                     </Image.Source>
                                 </Image>
-                                <Label Text="Complete" Style="{StaticResource MenuLabel}" TextColor="{StaticResource Accent}" />
+                                <Label Text="Finish" Style="{StaticResource MenuLabel}" TextColor="{StaticResource Success}" />
                             </Grid>
                             <!-- Start over: sets unticked, clock restarted -->
                             <Grid Style="{StaticResource MenuRow}">

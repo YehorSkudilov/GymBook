@@ -11,7 +11,7 @@
     Backdrop="#B3000000">
 
     <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
-    <Grid RowDefinitions="Auto,*" Padding="20,16,20,20">
+    <Grid RowDefinitions="Auto,*" Padding="10,16,10,20">
         <Button Text="✕" FontSize="18" Style="{StaticResource StepButton}" WidthRequest="40" HeightRequest="40"
                 BackgroundColor="{StaticResource Surface2}" HorizontalOptions="Start" Command="{Binding CloseCommand}" />
 

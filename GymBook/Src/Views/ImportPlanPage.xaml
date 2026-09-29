@@ -18,7 +18,7 @@
                     Command="{Binding CloseCommand}" />
 
             <ScrollView Grid.Row="1">
-                <VerticalStackLayout Padding="20,4,20,24" Spacing="16">
+                <VerticalStackLayout Padding="10,4,10,24" Spacing="16">
                     <VerticalStackLayout Spacing="6">
                         <Label Text="Import a plan" Style="{StaticResource Title}" FontSize="30" />
                         <Label Text="Paste it, add a link to it, or pick a photo, screenshot, PDF or text file. AI turns it into a plan you can track."
@@ -66,7 +66,7 @@
                 </VerticalStackLayout>
             </ScrollView>
 
-            <VerticalStackLayout Grid.Row="2" Padding="16,8,16,16" Spacing="6">
+            <VerticalStackLayout Grid.Row="2" Padding="10,8,10,16" Spacing="6">
                 <Button Text="Import plan" Style="{StaticResource PrimaryButton}" Command="{Binding ImportCommand}"
                         IsVisible="{Binding IsImporting, Converter={StaticResource Not}}" />
                 <HorizontalStackLayout IsVisible="{Binding IsImporting}" HorizontalOptions="Center" Spacing="10" HeightRequest="52">

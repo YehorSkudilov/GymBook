@@ -17,7 +17,7 @@
                     Command="{Binding NotNowCommand}" />
 
             <ScrollView Grid.Row="1">
-                <VerticalStackLayout Padding="20,4,20,24" Spacing="16">
+                <VerticalStackLayout Padding="10,4,10,24" Spacing="16">
 
                     <!-- What's wrong -->
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
@@ -91,7 +91,7 @@
             </ScrollView>
 
             <!-- Choices -->
-            <VerticalStackLayout Grid.Row="2" Padding="16,8,16,16" Spacing="8">
+            <VerticalStackLayout Grid.Row="2" Padding="10,8,10,16" Spacing="8">
                 <Button Text="{Binding AlternativeText}" Style="{StaticResource PrimaryButton}" IsVisible="{Binding HasAlternative}"
                         Command="{Binding AlternativeCommand}" />
                 <Button Text="{Binding StartAnywayText}" Style="{StaticResource SecondaryButton}" Command="{Binding StartAnywayCommand}" />

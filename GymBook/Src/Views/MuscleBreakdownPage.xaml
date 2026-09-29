@@ -23,7 +23,7 @@
 
             <Grid RowDefinitions="Auto,*">
                 <!-- Header -->
-                <VerticalStackLayout Padding="20,18,20,12" Spacing="14">
+                <VerticalStackLayout Padding="10,18,10,12" Spacing="14">
                     <Grid ColumnDefinitions="*,Auto">
                         <VerticalStackLayout>
                             <Label Text="{Binding Title}" Style="{StaticResource H2}" LineBreakMode="TailTruncation" />
@@ -58,7 +58,7 @@
                 </VerticalStackLayout>
 
                 <ScrollView Grid.Row="1">
-                    <VerticalStackLayout Padding="20,0,20,24" Spacing="16">
+                    <VerticalStackLayout Padding="10,0,10,24" Spacing="16">
                         <GraphicsView Drawable="{Binding Map}" HeightRequest="280" />
                         <Grid ColumnDefinitions="*,*" Padding="30,0">
                             <Label Text="Front" Style="{StaticResource Caption}" HorizontalOptions="Center" />

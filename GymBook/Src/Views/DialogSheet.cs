@@ -46,30 +46,70 @@ public class DialogSheet : SheetPage
         Content = root;
     }
 
-    /// <summary>A menu: the options as rows (the destructive one in red), then Cancel. Resolves to the chosen option.</summary>
-    public static Task<string?> Menu(string title, string? destructive, string[] options) =>
+    /// <summary>
+    /// A menu: the options as rows (the destructive one in red), then Cancel. Resolves to the chosen option. Any
+    /// <paramref name="switches"/> go above them, flipped in place without closing the menu.
+    /// </summary>
+    public static Task<string?> Menu(string title, string? destructive, string[] options, IReadOnlyList<MenuSwitch>? switches = null) =>
         Show(new DialogSheet(title, null, s =>
         {
             var list = new VerticalStackLayout { Spacing = 10 };
+            if (switches is { Count: > 0 })
+            {
+                var toggles = new VerticalStackLayout();
+                for (var i = 0; i < switches.Count; i++)
+                {
+                    if (i > 0)
+                        toggles.Add(Divider());
+                    toggles.Add(SwitchRow(switches[i]));
+                }
+                list.Add(Card(toggles));
+            }
             var card = new VerticalStackLayout();
             var all = destructive == null ? options : [.. options, destructive];
             for (var i = 0; i < all.Length; i++)
             {
                 if (i > 0)
-                    card.Add(new BoxView { HeightRequest = 1, Color = Resource<Color>("Stroke"), Margin = new Thickness(18, 0) });
+                    card.Add(Divider());
                 card.Add(s.Row(all[i], all[i] == destructive));
             }
-            list.Add(new Border
-            {
-                BackgroundColor = Resource<Color>("Surface2"),
-                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 22 },
-                StrokeThickness = 0,
-                Padding = new Thickness(0, 4),
-                Content = card,
-            });
+            list.Add(Card(card));
             list.Add(s.Button("Cancel", "SecondaryButton", null));
             return list;
         }));
+
+    static BoxView Divider() => new() { HeightRequest = 1, Color = Resource<Color>("Stroke"), Margin = new Thickness(18, 0) };
+
+    static Border Card(View content) => new()
+    {
+        BackgroundColor = Resource<Color>("Surface2"),
+        StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 22 },
+        StrokeThickness = 0,
+        Padding = new Thickness(0, 4),
+        Content = content,
+    };
+
+    // A name, a line on what it does, and the switch; the whole row flips it.
+    static View SwitchRow(MenuSwitch option)
+    {
+        var toggle = new Switch { IsToggled = option.IsOn, VerticalOptions = LayoutOptions.Center };
+        toggle.Toggled += (_, e) => option.Changed(e.Value);
+        var text = new VerticalStackLayout { Spacing = 2, VerticalOptions = LayoutOptions.Center };
+        text.Add(new Label { Text = option.Title, FontFamily = "OpenSansSemibold", FontSize = 17, TextColor = Resource<Color>("TextPrimary") });
+        if (!string.IsNullOrWhiteSpace(option.Detail))
+            text.Add(new Label { Text = option.Detail, Style = Resource<Style>("Caption"), FontSize = 12 });
+        var row = new Grid
+        {
+            Padding = new Thickness(18, 10, 12, 10),
+            MinimumHeightRequest = 54,
+            ColumnSpacing = 12,
+            ColumnDefinitions = [new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto)],
+        };
+        row.Add(text);
+        row.Add(toggle, 1);
+        row.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => toggle.IsToggled = !toggle.IsToggled) });
+        return row;
+    }
 
     /// <summary>A question with a main button and Cancel. Resolves to true for the main one.</summary>
     public static async Task<bool> Confirm(string title, string message, string accept, string cancel) =>
@@ -207,3 +247,6 @@ public class DialogSheet : SheetPage
 
     static T Resource<T>(string key) => (T)Application.Current!.Resources[key];
 }
+
+/// <summary>An on/off setting in a <see cref="DialogSheet.Menu"/>, applied through <see cref="Changed"/> as it's flipped.</summary>
+public record MenuSwitch(string Title, string? Detail, bool IsOn, Action<bool> Changed);

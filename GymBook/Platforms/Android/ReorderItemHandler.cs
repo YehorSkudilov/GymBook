@@ -7,9 +7,10 @@ using Microsoft.Maui.Platform;
 namespace GymBook;
 
 /// <summary>
-/// <see cref="ReorderItem"/> on Android: a long-press starts the drag. Until then the touch belongs to whatever is
-/// under the finger (a tap opens an exercise, a quick swipe scrolls the list or the day strip); once it fires, the item
-/// takes the touch over and the scrolling parents are told to leave it alone until the finger lifts.
+/// <see cref="ReorderItem"/> on Android: touching the item's grip starts the drag at once, or, on an item without one,
+/// a long-press. Until then the touch belongs to whatever is under the finger (a tap opens an exercise, a swipe scrolls
+/// the list or the day strip); once it starts, the item takes the touch over and the scrolling parents are told to leave
+/// it alone until the finger lifts.
 /// </summary>
 public class ReorderItemHandler : ContentViewHandler
 {
@@ -35,7 +36,7 @@ sealed class ReorderViewGroup : ContentViewGroup
         _begin = new Java.Lang.Runnable(Begin);
     }
 
-    // The long-press fired with the finger still where it went down: the drag starts.
+    // The grip was touched, or the long-press fired with the finger still where it went down: the drag starts.
     void Begin()
     {
         if (!_pending)
@@ -64,12 +65,13 @@ sealed class ReorderViewGroup : ContentViewGroup
         return _dragging;
     }
 
-    // The touch once dragging, or when no child wanted it (still worth watching for a long-press).
+    // The touch once dragging, or when no child wanted it: kept only while it may become a drag, so a touch that won't
+    // (e.g. on an item with a grip, away from it) goes on to scroll the list.
     public override bool OnTouchEvent(MotionEvent? e)
     {
         if (e != null)
             Track(e);
-        return true;
+        return _pending || _dragging;
     }
 
     void Track(MotionEvent e)
@@ -80,9 +82,24 @@ sealed class ReorderViewGroup : ContentViewGroup
                 // Raw (screen) positions: the item itself moves under the finger while dragging.
                 (_downX, _downY) = (e.RawX, e.RawY);
                 _dragging = false;
-                _pending = true;
+                _pending = false;
                 RemoveCallbacks(_begin);
-                PostDelayed(_begin, LongPressMs);
+                // An item with a grip drags from it at once and leaves every other touch alone (scrolling, taps).
+                // One without is held to drag: a long-press, so a quick swipe still scrolls.
+                if (_item()?.FindHandle()?.Handler?.PlatformView is Android.Views.View handle)
+                {
+                    var hit = new Android.Graphics.Rect();
+                    if (handle.GetGlobalVisibleRect(hit) && hit.Contains((int)e.RawX, (int)e.RawY))
+                    {
+                        _pending = true;
+                        Begin();
+                    }
+                }
+                else
+                {
+                    _pending = true;
+                    PostDelayed(_begin, LongPressMs);
+                }
                 break;
             case MotionEventActions.Move:
                 var dx = e.RawX - _downX;

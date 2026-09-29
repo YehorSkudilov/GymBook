@@ -88,14 +88,15 @@
 
             <!-- Next workout: tap to preview the day; Start starts it straight away. -->
             <!-- No padding on the card itself: the glow fills it edge to edge, and the content has the padding instead. -->
-            <Border IsVisible="{Binding HasPlan}" Style="{StaticResource Card}" Padding="0">
+            <!-- While a workout is running it shows that one instead, and both tapping it and Resume open it. -->
+            <Border IsVisible="{Binding ShowNextCard}" Style="{StaticResource Card}" Padding="0">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding OpenNextCommand}" />
                 </Border.GestureRecognizers>
                 <Grid>
                 <!-- Light drifting behind the card in the readiness colour: faint when tired, rich when fresh. It fills the whole
                      card; the card's rounded shape clips it. -->
-                <controls:ReadinessGlowView Shape="Card" Readiness="{Binding NextReadiness}" Tint="{Binding NextTint}" IsRunning="{Binding IsShowing}" />
+                <controls:ReadinessGlowView Shape="Card" Readiness="{Binding NextGlow}" Tint="{Binding NextTint}" IsRunning="{Binding IsShowing}" />
                 <VerticalStackLayout Spacing="12" Padding="16,14">
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                         <VerticalStackLayout>
@@ -132,9 +133,9 @@
                         <Label Text="{Binding NextWorkoutMeta}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
                         <!-- The fresher you are, the more it invites a tap: grey and still when tired, vivid with a pulsing glow when ready. -->
                         <Grid Grid.Column="1">
-                            <controls:ReadinessGlowView Shape="Button" Readiness="{Binding NextReadiness}" Tint="{Binding StartColor}" IsRunning="{Binding IsShowing}"
+                            <controls:ReadinessGlowView Shape="Button" Readiness="{Binding NextGlow}" Tint="{Binding StartColor}" IsRunning="{Binding IsShowing}"
                                                         Margin="-10" />
-                            <Button Text="▶  Start" Style="{StaticResource PrimaryButton}" HeightRequest="44" Padding="26,0"
+                            <Button Text="{Binding StartText}" Style="{StaticResource PrimaryButton}" HeightRequest="44" Padding="26,0"
                                     BackgroundColor="{Binding StartColor}" TextColor="{Binding StartTextColor}" Command="{Binding StartNextCommand}" />
                         </Grid>
                     </Grid>
@@ -176,8 +177,8 @@
                                         </VerticalStackLayout.GestureRecognizers>
                                         <Label Text="{Binding Name}" TextColor="{Binding NameColor}" FontFamily="OpenSansSemibold" FontSize="17"
                                                LineBreakMode="TailTruncation" />
-                                        <Label Text="{Binding Status}" IsVisible="{Binding IsNext}" Style="{StaticResource Caption}" FontSize="12"
-                                               TextColor="{StaticResource Accent}" />
+                                        <Label Text="{Binding Status}" IsVisible="{Binding HasStatus}" Style="{StaticResource Caption}" FontSize="12"
+                                               TextColor="{Binding StatusColor}" />
                                     </VerticalStackLayout>
                                     <Border Grid.Column="2" IsVisible="{Binding HasThumbnails}" BackgroundColor="{StaticResource Surface2}"
                                             StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="4" VerticalOptions="Center">
@@ -237,18 +238,17 @@
                             <Label Text="Fresh" Style="{StaticResource Caption}" FontSize="12" />
                         </HorizontalStackLayout>
                     </HorizontalStackLayout>
-                    <!-- Preview: drag back to see past recovery, forward to see when muscles will be fresh. -->
+                    <!-- Preview: drag ahead to see when muscles will be fresh. From now on only: the past is in the calendar. -->
                     <VerticalStackLayout Spacing="2">
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Text="{Binding RecoveryWhen}" FontFamily="OpenSansSemibold" FontSize="13" VerticalOptions="Center" />
                             <Button Grid.Column="1" Text="Now" Style="{StaticResource SmallButton}" IsVisible="{Binding IsRecoveryPreview}"
                                     Command="{Binding RecoveryNowCommand}" />
                         </Grid>
-                        <!-- Maximum before Minimum: the minimum can only go negative once the maximum allows the range. -->
-                        <Slider Maximum="96" Minimum="-168" Value="{Binding RecoveryHours}"
+                        <Slider Maximum="96" Minimum="0" Value="{Binding RecoveryHours}"
                                 MinimumTrackColor="{StaticResource Accent}" MaximumTrackColor="{StaticResource Surface3}" ThumbColor="{StaticResource Accent}" />
                         <Grid ColumnDefinitions="*,*">
-                            <Label Text="7 days ago" Style="{StaticResource Caption}" FontSize="11" />
+                            <Label Text="Now" Style="{StaticResource Caption}" FontSize="11" />
                             <Label Grid.Column="1" Text="In 4 days" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End" />
                         </Grid>
                     </VerticalStackLayout>

@@ -42,7 +42,8 @@ public partial class MainPage : ContentPage
             {
                 Glyph = "fitness_center", PageName = "Workout", Page = home,
                 Color = (Color)resources["TextPrimary"], SelectedColor = Colors.White,
-                IconBackground = (Color)resources["Surface3"], SelectedIconBackground = accent,
+                // A muted blue when not open (the bar's own glass tint would hide it), the full accent when open.
+                IconBackground = Color.FromArgb("#2E4677"), SelectedIconBackground = accent,
                 IconSize = 26, IconBackgroundSize = 44, ItemWidth = 72, ShowLabel = false,
             },
             new() { Glyph = "analytics", PageName = "Progress", Page = stats, Color = color },

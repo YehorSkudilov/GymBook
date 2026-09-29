@@ -12,7 +12,7 @@
 
     <Grid RowDefinitions="*,Auto">
         <ScrollView>
-            <VerticalStackLayout Padding="16,8,16,24" Spacing="16">
+            <VerticalStackLayout Padding="10,8,10,24" Spacing="16">
 
                 <!-- Status, selectable so an error can be copied into a bug report. -->
                 <Border Style="{StaticResource Card}" BackgroundColor="{StaticResource WarningSoft}" IsVisible="{Binding HasProblem}">
@@ -42,7 +42,7 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <Button Grid.Row="1" Text="Sync now" Style="{StaticResource PrimaryButton}" Margin="16,8,16,16"
+        <Button Grid.Row="1" Text="Sync now" Style="{StaticResource PrimaryButton}" Margin="10,8,10,16"
                 IsEnabled="{Binding IsSyncing, Converter={StaticResource Not}}" Command="{Binding SyncNowCommand}" />
     </Grid>
 </views:BasePage>

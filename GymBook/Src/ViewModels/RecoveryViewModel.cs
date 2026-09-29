@@ -18,8 +18,8 @@ public class MuscleRecoveryItem
 }
 
 /// <summary>
-/// Full-screen recovery: the body map at a moment picked like on the calendar (a workout, before or after it, and a
-/// slider from there; or from now, opened from the Workout tab), and every muscle's recovery with when it will be
+/// Full-screen recovery: the body map at a moment picked like on the calendar (going into a day or after its last
+/// workout; or a slider from now, opened from the Workout tab), and every muscle's recovery with when it will be
 /// ready and which workout tired it.
 /// </summary>
 public partial class RecoveryViewModel : BaseViewModel, IQueryAttributable
@@ -45,7 +45,7 @@ public partial class RecoveryViewModel : BaseViewModel, IQueryAttributable
     public RecoveryMoment Moment { get; } = new();
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) =>
-        Moment.Apply(query, day => store.History.Where(s => s.StartedAt.Date == day), store.GetExercise);
+        Moment.Apply(query, day => store.History.Where(s => s.StartedAt.Date == day && s.EndedAt != null));
 
     public override Task OnAppearingAsync()
     {

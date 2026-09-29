@@ -27,7 +27,7 @@
     </ContentPage.Resources>
 
     <ScrollView>
-        <VerticalStackLayout Padding="16,4,16,28" Spacing="16">
+        <VerticalStackLayout Padding="10,4,10,28" Spacing="16">
 
             <!-- Map and preview -->
             <Border Style="{StaticResource Card}">
@@ -47,7 +47,7 @@
                             <Label Text="Fresh" Style="{StaticResource Caption}" FontSize="12" />
                         </HorizontalStackLayout>
                     </HorizontalStackLayout>
-                    <!-- The same picker as the calendar's day card: which workout, before or after it, and a slider from there -->
+                    <!-- From a calendar day, its Before | After toggle; from the Workout tab, a slider from now -->
                     <views:RecoveryMomentView BindingContext="{Binding Moment}" />
                     <Label Text="{Binding Summary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>

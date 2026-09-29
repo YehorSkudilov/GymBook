@@ -16,7 +16,7 @@
         <Grid RowDefinitions="Auto,*,Auto">
 
             <!-- Header -->
-            <Grid ColumnDefinitions="*,Auto" Padding="20,14,8,6">
+            <Grid ColumnDefinitions="*,Auto" Padding="10,14,4,6">
                 <VerticalStackLayout VerticalOptions="Center">
                     <HorizontalStackLayout Spacing="8">
                         <Image WidthRequest="20" HeightRequest="20" VerticalOptions="Center">
@@ -33,7 +33,7 @@
             </Grid>
 
             <ScrollView Grid.Row="1">
-                <VerticalStackLayout Padding="16,8,16,16" Spacing="12">
+                <VerticalStackLayout Padding="10,8,10,16" Spacing="12">
 
                     <!-- Working on it -->
                     <VerticalStackLayout Spacing="12" Padding="0,48" IsVisible="{Binding IsLoading}" HorizontalOptions="Center">
@@ -94,7 +94,7 @@
             </ScrollView>
 
             <!-- Ask again, e.g. after a few more workouts or after applying some -->
-            <VerticalStackLayout Grid.Row="2" Padding="16,6,16,16" Spacing="4" IsVisible="{Binding CanAsk}">
+            <VerticalStackLayout Grid.Row="2" Padding="10,6,10,16" Spacing="4" IsVisible="{Binding CanAsk}">
                 <Button Text="Get new suggestions" Style="{StaticResource SecondaryButton}" Command="{Binding LoadCommand}"
                         IsEnabled="{Binding IsLoading, Converter={StaticResource Not}}" />
                 <Label Text="{Binding QuotaText}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />

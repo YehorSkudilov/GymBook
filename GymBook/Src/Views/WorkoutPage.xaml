@@ -32,10 +32,11 @@
             </VerticalStackLayout>
             <ImageButton Grid.Column="2" Source="{StaticResource IconMore}" WidthRequest="40" HeightRequest="40" Padding="9"
                          BackgroundColor="{StaticResource Surface2}" CornerRadius="20" Command="{Binding WorkoutMenuCommand}" />
-            <Button Grid.Column="3" Text="Finish" BackgroundColor="{StaticResource Success}" TextColor="#06200F"
+            <!-- Only once every set is ticked; before that, Finish is in the ··· menu -->
+            <Button Grid.Column="3" Text="Finish" BackgroundColor="{StaticResource Success}" TextColor="#06200F" IsVisible="{Binding CanFinish}" controls:Pop.When="{Binding CanFinish}"
                     CornerRadius="12" Padding="18,6" HeightRequest="40" MinimumHeightRequest="40" Command="{Binding FinishCommand}" />
         </Grid>
-        <ProgressBar Grid.Row="1" Progress="{Binding Progress}" HeightRequest="3" Margin="16,0" />
+        <ProgressBar Grid.Row="1" controls:SmoothProgress.Value="{Binding Progress}" HeightRequest="3" Margin="10,0" />
 
         <!-- One photo per exercise, scrolling sideways; the one on screen is highlighted. Tap to jump to it, + to add more. -->
         <Grid Grid.Row="2" Margin="0,10,0,0" IsVisible="{Binding IsEmpty, Converter={StaticResource Not}}">
@@ -76,7 +77,7 @@
 
         <!-- Exercises: swipe sideways from one to the next -->
         <Grid Grid.Row="3">
-            <VerticalStackLayout IsVisible="{Binding IsEmpty}" Padding="16,24" Spacing="12">
+            <VerticalStackLayout IsVisible="{Binding IsEmpty}" Padding="10,24" Spacing="12">
                 <Border Style="{StaticResource Card}" Padding="20">
                     <VerticalStackLayout Spacing="6">
                         <Label Text="Empty workout" Style="{StaticResource H3}" HorizontalOptions="Center" />
@@ -94,7 +95,7 @@
                         <SwipeGestureRecognizer Direction="Right" Command="{Binding PreviousExerciseCommand}" />
                     </Grid.GestureRecognizers>
                     <ContentView x:Name="ExerciseBody" BindingContext="{Binding CurrentExercise}">
-                        <VerticalStackLayout x:DataType="vm:WorkoutExerciseViewModel" Padding="16,14,16,110" Spacing="14">
+                        <VerticalStackLayout x:DataType="vm:WorkoutExerciseViewModel" Padding="10,14,10,110" Spacing="14">
 
                             <!-- Exercise -->
                             <VerticalStackLayout Spacing="4">
@@ -142,7 +143,8 @@
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="vm:SetRowViewModel">
                                             <!-- Warm-up rows fold away and open with an animation -->
-                                            <Grid controls:AnimatedVisibility.IsShown="{Binding IsVisible}" ColumnDefinitions="48,*,*,Auto,*,56" ColumnSpacing="8" MinimumHeightRequest="52">
+                                            <Grid controls:AnimatedVisibility.IsShown="{Binding IsVisible}" ColumnDefinitions="48,*,*,Auto,*,56" ColumnSpacing="8" MinimumHeightRequest="52"
+                                                  Opacity="{Binding RowOpacity}" controls:Pop.When="{Binding IsCompleted}" controls:Pop.Amount="1.03">
                                                 <!-- Tapping a row that isn't being logged opens it for editing. -->
                                                 <Grid.GestureRecognizers>
                                                     <TapGestureRecognizer Command="{Binding EditCommand}" />
@@ -179,7 +181,10 @@
 
                                                 <Label Grid.Column="4" Text="{Binding E1Rm}" TextColor="{StaticResource TextSecondary}" FontSize="18"
                                                        HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowE1Rm}" />
-                                                <!-- The warm-up being logged: skip it instead -->
+                                                <!-- Skipped: left out when the workout is finished; tap the row and its check to do it after all -->
+                                                <Label Grid.Column="4" Text="Skipped" TextColor="{StaticResource TextSecondary}" FontSize="14" FontFamily="OpenSansSemibold"
+                                                       HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowSkipped}" />
+                                                <!-- The set being logged: skip it instead -->
                                                 <Label Grid.Column="4" Text="Skip" TextColor="{StaticResource Accent}" FontFamily="OpenSansSemibold" FontSize="16"
                                                        HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowSkip}">
                                                     <Label.GestureRecognizers>
@@ -195,13 +200,19 @@
                                                     </Border.GestureRecognizers>
                                                     <Image Source="{Binding CheckIcon}" WidthRequest="24" HeightRequest="24" />
                                                 </Border>
-                                                <Image Grid.Column="5" Source="{StaticResource IconCheck}" WidthRequest="18" HeightRequest="18" Opacity="0.8" IsVisible="{Binding ShowDoneTick}" />
+                                                <Image Grid.Column="5" Source="{StaticResource IconCheck}" WidthRequest="18" HeightRequest="18" Opacity="0.8" IsVisible="{Binding ShowDoneTick}"
+                                                       controls:Pop.When="{Binding IsCompleted}" controls:Pop.Amount="1.6" />
                                             </Grid>
                                         </DataTemplate>
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
 
-                                <Button Text="+ Add set" Style="{StaticResource GhostButton}" HorizontalOptions="Start" Command="{Binding AddSetCommand}" />
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Button Text="+ Add set" Style="{StaticResource GhostButton}" HorizontalOptions="Start" Command="{Binding AddSetCommand}" />
+                                    <!-- Skip what's left of this exercise (or bring it back) -->
+                                    <Button Grid.Column="1" Text="{Binding SkipExerciseText}" Style="{StaticResource GhostButton}" TextColor="{StaticResource TextSecondary}"
+                                            IsVisible="{Binding CanSkipExercise}" Command="{Binding SkipExerciseCommand}" />
+                                </Grid>
                             </VerticalStackLayout>
 
                             <!-- Last time -->
@@ -253,7 +264,8 @@
         <Border Grid.Row="4" IsVisible="{Binding IsResting}" BackgroundColor="{StaticResource Surface2}"
                 StrokeShape="RoundRectangle 24,24,0,0" Padding="20,14,20,22">
             <VerticalStackLayout Spacing="12">
-                <ProgressBar Progress="{Binding RestProgress}" HeightRequest="4" />
+                <!-- Glides down second by second rather than stepping -->
+                <ProgressBar controls:SmoothProgress.Value="{Binding RestProgress}" controls:SmoothProgress.Length="1000" HeightRequest="4" />
                 <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="8">
                     <Image Source="{StaticResource IconTimer}" WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
@@ -268,6 +280,23 @@
                             Command="{Binding SkipRestCommand}" VerticalOptions="Center" />
                 </Grid>
             </VerticalStackLayout>
+        </Border>
+
+        <!-- Celebrations over everything, never in the way of a tap: confetti when an exercise is done, and a banner for
+             that or for the rest being over. Played from the code-behind. -->
+        <controls:ConfettiView x:Name="Confetti" Grid.RowSpan="5" IsVisible="False" IsRunning="False" InputTransparent="True" />
+        <Border x:Name="Banner" Grid.RowSpan="5" VerticalOptions="Start" HorizontalOptions="Center" Margin="16,72,16,0" Opacity="0"
+                InputTransparent="True" StrokeShape="RoundRectangle 22" StrokeThickness="0" Padding="18,12" BackgroundColor="{StaticResource Surface3}">
+            <Border.Shadow>
+                <Shadow Brush="Black" Opacity="0.4" Radius="18" Offset="0,6" />
+            </Border.Shadow>
+            <HorizontalStackLayout Spacing="10">
+                <Image x:Name="BannerIcon" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
+                <VerticalStackLayout VerticalOptions="Center">
+                    <Label x:Name="BannerTitle" FontFamily="OpenSansSemibold" FontSize="16" TextColor="{StaticResource TextPrimary}" />
+                    <Label x:Name="BannerText" Style="{StaticResource Caption}" FontSize="12" />
+                </VerticalStackLayout>
+            </HorizontalStackLayout>
         </Border>
     </Grid>
 </views:SheetPage>

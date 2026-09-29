@@ -21,6 +21,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(Routes.Exercise, typeof(ExerciseDetailPage));
         Routing.RegisterRoute(Routes.SyncDetails, typeof(SyncDetailsPage));
         Routing.RegisterRoute(Routes.Recovery, typeof(RecoveryPage));
+        Routing.RegisterRoute(Routes.WorkoutDone, typeof(WorkoutDonePage));
     }
 }
 
@@ -40,4 +41,5 @@ public static class Routes
     public const string Exercise = "exercise";
     public const string SyncDetails = "syncdetails";
     public const string Recovery = "recovery";
+    public const string WorkoutDone = "workoutdone";
 }
