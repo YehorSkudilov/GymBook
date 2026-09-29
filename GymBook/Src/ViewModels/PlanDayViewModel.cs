@@ -56,9 +56,13 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     int _week = 1;
     // Opened for one finished workout rather than a plan day.
     string? _sessionId;
+    // The finished workout on show, however it was opened; null for a day still to do.
+    WorkoutSession? _finished;
 
     // A finished workout: its numbers, and the fatigue it left.
     [ObservableProperty] bool hasStats;
+    /// <summary>A finished workout is on show: the Discard workout button.</summary>
+    [ObservableProperty] bool canDiscard;
     [ObservableProperty] StatTile statTime = StatTile.Empty;
     [ObservableProperty] StatTile statVolume = StatTile.Empty;
     [ObservableProperty] StatTile statSets = StatTile.Empty;
@@ -109,6 +113,8 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
 
         var workout = progress.Days[_day];
         HasStats = false;
+        _finished = null;
+        CanDiscard = false;
         var session = workout == null ? null : progress.SessionFor(workout, _week);
         Subtitle = PlanCycle.Describe(plan, _week) is { } phase ? $"{plan.Name} · Week {_week} · {phase}" : $"{plan.Name} · Week {_week}";
         IsDone = progress.IsDayDone(_day, _week);
@@ -137,15 +143,9 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
 
         if (session != null)
         {
-            // A finished session only keeps completed sets; warm-ups are shown too, like on the session page.
-            var logged = session.Exercises.Where(e => e.Sets.Count > 0).ToList();
-            Meta = $"{logged.Count} exercises · {logged.Sum(e => e.Sets.Count)} sets";
-            var minutes = session.EndedAt is { } end ? (int)Math.Round((end - session.StartedAt).TotalMinutes) : (int?)null;
-            When = session.StartedAt.ToString("dddd, h:mm tt") + (minutes is { } m ? $" · {m} min" : "");
-            Exercises = logged.Select(Logged).ToList();
-            ActionText = "";
-            HasAction = false;
-            ShowFinished(session);
+            // Exactly what the calendar shows for it: one way to show a finished workout.
+            ShowFinishedWorkout(session);
+            return Task.CompletedTask;
         }
         else
         {
@@ -159,22 +159,19 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         return Task.CompletedTask;
     }
 
-    /// <summary>The ··· of a finished workout: the plan it came from, or deleting it.</summary>
-    async Task SessionOptions()
+    /// <summary>The ··· of a finished workout: the plan it came from, or discarding it.</summary>
+    async Task SessionOptions(WorkoutSession session)
     {
-        var session = store.History.FirstOrDefault(s => s.Id == _sessionId);
-        if (session == null)
-            return;
         var plan = store.GetPlan(session.PlanId);
         var day = plan == null ? -1 : PlanSchedule.Days(plan).FindIndex(w => w?.Id == session.PlanWorkoutId);
         var options = day >= 0 ? new[] { "Edit in plan" } : Array.Empty<string>();
-        switch (await dialogs.ActionSheet(DayName, "Delete workout", options))
+        switch (await dialogs.ActionSheet(DayName, "Discard workout", options))
         {
             case "Edit in plan":
                 // One navigation: the sheet slides away as the plan comes in, with nothing in between.
                 await GoTo($"../{Routes.Plan}?id={plan!.Id}&day={day}");
                 break;
-            case "Delete workout":
+            case "Discard workout":
                 await DeleteSession(session);
                 break;
         }
@@ -183,12 +180,16 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     /// <summary>Removes a finished workout from the history and statistics, after asking.</summary>
     async Task DeleteSession(WorkoutSession session)
     {
-        if (!await dialogs.Confirm("Delete workout?", "This removes it from your history and statistics.", "Delete"))
+        if (!await dialogs.Confirm("Discard workout?", "It's removed from your history and statistics. This can't be undone.", "Discard"))
             return;
         store.Data.Sessions.Remove(session);
         store.Save();
         await Close();
     }
+
+    /// <summary>The Discard workout button under a finished workout.</summary>
+    [RelayCommand]
+    Task Discard() => _finished is { } session ? DeleteSession(session) : Task.CompletedTask;
 
     /// <summary>One finished workout (from the calendar), plan or not: what was done, its stats and the fatigue it left.</summary>
     Task ShowSession()
@@ -196,6 +197,18 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var session = store.History.FirstOrDefault(s => s.Id == _sessionId);
         if (session == null)
             return Close();
+        ShowFinishedWorkout(session);
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// A finished workout, the same wherever it's opened from (the Workout tab's plan week, the calendar, History, or
+    /// right after finishing it): what was done, its stats against last time, and the fatigue it left.
+    /// </summary>
+    void ShowFinishedWorkout(WorkoutSession session)
+    {
+        _finished = session;
+        CanDiscard = true;
         var plan = store.GetPlan(session.PlanId);
         var logged = session.Exercises.Where(e => e.Sets.Count > 0).ToList();
         DayName = session.Name;
@@ -213,7 +226,6 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         ActionText = "";
         HasAction = false;
         ShowFinished(session);
-        return Task.CompletedTask;
     }
 
     /// <summary>The stats of a finished workout, and how fatigued each muscle was the moment it ended.</summary>
@@ -437,26 +449,18 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     [RelayCommand]
     async Task Options()
     {
-        if (_sessionId != null)
+        // A finished workout has the same menu wherever it was opened from.
+        if (_finished is { } finished)
         {
-            await SessionOptions();
+            await SessionOptions(finished);
             return;
         }
         var plan = store.GetPlan(_planId);
         if (plan == null)
             return;
-        var workout = PlanSchedule.Days(plan).ElementAtOrDefault(_day);
-        var session = workout == null ? null : new PlanProgress(plan, store.History).SessionFor(workout, _week);
-        // Edit in plan opens the plan page on this day; a finished day's workout can also be deleted.
-        switch (await dialogs.ActionSheet(DayName, session != null ? "Delete workout" : null, "Edit in plan"))
-        {
-            case "Edit in plan":
-                // One navigation: the sheet slides away as the plan comes in, with nothing in between.
-                await GoTo($"../{Routes.Plan}?id={plan.Id}&day={_day}");
-                break;
-            case "Delete workout":
-                await DeleteSession(session!);
-                break;
-        }
+        // Opens the plan page on this day.
+        if (await dialogs.ActionSheet(DayName, null, "Edit in plan") == "Edit in plan")
+            // One navigation: the sheet slides away as the plan comes in, with nothing in between.
+            await GoTo($"../{Routes.Plan}?id={plan.Id}&day={_day}");
     }
 }

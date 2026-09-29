@@ -4,7 +4,8 @@ using GymBook.Services;
 
 namespace GymBook.Views;
 
-public enum AppTab { Workout, Plans, Exercises, Progress, Profile }
+/// <summary>The tabs, in the order they sit in the nav bar (and swipe): Workout is the big button in the middle.</summary>
+public enum AppTab { Exercises, Plans, Workout, Progress, Profile }
 
 /// <summary>The app's root: the tabs live in a swipeable CView with a CNavBar underneath. Detail pages still push through Shell.</summary>
 public partial class MainPage : ContentPage
@@ -26,12 +27,22 @@ public partial class MainPage : ContentPage
         _workouts = workouts;
         _store = store;
 
-        var color = (Color)Application.Current!.Resources["TextPrimary"];
+        var resources = Application.Current!.Resources;
+        var color = (Color)resources["TextPrimary"];
+        var accent = (Color)resources["Accent"];
+        // In AppTab order. Workout sits in the middle as a larger round button (no label, it speaks for itself), lit up
+        // when open; the others keep the bar's usual look (the filled icon font when selected).
         _tabs =
         [
-            new() { Glyph = "fitness_center", PageName = "Workout", Page = home, Color = color },
-            new() { Glyph = "event_note", PageName = "Plans", Page = plans, Color = color },
             new() { Glyph = "format_list_bulleted", PageName = "Exercises", Page = exercises, Color = color },
+            new() { Glyph = "event_note", PageName = "Plans", Page = plans, Color = color },
+            new()
+            {
+                Glyph = "fitness_center", PageName = "Workout", Page = home,
+                Color = (Color)resources["TextPrimary"], SelectedColor = Colors.White,
+                IconBackground = (Color)resources["Surface3"], SelectedIconBackground = accent,
+                IconSize = 26, IconBackgroundSize = 44, ItemWidth = 72, ShowLabel = false,
+            },
             new() { Glyph = "insights", PageName = "Progress", Page = stats, Color = color },
             new() { Glyph = "person", PageName = "Profile", Page = profile, Color = color },
         ];

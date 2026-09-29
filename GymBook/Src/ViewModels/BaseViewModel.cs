@@ -20,19 +20,42 @@ public abstract class BaseViewModel : ObservableObject
     protected static Task GoBack() => Shell.Current.GoToAsync("..");
 
     /// <summary>
-    /// Starts <paramref name="workout"/> from <paramref name="plan"/>, but first warns when muscles it works are still
-    /// recovering, suggesting a fresher workout from the plan (or rest) instead. Resuming a workout in progress skips the check.
+    /// Starts <paramref name="workout"/> from <paramref name="plan"/>. With a workout already in progress, asks first
+    /// whether to resume it (no recovery check: it's already underway) or start the new one. Before starting, warns when
+    /// muscles it works are still recovering, suggesting a fresher workout from the plan (or rest) instead. The workout
+    /// in progress is only replaced once the new one really starts, so backing out of the warning keeps it.
     /// </summary>
     protected static async Task StartPlannedWorkoutAsync(WorkoutService workouts, DialogService dialogs, RecoveryService recovery,
         WorkoutPlan plan, PlanWorkout workout, int? week)
     {
-        if (workouts.Active == null)
+        switch (await AskAboutActiveAsync(workouts, dialogs))
         {
-            if (await ChooseForRecoveryAsync(recovery, plan, workout) is not { } chosen)
+            case ActiveChoice.Cancel:
                 return;
-            workout = chosen;
+            case ActiveChoice.Resume:
+                await GoTo(Routes.Workout);
+                return;
         }
-        await StartWorkoutAsync(workouts, dialogs, () => workouts.StartFromPlan(plan, workout, week));
+        if (await ChooseForRecoveryAsync(recovery, plan, workout) is not { } chosen)
+            return;
+        workouts.StartFromPlan(plan, chosen, week);
+        await GoTo(Routes.Workout);
+    }
+
+    enum ActiveChoice { StartNew, Resume, Cancel }
+
+    /// <summary>With a workout in progress: resume it, drop it for the new one, or neither. StartNew when there's none.</summary>
+    static async Task<ActiveChoice> AskAboutActiveAsync(WorkoutService workouts, DialogService dialogs)
+    {
+        if (workouts.Active == null)
+            return ActiveChoice.StartNew;
+        var choice = await dialogs.ActionSheet($"\"{workouts.Active.Name}\" is still in progress", "Discard it and start new", "Resume current workout");
+        return choice switch
+        {
+            null => ActiveChoice.Cancel,
+            "Resume current workout" => ActiveChoice.Resume,
+            _ => ActiveChoice.StartNew,
+        };
     }
 
     /// <summary>
@@ -57,18 +80,11 @@ public abstract class BaseViewModel : ObservableObject
     /// <summary>Starts a workout, asking first if one is already in progress.</summary>
     protected static async Task StartWorkoutAsync(WorkoutService workouts, DialogService dialogs, Func<WorkoutSession> start)
     {
-        if (workouts.Active != null)
-        {
-            var choice = await dialogs.ActionSheet($"\"{workouts.Active.Name}\" is still in progress", "Discard it and start new", "Resume current workout");
-            if (choice == null)
-                return;
-            if (choice != "Resume current workout")
-                start();
-        }
-        else
-        {
+        var choice = await AskAboutActiveAsync(workouts, dialogs);
+        if (choice == ActiveChoice.Cancel)
+            return;
+        if (choice == ActiveChoice.StartNew)
             start();
-        }
         await GoTo(Routes.Workout);
     }
 }

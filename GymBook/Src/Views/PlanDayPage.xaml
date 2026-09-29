@@ -230,6 +230,9 @@
 
             <Button Grid.Row="2" Text="{Binding ActionText}" Style="{StaticResource PrimaryButton}"
                     Margin="16,8,16,16" IsVisible="{Binding HasAction}" Command="{Binding DayActionCommand}" />
+            <!-- A finished workout, wherever it was opened from: remove it from the history (after asking). -->
+            <Button Grid.Row="2" Text="Discard workout" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Danger}"
+                    Margin="16,8,16,16" IsVisible="{Binding CanDiscard}" Command="{Binding DiscardCommand}" />
         </Grid>
     </Border>
 </views:SheetPage>

@@ -19,6 +19,61 @@ public partial class HomeViewModel(
 
     [ObservableProperty] string greeting = "";
     [ObservableProperty] string dateText = "";
+    /// <summary>Which little scene sits by the greeting.</summary>
+    [ObservableProperty] DayPart dayPart;
+    /// <summary>The connection, at the end of the date line; kept up to date while Home is showing.</summary>
+    [ObservableProperty] bool isOnline;
+    [ObservableProperty] string connectionText = "";
+    [ObservableProperty] Color connectionColor = Colors.Transparent;
+
+    // How ready the Up next workout's muscles are, 0 to 1, and what that does to the card: the ring, the words, and
+    // a Start button (and background) that get brighter and livelier the fresher you are.
+    [ObservableProperty] double nextReadiness = 1;
+    [ObservableProperty] string nextReadyText = "";
+    [ObservableProperty] Color nextTint = Color.FromArgb("#3F7DFF");
+    [ObservableProperty] Color startColor = Color.FromArgb("#3F7DFF");
+    [ObservableProperty] Color startTextColor = Colors.White;
+
+    static readonly Color Muted = Color.FromArgb("#2C3240"), Amber = Color.FromArgb("#FFB020"),
+        Blue = Color.FromArgb("#3F7DFF"), Green = Color.FromArgb("#2ED47A");
+
+    void ShowReadiness(double readiness, List<MuscleRecovery> tired, PlanWorkout? fresher)
+    {
+        NextReadiness = Math.Clamp(readiness, 0, 1);
+        NextReadyText = tired.Count == 0
+            ? $"{NextReadiness:P0} recovered · ready to go"
+            : $"{NextReadiness:P0} recovered · {string.Join(", ", tired.Take(2).Select(t => t.Muscle.Display()))} still recovering"
+              + (fresher != null ? $" · {fresher.Name} is fresher" : "");
+        // Amber when tired, through the app's blue, to green when fresh.
+        NextTint = NextReadiness < 0.75
+            ? Lerp(Amber, Blue, (float)Math.Clamp((NextReadiness - 0.5) / 0.25, 0, 1))
+            : Lerp(Blue, Green, (float)Math.Clamp((NextReadiness - 0.75) / 0.25, 0, 1));
+        // The button starts out flat and grey, and takes on that colour as recovery goes up.
+        var vivid = (float)Math.Clamp((NextReadiness - 0.4) / 0.5, 0, 1);
+        StartColor = Lerp(Muted, NextTint, vivid);
+        StartTextColor = vivid > 0.35 ? Colors.White : Color.FromArgb("#9AA3B5");
+    }
+
+    static Color Lerp(Color a, Color b, float t) =>
+        new(a.Red + (b.Red - a.Red) * t, a.Green + (b.Green - a.Green) * t, a.Blue + (b.Blue - a.Blue) * t, a.Alpha + (b.Alpha - a.Alpha) * t);
+
+    /// <summary>Home is the tab on screen: the greeting's scene animates only then.</summary>
+    [ObservableProperty] bool isShowing;
+
+    public override void OnDisappearing()
+    {
+        IsShowing = false;
+        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
+    }
+
+    void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(ShowConnection);
+
+    void ShowConnection()
+    {
+        IsOnline = Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
+        ConnectionText = IsOnline ? "Online" : "Offline";
+        ConnectionColor = IsOnline ? Color.FromArgb("#2ED47A") : Color.FromArgb("#FFB020");
+    }
     [ObservableProperty] bool hasPlan;
     [ObservableProperty] string planName = "";
     [ObservableProperty] string nextWorkoutName = "";
@@ -51,6 +106,10 @@ public partial class HomeViewModel(
 
     public override Task OnAppearingAsync()
     {
+        IsShowing = true;
+        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
+        Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
+        ShowConnection();
         Refresh();
         return Task.CompletedTask;
     }
@@ -58,8 +117,15 @@ public partial class HomeViewModel(
     void Refresh()
     {
         var profile = store.Profile;
-        var hour = DateTime.Now.Hour;
-        var part = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+        DayPart = TimeOfDayView.For(DateTime.Now);
+        var part = DayPart switch
+        {
+            DayPart.Morning => "Good morning",
+            DayPart.Afternoon => "Good afternoon",
+            DayPart.Evening => "Good evening",
+            // After midnight and before dawn.
+            _ => DateTime.Now.Hour < 5 ? "Up late" : "Good evening",
+        };
         Greeting = string.IsNullOrWhiteSpace(profile.Name) ? part : $"{part}, {profile.Name}";
         DateText = DateTime.Today.ToString("dddd, d MMMM");
 
@@ -72,8 +138,16 @@ public partial class HomeViewModel(
             (_nextWeek, _next) = progress.NextWorkout(_week) is { } inWeek
                 ? (_week, inWeek)
                 : (_week + 1, progress.NextWorkout(_week + 1) ?? progress.Days.OfType<PlanWorkout>().First());
+            // Up next is always the plan's next workout (the same one the week below marks). Recovery only colours the
+            // card, and when it would hit muscles still recovering, names a fresher workout left this week.
+            var now = DateTime.Now;
             var next = _next;
             NextLabel = _nextWeek == _week ? "UP NEXT" : $"UP NEXT · WEEK {_nextWeek}";
+            var tired = recovery.NotReady(next, now);
+            var fresher = tired.Count == 0 || _nextWeek != _week ? null : progress.Days.OfType<PlanWorkout>()
+                .Where(w => w != next && w.Exercises.Count > 0 && progress.SessionFor(w, _week) == null && recovery.NotReady(w, now).Count == 0)
+                .MaxBy(w => recovery.Readiness(w, now));
+            ShowReadiness(recovery.Readiness(next, now), tired, fresher);
             BuildPlanWeek(plan, progress);
 
             var exercises = next.Exercises.Select(e => (pe: e, ex: store.GetExercise(e.ExerciseId))).Where(x => x.ex != null).ToList();

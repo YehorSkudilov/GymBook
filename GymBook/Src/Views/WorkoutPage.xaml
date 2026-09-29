@@ -240,7 +240,7 @@
             </ScrollView>
 
             <!-- Rest timer button, floating over the exercise -->
-            <Border IsVisible="{Binding IsResting, Converter={StaticResource Not}}" WidthRequest="72" HeightRequest="60" StrokeShape="RoundRectangle 20"
+            <Border IsVisible="{Binding ShowRestButton}" WidthRequest="72" HeightRequest="60" StrokeShape="RoundRectangle 20"
                     StrokeThickness="0" BackgroundColor="{StaticResource Surface3}" HorizontalOptions="Center" VerticalOptions="End" Margin="0,0,0,20">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding StartRestNowCommand}" />

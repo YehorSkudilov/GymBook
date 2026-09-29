@@ -243,8 +243,10 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         var saved = store.GetPlan(_id);
         if (saved == null)
             return GoBack();
-        // Without unsaved edits, pick up whatever changed the saved plan meanwhile (the AI, another device, a workout).
-        if (_draft == null || !HasChanges)
+        // Without unsaved edits, pick up whatever changed the saved plan meanwhile (the AI, another device). Only when
+        // it did change: the page also "appears" again each time a dialog on it closes, and an edit that dialog was
+        // asking about (e.g. "Delete workout?") is about to go into this same draft.
+        if (_draft == null || (!HasChanges && !SameEdits(_draft, saved)))
             _draft = LocalJson.Clone(saved);
         else
             CopyProgress(saved, _draft);

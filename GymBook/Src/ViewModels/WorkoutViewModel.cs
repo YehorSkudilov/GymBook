@@ -25,10 +25,17 @@ public partial class WorkoutViewModel(
     [ObservableProperty] string elapsed = "00:00";
     [ObservableProperty] string progressText = "";
     [ObservableProperty] double progress;
-    [ObservableProperty] bool isResting;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowRestButton))]
+    bool isResting;
     [ObservableProperty] string restText = "";
     [ObservableProperty] double restProgress;
-    [ObservableProperty] bool isEmpty;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowRestButton))]
+    bool isEmpty;
+
+    /// <summary>The floating rest timer button: not while resting, and not before there's an exercise to rest between.</summary>
+    public bool ShowRestButton => !IsResting && !IsEmpty;
 
     /// <summary>The exercise on screen; the page and the photo strip both follow it.</summary>
     [ObservableProperty] int currentIndex;
@@ -119,6 +126,8 @@ public partial class WorkoutViewModel(
             Exercises.Clear();
             foreach (var se in active.Exercises)
                 AddExerciseVm(se);
+            // Started empty (a quick workout) or everything removed: the empty state, not a blank exercise.
+            IsEmpty = Exercises.Count == 0;
             // Pick up where the workout left off: the first exercise with sets still to do.
             var open = Exercises.ToList().FindIndex(e => !e.IsDone);
             CurrentIndex = Math.Max(0, open);
@@ -368,6 +377,7 @@ public partial class WorkoutViewModel(
         Exercises.Clear();
         foreach (var se in _session.Exercises)
             AddExerciseVm(se);
+        IsEmpty = Exercises.Count == 0;
         CurrentIndex = 0;
         OnCurrentIndexChanged(CurrentIndex);
         UpdateProgress();

@@ -70,6 +70,20 @@ public class RecoveryService(DataStore store)
             .FirstOrDefault();
     }
 
+    /// <summary>
+    /// How ready the muscles <paramref name="workout"/> works are at <paramref name="at"/>, 0 to 1: their recovery,
+    /// weighted by how many sets each gets. 1 for a workout with nothing to go by.
+    /// </summary>
+    public double Readiness(PlanWorkout workout, DateTime at)
+    {
+        var sets = PlannedSets(workout);
+        var total = sets.Sum(s => s.Value);
+        if (total <= 0)
+            return 1;
+        var recovery = Compute(at);
+        return sets.Sum(s => s.Value * recovery[s.Key]) / total;
+    }
+
     /// <summary>Like <see cref="SetsPerMuscle"/>, for the sets a plan workout prescribes.</summary>
     Dictionary<MuscleGroup, double> PlannedSets(PlanWorkout workout)
     {
