@@ -160,16 +160,29 @@
                                  Command="{Binding PlanOptionsCommand}" />
                 </Grid>
 
-                <Border Style="{StaticResource Card}" Padding="16,6">
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding PlanDays}">
+                <!-- Less padding on the card than elsewhere: each row has its own, so the in-progress row's tile has room
+                     around it inside the card (nothing is drawn outside a row, which would be cut off). -->
+                <Border Style="{StaticResource Card}" Padding="8,6">
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding PlanDays}" Spacing="2">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="vm:PlanDayItem">
-                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14" Padding="0,10" BackgroundColor="Transparent">
-                                    <Border WidthRequest="30" HeightRequest="30" StrokeShape="RoundRectangle 15" StrokeThickness="1.5"
-                                            Stroke="{Binding BadgeColor}" BackgroundColor="Transparent" VerticalOptions="Center">
-                                        <Label Text="{Binding Badge}" TextColor="{Binding BadgeColor}" FontFamily="OpenSansSemibold" FontSize="13"
-                                               HorizontalOptions="Center" VerticalOptions="Center" />
-                                    </Border>
+                                <Grid BackgroundColor="Transparent">
+                                <!-- The workout in progress: green light drifting across its row, in a rounded tile the size of the row -->
+                                <Border StrokeShape="RoundRectangle 14" StrokeThickness="1"
+                                        Stroke="#332ED47A" BackgroundColor="#0F2ED47A" IsVisible="{Binding IsRunning}">
+                                    <controls:ReadinessGlowView Shape="Card" Readiness="1" Tint="#2ED47A" IsRunning="{Binding IsRunning}" />
+                                </Border>
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="5" Padding="0,3,8,3">
+                                    <!-- ...and its badge beats, with a glow pulsing out around it: room for the glow all round -->
+                                    <Grid WidthRequest="48" HeightRequest="48" VerticalOptions="Center">
+                                        <controls:ReadinessGlowView Shape="Button" Readiness="1" Tint="#2ED47A"
+                                                                    IsVisible="{Binding IsRunning}" IsRunning="{Binding IsRunning}" />
+                                        <Border WidthRequest="30" HeightRequest="30" StrokeShape="RoundRectangle 15" StrokeThickness="1.5" controls:Pulse.While="{Binding IsRunning}"
+                                                Stroke="{Binding BadgeColor}" BackgroundColor="Transparent">
+                                            <Label Text="{Binding Badge}" TextColor="{Binding BadgeColor}" FontFamily="OpenSansSemibold" FontSize="13"
+                                                   HorizontalOptions="Center" VerticalOptions="Center" />
+                                        </Border>
+                                    </Grid>
                                     <!-- Tap the day to view it, then start it or mark it finished; days can be done in any order. -->
                                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" BackgroundColor="Transparent">
                                         <VerticalStackLayout.GestureRecognizers>
@@ -197,6 +210,7 @@
                                                    FontFamily="OpenSansSemibold" VerticalOptions="Center" Margin="3,0,4,0" />
                                         </HorizontalStackLayout>
                                     </Border>
+                                </Grid>
                                 </Grid>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>

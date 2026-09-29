@@ -37,11 +37,37 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     [ObservableProperty] bool hasLifts;
     [ObservableProperty] List<LineItem> gains = [];
     [ObservableProperty] bool hasGains;
+
+    /// <summary>The tab is on screen: icons animate, and charts, numbers and cards play in each time it comes into view.</summary>
+    [ObservableProperty] bool isShowing;
+
+    [ObservableProperty] IDrawable? consistencyChart;
+    [ObservableProperty] string consistencyText = "";
+    [ObservableProperty] IDrawable? durationChart;
+    [ObservableProperty] string durationText = "";
+    [ObservableProperty] bool hasDuration;
+    [ObservableProperty] IDrawable? splitChart;
+    [ObservableProperty] List<SplitItem> split = [];
+    [ObservableProperty] bool hasSplit;
+
+    const int ConsistencyWeeks = 16;
+
+    // The training split: muscles grouped the way plans are.
+    static readonly (string Name, Color Color, MuscleGroup[] Muscles)[] SplitGroups =
+    [
+        ("Push", Color.FromArgb("#3F7DFF"), [MuscleGroup.Chest, MuscleGroup.Shoulders, MuscleGroup.Triceps]),
+        ("Pull", Color.FromArgb("#7C5CFF"), [MuscleGroup.Back, MuscleGroup.Traps, MuscleGroup.Biceps, MuscleGroup.Forearms]),
+        ("Legs", Color.FromArgb("#2ED47A"), [MuscleGroup.Quads, MuscleGroup.Hamstrings, MuscleGroup.Glutes, MuscleGroup.Calves]),
+        ("Core", Color.FromArgb("#FF8A3D"), [MuscleGroup.Abs, MuscleGroup.LowerBack, MuscleGroup.Neck]),
+    ];
+
+    public override void OnDisappearing() => IsShowing = false;
     public System.Collections.ObjectModel.ObservableCollection<ChipItem> LiftChips { get; } = [];
     string? _liftId;
 
     public override Task OnAppearingAsync()
     {
+        IsShowing = false;
         var history = store.History.ToList();
         TotalWorkouts = history.Count.ToString();
         var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
@@ -87,10 +113,37 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         }).ToList();
         HasRecords = Records.Count > 0;
         ShowStrength();
+        ShowHabits(history);
+        // Last, so everything bound above plays in (charts draw, numbers count, cards rise).
+        IsShowing = true;
         return Task.CompletedTask;
     }
 
     const int TrendWeeks = 12;
+
+    /// <summary>How often and how long you train, and how the work is split across the body.</summary>
+    void ShowHabits(List<WorkoutSession> history)
+    {
+        var (monday, days) = stats.DailyVolume(ConsistencyWeeks);
+        ConsistencyChart = new HeatmapDrawable(monday, days, Accent);
+        var trained = days.Count(d => d > 0);
+        var weeks = Math.Max(1, days.Count / 7.0);
+        ConsistencyText = trained == 0
+            ? "Every workout lights up a day here."
+            : $"{trained} training day{(trained == 1 ? "" : "s")} in {ConsistencyWeeks} weeks · {trained / weeks:0.#} a week";
+
+        var minutes = stats.MinutesPerWeek(TrendWeeks);
+        HasDuration = minutes.Count > 0;
+        DurationChart = new LineChartDrawable(minutes, Violet, v => $"{v:0} min");
+        DurationText = HasDuration ? $"About {minutes.Average(p => p.Value):0} minutes a workout lately" : "";
+
+        var sets = stats.SetsPerMuscleSince(DateTime.Today.AddDays(-30));
+        var slices = SplitGroups.Select(g => new DonutSlice(g.Name, g.Muscles.Sum(m => sets.GetValueOrDefault(m)), g.Color)).ToList();
+        var total = slices.Sum(s => s.Value);
+        HasSplit = total > 0;
+        SplitChart = new DonutDrawable(slices.OrderByDescending(s => s.Value).ToList(), $"{total:0}", "sets");
+        Split = [.. slices.Select(s => new SplitItem(s.Label, s.Color, total > 0 ? s.Value / total : 0, $"{s.Value:0} sets"))];
+    }
 
     void ShowStrength()
     {

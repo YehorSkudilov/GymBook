@@ -1,10 +1,12 @@
 namespace GymBook.Controls;
 
-public enum StatIcon { Workouts, Sets, Volume, Target }
+public enum StatIcon { Workouts, Sets, Volume, Target, Calendar, Trend, Trophy, Clock, Scale, Pie, Streak }
 
 /// <summary>
 /// A small animated icon over a stat on Home's week card: a dumbbell lifting (workouts), three bars filling in turn
-/// like sets being ticked off (sets), and a flickering flame (volume).
+/// like sets being ticked off (sets), and a flickering flame (volume). Also for the Progress tab: a calendar page
+/// being ticked, a trend line drawing upwards, a shining trophy, a clock hand sweeping, a scale settling, a pie
+/// filling round, and a streak of flames.
 /// </summary>
 public class StatIconView : AnimatedDrawingView
 {
@@ -36,6 +38,28 @@ public class StatIconView : AnimatedDrawingView
                 break;
             case StatIcon.Target:
                 DrawTarget(canvas, cx, cy, s, t);
+                break;
+            case StatIcon.Calendar:
+                DrawCalendar(canvas, cx, cy, s, t);
+                break;
+            case StatIcon.Trend:
+                DrawTrend(canvas, cx, cy, s, t);
+                break;
+            case StatIcon.Trophy:
+                DrawTrophy(canvas, cx, cy, s, t);
+                break;
+            case StatIcon.Clock:
+                DrawClock(canvas, cx, cy, s, t);
+                break;
+            case StatIcon.Scale:
+                DrawScale(canvas, cx, cy, s, t);
+                break;
+            case StatIcon.Pie:
+                DrawPie(canvas, cx, cy, s, t);
+                break;
+            case StatIcon.Streak:
+                DrawFlame(canvas, cx - s * 0.18f, cy + s * 0.06f, s * 0.7f, t + 0.7f);
+                DrawFlame(canvas, cx + s * 0.1f, cy, s, t);
                 break;
             default:
                 DrawFlame(canvas, cx, cy, s, t);
@@ -135,6 +159,188 @@ public class StatIconView : AnimatedDrawingView
         path.CurveTo(x - width, bottom - width * 0.2f, x - width * 0.9f, bottom - height * 0.55f, tipX, tipY);
         path.Close();
         return path;
+    }
+
+    static readonly Color Green = Color.FromArgb("#2ED47A"), Gold = Color.FromArgb("#FFB020"), Orange = Color.FromArgb("#FF8A3D"),
+        Light = Color.FromArgb("#F4F6FB"), Dim = Color.FromArgb("#3A4152");
+
+    // A calendar page whose days tick off one by one, then it clears for a fresh page.
+    static void DrawCalendar(ICanvas canvas, float cx, float cy, float s, float t)
+    {
+        var w = s * 0.72f;
+        var h = s * 0.66f;
+        var x = cx - w / 2;
+        var y = cy - h / 2 + s * 0.04f;
+        var cycle = t % 3f;
+        var clear = cycle > 2.6f ? (cycle - 2.6f) / 0.4f : 0;
+        canvas.FillColor = Track;
+        canvas.FillRoundedRectangle(x, y, w, h, s * 0.08f);
+        canvas.FillColor = Blue;
+        canvas.FillRoundedRectangle(x, y, w, h * 0.26f, s * 0.08f);
+        canvas.FillRectangle(x, y + h * 0.14f, w, h * 0.12f);
+        foreach (var side in new[] { 0.3f, 0.7f })
+        {
+            canvas.FillColor = Light;
+            canvas.FillRoundedRectangle(x + w * side - s * 0.03f, y - s * 0.06f, s * 0.06f, s * 0.12f, s * 0.03f);
+        }
+        var cell = w / 3;
+        for (var i = 0; i < 6; i++)
+        {
+            var dx = x + cell * (i % 3 + 0.5f);
+            var dy = y + h * (0.47f + i / 3 * 0.3f);
+            var on = Math.Clamp((cycle - i * 0.35f) / 0.25f, 0, 1) * (1 - clear);
+            canvas.FillColor = on > 0 ? Green.WithAlpha(0.35f + 0.65f * on) : Dim;
+            canvas.FillCircle(dx, dy, cell * 0.2f * (0.7f + 0.3f * on));
+        }
+    }
+
+    // A line zig-zagging upwards, drawn in, with an arrowhead at its tip; then it fades and draws again.
+    static void DrawTrend(ICanvas canvas, float cx, float cy, float s, float t)
+    {
+        var cycle = t % 2.8f;
+        var draw = Ease(Math.Clamp(cycle / 1.4f, 0, 1));
+        var fade = cycle > 2.4f ? 1 - (cycle - 2.4f) / 0.4f : 1;
+        PointF[] pts = [new(cx - s * 0.36f, cy + s * 0.26f), new(cx - s * 0.12f, cy + s * 0.02f), new(cx + s * 0.04f, cy + s * 0.14f), new(cx + s * 0.34f, cy - s * 0.24f)];
+        var total = 0f;
+        for (var i = 1; i < pts.Length; i++)
+            total += Distance(pts[i - 1], pts[i]);
+        var left = total * draw;
+        var path = new PathF();
+        path.MoveTo(pts[0]);
+        var tip = pts[0];
+        var dir = new PointF(1, 0);
+        for (var i = 1; i < pts.Length && left > 0; i++)
+        {
+            var len = Distance(pts[i - 1], pts[i]);
+            var k = Math.Min(1, left / len);
+            tip = new PointF(pts[i - 1].X + (pts[i].X - pts[i - 1].X) * k, pts[i - 1].Y + (pts[i].Y - pts[i - 1].Y) * k);
+            dir = new PointF((pts[i].X - pts[i - 1].X) / len, (pts[i].Y - pts[i - 1].Y) / len);
+            path.LineTo(tip);
+            left -= len;
+        }
+        canvas.StrokeColor = Green.WithAlpha(fade);
+        canvas.StrokeSize = s * 0.08f;
+        canvas.StrokeLineCap = LineCap.Round;
+        canvas.StrokeLineJoin = LineJoin.Round;
+        canvas.DrawPath(path);
+        if (draw > 0.05f)
+        {
+            var a = s * 0.16f;
+            var arrow = new PathF();
+            arrow.MoveTo(tip.X + dir.X * a * 0.4f, tip.Y + dir.Y * a * 0.4f);
+            arrow.LineTo(tip.X - dir.X * a * 0.6f - dir.Y * a * 0.6f, tip.Y - dir.Y * a * 0.6f + dir.X * a * 0.6f);
+            arrow.LineTo(tip.X - dir.X * a * 0.6f + dir.Y * a * 0.6f, tip.Y - dir.Y * a * 0.6f - dir.X * a * 0.6f);
+            arrow.Close();
+            canvas.FillColor = Green.WithAlpha(fade);
+            canvas.FillPath(arrow);
+        }
+    }
+
+    static float Distance(PointF a, PointF b) => MathF.Sqrt((a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y));
+
+    // A gold trophy bobbing gently, with a glint of light sweeping across it and a sparkle now and then.
+    static void DrawTrophy(ICanvas canvas, float cx, float cy, float s, float t)
+    {
+        var bob = MathF.Sin(t * 2) * s * 0.02f;
+        var top = cy - s * 0.3f + bob;
+        var cup = new PathF();
+        cup.MoveTo(cx - s * 0.26f, top);
+        cup.LineTo(cx + s * 0.26f, top);
+        cup.CurveTo(cx + s * 0.26f, top + s * 0.3f, cx + s * 0.14f, top + s * 0.4f, cx, top + s * 0.42f);
+        cup.CurveTo(cx - s * 0.14f, top + s * 0.4f, cx - s * 0.26f, top + s * 0.3f, cx - s * 0.26f, top);
+        cup.Close();
+        canvas.StrokeColor = Gold;
+        canvas.StrokeSize = s * 0.06f;
+        canvas.DrawEllipse(cx - s * 0.38f, top + s * 0.03f, s * 0.2f, s * 0.2f);
+        canvas.DrawEllipse(cx + s * 0.18f, top + s * 0.03f, s * 0.2f, s * 0.2f);
+        canvas.FillColor = Gold;
+        canvas.FillPath(cup);
+        canvas.FillRectangle(cx - s * 0.04f, top + s * 0.4f, s * 0.08f, s * 0.14f);
+        canvas.FillRoundedRectangle(cx - s * 0.18f, top + s * 0.52f, s * 0.36f, s * 0.1f, s * 0.03f);
+        // The glint: a pale band crossing the cup.
+        var sweep = t % 2.5f / 2.5f;
+        var gx = cx - s * 0.5f + sweep * s * 1.2f;
+        canvas.SaveState();
+        canvas.ClipPath(cup);
+        var band = new PathF();
+        band.MoveTo(gx, top - s * 0.1f);
+        band.LineTo(gx + s * 0.1f, top - s * 0.1f);
+        band.LineTo(gx - s * 0.1f, top + s * 0.5f);
+        band.LineTo(gx - s * 0.2f, top + s * 0.5f);
+        band.Close();
+        canvas.FillColor = Colors.White.WithAlpha(0.45f);
+        canvas.FillPath(band);
+        canvas.RestoreState();
+        var twinkle = MathF.Max(0, MathF.Sin(t * 3.3f));
+        canvas.FillColor = Colors.White.WithAlpha(twinkle);
+        canvas.FillCircle(cx + s * 0.3f, top - s * 0.04f, s * 0.04f * twinkle);
+    }
+
+    // A clock whose hand sweeps round, with a ring filling behind it.
+    static void DrawClock(ICanvas canvas, float cx, float cy, float s, float t)
+    {
+        var r = s * 0.36f;
+        canvas.StrokeColor = Track;
+        canvas.StrokeSize = s * 0.08f;
+        canvas.DrawCircle(cx, cy, r);
+        var turn = t % 4f / 4f;
+        canvas.StrokeColor = Violet;
+        canvas.StrokeLineCap = LineCap.Round;
+        if (turn > 0.01f)
+            canvas.DrawArc(cx - r, cy - r, r * 2, r * 2, 90, 90 - 360 * turn, true, false);
+        var angle = turn * MathF.PI * 2;
+        canvas.StrokeColor = Light;
+        canvas.StrokeSize = s * 0.06f;
+        canvas.DrawLine(cx, cy, cx + MathF.Sin(angle) * r * 0.7f, cy - MathF.Cos(angle) * r * 0.7f);
+        canvas.DrawLine(cx, cy, cx, cy - r * 0.4f);
+        canvas.FillColor = Light;
+        canvas.FillCircle(cx, cy, s * 0.05f);
+    }
+
+    // A bathroom scale whose needle swings and settles.
+    static void DrawScale(ICanvas canvas, float cx, float cy, float s, float t)
+    {
+        var w = s * 0.7f;
+        canvas.FillColor = Track;
+        canvas.FillRoundedRectangle(cx - w / 2, cy - w / 2 + s * 0.04f, w, w, s * 0.14f);
+        var r = s * 0.2f;
+        var dialY = cy - s * 0.04f;
+        canvas.StrokeColor = Green;
+        canvas.StrokeSize = s * 0.05f;
+        canvas.DrawArc(cx - r, dialY - r, r * 2, r * 2, 160, 20, true, false);
+        var cycle = t % 3f;
+        var angle = -0.2f + MathF.Exp(-cycle * 2.2f) * MathF.Sin(cycle * 14) * 0.9f;
+        canvas.StrokeColor = Light;
+        canvas.StrokeLineCap = LineCap.Round;
+        canvas.DrawLine(cx, dialY + r * 0.2f, cx + MathF.Sin(angle) * r * 0.95f, dialY + r * 0.2f - MathF.Cos(angle) * r * 0.95f);
+        canvas.FillColor = Dim;
+        canvas.FillRoundedRectangle(cx - w * 0.3f, cy + s * 0.2f, w * 0.22f, s * 0.06f, s * 0.03f);
+        canvas.FillRoundedRectangle(cx + w * 0.08f, cy + s * 0.2f, w * 0.22f, s * 0.06f, s * 0.03f);
+    }
+
+    // A ring whose slices fill round one after another.
+    static void DrawPie(ICanvas canvas, float cx, float cy, float s, float t)
+    {
+        var r = s * 0.34f;
+        canvas.StrokeSize = s * 0.14f;
+        canvas.StrokeColor = Track;
+        canvas.DrawCircle(cx, cy, r);
+        var cycle = t % 3.2f;
+        var fill = Ease(Math.Clamp(cycle / 1.8f, 0, 1)) * (cycle > 2.8f ? 1 - (cycle - 2.8f) / 0.4f : 1);
+        Color[] colours = [Blue, Violet, Green, Orange];
+        float[] shares = [0.35f, 0.25f, 0.25f, 0.15f];
+        var start = 0f;
+        canvas.StrokeLineCap = LineCap.Butt;
+        for (var i = 0; i < shares.Length; i++)
+        {
+            var end = Math.Min(start + shares[i], fill);
+            if (end > start)
+            {
+                canvas.StrokeColor = colours[i];
+                canvas.DrawArc(cx - r, cy - r, r * 2, r * 2, 90 - start * 360, 90 - end * 360, true, false);
+            }
+            start += shares[i];
+        }
     }
 
     static float Ease(float x) => x < 0.5f ? 2 * x * x : 1 - MathF.Pow(-2 * x + 2, 2) / 2;

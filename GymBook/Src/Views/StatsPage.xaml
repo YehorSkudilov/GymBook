@@ -3,9 +3,23 @@
     x:Class="GymBook.Views.StatsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:GymBook.Controls"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:StatsViewModel">
+
+    <!-- Each time the tab comes into view (IsShowing): the cards rise in one after another, the numbers count up and
+         the charts draw themselves in. The little icons animate while it's on screen. -->
+    <ContentView.Resources>
+        <Style x:Key="StatTile" TargetType="Border" BasedOn="{StaticResource Card}">
+            <Setter Property="Padding" Value="14,12" />
+        </Style>
+        <Style x:Key="HeaderIcon" TargetType="controls:StatIconView">
+            <Setter Property="WidthRequest" Value="26" />
+            <Setter Property="HeightRequest" Value="26" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+    </ContentView.Resources>
 
         <VerticalStackLayout Spacing="14">
             <Grid ColumnDefinitions="*,Auto">
@@ -13,78 +27,117 @@
                 <Button Grid.Column="1" Text="History" Style="{StaticResource SmallButton}" Command="{Binding OpenHistoryCommand}" VerticalOptions="Center" />
             </Grid>
 
+            <!-- The totals, with an animated icon each -->
             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
-                <Border Style="{StaticResource Card}">
-                    <VerticalStackLayout>
-                        <Label Text="{Binding TotalWorkouts}" Style="{StaticResource StatValue}" />
-                        <Label Text="Total workouts" Style="{StaticResource Caption}" />
-                    </VerticalStackLayout>
+                <Border Style="{StaticResource StatTile}" controls:Rise.When="{Binding IsShowing}">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label controls:CountUp.Text="{Binding TotalWorkouts}" controls:CountUp.Replay="{Binding IsShowing}" Style="{StaticResource StatValue}" />
+                            <Label Text="Total workouts" Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                        <controls:StatIconView Grid.Column="1" Icon="Workouts" IsRunning="{Binding IsShowing}" WidthRequest="34" HeightRequest="34" VerticalOptions="Start" />
+                    </Grid>
                 </Border>
-                <Border Grid.Column="1" Style="{StaticResource Card}">
-                    <VerticalStackLayout>
-                        <Label Text="{Binding ThisMonth}" Style="{StaticResource StatValue}" />
-                        <Label Text="This month" Style="{StaticResource Caption}" />
-                    </VerticalStackLayout>
+                <Border Grid.Column="1" Style="{StaticResource StatTile}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="60">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label controls:CountUp.Text="{Binding ThisMonth}" controls:CountUp.Replay="{Binding IsShowing}" Style="{StaticResource StatValue}" />
+                            <Label Text="This month" Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                        <controls:StatIconView Grid.Column="1" Icon="Calendar" IsRunning="{Binding IsShowing}" WidthRequest="34" HeightRequest="34" VerticalOptions="Start" />
+                    </Grid>
                 </Border>
-                <Border Grid.Row="1" Style="{StaticResource Card}">
-                    <VerticalStackLayout>
-                        <Label Text="{Binding TotalVolume}" Style="{StaticResource StatValue}" />
-                        <Label Text="Total volume" Style="{StaticResource Caption}" />
-                    </VerticalStackLayout>
+                <Border Grid.Row="1" Style="{StaticResource StatTile}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="120">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label controls:CountUp.Text="{Binding TotalVolume}" controls:CountUp.Replay="{Binding IsShowing}" Style="{StaticResource StatValue}" />
+                            <Label Text="Total volume" Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                        <controls:StatIconView Grid.Column="1" Icon="Sets" IsRunning="{Binding IsShowing}" WidthRequest="34" HeightRequest="34" VerticalOptions="Start" />
+                    </Grid>
                 </Border>
-                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
-                    <VerticalStackLayout>
-                        <HorizontalStackLayout Spacing="6">
-                            <Label Text="{Binding Streak}" Style="{StaticResource StatValue}" />
-                            <Image Source="{StaticResource IconFlame}" WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-                        <Label Text="Week streak" Style="{StaticResource Caption}" />
-                    </VerticalStackLayout>
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource StatTile}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="180">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label controls:CountUp.Text="{Binding Streak}" controls:CountUp.Replay="{Binding IsShowing}" Style="{StaticResource StatValue}" />
+                            <Label Text="Week streak" Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+                        <controls:StatIconView Grid.Column="1" Icon="Streak" IsRunning="{Binding IsShowing}" WidthRequest="34" HeightRequest="34" VerticalOptions="Start" />
+                    </Grid>
                 </Border>
             </Grid>
 
-            <!-- Strength: overall trend across the main lifts -->
-            <Border Style="{StaticResource Card}">
+            <!-- How often: every day of the last 16 weeks -->
+            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="220">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Strength trend" Style="{StaticResource H3}" />
-                    <Label Text="{Binding StrengthTrendText}" Style="{StaticResource Caption}" FontSize="12" />
-                    <GraphicsView Drawable="{Binding StrengthTrendChart}" HeightRequest="170" IsVisible="{Binding HasStrengthTrend}" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Calendar" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Consistency" Style="{StaticResource H3}" />
+                            <Label Text="{Binding ConsistencyText}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <GraphicsView Drawable="{Binding ConsistencyChart}" HeightRequest="150" controls:ChartReveal.When="{Binding IsShowing}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Strength: overall trend across the main lifts -->
+            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="260">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Trend" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Strength trend" Style="{StaticResource H3}" />
+                            <Label Text="{Binding StrengthTrendText}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <GraphicsView Drawable="{Binding StrengthTrendChart}" HeightRequest="170" IsVisible="{Binding HasStrengthTrend}"
+                                  controls:ChartReveal.When="{Binding IsShowing}" />
                 </VerticalStackLayout>
             </Border>
 
             <!-- Strength: one lift at a time -->
-            <Border Style="{StaticResource Card}" IsVisible="{Binding HasLifts}">
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasLifts}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="300">
                 <VerticalStackLayout Spacing="10">
-                    <VerticalStackLayout Spacing="2">
-                        <Label Text="Lift progression" Style="{StaticResource H3}" />
-                        <Label Text="Estimated one-rep max each time you trained it." Style="{StaticResource Caption}" FontSize="12" />
-                    </VerticalStackLayout>
-                    <ScrollView x:Name="LiftStrip" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="-16,0">
-                        <HorizontalStackLayout BindableLayout.ItemsSource="{Binding LiftChips}" Spacing="8" Padding="16,0">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="vm:ChipItem">
-                                    <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,7">
-                                        <Border.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding SelectCommand}" />
-                                        </Border.GestureRecognizers>
-                                        <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
-                                    </Border>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </HorizontalStackLayout>
-                    </ScrollView>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Workouts" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Lift progression" Style="{StaticResource H3}" />
+                            <Label Text="Estimated one-rep max each time you trained it." Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <!-- Keeps a sideways drag from the swiping tabs, so the chips scroll -->
+                    <controls:HorizontalDragArea Margin="-16,0">
+                        <ScrollView x:Name="LiftStrip" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                            <HorizontalStackLayout BindableLayout.ItemsSource="{Binding LiftChips}" Spacing="8" Padding="16,0">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:ChipItem">
+                                        <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,7">
+                                            <Border.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                            </Border.GestureRecognizers>
+                                            <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
+                        </ScrollView>
+                    </controls:HorizontalDragArea>
                     <Label Text="{Binding LiftSummary}" Style="{StaticResource Caption}" FontSize="12" />
-                    <GraphicsView Drawable="{Binding LiftChart}" HeightRequest="170" />
+                    <GraphicsView Drawable="{Binding LiftChart}" HeightRequest="170" controls:ChartReveal.When="{Binding IsShowing}" />
                 </VerticalStackLayout>
             </Border>
 
             <!-- Strength: biggest recent gains -->
-            <Border Style="{StaticResource Card}" IsVisible="{Binding HasGains}">
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasGains}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="340">
                 <VerticalStackLayout Spacing="10">
-                    <VerticalStackLayout Spacing="2">
-                        <Label Text="Biggest gains" Style="{StaticResource H3}" />
-                        <Label Text="Estimated one-rep max, last 3 months." Style="{StaticResource Caption}" FontSize="12" />
-                    </VerticalStackLayout>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Target" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label Text="Biggest gains" Style="{StaticResource H3}" />
+                            <Label Text="Estimated one-rep max, last 3 months." Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Gains}" Spacing="4">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="vm:LineItem">
@@ -104,32 +157,90 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="380">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Weekly volume" Style="{StaticResource H3}" />
-                    <Label Text="Weight × reps across all working sets" Style="{StaticResource Caption}" FontSize="12" />
-                    <GraphicsView Drawable="{Binding VolumeChart}" HeightRequest="170" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Volume" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Weekly volume" Style="{StaticResource H3}" />
+                            <Label Text="Weight × reps across all working sets" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <GraphicsView Drawable="{Binding VolumeChart}" HeightRequest="170" controls:ChartReveal.When="{Binding IsShowing}" />
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="420">
                 <VerticalStackLayout Spacing="8">
-                    <Label Text="Workouts per week" Style="{StaticResource H3}" />
-                    <GraphicsView Drawable="{Binding WorkoutsChart}" HeightRequest="150" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Target" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <Label Grid.Column="1" Text="Workouts per week" Style="{StaticResource H3}" VerticalOptions="Center" />
+                    </Grid>
+                    <GraphicsView Drawable="{Binding WorkoutsChart}" HeightRequest="150" controls:ChartReveal.When="{Binding IsShowing}" />
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource Card}">
+            <!-- How long workouts take -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasDuration}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="460">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Clock" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Workout length" Style="{StaticResource H3}" />
+                            <Label Text="{Binding DurationText}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <GraphicsView Drawable="{Binding DurationChart}" HeightRequest="150" controls:ChartReveal.When="{Binding IsShowing}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- How the work is split across the body -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasSplit}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="500">
                 <VerticalStackLayout Spacing="10">
-                    <Label Text="Sets per muscle this week" Style="{StaticResource H3}" />
-                    <Label Text="10–20 hard sets per muscle per week is a good target for growth." Style="{StaticResource Caption}" FontSize="12" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Pie" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Training split" Style="{StaticResource H3}" />
+                            <Label Text="Working sets by movement, last 30 days" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Grid ColumnDefinitions="140,*" ColumnSpacing="16">
+                        <GraphicsView Drawable="{Binding SplitChart}" HeightRequest="140" controls:ChartReveal.When="{Binding IsShowing}" />
+                        <VerticalStackLayout Grid.Column="1" BindableLayout.ItemsSource="{Binding Split}" Spacing="10" VerticalOptions="Center">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:SplitItem">
+                                    <VerticalStackLayout Spacing="4">
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                            <Ellipse Fill="{Binding Color}" WidthRequest="10" HeightRequest="10" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding Percent}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                                        </Grid>
+                                        <ProgressBar controls:SmoothProgress.Value="{Binding Share}" ProgressColor="{Binding Color}" HeightRequest="4" />
+                                    </VerticalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="540">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Sets" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Sets per muscle this week" Style="{StaticResource H3}" />
+                            <Label Text="10–20 hard sets per muscle per week is a good target for growth." Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
                     <GraphicsView Drawable="{Binding MuscleMap}" HeightRequest="200" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding MuscleSets}" Spacing="8">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="vm:MuscleBarItem">
                                 <Grid ColumnDefinitions="90,*,64" ColumnSpacing="10">
                                     <Label Text="{Binding Name}" FontSize="13" VerticalOptions="Center" />
-                                    <ProgressBar Grid.Column="1" Progress="{Binding Progress}" ProgressColor="{Binding Color}" VerticalOptions="Center" />
+                                    <!-- Fills in from empty -->
+                                    <ProgressBar Grid.Column="1" controls:SmoothProgress.Value="{Binding Progress}" ProgressColor="{Binding Color}" VerticalOptions="Center" />
                                     <Label Grid.Column="2" Text="{Binding Value}" Style="{StaticResource Caption}" FontSize="12" HorizontalTextAlignment="End" VerticalOptions="Center" />
                                 </Grid>
                             </DataTemplate>
@@ -138,27 +249,30 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="580">
                 <VerticalStackLayout Spacing="8">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <VerticalStackLayout>
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Scale" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" VerticalOptions="Start" />
+                        <VerticalStackLayout Grid.Column="1">
                             <Label Text="Body weight" Style="{StaticResource H3}" />
                             <Label Text="{Binding BodyWeightChange}" Style="{StaticResource Caption}" FontSize="12" />
                         </VerticalStackLayout>
-                        <Button Grid.Column="1" Text="Log" Style="{StaticResource SmallButton}" Command="{Binding LogWeightCommand}" VerticalOptions="Start" />
+                        <Button Grid.Column="2" Text="Log" Style="{StaticResource SmallButton}" Command="{Binding LogWeightCommand}" VerticalOptions="Start" />
                     </Grid>
-                    <Label Text="{Binding BodyWeightText}" Style="{StaticResource StatValue}" />
-                    <GraphicsView Drawable="{Binding BodyWeightChart}" HeightRequest="160" />
+                    <Label controls:CountUp.Text="{Binding BodyWeightText}" controls:CountUp.Replay="{Binding IsShowing}" Style="{StaticResource StatValue}" />
+                    <GraphicsView Drawable="{Binding BodyWeightChart}" HeightRequest="160" controls:ChartReveal.When="{Binding IsShowing}" />
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource Card}">
+            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="620">
                 <VerticalStackLayout Spacing="10">
-                    <HorizontalStackLayout Spacing="8">
-                        <Image Source="{StaticResource IconTrophy}" WidthRequest="20" HeightRequest="20" />
-                        <Label Text="Personal records" Style="{StaticResource H3}" />
-                    </HorizontalStackLayout>
-                    <Label Text="Best estimated one-rep max per exercise." Style="{StaticResource Caption}" FontSize="12" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Trophy" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Personal records" Style="{StaticResource H3}" />
+                            <Label Text="Best estimated one-rep max per exercise." Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
                     <Label Text="No records yet. Finish a workout to set your first." Style="{StaticResource Caption}" IsVisible="{Binding HasRecords, Converter={StaticResource Not}}" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Records}" Spacing="4">
                         <BindableLayout.ItemTemplate>

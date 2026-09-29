@@ -668,6 +668,151 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         _parent.OnStructureChanged();
     }
 
+    // The column headings: one change for every set still to do (working sets not done or skipped; warm-ups keep theirs).
+    List<SetRowViewModel> OpenSets => [.. Sets.Where(s => !s.Model.IsWarmup && !s.IsSettled)];
+
+    /// <summary>The # heading: skip, bring back or delete the sets still to do, or add one.</summary>
+    [RelayCommand]
+    async Task SetsHeader()
+    {
+        var open = OpenSets;
+        var skipped = Sets.Where(s => s.IsSkipped).ToList();
+        var options = new List<string>();
+        if (open.Count > 0)
+            options.Add(open.Count == 1 ? "Skip the set left" : $"Skip the {open.Count} sets left");
+        if (skipped.Count > 0)
+            options.Add(skipped.Count == 1 ? "Don't skip the skipped set" : $"Don't skip the {skipped.Count} skipped sets");
+        options.Add("Add a set");
+        var remove = open.Count + skipped.Count > 0 ? "Delete sets not done" : null;
+        var choice = await _parent.Dialogs.ActionSheet("All sets", remove, [.. options]);
+        if (choice == null)
+            return;
+        if (choice.StartsWith("Skip"))
+            SkipExercise();
+        else if (choice.StartsWith("Don't"))
+        {
+            foreach (var s in skipped)
+                s.IsSkipped = false;
+            OnSkipsChanged();
+        }
+        else if (choice == "Add a set")
+            AddSet();
+        else if (choice == remove && await _parent.Dialogs.Confirm("Delete sets not done?",
+                     "Every working set that isn't ticked is removed from this exercise.", "Delete"))
+        {
+            foreach (var s in open.Concat(skipped))
+            {
+                Model.Sets.Remove(s.Model);
+                Sets.Remove(s);
+            }
+            Renumber();
+            _parent.OnStructureChanged();
+        }
+    }
+
+    /// <summary>The weight heading: one weight for all the sets still to do, or nudged up or down together.</summary>
+    [RelayCommand]
+    async Task WeightHeader()
+    {
+        var open = OpenSets;
+        if (open.Count == 0)
+        {
+            await NothingOpen();
+            return;
+        }
+        // Increment is in the unit shown.
+        var step = $"{Units.Increment(Exercise):0.##}";
+        var choice = await _parent.Dialogs.ActionSheet($"Weight for the {Count(open)} left", null,
+            "Set one weight for all", $"All + {step} {Units.Label}", $"All − {step} {Units.Label}", "Same as the last set done");
+        switch (choice)
+        {
+            case "Set one weight for all":
+                var text = await _parent.Dialogs.Prompt("Weight for all", $"In {Units.Label}, for every set still to do", open[0].WeightText, Keyboard.Numeric, "Apply");
+                if (text != null && Units.TryParse(text, out var kg))
+                    foreach (var s in open)
+                        s.WeightText = Units.Format(kg);
+                break;
+            case "Same as the last set done":
+                if (Sets.LastOrDefault(s => s.IsCompleted && !s.Model.IsWarmup) is { } last)
+                    foreach (var s in open)
+                        s.WeightText = last.WeightText;
+                break;
+            case { } nudge when nudge.StartsWith("All"):
+                var steps = nudge.Contains('+') ? 1 : -1;
+                foreach (var s in open)
+                    s.WeightText = Units.Format(Units.Step(s.Model.WeightKg, Exercise, steps));
+                break;
+            default:
+                return;
+        }
+        _parent.OnStructureChanged();
+    }
+
+    /// <summary>The reps heading: one rep count for all the sets still to do.</summary>
+    [RelayCommand]
+    async Task RepsHeader()
+    {
+        var open = OpenSets;
+        if (open.Count == 0)
+        {
+            await NothingOpen();
+            return;
+        }
+        var choice = await _parent.Dialogs.ActionSheet($"Reps for the {Count(open)} left", null,
+            $"Bottom of the range ({Model.RepMin})", $"Top of the range ({Model.RepMax})", "Set one rep count for all");
+        int? reps = choice switch
+        {
+            null => null,
+            _ when choice.StartsWith("Bottom") => Model.RepMin,
+            _ when choice.StartsWith("Top") => Model.RepMax,
+            _ => int.TryParse(await _parent.Dialogs.Prompt("Reps for all", "For every set still to do", open[0].RepsText, Keyboard.Numeric, "Apply"), out var r) && r > 0 ? r : null,
+        };
+        if (reps is not { } value)
+            return;
+        foreach (var s in open)
+            s.RepsText = value.ToString();
+        _parent.OnStructureChanged();
+    }
+
+    /// <summary>The RIR heading: one effort for all the sets still to do.</summary>
+    [RelayCommand]
+    async Task RirHeader()
+    {
+        var open = OpenSets;
+        if (open.Count == 0)
+        {
+            await NothingOpen();
+            return;
+        }
+        var choice = await _parent.Dialogs.ActionSheet($"RIR for the {Count(open)} left", null,
+            $"The target ({Model.TargetRir} RIR)", "0 · to failure", "1", "2", "3", "4", "Clear");
+        if (choice == null)
+            return;
+        var text = choice.StartsWith("The target") ? Model.TargetRir.ToString() : choice == "Clear" ? "" : choice[..1];
+        foreach (var s in open)
+            s.RirText = text;
+        _parent.OnStructureChanged();
+    }
+
+    /// <summary>The E1RM heading: what the number is, and this exercise's best.</summary>
+    [RelayCommand]
+    async Task E1RmHeader()
+    {
+        var best = Sets.Where(s => s.IsCompleted && !s.Model.IsWarmup)
+            .Select(s => ProgressionEngine.E1Rm(s.Model.WeightKg, s.Model.Reps, s.Model.Rir)).DefaultIfEmpty(0).Max();
+        var choice = await _parent.Dialogs.ActionSheet("Estimated 1RM", null,
+            best > 0 ? [$"Best today: {Units.FormatWithUnit(best)}", "What's this?", "Exercise details"] : ["What's this?", "Exercise details"]);
+        if (choice == "What's this?")
+            await _parent.Dialogs.Alert("Estimated one-rep max",
+                "The most you could lift once, worked out from each set's weight, reps and RIR. It's how progress is compared across rep ranges.");
+        else if (choice == "Exercise details")
+            await Help();
+    }
+
+    static string Count(List<SetRowViewModel> sets) => sets.Count == 1 ? "set" : $"{sets.Count} sets";
+
+    Task NothingOpen() => _parent.Dialogs.Alert("No sets left to do", "Every set of this exercise is done or skipped. Add a set to log another.");
+
     [RelayCommand]
     void AddSet()
     {
@@ -762,7 +907,7 @@ public partial class SetRowViewModel : ObservableObject
     public SetEntry Model { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(LabelColor), nameof(ShowSkip), nameof(ShowE1Rm))]
+    [NotifyPropertyChangedFor(nameof(LabelColor), nameof(ShowE1Rm))]
     string label = "";
 
     [ObservableProperty]
@@ -778,12 +923,12 @@ public partial class SetRowViewModel : ObservableObject
     string rirText;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CheckBackground), nameof(CheckIcon), nameof(ValueColor), nameof(ShowDoneTick), nameof(ShowSkip), nameof(ShowE1Rm), nameof(IsSettled))]
+    [NotifyPropertyChangedFor(nameof(CheckBackground), nameof(CheckIcon), nameof(ValueColor), nameof(ShowDoneTick), nameof(ShowE1Rm), nameof(IsSettled))]
     bool isCompleted;
 
     /// <summary>Won't be done this time: dimmed, not counted, and left out of the workout when it's finished. Not a plan change.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(RowOpacity), nameof(ShowSkip), nameof(ShowE1Rm), nameof(ShowSkipped), nameof(IsSettled))]
+    [NotifyPropertyChangedFor(nameof(RowOpacity), nameof(ShowE1Rm), nameof(ShowSkipped), nameof(IsSettled))]
     bool isSkipped;
 
     /// <summary>Nothing left to do on it: done or skipped.</summary>
@@ -792,16 +937,15 @@ public partial class SetRowViewModel : ObservableObject
     public bool ShowSkipped => IsSkipped && !IsCurrent;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsNotCurrent), nameof(ShowRirInput), nameof(ShowRirValue), nameof(ShowDoneTick), nameof(NumberOpacity), nameof(ShowSkip), nameof(ShowE1Rm), nameof(ShowSkipped))]
+    [NotifyPropertyChangedFor(nameof(IsNotCurrent), nameof(ShowRirInput), nameof(ShowRirValue), nameof(ShowDoneTick), nameof(NumberOpacity), nameof(ShowE1Rm), nameof(ShowSkipped))]
     bool isCurrent;
     public bool IsNotCurrent => !IsCurrent;
     public bool ShowRirInput => IsCurrent && TrackRir;
     public bool ShowRirValue => !IsCurrent && TrackRir;
     public bool ShowDoneTick => !IsCurrent && IsCompleted;
     public double NumberOpacity => IsCurrent ? 1 : 0.6;
-    /// <summary>The set being logged offers a skip in place of its E1RM, which it doesn't have until it's done.</summary>
-    public bool ShowSkip => IsCurrent && !IsCompleted && !IsSkipped;
-    public bool ShowE1Rm => !ShowSkip && !ShowSkipped;
+    /// <summary>A skipped set says so where its E1RM would be. (Skipping is in the set number's menu.)</summary>
+    public bool ShowE1Rm => !ShowSkipped;
 
     [ObservableProperty] bool isVisible = true;
 
@@ -857,9 +1001,6 @@ public partial class SetRowViewModel : ObservableObject
     /// <summary>Tapping a row other than the current one opens it for editing.</summary>
     [RelayCommand]
     void Edit() => _parent.UpdateCurrent(this);
-
-    [RelayCommand]
-    void Skip() => _parent.Skip(this);
 
     [RelayCommand]
     Task Menu() => _parent.SetMenu(this);

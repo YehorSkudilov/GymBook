@@ -130,13 +130,36 @@
 
                             <!-- Set table -->
                             <VerticalStackLayout Spacing="4">
+                                <!-- Tap a heading for that column across the sets still to do: skip or delete them all (#), or give them
+                                     all one weight, rep count or RIR. The ▾ says there's a menu. -->
                                 <Grid ColumnDefinitions="48,*,*,Auto,*,56" ColumnSpacing="8" Padding="0,0,0,4">
-                                    <Label Text="#" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
-                                    <Label Grid.Column="1" Text="{Binding UnitLabel}" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
-                                    <Label Grid.Column="2" Text="REPS" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
-                                    <Label Grid.Column="3" Text="RIR" WidthRequest="52" HorizontalTextAlignment="Center" IsVisible="{Binding TrackRir}"
-                                           Style="{StaticResource Overline}" FontSize="13" />
-                                    <Label Grid.Column="4" Text="E1RM" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Center" />
+                                    <Label Text="# ▾" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Fill" HorizontalTextAlignment="Center" Padding="0,6">
+                                        <Label.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SetsHeaderCommand}" />
+                                        </Label.GestureRecognizers>
+                                    </Label>
+                                    <Label Grid.Column="1" Text="{Binding UnitLabel, StringFormat='{0} ▾'}" Style="{StaticResource Overline}" FontSize="13"
+                                           HorizontalOptions="Fill" HorizontalTextAlignment="Center" Padding="0,6">
+                                        <Label.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding WeightHeaderCommand}" />
+                                        </Label.GestureRecognizers>
+                                    </Label>
+                                    <Label Grid.Column="2" Text="REPS ▾" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Fill" HorizontalTextAlignment="Center" Padding="0,6">
+                                        <Label.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding RepsHeaderCommand}" />
+                                        </Label.GestureRecognizers>
+                                    </Label>
+                                    <Label Grid.Column="3" Text="RIR ▾" WidthRequest="52" HorizontalTextAlignment="Center" IsVisible="{Binding TrackRir}"
+                                           Style="{StaticResource Overline}" FontSize="13" Padding="0,6">
+                                        <Label.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding RirHeaderCommand}" />
+                                        </Label.GestureRecognizers>
+                                    </Label>
+                                    <Label Grid.Column="4" Text="E1RM ▾" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Fill" HorizontalTextAlignment="Center" Padding="0,6">
+                                        <Label.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding E1RmHeaderCommand}" />
+                                        </Label.GestureRecognizers>
+                                    </Label>
                                 </Grid>
 
                                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding Sets}" Spacing="6">
@@ -184,13 +207,6 @@
                                                 <!-- Skipped: left out when the workout is finished; tap the row and its check to do it after all -->
                                                 <Label Grid.Column="4" Text="Skipped" TextColor="{StaticResource TextSecondary}" FontSize="14" FontFamily="OpenSansSemibold"
                                                        HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowSkipped}" />
-                                                <!-- The set being logged: skip it instead -->
-                                                <Label Grid.Column="4" Text="Skip" TextColor="{StaticResource Accent}" FontFamily="OpenSansSemibold" FontSize="16"
-                                                       HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowSkip}">
-                                                    <Label.GestureRecognizers>
-                                                        <TapGestureRecognizer Command="{Binding SkipCommand}" />
-                                                    </Label.GestureRecognizers>
-                                                </Label>
 
                                                 <!-- Check: big on the current set, a small tick on finished ones -->
                                                 <Border Grid.Column="5" BackgroundColor="{Binding CheckBackground}" StrokeShape="RoundRectangle 14" HeightRequest="46"
@@ -207,12 +223,9 @@
                                     </BindableLayout.ItemTemplate>
                                 </VerticalStackLayout>
 
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <Button Text="+ Add set" Style="{StaticResource GhostButton}" HorizontalOptions="Start" Command="{Binding AddSetCommand}" />
-                                    <!-- Skip what's left of this exercise (or bring it back) -->
-                                    <Button Grid.Column="1" Text="{Binding SkipExerciseText}" Style="{StaticResource GhostButton}" TextColor="{StaticResource TextSecondary}"
-                                            IsVisible="{Binding CanSkipExercise}" Command="{Binding SkipExerciseCommand}" />
-                                </Grid>
+                                <!-- Like "+ Add exercise". Skipping an exercise or a set is in their ··· / number menus. -->
+                                <Button Text="+ Add set" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Accent}" Margin="0,6,0,0"
+                                        Command="{Binding AddSetCommand}" />
                             </VerticalStackLayout>
 
                             <!-- Last time -->

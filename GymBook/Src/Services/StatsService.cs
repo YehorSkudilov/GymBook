@@ -32,6 +32,19 @@ public class StatsService(DataStore store, RecoveryService recovery)
 
     public List<ChartPoint> WorkoutsPerWeek(int weeks) => Weekly(weeks, list => list.Count);
 
+    /// <summary>Average workout length in minutes, per week with any workouts (the empty ones left out).</summary>
+    public List<ChartPoint> MinutesPerWeek(int weeks) =>
+        Weekly(weeks, list => list.Count == 0 ? 0 : list.Average(s => s.Duration.TotalMinutes)).Where(p => p.Value > 0).ToList();
+
+    /// <summary>The Monday <paramref name="weeks"/> weeks back (this week included), and the volume of every day since.</summary>
+    public (DateTime FirstMonday, List<double> Days) DailyVolume(int weeks)
+    {
+        var start = WeekStart(DateTime.Today).AddDays(-7 * (weeks - 1));
+        var byDay = store.History.Where(s => s.StartedAt >= start).GroupBy(s => s.StartedAt.Date).ToDictionary(g => g.Key, g => g.Sum(SessionVolume));
+        var count = (DateTime.Today - start).Days + 1;
+        return (start, Enumerable.Range(0, count).Select(i => byDay.GetValueOrDefault(start.AddDays(i))).ToList());
+    }
+
     List<ChartPoint> Weekly(int weeks, Func<List<WorkoutSession>, double> value)
     {
         var start = WeekStart(DateTime.Today).AddDays(-7 * (weeks - 1));

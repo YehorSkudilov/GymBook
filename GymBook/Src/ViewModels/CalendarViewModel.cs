@@ -118,15 +118,9 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
         SelectedIsEmpty = HasSelection && SelectedSessions.Count == 0;
     }
 
-    /// <summary>The toggle only makes sense on a day with a workout to be after.</summary>
-    [ObservableProperty] bool hasDayWorkouts;
-
     void UpdateRecovery(DateTime day)
     {
         _recoveryDay = day;
-        HasDayWorkouts = _byDay[day].Any(s => s.EndedAt != null);
-        if (!HasDayWorkouts && IsAfterDay)
-            IsAfterDay = false;
         ShowRecovery();
     }
 
@@ -141,15 +135,22 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     [RelayCommand]
     void AfterDay() => IsAfterDay = true;
 
-    /// <summary>Going into the day (its start), or right after its last workout was finished.</summary>
-    DateTime RecoveryAt => IsAfterDay && LastWorkoutEnd is { } end ? end : _recoveryDay;
+    /// <summary>
+    /// Going into the day (its start), or after it: right after its last workout, or on a day without one, the end of
+    /// the day (now, for today).
+    /// </summary>
+    DateTime RecoveryAt => !IsAfterDay ? _recoveryDay : LastWorkoutEnd ?? DayEnd(_recoveryDay);
+
+    internal static DateTime DayEnd(DateTime day) => day == DateTime.Today ? DateTime.Now : day.AddDays(1);
 
     void ShowRecovery()
     {
         var at = RecoveryAt;
         var rec = recovery.Compute(at);
         RecoveryMap = MuscleMapDrawable.ForRecovery(rec);
-        RecoveryTitle = IsAfterDay && LastWorkoutEnd is { } end ? $"Muscle recovery after the last workout ({end:HH:mm})" : "Muscle recovery going into the day";
+        RecoveryTitle = !IsAfterDay ? "Muscle recovery going into the day"
+            : LastWorkoutEnd is { } end ? $"Muscle recovery after the last workout ({end:HH:mm})"
+            : _recoveryDay == DateTime.Today ? "Muscle recovery right now" : "Muscle recovery at the end of the day";
         var tired = rec.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
         RecoverySummary = tired.Count == 0
             ? $"Every muscle group {(at < DateTime.Now ? "was" : "is")} fresh."

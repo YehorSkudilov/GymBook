@@ -55,7 +55,7 @@ public partial class RecoveryMoment : ObservableObject
     [NotifyPropertyChangedFor(nameof(BeforeBackground), nameof(AfterBackground), nameof(BeforeText), nameof(AfterText))]
     bool isAfterDay;
 
-    public bool HasToggle => IsDay && _lastEnd != null;
+    public bool HasToggle => IsDay;
     public Color BeforeBackground => IsAfterDay ? Colors.Transparent : ToggleOn;
     public Color AfterBackground => IsAfterDay ? ToggleOn : Colors.Transparent;
     public Color BeforeText => IsAfterDay ? ToggleOffText : ToggleOnText;
@@ -75,9 +75,9 @@ public partial class RecoveryMoment : ObservableObject
     public RecoveryStep? Current => Steps.ElementAtOrDefault((int)Math.Round(Index));
 
     /// <summary>The moment the map shows.</summary>
-    public DateTime At => IsDay ? (IsAfterDay && _lastEnd is { } end ? end : _day) : Current?.At ?? DateTime.Now;
+    public DateTime At => IsDay ? (IsAfterDay ? _lastEnd ?? CalendarViewModel.DayEnd(_day) : _day) : Current?.At ?? DateTime.Now;
 
-    /// <summary>A calendar day: going into it, or (<paramref name="after"/>) right after its last workout.</summary>
+    /// <summary>A calendar day: going into it, or (<paramref name="after"/>) right after its last workout (the end of the day without one).</summary>
     public void SetDay(DateTime day, IEnumerable<WorkoutSession> sessions, bool after)
     {
         _loading = true;
@@ -86,7 +86,7 @@ public partial class RecoveryMoment : ObservableObject
         Steps = [];
         IsDay = true;
         OnPropertyChanged(nameof(HasToggle));
-        IsAfterDay = after && _lastEnd != null;
+        IsAfterDay = after;
         _loading = false;
         Update();
     }
@@ -153,7 +153,9 @@ public partial class RecoveryMoment : ObservableObject
         if (_loading)
             return;
         if (IsDay)
-            When = IsAfterDay && _lastEnd is { } end ? $"After the last workout · {end:ddd d MMM, HH:mm}" : $"Going into {_day:ddd d MMM}";
+            When = !IsAfterDay ? $"Going into {_day:ddd d MMM}"
+                : _lastEnd is { } end ? $"After the last workout · {end:ddd d MMM, HH:mm}"
+                : _day == DateTime.Today ? "Right now" : $"End of {_day:ddd d MMM}";
         else
         {
             var current = Current;

@@ -2,8 +2,16 @@ using GymBook.Services;
 
 namespace GymBook.Controls;
 
-public abstract class ChartDrawable(IReadOnlyList<ChartPoint> points, Color color, Func<double, string> format) : IDrawable
+/// <summary>A chart that can draw itself in: <see cref="Reveal"/> runs from 0 (nothing yet) to 1 (all of it). See <see cref="ChartReveal"/>.</summary>
+public interface IRevealable
 {
+    float Reveal { get; set; }
+}
+
+public abstract class ChartDrawable(IReadOnlyList<ChartPoint> points, Color color, Func<double, string> format) : IDrawable, IRevealable
+{
+    public float Reveal { get; set; } = 1;
+
     protected static readonly Color Grid = Color.FromArgb("#2C3240");
     protected static readonly Color LabelColor = Color.FromArgb("#626B7E");
     protected static readonly Color ValueColor = Color.FromArgb("#F4F6FB");
@@ -38,6 +46,8 @@ public abstract class ChartDrawable(IReadOnlyList<ChartPoint> points, Color colo
         DrawSeries(canvas, plot);
     }
 
+    protected static float EaseOut(float x) => 1 - MathF.Pow(1 - Math.Clamp(x, 0, 1), 3);
+
     protected abstract void DrawSeries(ICanvas canvas, RectF plot);
 
     protected void DrawLabel(ICanvas canvas, int index, float centerX, float width, RectF plot)
@@ -62,12 +72,14 @@ public class BarChartDrawable(IReadOnlyList<ChartPoint> points, Color color, Fun
         for (var i = 0; i < Points.Count; i++)
         {
             var cx = plot.Left + slot * (i + 0.5f);
-            var h = (float)(Points[i].Value / max) * plot.Height;
+            // Each bar grows in a little after the one before it.
+            var grow = EaseOut((Reveal - 0.45f * i / Points.Count) / 0.55f);
+            var h = (float)(Points[i].Value / max) * plot.Height * grow;
             var last = i == Points.Count - 1;
             canvas.FillColor = last ? Color : Color.WithAlpha(0.45f);
             if (h > 0)
                 canvas.FillRoundedRectangle(cx - barW / 2, plot.Bottom - Math.Max(h, 4), barW, Math.Max(h, 4), 5);
-            if (last || Points[i].Value == max)
+            if ((last || Points[i].Value == max) && grow > 0.95f)
             {
                 canvas.FontColor = ValueColor;
                 canvas.DrawString(Format(Points[i].Value), cx - 40, plot.Bottom - h - ValueHeight, 80, ValueHeight - 2, HorizontalAlignment.Center, VerticalAlignment.Bottom);
@@ -104,6 +116,10 @@ public class LineChartDrawable(IReadOnlyList<ChartPoint> points, Color color, Fu
         area.LineTo(At(Points.Count - 1).X, plot.Bottom);
         area.Close();
 
+        // Drawn in from left to right.
+        canvas.SaveState();
+        canvas.ClipRectangle(plot.Left - 10, plot.Top - ValueHeight - 10, (plot.Width + 20) * EaseOut(Reveal), plot.Height + ValueHeight + LabelHeight + 20);
+
         canvas.SetFillPaint(new LinearGradientPaint([new PaintGradientStop(0, Color.WithAlpha(0.35f)), new PaintGradientStop(1, Color.WithAlpha(0f))], new Point(0, 0), new Point(0, 1)), plot);
         canvas.FillPath(area);
 
@@ -125,5 +141,175 @@ public class LineChartDrawable(IReadOnlyList<ChartPoint> points, Color color, Fu
             }
             DrawLabel(canvas, i, p.X, 0, plot);
         }
+        canvas.RestoreState();
+    }
+}
+
+/// <summary>
+/// Training days as a grid of squares, a column per week (oldest on the left) and a row per weekday: the more work
+/// that day, the brighter its square. Today is outlined. The columns pop in from the left as it's revealed.
+/// </summary>
+public class HeatmapDrawable(DateTime firstMonday, IReadOnlyList<double> days, Color color) : IDrawable, IRevealable
+{
+    static readonly Color Empty = Color.FromArgb("#1D212C"), LabelColor = Color.FromArgb("#626B7E"), TodayRing = Color.FromArgb("#F4F6FB");
+    static readonly string[] Weekdays = ["M", "", "W", "", "F", "", "S"];
+
+    public float Reveal { get; set; } = 1;
+
+    public void Draw(ICanvas canvas, RectF rect)
+    {
+        var weeks = (days.Count + 6) / 7;
+        if (weeks == 0)
+            return;
+        const float labelW = 16, headerH = 16;
+        var gap = 3f;
+        var cell = Math.Min((rect.Width - labelW - gap * (weeks - 1)) / weeks, (rect.Height - headerH - gap * 6) / 7);
+        var left = rect.Left + labelW + (rect.Width - labelW - (cell * weeks + gap * (weeks - 1))) / 2;
+        var top = rect.Top + headerH;
+        var max = days.DefaultIfEmpty(0).Max();
+
+        canvas.FontSize = 9;
+        canvas.FontColor = LabelColor;
+        for (var d = 0; d < 7; d++)
+            canvas.DrawString(Weekdays[d], rect.Left, top + d * (cell + gap), labelW - 4, cell, HorizontalAlignment.Left, VerticalAlignment.Center);
+
+        var todayIndex = (DateTime.Today - firstMonday).Days;
+        for (var w = 0; w < weeks; w++)
+        {
+            var x = left + w * (cell + gap);
+            // The month's name over the first week of each month.
+            var monday = firstMonday.AddDays(7 * w);
+            if (w == 0 || monday.Month != monday.AddDays(-7).Month)
+            {
+                canvas.FontColor = LabelColor;
+                canvas.DrawString(monday.ToString("MMM"), x, rect.Top, 40, headerH - 3, HorizontalAlignment.Left, VerticalAlignment.Top);
+            }
+            var pop = Math.Clamp((Reveal - 0.6f * w / weeks) / 0.4f, 0, 1);
+            if (pop <= 0)
+                continue;
+            var size = cell * (0.4f + 0.6f * pop);
+            for (var d = 0; d < 7; d++)
+            {
+                var i = w * 7 + d;
+                if (i >= days.Count)
+                    break;
+                var y = top + d * (cell + gap);
+                var level = max <= 0 || days[i] <= 0 ? 0 : 0.35f + 0.65f * (float)(days[i] / max);
+                canvas.FillColor = level == 0 ? Empty.WithAlpha(pop) : color.WithAlpha(level * pop);
+                canvas.FillRoundedRectangle(x + (cell - size) / 2, y + (cell - size) / 2, size, size, size * 0.25f);
+                if (i == todayIndex)
+                {
+                    canvas.StrokeColor = TodayRing.WithAlpha(0.8f * pop);
+                    canvas.StrokeSize = 1.5f;
+                    canvas.DrawRoundedRectangle(x + 0.75f, y + 0.75f, cell - 1.5f, cell - 1.5f, cell * 0.25f);
+                }
+            }
+        }
+    }
+}
+
+/// <summary>One slice of a <see cref="DonutDrawable"/>.</summary>
+public record DonutSlice(string Label, double Value, Color Color);
+
+/// <summary>
+/// Shares of a whole as a ring, the biggest slice from the top going clockwise, with the total in the middle. The ring
+/// sweeps round as it's revealed.
+/// </summary>
+public class DonutDrawable(IReadOnlyList<DonutSlice> slices, string centerValue, string centerLabel) : IDrawable, IRevealable
+{
+    static readonly Color Track = Color.FromArgb("#1D212C"), ValueColor = Color.FromArgb("#F4F6FB"), LabelColor = Color.FromArgb("#9AA3B5");
+
+    public float Reveal { get; set; } = 1;
+
+    public void Draw(ICanvas canvas, RectF rect)
+    {
+        var size = Math.Min(rect.Width, rect.Height);
+        var thickness = size * 0.14f;
+        var r = size / 2 - thickness / 2 - 2;
+        var box = new RectF(rect.Center.X - r, rect.Center.Y - r, r * 2, r * 2);
+        canvas.StrokeSize = thickness;
+        canvas.StrokeColor = Track;
+        canvas.DrawEllipse(box);
+
+        var total = slices.Sum(s => s.Value);
+        var sweep = 360 * (1 - MathF.Pow(1 - Math.Clamp(Reveal, 0, 1), 3));
+        if (total > 0)
+        {
+            canvas.StrokeLineCap = LineCap.Butt;
+            var start = 0f;
+            foreach (var slice in slices)
+            {
+                var angle = (float)(slice.Value / total * 360);
+                var end = Math.Min(start + angle, sweep);
+                // A hair of space between slices.
+                if (end - start > 1.5f)
+                {
+                    canvas.StrokeColor = slice.Color;
+                    // Degrees counter-clockwise from 3 o'clock: from the top, going clockwise.
+                    canvas.DrawArc(box, 90 - start - 0.75f, 90 - end + 0.75f, true, false);
+                }
+                start += angle;
+                if (start >= sweep)
+                    break;
+            }
+        }
+
+        canvas.FontColor = ValueColor;
+        canvas.FontSize = size * 0.16f;
+        canvas.DrawString(centerValue, rect.Left, rect.Center.Y - size * 0.14f, rect.Width, size * 0.2f, HorizontalAlignment.Center, VerticalAlignment.Center);
+        canvas.FontColor = LabelColor;
+        canvas.FontSize = size * 0.08f;
+        canvas.DrawString(centerLabel, rect.Left, rect.Center.Y + size * 0.06f, rect.Width, size * 0.12f, HorizontalAlignment.Center, VerticalAlignment.Center);
+    }
+}
+
+/// <summary>
+/// Draws a chart in (see <see cref="IRevealable"/>): <c>controls:ChartReveal.When="{Binding IsShowing}"</c> on its
+/// GraphicsView plays it each time that turns true, and whenever the chart is replaced while it's true.
+/// </summary>
+public static class ChartReveal
+{
+    public static readonly BindableProperty WhenProperty =
+        BindableProperty.CreateAttached("When", typeof(bool), typeof(ChartReveal), false, propertyChanged: OnWhenChanged);
+
+    static readonly BindableProperty HookedProperty =
+        BindableProperty.CreateAttached("Hooked", typeof(bool), typeof(ChartReveal), false);
+
+    public static bool GetWhen(BindableObject view) => (bool)view.GetValue(WhenProperty);
+    public static void SetWhen(BindableObject view, bool value) => view.SetValue(WhenProperty, value);
+
+    static void OnWhenChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is not GraphicsView view)
+            return;
+        if (!(bool)view.GetValue(HookedProperty))
+        {
+            view.SetValue(HookedProperty, true);
+            view.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(GraphicsView.Drawable) && GetWhen(view))
+                    Play(view);
+            };
+        }
+        if (newValue is true)
+            Play(view);
+    }
+
+    static void Play(GraphicsView view)
+    {
+        if (view.Drawable is not IRevealable chart)
+            return;
+        view.AbortAnimation("reveal");
+        chart.Reveal = 0;
+        view.Invalidate();
+        new Animation(v =>
+        {
+            chart.Reveal = (float)v;
+            view.Invalidate();
+        }).Commit(view, "reveal", 16, 1000, Easing.Linear, (_, _) =>
+        {
+            chart.Reveal = 1;
+            view.Invalidate();
+        });
     }
 }

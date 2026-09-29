@@ -152,7 +152,7 @@
                         <GraphicsView Drawable="{Binding RecoveryMap}" HeightRequest="220" />
                         <Label Text="{Binding RecoverySummary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
                         <!-- Before this day | After this day: two halves of one toggle -->
-                        <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="3" IsVisible="{Binding HasDayWorkouts}">
+                        <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="3">
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="2">
                                 <Border BackgroundColor="{Binding BeforeBackground}" StrokeShape="RoundRectangle 9" StrokeThickness="0" Padding="0,8">
                                     <Border.GestureRecognizers>

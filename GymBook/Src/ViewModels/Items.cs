@@ -165,3 +165,9 @@ public partial class ExerciseItem(Exercise exercise, Action<ExerciseItem> onTap)
     [RelayCommand]
     void Tap() => onTap(this);
 }
+
+/// <summary>A part of the training split on the Progress tab: its colour, share of the sets, and how many.</summary>
+public record SplitItem(string Name, Color Color, double Share, string Value)
+{
+    public string Percent => $"{Share:P0}";
+}
