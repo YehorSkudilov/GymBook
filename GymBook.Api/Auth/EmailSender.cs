@@ -23,8 +23,11 @@ public class SmtpOptions
 /// </summary>
 public class EmailSender(SmtpOptions options, IHostEnvironment env, IMemoryCache sent, ILogger<EmailSender> log)
 {
-    // One code per address and purpose a minute, so nobody can flood someone's inbox through us.
+    // One code per address and purpose a minute, and a few a day, so nobody can flood someone's inbox through us, and
+    // an address that doesn't exist (a typo) isn't mailed over and over, each one bouncing.
     static readonly TimeSpan Cooldown = TimeSpan.FromMinutes(1);
+    static readonly TimeSpan DailyWindow = TimeSpan.FromDays(1);
+    const int DailyLimit = 5;
 
     public bool IsAvailable => options.IsConfigured || env.IsDevelopment();
 
@@ -39,15 +42,31 @@ public class EmailSender(SmtpOptions options, IHostEnvironment env, IMemoryCache
         return copy.ToArray();
     }
 
-    /// <summary>Sends a code. False (and nothing sent) when one went to this address for this purpose within the last minute.</summary>
+    /// <summary>
+    /// Sends a code. False (and nothing sent) when one went to this address for this purpose within the last minute,
+    /// or <see cref="DailyLimit"/> already went today.
+    /// </summary>
     public async Task<bool> SendCodeAsync(string to, string purpose, CodeEmail mail, CancellationToken ct)
     {
         if (!IsAvailable)
             throw new InvalidOperationException("Smtp is not configured.");
         var key = $"email-code:{purpose}:{to.ToUpperInvariant()}";
+        var dailyKey = "daily-" + key;
         if (sent.TryGetValue(key, out _))
             return false;
+        // The day starts with the first code, and the count lives as long as it.
+        var today = sent.GetOrCreate(dailyKey, entry =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = DailyWindow;
+            return new DailyCount();
+        })!;
+        if (today.Count >= DailyLimit)
+        {
+            log.LogWarning("Daily limit of {Limit} {Purpose} emails reached for an address; not sending", DailyLimit, purpose);
+            return false;
+        }
         sent.Set(key, true, Cooldown);
+        Interlocked.Increment(ref today.Count);
 
         if (!options.IsConfigured)
         {
@@ -78,12 +97,19 @@ public class EmailSender(SmtpOptions options, IHostEnvironment env, IMemoryCache
         }
         catch
         {
-            // Didn't go out: let the user ask again straight away.
+            // Didn't go out: let the user ask again straight away, and it doesn't count towards today's.
             sent.Remove(key);
+            Interlocked.Decrement(ref today.Count);
             throw;
         }
         return true;
     }
+}
+
+/// <summary>How many codes went to one address for one purpose today (see <see cref="EmailSender"/>).</summary>
+sealed class DailyCount
+{
+    public int Count;
 }
 
 /// <summary>

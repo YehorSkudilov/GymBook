@@ -44,7 +44,7 @@ public class AccountController(
         switch (await SendVerificationCodeAsync(user, email, users, log, ct))
         {
             case false:
-                return Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "A code was just sent. Wait a minute before asking for another.");
+                return Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "A code was just sent, or today's codes are used up. Check your inbox and spam, or try again later.");
             case null:
                 return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Couldn't send the email. Please try again later.");
         }
@@ -80,7 +80,7 @@ public class AccountController(
 
     /// <summary>
     /// Emails an email verification code. True when sent, false when one was sent within the last minute, null when
-    /// sending failed. Shared with registration, which sends the first code by itself.
+    /// sending failed. Only when the app asks: it does once, when the verification sheet first shows for an address.
     /// </summary>
     internal static async Task<bool?> SendVerificationCodeAsync(AppUser user, EmailSender email, UserManager<AppUser> users, ILogger log, CancellationToken ct)
     {
@@ -166,7 +166,7 @@ public class AccountController(
                     "Enter this code in GymBook to sign in with this address from now on.",
                     code,
                     "If you didn't ask for this, you can ignore this email. Your account stays as it is."), ct))
-                return Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "A code was just sent. Wait a minute before asking for another.");
+                return Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "A code was just sent, or today's codes are used up. Check your inbox and spam, or try again later.");
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {

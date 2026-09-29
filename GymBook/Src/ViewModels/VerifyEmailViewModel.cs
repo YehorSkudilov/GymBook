@@ -32,28 +32,26 @@ public partial class VerifyEmailViewModel(AccountService account, DialogService 
             Done?.Invoke(this, EventArgs.Empty);
             return;
         }
-        // The code is only emailed once the user is looking at this: the first time it opens, and again only when the
-        // last one is old enough to have expired. Reopening it (every start and resume) doesn't send another.
+        // A code is emailed by itself only once per address: the first time this is shown for it. After that, reopening
+        // it (every start and resume) never sends another; only Resend does. So a mistyped address that bounces isn't
+        // mailed again and again, just when the user asks.
         if (!_codeRequested)
         {
             _codeRequested = true;
-            if (RecentlySent(Email))
-                Info = $"We sent a code to {Email}. Didn't get it? Resend it.";
+            if (AlreadySent(Email))
+                Info = $"We sent a code to {Email}. Didn't get it? Check the address, or resend it.";
             else
                 await SendCodeAsync(quiet: true);
         }
     }
 
-    // A code sent automatically lasts about this long, so there's no point sending another before then.
-    static readonly TimeSpan AutoResendAfter = TimeSpan.FromMinutes(10);
     const string SentKey = "verify.code_sent";
 
-    // "address|ticks" of the last code sent from here, for the same address only.
-    static bool RecentlySent(string email)
+    // "address|ticks" of the last code sent from here. Any code to the same address counts: none is sent by itself again.
+    static bool AlreadySent(string email)
     {
         var parts = Preferences.Default.Get(SentKey, "").Split('|');
-        return parts.Length == 2 && string.Equals(parts[0], email, StringComparison.OrdinalIgnoreCase)
-            && long.TryParse(parts[1], out var ticks) && DateTime.UtcNow - new DateTime(ticks, DateTimeKind.Utc) < AutoResendAfter;
+        return parts.Length == 2 && string.Equals(parts[0], email, StringComparison.OrdinalIgnoreCase);
     }
 
     static void MarkSent(string email) => Preferences.Default.Set(SentKey, $"{email}|{DateTime.UtcNow.Ticks}");
@@ -107,6 +105,8 @@ public partial class VerifyEmailViewModel(AccountService account, DialogService 
             }
             catch (ApiException e) when (quiet && e.Status == System.Net.HttpStatusCode.TooManyRequests)
             {
+                // One went out moments ago (or today's are used up): it counts as sent.
+                MarkSent(Email);
                 Info = $"We sent a code to {Email}.";
             }
         });
