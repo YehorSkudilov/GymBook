@@ -6,9 +6,9 @@ using Microsoft.Maui.Platform;
 namespace GymBook;
 
 /// <summary>
-/// <see cref="Controls.HorizontalDragArea"/> on Android: once a drag inside it is clearly sideways, the parents (the
-/// swiping tabs, a page's scroll view) are told not to take it, so the strip inside scrolls. It decides at half the
-/// usual touch slop, before the tabs would claim the drag at the full slop.
+/// <see cref="Controls.HorizontalDragArea"/> on Android: a touch inside it belongs to the strip from the moment it
+/// lands, so the parents (the swiping tabs, a page's scroll view) can't take a sideways drag, however quick. Only once
+/// the drag turns out to be mostly up or down is it handed back, so the page still scrolls.
 /// </summary>
 public class HorizontalDragAreaHandler : ContentViewHandler
 {
@@ -22,14 +22,21 @@ sealed class DragAreaViewGroup(Context context) : ContentViewGroup(context)
     bool _decided;
 
     // Only watches: the touch still goes to the strip and its chips.
-    public override bool OnInterceptTouchEvent(MotionEvent? e)
+    public override bool DispatchTouchEvent(MotionEvent? e)
     {
-        if (e == null)
-            return false;
+        if (e != null)
+            Watch(e);
+        return base.DispatchTouchEvent(e);
+    }
+
+    void Watch(MotionEvent e)
+    {
         switch (e.ActionMasked)
         {
             case MotionEventActions.Down:
                 (_downX, _downY, _decided) = (e.RawX, e.RawY, false);
+                // Claimed straight away: the tabs would otherwise take a fast sideways flick before it's measured.
+                Parent?.RequestDisallowInterceptTouchEvent(true);
                 break;
             case MotionEventActions.Move when !_decided:
                 var dx = Math.Abs(e.RawX - _downX);
@@ -37,11 +44,11 @@ sealed class DragAreaViewGroup(Context context) : ContentViewGroup(context)
                 if (dx > _slop || dy > _slop)
                 {
                     _decided = true;
-                    if (dx > dy)
-                        Parent?.RequestDisallowInterceptTouchEvent(true);
+                    // Up or down: the page scrolls after all.
+                    if (dy > dx)
+                        Parent?.RequestDisallowInterceptTouchEvent(false);
                 }
                 break;
         }
-        return false;
     }
 }

@@ -334,6 +334,8 @@ public partial class HomeViewModel(
         foreach (var session in sessions)
             store.Data.Sessions.Remove(session);
         PlanProgress.ClearRestDays(plan, week);
+        // The weeks after it move up, so the week just emptied doesn't sit before them.
+        store.CompactPlanWeeks();
         store.Save();
         Refresh();
     }

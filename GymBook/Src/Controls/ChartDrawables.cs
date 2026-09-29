@@ -116,7 +116,9 @@ public class LineChartDrawable(IReadOnlyList<ChartPoint> points, Color color, Fu
         area.LineTo(At(Points.Count - 1).X, plot.Bottom);
         area.Close();
 
-        // Drawn in from left to right.
+        // The line sweeps in from left to right; the labels under it are there from the start.
+        for (var i = 0; i < Points.Count; i++)
+            DrawLabel(canvas, i, At(i).X, 0, plot);
         canvas.SaveState();
         canvas.ClipRectangle(plot.Left - 10, plot.Top - ValueHeight - 10, (plot.Width + 20) * EaseOut(Reveal), plot.Height + ValueHeight + LabelHeight + 20);
 
@@ -134,14 +136,14 @@ public class LineChartDrawable(IReadOnlyList<ChartPoint> points, Color color, Fu
             var last = i == Points.Count - 1;
             canvas.FillColor = last ? ValueColor : Color;
             canvas.FillCircle(p, last ? 4.5f : 3f);
-            if (last)
-            {
-                canvas.FontColor = ValueColor;
-                canvas.DrawString(Format(Points[i].Value), p.X - 60, p.Y - ValueHeight - 2, 64, ValueHeight, HorizontalAlignment.Right, VerticalAlignment.Bottom);
-            }
-            DrawLabel(canvas, i, p.X, 0, plot);
         }
         canvas.RestoreState();
+        if (Reveal > 0.95f)
+        {
+            var p = At(Points.Count - 1);
+            canvas.FontColor = ValueColor;
+            canvas.DrawString(Format(Points[^1].Value), p.X - 60, p.Y - ValueHeight - 2, 64, ValueHeight, HorizontalAlignment.Right, VerticalAlignment.Bottom);
+        }
     }
 }
 
@@ -184,22 +186,26 @@ public class HeatmapDrawable(DateTime firstMonday, IReadOnlyList<double> days, C
                 canvas.FontColor = LabelColor;
                 canvas.DrawString(monday.ToString("MMM"), x, rect.Top, 40, headerH - 3, HorizontalAlignment.Left, VerticalAlignment.Top);
             }
+            // The grid is always there; the training days light up in it, a week at a time from the left.
             var pop = Math.Clamp((Reveal - 0.6f * w / weeks) / 0.4f, 0, 1);
-            if (pop <= 0)
-                continue;
-            var size = cell * (0.4f + 0.6f * pop);
             for (var d = 0; d < 7; d++)
             {
                 var i = w * 7 + d;
                 if (i >= days.Count)
                     break;
                 var y = top + d * (cell + gap);
+                canvas.FillColor = Empty;
+                canvas.FillRoundedRectangle(x, y, cell, cell, cell * 0.25f);
                 var level = max <= 0 || days[i] <= 0 ? 0 : 0.35f + 0.65f * (float)(days[i] / max);
-                canvas.FillColor = level == 0 ? Empty.WithAlpha(pop) : color.WithAlpha(level * pop);
-                canvas.FillRoundedRectangle(x + (cell - size) / 2, y + (cell - size) / 2, size, size, size * 0.25f);
+                if (level > 0 && pop > 0)
+                {
+                    var size = cell * (0.4f + 0.6f * pop);
+                    canvas.FillColor = color.WithAlpha(level * pop);
+                    canvas.FillRoundedRectangle(x + (cell - size) / 2, y + (cell - size) / 2, size, size, size * 0.25f);
+                }
                 if (i == todayIndex)
                 {
-                    canvas.StrokeColor = TodayRing.WithAlpha(0.8f * pop);
+                    canvas.StrokeColor = TodayRing.WithAlpha(0.8f);
                     canvas.StrokeSize = 1.5f;
                     canvas.DrawRoundedRectangle(x + 0.75f, y + 0.75f, cell - 1.5f, cell - 1.5f, cell * 0.25f);
                 }

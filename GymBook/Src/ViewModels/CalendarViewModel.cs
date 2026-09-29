@@ -185,6 +185,7 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
                 return;
             foreach (var s in sessions)
                 store.Data.Sessions.Remove(s);
+            store.CompactPlanWeeks();
             store.Save();
             await OnAppearingAsync();
         }

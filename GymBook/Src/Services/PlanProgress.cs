@@ -61,6 +61,23 @@ public class PlanProgress
     /// <summary>Unmarks every rest day of <paramref name="week"/>.</summary>
     public static void ClearRestDays(WorkoutPlan plan, int week) => plan.RestDaysDone?.RemoveAll(k => k / 1000 == week);
 
+    /// <summary>
+    /// Closes the gaps left in a plan's weeks when one is reset or its workouts are deleted: the weeks with anything in
+    /// them (a workout, the one in progress, or a rest day done) are numbered 1, 2, 3… again in order, so an empty week
+    /// never sits before a week with progress. E.g. weeks 0/6, 1/6 become week 1 with 1/6.
+    /// </summary>
+    public static void CompactWeeks(WorkoutPlan plan, IEnumerable<WorkoutSession> sessions)
+    {
+        var progress = new PlanProgress(plan, sessions);
+        var used = progress._sessions.Select(progress.WeekOf).Concat((plan.RestDaysDone ?? []).Select(k => k / 1000)).Distinct().Order().ToList();
+        var map = used.Select((week, i) => (week, number: i + 1)).ToDictionary(x => x.week, x => x.number);
+        if (map.All(x => x.Key == x.Value))
+            return;
+        foreach (var s in progress._sessions)
+            s.PlanWeek = map[progress.WeekOf(s)];
+        plan.RestDaysDone = plan.RestDaysDone?.Select(k => map[k / 1000] * 1000 + k % 1000).ToList();
+    }
+
     static int RestKey(int day, int week) => week * 1000 + day;
 
     public static void SetRestDone(WorkoutPlan plan, int day, int week, bool done)

@@ -69,4 +69,17 @@ public class DataStore
 
     /// <summary>Finished sessions, newest first.</summary>
     public IEnumerable<WorkoutSession> History => Data.Sessions.Where(s => s.EndedAt != null).OrderByDescending(s => s.StartedAt);
+
+    /// <summary>
+    /// After workouts are deleted or a week is reset: every plan's weeks renumbered so none is left empty before one
+    /// with progress (see <see cref="PlanProgress.CompactWeeks"/>). Saving is up to the caller.
+    /// </summary>
+    public void CompactPlanWeeks()
+    {
+        var sessions = History.ToList();
+        if (Data.ActiveSession is { } active && sessions.All(s => s.Id != active.Id))
+            sessions.Add(active);
+        foreach (var plan in Data.Plans)
+            PlanProgress.CompactWeeks(plan, sessions);
+    }
 }

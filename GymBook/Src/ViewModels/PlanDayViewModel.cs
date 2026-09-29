@@ -186,6 +186,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         if (!await dialogs.Confirm("Discard workout?", "It's removed from your history and statistics. This can't be undone.", "Discard"))
             return;
         store.Data.Sessions.Remove(session);
+        store.CompactPlanWeeks();
         store.Save();
         await Close();
     }
