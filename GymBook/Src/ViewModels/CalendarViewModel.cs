@@ -27,12 +27,19 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     [ObservableProperty] List<SessionItem> selectedSessions = [];
     [ObservableProperty] bool selectedIsEmpty;
 
-    // Muscle recovery on the selected day: now for today, that morning for any other day.
+    // Muscle recovery on the selected day, at the moment picked under the map: before or after one of its workouts
+    // (or that morning), moved with a slider.
     [ObservableProperty] IDrawable recoveryMap = MuscleMapDrawable.Empty;
     [ObservableProperty] string recoveryTitle = "";
     [ObservableProperty] string recoverySummary = "";
-    [ObservableProperty] bool canOpenRecovery;
-    double _recoveryHours;
+    [ObservableProperty] bool canOpenRecovery = true;
+
+    /// <summary>The moment the map shows; shared with the recovery details page it opens.</summary>
+    public RecoveryMoment Moment { get; } = new();
+
+    bool _momentHooked;
+    // The day (and how many workouts it had) the moment was set up for: a refresh of the same day keeps what was picked.
+    (DateTime Day, int Count)? _momentFor;
 
     public override Task OnAppearingAsync()
     {
@@ -99,28 +106,39 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
         SelectedIsEmpty = HasSelection && SelectedSessions.Count == 0;
     }
 
+    /// <summary>A newly selected day starts before its first workout (or that morning); the moment picker takes it from there.</summary>
     void UpdateRecovery(DateTime day)
     {
-        // On a training day, how recovered you were going into the first workout; otherwise now (today) or that morning.
-        var first = _byDay[day].OrderBy(s => s.StartedAt).FirstOrDefault();
-        var at = first != null ? first.StartedAt : day == DateTime.Today ? DateTime.Now : day.AddHours(9);
-        var rec = recovery.Compute(at);
-        RecoveryMap = MuscleMapDrawable.ForRecovery(rec);
-        RecoveryTitle = first != null ? $"Muscle recovery before {first.Name} ({first.StartedAt:HH:mm})"
-            : day == DateTime.Today ? "Muscle recovery now"
-            : day > DateTime.Today ? "Muscle recovery that morning (forecast)"
-            : "Muscle recovery that morning";
-        var tired = rec.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
-        RecoverySummary = tired.Count == 0
-            ? $"Every muscle group {(day < DateTime.Today ? "was" : "is")} fresh."
-            : $"Recovering: {string.Join(", ", tired)}";
-        // The details page previews a week back and four days ahead.
-        _recoveryHours = Math.Round((at - DateTime.Now).TotalHours);
-        CanOpenRecovery = _recoveryHours >= -RecoveryService.PreviewPastHours && _recoveryHours <= RecoveryService.PreviewFutureHours;
+        if (!_momentHooked)
+        {
+            _momentHooked = true;
+            Moment.Changed += (_, _) => ShowRecovery();
+        }
+        var key = (day, _byDay[day].Count());
+        if (_momentFor == key)
+        {
+            ShowRecovery();
+            return;
+        }
+        _momentFor = key;
+        Moment.SetDay(day, _byDay[day]);
     }
 
+    void ShowRecovery()
+    {
+        var at = Moment.At;
+        var rec = recovery.Compute(at);
+        RecoveryMap = MuscleMapDrawable.ForRecovery(rec);
+        RecoveryTitle = at > DateTime.Now.AddMinutes(5) ? "Muscle recovery (forecast)" : "Muscle recovery";
+        var tired = rec.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
+        RecoverySummary = tired.Count == 0
+            ? $"Every muscle group {(at < DateTime.Now ? "was" : "is")} fresh."
+            : $"Recovering: {string.Join(", ", tired)}";
+    }
+
+    /// <summary>The details page, on the same workout, side and slider position.</summary>
     [RelayCommand]
-    Task OpenRecovery() => GoTo($"{Routes.Recovery}?hours={_recoveryHours.ToString(System.Globalization.CultureInfo.InvariantCulture)}");
+    Task OpenRecovery() => GoTo($"{Routes.Recovery}?{Moment.Query}");
 
     void Select(DateTime day)
     {

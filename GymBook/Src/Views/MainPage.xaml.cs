@@ -34,7 +34,9 @@ public partial class MainPage : ContentPage
         // when open; the others keep the bar's usual look (the filled icon font when selected).
         _tabs =
         [
-            new() { Glyph = "format_list_bulleted", PageName = "Exercises", Page = exercises, Color = color },
+            // Icons with a solid body, so the filled version (selected) looks different from the outline one; line-only
+            // icons like format_list_bulleted and insights look the same in both.
+            new() { Glyph = "list_alt", PageName = "Exercises", Page = exercises, Color = color },
             new() { Glyph = "event_note", PageName = "Plans", Page = plans, Color = color },
             new()
             {
@@ -43,7 +45,7 @@ public partial class MainPage : ContentPage
                 IconBackground = (Color)resources["Surface3"], SelectedIconBackground = accent,
                 IconSize = 26, IconBackgroundSize = 44, ItemWidth = 72, ShowLabel = false,
             },
-            new() { Glyph = "insights", PageName = "Progress", Page = stats, Color = color },
+            new() { Glyph = "analytics", PageName = "Progress", Page = stats, Color = color },
             new() { Glyph = "person", PageName = "Profile", Page = profile, Color = color },
         ];
 

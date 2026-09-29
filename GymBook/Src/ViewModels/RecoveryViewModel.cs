@@ -18,27 +18,34 @@ public class MuscleRecoveryItem
 }
 
 /// <summary>
-/// Full-screen recovery: the body map, a preview slider to look back up to a week or ahead until everything is fresh,
-/// and every muscle's recovery with when it will be ready and which workout tired it.
+/// Full-screen recovery: the body map at a moment picked like on the calendar (a workout, before or after it, and a
+/// slider from there; or from now, opened from the Workout tab), and every muscle's recovery with when it will be
+/// ready and which workout tired it.
 /// </summary>
-public partial class RecoveryViewModel(RecoveryService recovery) : BaseViewModel, IQueryAttributable
+public partial class RecoveryViewModel : BaseViewModel, IQueryAttributable
 {
     // The big movers first, then the smaller and supporting muscles that work alongside them.
     static readonly MuscleGroup[] Major = [MuscleGroup.Chest, MuscleGroup.Back, MuscleGroup.Shoulders, MuscleGroup.Quads, MuscleGroup.Hamstrings, MuscleGroup.Glutes];
 
+    readonly RecoveryService recovery;
+    readonly DataStore store;
+
+    public RecoveryViewModel(RecoveryService recovery, DataStore store)
+    {
+        (this.recovery, this.store) = (recovery, store);
+        Moment.Changed += (_, _) => Update();
+    }
+
     [ObservableProperty] IDrawable map = MuscleMapDrawable.Empty;
-    [ObservableProperty] double hours;
-    [ObservableProperty] string when = "Now";
-    [ObservableProperty] bool isPreview;
     [ObservableProperty] string summary = "";
     [ObservableProperty] List<MuscleRecoveryItem> majorMuscles = [];
     [ObservableProperty] List<MuscleRecoveryItem> supportingMuscles = [];
 
-    public void ApplyQueryAttributes(IDictionary<string, object> query)
-    {
-        if (query.TryGetValue("hours", out var h) && double.TryParse(h?.ToString(), System.Globalization.CultureInfo.InvariantCulture, out var value))
-            Hours = Math.Clamp(value, -RecoveryService.PreviewPastHours, RecoveryService.PreviewFutureHours);
-    }
+    /// <summary>The moment shown, the same picker as on the calendar's day card.</summary>
+    public RecoveryMoment Moment { get; } = new();
+
+    public void ApplyQueryAttributes(IDictionary<string, object> query) =>
+        Moment.TryApply(query, day => store.History.Where(s => s.StartedAt.Date == day));
 
     public override Task OnAppearingAsync()
     {
@@ -46,24 +53,11 @@ public partial class RecoveryViewModel(RecoveryService recovery) : BaseViewModel
         return Task.CompletedTask;
     }
 
-    partial void OnHoursChanged(double value)
-    {
-        var snapped = Math.Round(value);
-        if (Math.Abs(snapped - value) > 0.001)
-        {
-            Hours = snapped;
-            return;
-        }
-        Update();
-    }
-
     void Update()
     {
-        var at = DateTime.Now.AddHours(Hours);
+        var at = Moment.At;
         var details = recovery.Details(at);
         Map = MuscleMapDrawable.ForRecovery(details.ToDictionary(d => d.Muscle, d => d.Recovery));
-        When = RecoveryService.PreviewLabel(Hours);
-        IsPreview = Hours != 0;
 
         var tired = details.Count(d => d.Recovery < 0.9);
         Summary = tired == 0 ? "Every muscle is fresh." : $"{tired} of {details.Count} muscle groups still recovering.";
@@ -88,7 +82,4 @@ public partial class RecoveryViewModel(RecoveryService recovery) : BaseViewModel
         var h = (int)Math.Ceiling(span.TotalHours);
         return h >= 24 ? $"in {h / 24} d {h % 24} h" : $"in {h} h";
     }
-
-    [RelayCommand]
-    void Now() => Hours = 0;
 }

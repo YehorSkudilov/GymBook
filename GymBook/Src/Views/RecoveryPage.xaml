@@ -47,19 +47,8 @@
                             <Label Text="Fresh" Style="{StaticResource Caption}" FontSize="12" />
                         </HorizontalStackLayout>
                     </HorizontalStackLayout>
-                    <VerticalStackLayout Spacing="2">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Label Text="{Binding When}" FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" />
-                            <Button Grid.Column="1" Text="Now" Style="{StaticResource SmallButton}" IsVisible="{Binding IsPreview}" Command="{Binding NowCommand}" />
-                        </Grid>
-                        <!-- Maximum before Minimum: the minimum can only go negative once the maximum allows the range. -->
-                        <Slider Maximum="96" Minimum="-168" Value="{Binding Hours}"
-                                MinimumTrackColor="{StaticResource Accent}" MaximumTrackColor="{StaticResource Surface3}" ThumbColor="{StaticResource Accent}" />
-                        <Grid ColumnDefinitions="*,*">
-                            <Label Text="7 days ago" Style="{StaticResource Caption}" FontSize="11" />
-                            <Label Grid.Column="1" Text="In 4 days" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End" />
-                        </Grid>
-                    </VerticalStackLayout>
+                    <!-- The same picker as the calendar's day card: which workout, before or after it, and a slider from there -->
+                    <views:RecoveryMomentView BindingContext="{Binding Moment}" />
                     <Label Text="{Binding Summary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
             </Border>

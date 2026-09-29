@@ -143,6 +143,8 @@
                         <Label Text="{Binding RecoveryTitle}" Style="{StaticResource H3}" />
                         <GraphicsView Drawable="{Binding RecoveryMap}" HeightRequest="220" />
                         <Label Text="{Binding RecoverySummary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                        <!-- Which workout, before or after it, and a slider to move from there -->
+                        <views:RecoveryMomentView BindingContext="{Binding Moment}" />
                         <Button Text="Details" Style="{StaticResource GhostButton}" IsVisible="{Binding CanOpenRecovery}" Command="{Binding OpenRecoveryCommand}" />
                     </VerticalStackLayout>
                 </Border>
