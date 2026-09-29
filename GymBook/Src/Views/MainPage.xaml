@@ -28,7 +28,7 @@
             x:Name="ActiveBar"
             Margin="0,0,0,10"
             BorderColor="Transparent"
-rename co            CornerRadius="17"
+            CornerRadius="17"
             EffectStyle="Custom"
             HorizontalOptions="Center"
             IsVisible="False"
