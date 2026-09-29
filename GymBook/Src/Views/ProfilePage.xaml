@@ -27,6 +27,25 @@
             <Setter Property="HeightRequest" Value="16" />
             <Setter Property="VerticalOptions" Value="Center" />
         </Style>
+        <!-- A part of Defaults (Rest, Warm-ups, Training): an icon, its name and what it applies to, above its card -->
+        <Style x:Key="SubsectionHeader" TargetType="Grid">
+            <Setter Property="ColumnDefinitions" Value="Auto,*" />
+            <Setter Property="ColumnSpacing" Value="12" />
+            <Setter Property="Margin" Value="4,10,0,-4" />
+        </Style>
+        <Style x:Key="SubsectionIcon" TargetType="Border">
+            <Setter Property="WidthRequest" Value="36" />
+            <Setter Property="HeightRequest" Value="36" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 11" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="BackgroundColor" Value="{StaticResource AccentSoft}" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="SubsectionTitle" TargetType="Label">
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        </Style>
         <Style x:Key="Divider" TargetType="BoxView">
             <Setter Property="HeightRequest" Value="1" />
             <Setter Property="Margin" Value="16,0" />
@@ -114,53 +133,10 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Label Text="TRAINING PROFILE" Style="{StaticResource Overline}" Margin="4,6,0,0" />
-            <Border Style="{StaticResource Card}" Padding="0">
-                <VerticalStackLayout>
-                    <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditGoalCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Goal" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="{Binding GoalText}" Style="{StaticResource RowValue}" />
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
-                    <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditExperienceCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Experience" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="{Binding ExperienceText}" Style="{StaticResource RowValue}" />
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
-                    <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditDaysCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Training days" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="{Binding DaysText}" Style="{StaticResource RowValue}" />
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
-                    <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditDurationCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Session length" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="{Binding DurationText}" Style="{StaticResource RowValue}" />
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
-                    <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditEquipmentCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Equipment" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="{Binding EquipmentText}" Style="{StaticResource RowValue}" LineBreakMode="TailTruncation" MaximumWidthRequest="180" />
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
-                    <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding NewPlanCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Generate a new plan" TextColor="{StaticResource Accent}" VerticalOptions="Center" />
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                </VerticalStackLayout>
-            </Border>
-
-            <Label Text="WORKOUT SETTINGS" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+            <!-- You yourself: what starting weights, progression and the suggested sets and rest go by. No goal, training
+                 days, session length or equipment here: those are each plan's own, asked for when one is built (and
+                 remembered for the next). -->
+            <Label Text="ABOUT YOU" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0">
                 <VerticalStackLayout>
                     <Grid Style="{StaticResource Row}">
@@ -200,6 +176,39 @@
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditExperienceCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Experience" />
+                            <Label Text="Sets how fast weights go up, and the suggested sets and rest" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="{Binding ExperienceText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- What plans start from: rest and warm-ups every plan follows unless it has its own (its ··· menu), and how a
+                 new plan runs its weeks. -->
+            <Label Text="DEFAULTS" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+            <Label Text="Plans use these unless you give one its own, in its ··· menu under Plan settings."
+                   Style="{StaticResource Caption}" FontSize="12" Margin="4,-6,0,0" />
+
+            <Grid Style="{StaticResource SubsectionHeader}">
+                <Border Style="{StaticResource SubsectionIcon}">
+                    <Image WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image.Source>
+                            <FontImageSource FontFamily="OutlinedIcons" Glyph="timer" Color="{StaticResource Accent}" Size="32" />
+                        </Image.Source>
+                    </Image>
+                </Border>
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                    <Label Text="Rest" Style="{StaticResource SubsectionTitle}" />
+                    <Label Text="Between sets, in plans using the defaults" Style="{StaticResource Caption}" FontSize="12" />
+                </VerticalStackLayout>
+            </Grid>
+            <Border Style="{StaticResource Card}" Padding="0">
+                <VerticalStackLayout>
+                    <Grid Style="{StaticResource Row}">
                         <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditCompoundRestCommand}" /></Grid.GestureRecognizers>
                         <VerticalStackLayout VerticalOptions="Center">
                             <Label Text="Rest: compound" />
@@ -219,6 +228,17 @@
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
+                    <!-- Part of the warm-up settings, but it's a rest time, so it's with these -->
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding WarmupSettings.EditRestCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Rest: warm-up sets" />
+                            <Label Text="After each warm-up set, before the next" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="{Binding WarmupSettings.RestText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}" Padding="16,6">
                         <VerticalStackLayout VerticalOptions="Center">
                             <Label Text="Auto-start rest timer" />
@@ -226,7 +246,39 @@
                         </VerticalStackLayout>
                         <Switch Grid.Column="2" IsToggled="{Binding AutoRest}" />
                     </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid Style="{StaticResource SubsectionHeader}">
+                <Border Style="{StaticResource SubsectionIcon}">
+                    <Image WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image.Source>
+                            <FontImageSource FontFamily="OutlinedIcons" Glyph="local_fire_department" Color="{StaticResource Accent}" Size="32" />
+                        </Image.Source>
+                    </Image>
+                </Border>
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                    <Label Text="Warm-ups" Style="{StaticResource SubsectionTitle}" />
+                    <Label Text="In plans using the defaults. Percentages are of your first working set" Style="{StaticResource Caption}" FontSize="12" />
+                </VerticalStackLayout>
+            </Grid>
+            <views:WarmupSettingsView BindingContext="{Binding WarmupSettings}" />
+
+            <Grid Style="{StaticResource SubsectionHeader}">
+                <Border Style="{StaticResource SubsectionIcon}">
+                    <Image WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Image.Source>
+                            <FontImageSource FontFamily="OutlinedIcons" Glyph="trending_up" Color="{StaticResource Accent}" Size="32" />
+                        </Image.Source>
+                    </Image>
+                </Border>
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                    <Label Text="Training" Style="{StaticResource SubsectionTitle}" />
+                    <Label Text="Reps in reserve and how plans using the defaults run their weeks" Style="{StaticResource Caption}" FontSize="12" />
+                </VerticalStackLayout>
+            </Grid>
+            <Border Style="{StaticResource Card}" Padding="0">
+                <VerticalStackLayout>
                     <Grid Style="{StaticResource Row}" Padding="16,6">
                         <VerticalStackLayout VerticalOptions="Center">
                             <Label Text="Track RIR" />
@@ -237,19 +289,21 @@
                     <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}" Padding="16,6">
                         <VerticalStackLayout VerticalOptions="Center">
-                            <Label Text="Train neck" />
-                            <Label Text="Add neck exercises to new plans" Style="{StaticResource Caption}" FontSize="12" />
+                            <Label Text="Deload weeks" />
+                            <Label Text="A lighter week after every 4: about half the sets" Style="{StaticResource Caption}" FontSize="12" />
                         </VerticalStackLayout>
-                        <Switch Grid.Column="2" IsToggled="{Binding TrainNeck}" />
+                        <Switch Grid.Column="2" IsToggled="{Binding DefaultDeloads}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}" Padding="16,6">
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Periodization" />
+                            <Label Text="Each 4-week block builds, hardest in week 4" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="2" IsToggled="{Binding DefaultPeriodization}" />
                     </Grid>
                 </VerticalStackLayout>
             </Border>
-
-            <!-- Warm-ups: the defaults every plan uses, unless a plan has its own (its ··· menu) -->
-            <Label Text="WARM-UPS" Style="{StaticResource Overline}" Margin="4,6,0,0" />
-            <views:WarmupSettingsView BindingContext="{Binding WarmupSettings}" />
-            <Label Text="Every plan uses these unless you change its own in the plan's ··· menu. Percentages are of your first working set's weight."
-                   Style="{StaticResource Caption}" FontSize="12" Margin="4,0" />
 
             <Label Text="DATA" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0">

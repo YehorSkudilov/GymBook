@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- One day on the Edit plan page, bound to a PlanDetailDay: the page's day pager (a CView) holds one of these per day
+     and swipes between them. What the day does goes through its Plan, the page's view model, for the day on screen. -->
+<skeleton:PageBase
+    x:Class="GymBook.Views.PlanDetailDayView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:GymBook.Controls"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PlanDetailDay"
+    Padding="0">
+
+    <!-- A background, so the day sliding in covers the one going out -->
+    <VerticalStackLayout Spacing="18" BackgroundColor="{StaticResource Bg}">
+            <!-- Selected day -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="14,0">
+                <VerticalStackLayout Spacing="4" VerticalOptions="Center">
+                    <!-- A grid, not a stack: a long name shortens instead of pushing the ··· under the diagram. -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <Label Text="{Binding DayName}" Style="{StaticResource Title}" FontSize="28" VerticalOptions="Center"
+                               LineBreakMode="TailTruncation" />
+                        <ImageButton Grid.Column="1" Source="{StaticResource IconMore}" WidthRequest="44" HeightRequest="36" Padding="10,6"
+                                     BackgroundColor="{StaticResource Surface2}" CornerRadius="18" VerticalOptions="Center"
+                                     Command="{Binding Plan.DayOptionsCommand}" />
+                    </Grid>
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="{Binding DayLabel}" Style="{StaticResource Caption}" FontSize="15" VerticalOptions="Center" />
+                        <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource SuccessSoft}" IsVisible="{Binding IsDayDone}"
+                                Padding="8,2" VerticalOptions="Center">
+                            <Label Text="Finished" TextColor="{StaticResource Success}" FontSize="11" FontFamily="OpenSansSemibold" />
+                        </Border>
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding DayMeta}" Style="{StaticResource Caption}" FontSize="15" TextColor="{StaticResource TextTertiary}" />
+                </VerticalStackLayout>
+                <!-- Tap for the full muscle breakdown. -->
+                <Border Grid.Column="1" BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 16" StrokeThickness="0"
+                        Padding="6" IsVisible="{Binding IsWorkoutDay}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding Plan.OpenMusclesCommand}" />
+                    </Border.GestureRecognizers>
+                    <Grid>
+                        <GraphicsView Drawable="{Binding DayMap}" WidthRequest="116" HeightRequest="116" InputTransparent="True" />
+                        <Image Source="{StaticResource IconChevronRight}" WidthRequest="12" HeightRequest="12" HorizontalOptions="End"
+                               VerticalOptions="End" Opacity="0.7" />
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Exercises: tap one to change it here, drag its grip up or down to move it -->
+            <Border Style="{StaticResource Card}" Margin="10,0" Padding="14" IsVisible="{Binding IsWorkoutDay}">
+                <VerticalStackLayout Spacing="10">
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding DayExercises}" Spacing="6">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PlanDayExercise">
+                                <!-- The row itself follows the finger; the others slide aside. A solid background so it covers them. -->
+                                <controls:ReorderItem MoveCommand="{Binding MoveCommand}">
+                                <Border BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="0,4">
+                                    <VerticalStackLayout>
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
+                                            <Grid.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding ToggleCommand}" />
+                                            </Grid.GestureRecognizers>
+                                            <Border WidthRequest="88" HeightRequest="66" StrokeShape="RoundRectangle 14" StrokeThickness="0"
+                                                    BackgroundColor="{Binding Thumb.Soft}" VerticalOptions="Start">
+                                                <Grid>
+                                                    <Label Text="{Binding Thumb.Initial}" TextColor="{Binding Thumb.Color}" FontFamily="OpenSansSemibold"
+                                                           FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                    <Image Source="{Binding Thumb.Image}" IsVisible="{Binding Thumb.HasImage}" Aspect="AspectFill" />
+                                                </Grid>
+                                            </Border>
+                                            <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                                <VerticalStackLayout>
+                                                    <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" LineBreakMode="TailTruncation" />
+                                                    <Label Text="{Binding Equipment}" Style="{StaticResource Caption}" />
+                                                </VerticalStackLayout>
+                                                <!-- Tap either for a number popup: sets, or the rep range (lowest and highest). Rest and RIR are on the opened row. -->
+                                                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                                                    <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
+                                                        <Border.GestureRecognizers>
+                                                            <TapGestureRecognizer Command="{Binding PickSetsCommand}" />
+                                                        </Border.GestureRecognizers>
+                                                        <Label Text="{Binding Sets, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
+                                                    </Border>
+                                                    <Border Grid.Column="1" BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
+                                                        <Border.GestureRecognizers>
+                                                            <TapGestureRecognizer Command="{Binding PickRepsCommand}" />
+                                                        </Border.GestureRecognizers>
+                                                        <Label Text="{Binding Reps, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
+                                                    </Border>
+                                                </Grid>
+                                            </VerticalStackLayout>
+                                            <!-- The grip: drag the row from here (at once, no hold). Anywhere else on the row scrolls the list.
+                                                 The whole row height and a bit either side, so it is easy to hit. -->
+                                            <Label Grid.Column="2" Text="⋮⋮" TextColor="{StaticResource TextTertiary}" FontSize="18" controls:ReorderItem.IsHandle="True"
+                                                   VerticalOptions="Fill" VerticalTextAlignment="Center" Padding="12,0" Margin="-12,0,0,0" />
+                                        </Grid>
+
+                                        <!-- Opened: change it right here. Grows open and folds away; the gap above it is padding, so that animates too. -->
+                                        <VerticalStackLayout Spacing="10" Padding="0,12,0,0" controls:AnimatedVisibility.IsShown="{Binding IsExpanded}">
+                                            <!-- Each is the plan's unless changed here (then it says what the plan's is), and can go back to it. The rep range
+                                                 is on the Reps pill above. Cards in a row fill it, so they're as tall as each other. -->
+                                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                                                <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill">
+                                                    <VerticalStackLayout Spacing="6">
+                                                        <Label Text="REST" Style="{StaticResource Overline}" FontSize="10" />
+                                                        <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
+                                                            <Border.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding PickRestCommand}" />
+                                                            </Border.GestureRecognizers>
+                                                            <Label Text="{Binding RestText, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
+                                                        </Border>
+                                                        <Label Text="{Binding RestSource}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                                                        <Label Text="Use the plan's" TextColor="{StaticResource Accent}" FontSize="12" FontFamily="OpenSansSemibold"
+                                                               HorizontalOptions="Center" IsVisible="{Binding IsCustomRest}" Padding="0,2">
+                                                            <Label.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding ResetRestCommand}" />
+                                                            </Label.GestureRecognizers>
+                                                        </Label>
+                                                    </VerticalStackLayout>
+                                                </Border>
+                                                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill" IsVisible="{Binding ShowRir}">
+                                                    <VerticalStackLayout Spacing="6">
+                                                        <Label Text="TARGET RIR" Style="{StaticResource Overline}" FontSize="10" />
+                                                        <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
+                                                            <Border.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding PickRirCommand}" />
+                                                            </Border.GestureRecognizers>
+                                                            <Label Text="{Binding RirText, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
+                                                        </Border>
+                                                        <Label Text="{Binding RirSource}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                                                        <Label Text="Use the plan's" TextColor="{StaticResource Accent}" FontSize="12" FontFamily="OpenSansSemibold"
+                                                               HorizontalOptions="Center" IsVisible="{Binding IsCustomRir}" Padding="0,2">
+                                                            <Label.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding ResetRirCommand}" />
+                                                            </Label.GestureRecognizers>
+                                                        </Label>
+                                                    </VerticalStackLayout>
+                                                </Border>
+                                                <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill" IsVisible="{Binding ShowWarmups}">
+                                                    <VerticalStackLayout Spacing="6">
+                                                        <Label Text="WARM-UPS" Style="{StaticResource Overline}" FontSize="10" />
+                                                        <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
+                                                            <Border.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding PickWarmupsCommand}" />
+                                                            </Border.GestureRecognizers>
+                                                            <Label Text="{Binding WarmupsText, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
+                                                        </Border>
+                                                        <Label Text="{Binding WarmupsSource}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                                                        <Label Text="Use the plan's" TextColor="{StaticResource Accent}" FontSize="12" FontFamily="OpenSansSemibold"
+                                                               HorizontalOptions="Center" IsVisible="{Binding IsCustomWarmups}" Padding="0,2">
+                                                            <Label.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding ResetWarmupsCommand}" />
+                                                            </Label.GestureRecognizers>
+                                                        </Label>
+                                                    </VerticalStackLayout>
+                                                </Border>
+                                                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill">
+                                                    <VerticalStackLayout Spacing="6">
+                                                        <Label Text="WEEK TO WEEK" Style="{StaticResource Overline}" FontSize="10" />
+                                                        <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
+                                                            <Border.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding PickWeeksCommand}" />
+                                                            </Border.GestureRecognizers>
+                                                            <Label Text="{Binding WeeksText, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
+                                                        </Border>
+                                                        <Label Text="{Binding WeeksSource}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                                                        <Label Text="Use the plan's" TextColor="{StaticResource Accent}" FontSize="12" FontFamily="OpenSansSemibold"
+                                                               HorizontalOptions="Center" IsVisible="{Binding IsCustomWeeks}" Padding="0,2">
+                                                            <Label.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding ResetWeeksCommand}" />
+                                                            </Label.GestureRecognizers>
+                                                        </Label>
+                                                    </VerticalStackLayout>
+                                                </Border>
+                                            </Grid>
+                                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                                <Button Text="Exercise info" Style="{StaticResource SmallButton}" Command="{Binding OpenCommand}" IsEnabled="{Binding HasInfo}" />
+                                                <Button Grid.Column="1" Text="Remove" Style="{StaticResource SmallButton}" TextColor="{StaticResource Danger}"
+                                                        Command="{Binding RemoveCommand}" />
+                                            </Grid>
+                                        </VerticalStackLayout>
+                                    </VerticalStackLayout>
+                                </Border>
+                                </controls:ReorderItem>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Label Text="No exercises yet." Style="{StaticResource Caption}" HorizontalOptions="Center" IsVisible="{Binding IsEmptyDay}" />
+                    <Button Text="+ Add exercise" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Accent}" Command="{Binding Plan.AddExerciseCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Rest -->
+            <Border Style="{StaticResource Card}" Margin="10,0" Padding="20,28" IsVisible="{Binding IsRestDay}">
+                <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                    <Label Text="Rest day" Style="{StaticResource H3}" HorizontalOptions="Center" />
+                    <Label Text="Drag it in the day strip to move it, or remove it from the ··· menu." Style="{StaticResource Caption}" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+    </VerticalStackLayout>
+</skeleton:PageBase>

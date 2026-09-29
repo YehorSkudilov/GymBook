@@ -144,6 +144,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
             Name = response.Name,
             Description = response.Description,
             Goal = answers.Goal,
+            OwnTraining = true,
             Deloads = false,
             Periodization = false,
         };
@@ -507,6 +508,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
                     RestSeconds = rest,
                     // An imported plan's rest times are as written: each exercise keeps its own.
                     CustomRest = keepRest,
+                    CustomRir = keepRest,
                 });
             }
             if (workout.Exercises.Count > 0)

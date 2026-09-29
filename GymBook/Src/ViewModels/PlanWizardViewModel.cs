@@ -16,7 +16,7 @@ namespace GymBook.ViewModels;
 public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, AiPlanService ai, IServiceProvider services)
     : BaseViewModel, IQueryAttributable
 {
-    enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, BuildWith, Questions, Result }
+    enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, Neck, BuildWith, Questions, Result }
 
     List<Step> _steps = [];
     int _index;
@@ -35,6 +35,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     int _days;
     int _minutes;
     EquipmentAccess _equipment;
+    bool _neck;
     // The last choice: build the plan with AI (follow-up questions, then generation) or with the built-in generator.
     bool _useAi = true;
 
@@ -99,7 +100,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         // Ready by the last steps, so a used-up quota skips straight to the standard plan.
         _ = ai.RefreshQuotaAsync();
         var p = store.Profile;
-        (_goal, _experience, _days, _minutes, _equipment) = (p.Goal, p.Experience, p.DaysPerWeek, p.SessionMinutes, p.EquipmentAccess);
+        (_goal, _experience, _days, _minutes, _equipment, _neck) = (p.Goal, p.Experience, p.DaysPerWeek, p.SessionMinutes, p.EquipmentAccess, p.TrainNeck);
         _regenerating = onboarding ? null : store.GetPlan(_regenerateId);
         if (_regenerating != null)
         {
@@ -109,8 +110,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         }
         UserName = p.Name;
         _steps = onboarding
-            ? [Step.Welcome, Step.About, Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.BuildWith, Step.Questions, Step.Result]
-            : [Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.BuildWith, Step.Questions, Step.Result];
+            ? [Step.Welcome, Step.About, Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Questions, Step.Result]
+            : [Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Questions, Step.Result];
 
         UnitChips.Clear();
         foreach (var u in Enum.GetValues<WeightUnit>())
@@ -221,6 +222,13 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
                 Subtitle = "We'll only pick exercises you can actually do.";
                 AddOptions(Enum.GetValues<EquipmentAccess>(), e => e.Display(), e => e.Description(), _equipment);
                 break;
+            case Step.Neck:
+                Title = "Train your neck too?";
+                Subtitle = "Neck work is optional. It helps in contact sports and for a thicker-looking neck.";
+                AddOptions([true, false], neck => neck ? "Yes, add neck exercises" : "No neck exercises", neck => neck
+                    ? "A neck exercise on some of your workouts"
+                    : "Leave the neck out of the plan", _neck);
+                break;
             case Step.BuildWith:
                 Title = "How should we build your plan?";
                 Subtitle = "AI tailors the plan to you after a few more questions. The standard plan is ready instantly.";
@@ -256,6 +264,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             case EquipmentAccess a: _equipment = a; break;
             case int i when _steps[_index] == Step.Days: _days = i; break;
             case int m: _minutes = m; break;
+            case bool neck when _steps[_index] == Step.Neck: _neck = neck; break;
             case bool useAi: _useAi = useAi; break;
         }
     }
@@ -270,7 +279,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             DaysPerWeek = _days,
             SessionMinutes = _minutes,
             EquipmentAccess = _equipment,
-            TrainNeck = p.TrainNeck,
+            TrainNeck = _neck,
             BodyWeightKg = units.TryParse(BodyWeight, out var kg) && kg > 0 ? kg : p.BodyWeightKg,
             BirthYear = p.BirthYear,
             TrainingSince = p.TrainingSince,
@@ -279,7 +288,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         };
     }
 
-    string AnswersKey() => $"{_goal}|{_experience}|{_days}|{_minutes}|{_equipment}";
+    string AnswersKey() => $"{_goal}|{_experience}|{_days}|{_minutes}|{_equipment}|{_neck}";
 
     /// <summary>
     /// Asks the AI what else it wants to know. The questions are kept while the answers stay the same. If the AI can't
@@ -496,6 +505,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         p.DaysPerWeek = _days;
         p.SessionMinutes = _minutes;
         p.EquipmentAccess = _equipment;
+        p.TrainNeck = _neck;
         if (IsOnboarding)
         {
             p.Name = UserName.Trim();
@@ -518,9 +528,17 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             _regenerating.DaysPerWeek = _plan.DaysPerWeek;
             _regenerating.Workouts = _plan.Workouts;
             _regenerating.RestDays = _plan.RestDays;
+            // The new exercises take the plan's own rest and target RIR, if it has them; otherwise they're as built.
+            if (_regenerating.OwnRest)
+                PlanRest.Apply(_regenerating, p, store.GetExercise);
+            if (_regenerating is { OwnTraining: true, TargetRir: not null })
+                PlanTraining.ApplyRir(_regenerating, p, store.GetExercise);
         }
         else if (_plan != null)
         {
+            // A new plan follows the profile's defaults (rest, warm-ups, training) until given its own; a regenerated one
+            // keeps its own settings.
+            PlanTraining.Apply(_plan, p);
             store.Data.Plans.Add(_plan);
             store.Data.ActivePlanId = _plan.Id;
         }

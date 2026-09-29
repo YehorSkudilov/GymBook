@@ -53,20 +53,6 @@ public partial class WorkoutViewModel(
         OnPropertyChanged(nameof(CurrentExercise));
     }
 
-    [RelayCommand]
-    void NextExercise()
-    {
-        if (CurrentIndex + 1 < Exercises.Count)
-            CurrentIndex++;
-    }
-
-    [RelayCommand]
-    void PreviousExercise()
-    {
-        if (CurrentIndex > 0)
-            CurrentIndex--;
-    }
-
     internal Task SelectExercise(WorkoutExerciseViewModel vm)
     {
         var index = Exercises.IndexOf(vm);

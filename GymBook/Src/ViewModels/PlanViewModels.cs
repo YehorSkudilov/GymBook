@@ -39,15 +39,32 @@ public class PlanDayChip
 }
 
 /// <summary>
-/// An exercise of the selected day on the plan page. Tap it to change its sets, rep range, reps in reserve and rest
-/// right there; long-press and drag it onto another exercise to move it there.
+/// One day on the Edit plan page, on its own page in the day pager: a workout with its exercises, or a rest day.
+/// What it does (add an exercise, its ··· menu, the muscle map) is on <see cref="Plan"/>, for the day on screen.
 /// </summary>
+public class PlanDetailDay
+{
+    public required PlanDetailViewModel Plan { get; init; }
+    /// <summary>The workout, or null for a rest day.</summary>
+    public required PlanWorkout? Workout { get; init; }
+    public required string DayName { get; init; }
+    public required string DayLabel { get; init; }
+    public required string DayMeta { get; init; }
+    public bool IsRestDay => Workout == null;
+    public bool IsWorkoutDay => Workout != null;
+    public required bool IsEmptyDay { get; init; }
+    /// <summary>Opened from a plan week on Home, and that week's session of it is logged.</summary>
+    public required bool IsDayDone { get; init; }
+    public required IDrawable DayMap { get; init; }
+    public required List<PlanDayExercise> DayExercises { get; init; }
+}
+
 /// <summary>
 /// An exercise of the day on the Edit plan page. Its sets and reps are picked from the pills on the row itself; opened,
-/// it has the rep range, target RIR and rest. The rest is the plan's default unless set here, and can go back to it
-/// (<paramref name="planRest"/>).
+/// it has its target RIR, rest, warm-ups, and deloads and periodization. Each of those is the plan's unless set here,
+/// and can go back to it.
 /// </summary>
-public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, bool showRir, Action changed, DialogService dialogs, Func<int> planRest)
+public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, WorkoutPlan plan, UserProfile profile, Action changed, DialogService dialogs)
     : ObservableObject
 {
     public PlanExercise Model { get; } = model;
@@ -56,17 +73,50 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, boo
     public string Equipment => exercise?.Equipment.Display() ?? "";
     public bool HasInfo => exercise != null;
     /// <summary>The plan uses reps in reserve; otherwise its target isn't shown or changed.</summary>
-    public bool ShowRir { get; } = showRir;
+    public bool ShowRir { get; } = plan.UseRir;
+    /// <summary>Bodyweight moves get no warm-up sets, so there's nothing to set.</summary>
+    public bool ShowWarmups => exercise is { IsBodyweight: false };
+
+    // What the plan gives it, when it has none of its own.
+    int PlanRest => exercise == null ? Model.RestSeconds : Services.PlanRest.DefaultFor(plan, profile, exercise);
+    int PlanRir => exercise == null ? Model.TargetRir : PlanTraining.RirFor(plan, profile, exercise);
+    IReadOnlyList<WarmupStep> PlanWarmups => exercise == null ? [] : WarmupSettings.For(plan, profile).StepsFor(null, exercise, false);
 
     public string Sets => Model.Sets == 1 ? "1 set" : $"{Model.Sets} sets";
     public string Reps => Model.RepMin == Model.RepMax ? $"{Model.RepMin} reps" : $"{Model.RepMin}–{Model.RepMax} reps";
     public string SetsText => Model.Sets.ToString();
     public string RepsText => $"{Model.RepMin}–{Model.RepMax}";
+
     public string RirText => Model.TargetRir.ToString();
+    /// <summary>Set for this exercise itself, not the plan's: it can go back.</summary>
+    public bool IsCustomRir => Model.CustomRir;
+    public string RirSource => Model.CustomRir ? $"Plan: {PlanRir}" : "Plan's";
+
     public string RestText => Units.Rest(Model.RestSeconds);
-    /// <summary>Set for this exercise itself, not the plan's default: it can be reset.</summary>
     public bool IsCustomRest => Model.CustomRest;
-    public string RestSource => Model.CustomRest ? $"Plan: {Units.Rest(planRest())}" : "Plan default";
+    public string RestSource => Model.CustomRest ? $"Plan: {Units.Rest(PlanRest)}" : "Plan's";
+
+    static string SetCount(int n) => n switch { 0 => "None", 1 => "1 set", _ => $"{n} sets" };
+    public string WarmupsText => SetCount((WarmupSettings.ParseSteps(Model.Warmups) ?? PlanWarmups).Count);
+    public bool IsCustomWarmups => Model.Warmups != null;
+    public string WarmupsSource => WarmupSettings.ParseSteps(Model.Warmups) is { } steps ? WarmupSettings.Describe(steps) : "Plan's";
+
+    public string WeeksText
+    {
+        get
+        {
+            var (deloads, periodization) = PlanTraining.Weeks(plan, Model);
+            // A deload week only comes in a plan that has them.
+            var parts = new List<string>();
+            if (deloads && plan.Deloads)
+                parts.Add("Deloads");
+            if (periodization)
+                parts.Add("Builds");
+            return parts.Count == 0 ? "Same weekly" : string.Join(" · ", parts);
+        }
+    }
+    public bool IsCustomWeeks => Model.Deloads != null || Model.Periodization != null;
+    public string WeeksSource => IsCustomWeeks ? "Own" : "Plan's";
 
     public required IAsyncRelayCommand OpenCommand { get; init; }
     public required IRelayCommand RemoveCommand { get; init; }
@@ -79,30 +129,52 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, boo
 
     void Changed()
     {
-        foreach (var p in new[] { nameof(Sets), nameof(Reps), nameof(SetsText), nameof(RepsText), nameof(RirText), nameof(RestText), nameof(IsCustomRest), nameof(RestSource) })
+        foreach (var p in new[]
+        {
+            nameof(Sets), nameof(Reps), nameof(SetsText), nameof(RepsText), nameof(RirText), nameof(IsCustomRir), nameof(RirSource),
+            nameof(RestText), nameof(IsCustomRest), nameof(RestSource), nameof(WarmupsText), nameof(IsCustomWarmups), nameof(WarmupsSource),
+            nameof(WeeksText), nameof(IsCustomWeeks), nameof(WeeksSource),
+        })
             OnPropertyChanged(p);
         changed();
     }
 
-    [RelayCommand] void SetsUp() { Model.Sets = Math.Min(10, Model.Sets + 1); Changed(); }
-    [RelayCommand] void SetsDown() { Model.Sets = Math.Max(1, Model.Sets - 1); Changed(); }
-    [RelayCommand] void RepsUp() { Model.RepMin = Math.Min(40, Model.RepMin + 1); Model.RepMax = Math.Max(Model.RepMax, Model.RepMin); Changed(); }
-    [RelayCommand] void RepsDown() { Model.RepMin = Math.Max(1, Model.RepMin - 1); Changed(); }
-    [RelayCommand] void RangeUp() { Model.RepMax = Math.Min(50, Model.RepMax + 1); Changed(); }
-    [RelayCommand] void RangeDown() { Model.RepMax = Math.Max(Model.RepMin, Model.RepMax - 1); Changed(); }
-
-    // A rest changed here is this exercise's own (unless it lands back on the plan's default), so the default no longer moves it.
+    // A rest changed here is this exercise's own (unless it lands back on the plan's), so the plan's no longer moves it.
     void SetRest(int seconds)
     {
-        (Model.RestSeconds, Model.CustomRest) = (seconds, seconds != planRest());
+        (Model.RestSeconds, Model.CustomRest) = (seconds, seconds != PlanRest);
         Changed();
     }
 
-    /// <summary>Back to the plan's default rest, following it from now on.</summary>
+    /// <summary>Back to the plan's rest, following it from now on.</summary>
     [RelayCommand]
     void ResetRest()
     {
-        (Model.RestSeconds, Model.CustomRest) = (planRest(), false);
+        (Model.RestSeconds, Model.CustomRest) = (PlanRest, false);
+        Changed();
+    }
+
+    /// <summary>Back to the plan's target RIR, following it from now on.</summary>
+    [RelayCommand]
+    void ResetRir()
+    {
+        (Model.TargetRir, Model.CustomRir) = (PlanRir, false);
+        Changed();
+    }
+
+    /// <summary>Back to the plan's warm-ups.</summary>
+    [RelayCommand]
+    void ResetWarmups()
+    {
+        Model.Warmups = null;
+        Changed();
+    }
+
+    /// <summary>Back to the plan's deloads and periodization.</summary>
+    [RelayCommand]
+    void ResetWeeks()
+    {
+        (Model.Deloads, Model.Periodization) = (null, null);
         Changed();
     }
 
@@ -110,31 +182,86 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, boo
     [RelayCommand]
     async Task PickSets()
     {
-        if (await dialogs.Numbers(Name, "Working sets", "Save", new Views.NumberField("Sets", Model.Sets, 1, 10)) is not [var sets])
+        if (await dialogs.Numbers(Name, "Working sets", "Save", new Views.NumberField("Sets", Model.Sets, 0, Views.NumberField.NoLimit)) is not [var sets])
             return;
         Model.Sets = sets;
         Changed();
     }
 
-    /// <summary>The target RIR pill: reps in reserve, typed or stepped.</summary>
+    /// <summary>The target RIR pill: reps in reserve, typed or stepped; its own unless it lands on the plan's.</summary>
     [RelayCommand]
     async Task PickRir()
     {
-        if (await dialogs.Numbers(Name, "Target reps in reserve", "Save", new Views.NumberField("RIR", Model.TargetRir, 0, 10)) is not [var rir])
+        if (await dialogs.Numbers(Name, "Target reps in reserve", "Save", new Views.NumberField("RIR", Model.TargetRir, 0, Views.NumberField.NoLimit)) is not [var rir])
             return;
-        Model.TargetRir = rir;
+        (Model.TargetRir, Model.CustomRir) = (rir, rir != PlanRir);
         Changed();
     }
 
-    /// <summary>The rest pill: minutes and seconds between sets, typed or stepped.</summary>
+    /// <summary>The rest pill: the time between sets, typed ("2:30") or stepped, the same popup as in a workout.</summary>
     [RelayCommand]
     async Task PickRest()
     {
-        if (await dialogs.Numbers(Name, "Rest between sets", "Save",
-                new Views.NumberField("Min", Model.RestSeconds / 60, 0, 10),
-                new Views.NumberField("Sec", Model.RestSeconds % 60, 0, 59)) is not [var minutes, var seconds])
+        if (await dialogs.RestTime($"{Name} · rest between sets", Model.RestSeconds) is { } seconds)
+            SetRest(seconds);
+    }
+
+    const string CustomWarmups = "Custom…";
+
+    /// <summary>The warm-ups pill: the plan's, none, a common ramp, or typed in.</summary>
+    [RelayCommand]
+    async Task PickWarmups()
+    {
+        var planLabel = $"The plan's ({WarmupSettings.Describe(PlanWarmups)})";
+        var presets = WarmupSettingsViewModel.Presets;
+        var labels = presets.Select(p => p.Length == 0 ? "None" : $"{SetCount(p.Length)}: {WarmupSettings.Describe(p)}").ToList();
+        var choice = await dialogs.ActionSheet($"{Name} · warm-ups, % of the working weight × reps", null, [planLabel, .. labels, CustomWarmups]);
+        if (choice == null)
             return;
-        SetRest(minutes * 60 + seconds);
+        if (choice == planLabel)
+        {
+            ResetWarmups();
+            return;
+        }
+        List<WarmupStep>? steps;
+        if (choice == CustomWarmups)
+        {
+            var current = WarmupSettings.ParseSteps(Model.Warmups) ?? PlanWarmups;
+            var text = await dialogs.Prompt(Name, "Each warm-up set as percent × reps, lightest first, e.g. 50x8, 75x4",
+                WarmupSettings.FormatSteps(current), Keyboard.Text, "Save");
+            if (text == null)
+                return;
+            steps = WarmupSettings.ParseSteps(text);
+            if (steps == null)
+            {
+                await dialogs.Alert("Couldn't read that", "Write each set as percent x reps (10–95% and 1–20 reps, up to 5 sets), e.g. 50x8, 75x4. Leave it empty for none.");
+                return;
+            }
+        }
+        else
+        {
+            steps = [.. presets[labels.IndexOf(choice)]];
+        }
+        Model.Warmups = WarmupSettings.FormatSteps(steps);
+        Changed();
+    }
+
+    /// <summary>
+    /// The deloads and periodization pill: switched in place, each becoming this exercise's own; or back to the plan's.
+    /// </summary>
+    [RelayCommand]
+    async Task PickWeeks()
+    {
+        var (deloads, periodization) = PlanTraining.Weeks(plan, Model);
+        const string usePlan = "Use the plan's";
+        Views.MenuSwitch[] switches =
+        [
+            new("Deload weeks", plan.Deloads ? "Lighter in the plan's deload weeks" : "The plan has no deload weeks now",
+                deloads, on => { Model.Deloads = on; Changed(); }),
+            new("Periodization", "Builds over each 4-week block", periodization, on => { Model.Periodization = on; Changed(); }),
+        ];
+        if (await dialogs.ActionSheet($"{Name} · week to week", null, switches, IsCustomWeeks ? new[] { usePlan } : []) == usePlan)
+            ResetWeeks();
     }
 
     /// <summary>
@@ -247,6 +374,8 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
             Workouts = [new PlanWorkout { Name = "Workout A" }],
             RestDays = [],
         };
+        // It follows the profile's defaults until given its own.
+        PlanTraining.Apply(plan, store.Profile);
         store.Data.Plans.Add(plan);
         store.Data.ActivePlanId ??= plan.Id;
         store.Save();
@@ -280,16 +409,10 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
     /// <summary>The draft differs from the saved plan.</summary>
     [ObservableProperty] bool hasChanges;
 
-    // The selected day
-    [ObservableProperty] string dayName = "";
-    [ObservableProperty] string dayLabel = "";
-    [ObservableProperty] string dayMeta = "";
-    [ObservableProperty] bool isRestDay;
-    [ObservableProperty] bool isWorkoutDay;
-    [ObservableProperty] bool isEmptyDay;
-    [ObservableProperty] IDrawable dayMap = MuscleMapDrawable.Empty;
-    [ObservableProperty] List<PlanDayExercise> dayExercises = [];
-    [ObservableProperty] bool isDayDone;
+    /// <summary>Every day of the plan, in order, each on its own page that the day strip and swiping move between.</summary>
+    [ObservableProperty] List<PlanDetailDay> dayPages = [];
+    /// <summary>The day on screen, an index into <see cref="DayPages"/>.</summary>
+    [ObservableProperty] int selectedDay;
 
     // The weekly AI check found ways to improve this (active) plan.
     [ObservableProperty] bool hasSuggestions;
@@ -370,40 +493,55 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
             MoveCommand = new RelayCommand<int>(to => MoveDay(i, to)),
         }).ToList();
 
-        var day = schedule.ElementAtOrDefault(_selected);
+        // Every day, not just the selected one: the page swipes between them, the neighbours sliding in beside it.
         var shownWeek = _week ?? progress.CurrentWeek;
-        DayLabel = _week == null ? $"Day {_selected + 1}" : $"Week {_week} · Day {_selected + 1}";
-        IsDayDone = _week != null && schedule.Count > 0 && progress.IsDayDone(_selected, shownWeek);
-        IsRestDay = day == null;
-        IsWorkoutDay = day != null;
-        DayName = day?.Name ?? "Rest";
+        var everyExercise = schedule.OfType<PlanWorkout>().SelectMany(w => w.Exercises).ToList();
+        _expanded.IntersectWith(everyExercise);
+        // The selection first: the page moves its pager when the pages change, to the selected one.
+        SelectedDay = _selected;
+        DayPages = schedule.Select((day, i) => BuildDay(plan, progress, day, i, shownWeek)).ToList();
+    }
 
+    /// <summary>One day of the plan as its page shows it.</summary>
+    PlanDetailDay BuildDay(WorkoutPlan plan, PlanProgress progress, PlanWorkout? day, int index, int shownWeek)
+    {
         var exercises = day?.Exercises.Select(pe => (pe, ex: store.GetExercise(pe.ExerciseId))).ToList() ?? [];
-        UpdateDayMeta(plan, day);
-        DayMap = MuscleMapDrawable.ForWorkout(exercises.Select(x => x.ex).OfType<Exercise>());
-        _expanded.IntersectWith(exercises.Select(x => x.pe));
-        DayExercises = exercises.Select(x =>
+        return new PlanDetailDay
         {
-            PlanDayExercise? item = null;
-            item = new PlanDayExercise(x.pe, x.ex, plan.UseRir, () => ExerciseChanged(plan, day), dialogs,
-                () => x.ex == null ? x.pe.RestSeconds : PlanRest.DefaultFor(plan, store.Profile, x.ex))
+            Plan = this,
+            Workout = day,
+            DayName = day?.Name ?? "Rest",
+            DayLabel = _week == null ? $"Day {index + 1}" : $"Week {_week} · Day {index + 1}",
+            DayMeta = day == null
+                ? "Recovery day. Muscles grow between sessions."
+                : $"{day.Exercises.Count} exercises · {day.Exercises.Sum(e => e.Sets)} sets · {WorkoutEstimator.Format(estimator.Minutes(day, plan.Goal))}",
+            IsDayDone = _week != null && progress.IsDayDone(index, shownWeek),
+            IsEmptyDay = day != null && day.Exercises.Count == 0,
+            DayMap = MuscleMapDrawable.ForWorkout(exercises.Select(x => x.ex).OfType<Exercise>()),
+            DayExercises = day == null ? [] : exercises.Select(x =>
             {
-                IsExpanded = _expanded.Contains(x.pe),
-                OpenCommand = new AsyncRelayCommand(() => x.ex == null ? Task.CompletedTask : GoTo($"{Routes.Exercise}?id={x.ex.Id}")),
-                RemoveCommand = new RelayCommand(() => RemoveExercise(item!)),
-                MoveCommand = new RelayCommand<int>(to => MoveExercise(item!, to)),
-            };
-            item.PropertyChanged += (_, e) =>
-            {
-                if (e.PropertyName != nameof(PlanDayExercise.IsExpanded))
-                    return;
-                if (item.IsExpanded)
-                    _expanded.Add(item.Model);
-                else
-                    _expanded.Remove(item.Model);
-            };
-            return item;
-        }).ToList();
+                PlanDayExercise? item = null;
+                // An edit rebuilds the list: its popup's closing already did (the page "appears" again), so this item may
+                // no longer be the one on screen.
+                item = new PlanDayExercise(x.pe, x.ex, plan, store.Profile, Edited, dialogs)
+                {
+                    IsExpanded = _expanded.Contains(x.pe),
+                    OpenCommand = new AsyncRelayCommand(() => x.ex == null ? Task.CompletedTask : GoTo($"{Routes.Exercise}?id={x.ex.Id}")),
+                    RemoveCommand = new RelayCommand(() => RemoveExercise(day!, item!)),
+                    MoveCommand = new RelayCommand<int>(to => MoveExercise(day!, item!, to)),
+                };
+                item.PropertyChanged += (_, e) =>
+                {
+                    if (e.PropertyName != nameof(PlanDayExercise.IsExpanded))
+                        return;
+                    if (item.IsExpanded)
+                        _expanded.Add(item.Model);
+                    else
+                        _expanded.Remove(item.Model);
+                };
+                return item;
+            }).ToList(),
+        };
     }
 
     // ---- The draft ----
@@ -421,9 +559,13 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         UseRir = p.UseRir,
         Deloads = p.Deloads,
         Periodization = p.Periodization,
+        OwnTraining = p.OwnTraining,
+        TargetRir = p.TargetRir,
         Warmups = p.Warmups,
+        OwnRest = p.OwnRest,
         CompoundRestSeconds = p.CompoundRestSeconds,
         IsolationRestSeconds = p.IsolationRestSeconds,
+        WarmupRestSeconds = p.WarmupRestSeconds,
         CreatedAt = default,
     });
 
@@ -458,9 +600,13 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         saved.UseRir = copy.UseRir;
         saved.Deloads = copy.Deloads;
         saved.Periodization = copy.Periodization;
+        saved.OwnTraining = copy.OwnTraining;
+        saved.TargetRir = copy.TargetRir;
         saved.Warmups = copy.Warmups;
+        saved.OwnRest = copy.OwnRest;
         saved.CompoundRestSeconds = copy.CompoundRestSeconds;
         saved.IsolationRestSeconds = copy.IsolationRestSeconds;
+        saved.WarmupRestSeconds = copy.WarmupRestSeconds;
         store.Save();
         Refresh();
     }
@@ -509,35 +655,15 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
 
     // ---- Editing ----
 
-    void UpdateDayMeta(WorkoutPlan plan, PlanWorkout? day)
+    void RemoveExercise(PlanWorkout workout, PlanDayExercise item)
     {
-        DayMeta = day == null
-            ? "Recovery day. Muscles grow between sessions."
-            : $"{day.Exercises.Count} exercises · {day.Exercises.Sum(e => e.Sets)} sets · {WorkoutEstimator.Format(estimator.Minutes(day, plan.Goal))}";
-        IsEmptyDay = day != null && day.Exercises.Count == 0;
-    }
-
-    // A stepper on an open exercise: the totals under the day name follow; the list itself stays as it is.
-    void ExerciseChanged(WorkoutPlan plan, PlanWorkout? day)
-    {
-        UpdateDayMeta(plan, day);
-        if (store.GetPlan(_id) is { } saved)
-            HasChanges = !SameEdits(plan, saved);
-    }
-
-    void RemoveExercise(PlanDayExercise item)
-    {
-        if (_draft is not { } plan || SelectedWorkout(plan) is not { } workout)
-            return;
         workout.Exercises.Remove(item.Model);
         Edited();
     }
 
     /// <summary>An exercise dragged to position <paramref name="to"/>; the ones in between shift over.</summary>
-    void MoveExercise(PlanDayExercise item, int to)
+    void MoveExercise(PlanWorkout workout, PlanDayExercise item, int to)
     {
-        if (_draft is not { } plan || SelectedWorkout(plan) is not { } workout)
-            return;
         var from = workout.Exercises.IndexOf(item.Model);
         if (from < 0 || to < 0 || to >= workout.Exercises.Count || from == to)
             return;
@@ -580,6 +706,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         {
             var pe = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, ex, store.Profile);
             pe.RestSeconds = PlanRest.DefaultFor(plan, store.Profile, ex);
+            pe.TargetRir = PlanTraining.RirFor(plan, store.Profile, ex);
             workout.Exercises.Add(pe);
         }
         if (picked.Count > 0)
@@ -590,6 +717,13 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
     {
         _selected = index;
         Refresh();
+    }
+
+    /// <summary>A day swiped to (the page is already showing it): it becomes the selected one.</summary>
+    public void ShowDay(int index)
+    {
+        if (index != _selected && index >= 0 && index < DayPages.Count)
+            Select(index);
     }
 
     PlanWorkout? SelectedWorkout(WorkoutPlan plan) => PlanSchedule.Days(plan).ElementAtOrDefault(_selected);
@@ -631,7 +765,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
             options.Add("Discard changes to this day");
         if (day != null)
             options.Add("Rename workout");
-        switch (await dialogs.ActionSheet(DayName, day == null ? "Remove rest day" : "Delete workout", [.. options]))
+        switch (await dialogs.ActionSheet(day?.Name ?? "Rest", day == null ? "Remove rest day" : "Delete workout", [.. options]))
         {
             case "Discard changes to this day":
                 if (saved == null)
@@ -739,76 +873,18 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
                 if (store.GetExercise(pe.ExerciseId) is not { } ex)
                     continue;
                 var p = TrainingGoals.Prescription(goal, store.Profile.Experience, ex, store.Profile);
-                (pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir) = (p.Sets, p.RepMin, p.RepMax, p.TargetRir);
-                // The rest follows the plan's default again (the new goal's, unless the plan or profile set one).
+                (pe.Sets, pe.RepMin, pe.RepMax) = (p.Sets, p.RepMin, p.RepMax);
+                // The target RIR and rest follow the plan's again: its own, or the new goal's.
+                (pe.TargetRir, pe.CustomRir) = (PlanTraining.RirFor(plan, store.Profile, ex), false);
                 (pe.RestSeconds, pe.CustomRest) = (PlanRest.DefaultFor(plan, store.Profile, ex), false);
             }
         }
         Edited();
     }
 
-    /// <summary>RIR, deloads and periodization for this plan, switched right in the ··· menu; part of the draft like any edit.</summary>
-    Views.MenuSwitch[] TrainingSwitches(WorkoutPlan plan) =>
-    [
-        new("Reps in reserve (RIR)", "A target effort for each exercise, logged with each set. Off: just weight and reps.",
-            plan.UseRir, on => { plan.UseRir = on; Edited(); }),
-        new("Deload weeks", "After every 4 weeks, a lighter week to recover: about half the sets, easier effort.",
-            plan.Deloads, on => { plan.Deloads = on; Edited(); }),
-        new("Periodization", "Each 4-week block builds: an easier first week, an extra set in weeks 3 and 4, hardest in week 4.",
-            plan.Periodization, on => { plan.Periodization = on; Edited(); }),
-    ];
-
-    /// <summary>This plan's own warm-ups on a sheet, starting from the profile's; part of the draft like any edit.</summary>
-    Task Warmups(WorkoutPlan plan)
-    {
-        var profile = store.Profile;
-        var settings = new WarmupSettingsViewModel(
-            () => WarmupSettings.For(plan, profile),
-            () => WarmupSettings.Global(profile),
-            s =>
-            {
-                // The same as the profile's: just follow the profile again.
-                plan.Warmups = s == null || s.SameAs(WarmupSettings.Global(profile)) ? null : s.ToJson();
-                Edited();
-            },
-            () => plan.Warmups != null,
-            "Use the profile's warm-ups", "your profile's warm-ups", dialogs, units);
-        return Shell.Current.Navigation.PushModalAsync(new Views.PlanWarmupsPage(settings), false);
-    }
-
-    static readonly int[] RestChoices = [30, 45, 60, 75, 90, 120, 150, 180, 240, 300];
-
-    /// <summary>
-    /// The plan's default rest for compound and isolation lifts, over the profile's. Exercises without a rest of their
-    /// own follow it; part of the draft like any edit.
-    /// </summary>
-    async Task RestTimes(WorkoutPlan plan)
-    {
-        var profile = store.Profile;
-        string Profile(int? seconds) => seconds is { } s ? Units.Rest(s) : "by goal";
-        string Current(int? own, int? fromProfile) => own is { } s ? Units.Rest(s) : $"profile, {Profile(fromProfile)}";
-        var compound = $"Compound lifts · {Current(plan.CompoundRestSeconds, profile.CompoundRestSeconds)}";
-        var isolation = $"Isolation · {Current(plan.IsolationRestSeconds, profile.IsolationRestSeconds)}";
-        var kind = await dialogs.ActionSheet("Rest between working sets in this plan", null, compound, isolation);
-        if (kind == null)
-            return;
-        var isCompound = kind == compound;
-        var fromProfile = isCompound ? profile.CompoundRestSeconds : profile.IsolationRestSeconds;
-        var labels = new List<string> { $"As in your profile ({Profile(fromProfile)})" };
-        labels.AddRange(RestChoices.Select(Units.Rest));
-        var pick = await dialogs.ActionSheet(isCompound ? "Rest for compound lifts" : "Rest for isolation exercises", null, [.. labels]);
-        var index = pick == null ? -1 : labels.IndexOf(pick);
-        if (index < 0)
-            return;
-        int? value = index == 0 ? null : RestChoices[index - 1];
-        if (isCompound)
-            plan.CompoundRestSeconds = value;
-        else
-            plan.IsolationRestSeconds = value;
-        // Exercises with a rest of their own keep it.
-        PlanRest.Apply(plan, profile, store.GetExercise);
-        Edited();
-    }
+    /// <summary>The plan's rest times, warm-ups and training on a sheet; part of the draft like any edit.</summary>
+    Task PlanSettings(WorkoutPlan plan) =>
+        Shell.Current.Navigation.PushModalAsync(new Views.PlanSettingsPage(new PlanSettingsViewModel(plan, store, dialogs, units, Edited)), false);
 
     /// <summary>The AI's suggestions from the workouts logged on the plan; applied ones are saved, and this page reloads when it closes.</summary>
     [RelayCommand]
@@ -835,8 +911,8 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         var options = new List<string>();
         if (HasChanges)
             options.AddRange(["Save changes", "Discard changes"]);
-        options.AddRange(["Warm-ups", "Rest times", "AI suggestions", "Change with AI", "Regenerate plan", "Training goal", "Rename plan", "Duplicate plan"]);
-        switch (await dialogs.ActionSheet(plan.Name, "Delete plan", TrainingSwitches(plan), [.. options]))
+        options.AddRange(["Plan settings", "AI suggestions", "Change with AI", "Regenerate plan", "Training goal", "Rename plan", "Duplicate plan"]);
+        switch (await dialogs.ActionSheet(plan.Name, "Delete plan", [.. options]))
         {
             case "Save changes":
                 Save();
@@ -845,11 +921,8 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
                 if (await dialogs.Confirm("Discard changes?", "Your unsaved changes to this plan will be lost.", "Discard"))
                     Discard();
                 break;
-            case "Warm-ups":
-                await Warmups(plan);
-                break;
-            case "Rest times":
-                await RestTimes(plan);
+            case "Plan settings":
+                await PlanSettings(plan);
                 break;
             case "AI suggestions":
                 await ImproveWithAi();

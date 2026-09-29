@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using GymBook.Models;
 
 namespace GymBook.Services;
@@ -76,8 +77,47 @@ public class WarmupSettings
         profile.WarmupRestSeconds = settings?.RestSeconds ?? Defaults().RestSeconds;
     }
 
-    /// <summary>The settings a workout of <paramref name="plan"/> uses: its own, or the profile's.</summary>
-    public static WarmupSettings For(WorkoutPlan? plan, UserProfile profile) => Parse(plan?.Warmups) ?? Global(profile);
+    /// <summary>
+    /// The settings a workout of <paramref name="plan"/> uses: its own, or the profile's; with the rest after a warm-up set
+    /// from its rest times (see <see cref="PlanRest.Warmup"/>).
+    /// </summary>
+    public static WarmupSettings For(WorkoutPlan? plan, UserProfile profile)
+    {
+        var settings = Parse(plan?.Warmups) ?? Global(profile);
+        settings.RestSeconds = PlanRest.Warmup(plan, profile);
+        return settings;
+    }
+
+    /// <summary>
+    /// The warm-up sets before <paramref name="ex"/>: its own when it has them (<see cref="PlanExercise.Warmups"/>, even
+    /// with warm-ups off), otherwise these settings' ramp for its kind; none with warm-ups off.
+    /// </summary>
+    public IReadOnlyList<WarmupStep> StepsFor(PlanExercise? pe, Exercise ex, bool alreadyWarm) =>
+        ParseSteps(pe?.Warmups) ?? (Enabled ? Steps(KindOf(ex, alreadyWarm)) : []);
+
+    static readonly Regex StepPattern = new(@"(\d+)\s*%?\s*[x×*]\s*(\d+)", RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// "40x8, 60x5" into warm-up sets, lightest first ("" or "none" for none); null when it doesn't make sense: 10–95%
+    /// and 1–20 reps, up to 5 sets.
+    /// </summary>
+    public static List<WarmupStep>? ParseSteps(string? text)
+    {
+        if (text == null)
+            return null;
+        if (string.IsNullOrWhiteSpace(text) || text.Trim().Equals("none", StringComparison.OrdinalIgnoreCase))
+            return [];
+        var matches = StepPattern.Matches(text);
+        if (matches.Count is 0 or > 5)
+            return null;
+        var steps = matches.Select(m => new WarmupStep(int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value))).ToList();
+        if (steps.Any(s => s.Percent is < 10 or > 95 || s.Reps is < 1 or > 20))
+            return null;
+        return [.. steps.OrderBy(s => s.Percent)];
+    }
+
+    /// <summary>Warm-up sets as they're typed and stored: "40x8, 60x5"; empty for none.</summary>
+    public static string FormatSteps(IEnumerable<WarmupStep> steps) => string.Join(", ", steps.Select(s => $"{s.Percent}x{s.Reps}"));
 
     public static WarmupKind KindOf(Exercise ex, bool alreadyWarm) =>
         alreadyWarm ? WarmupKind.AlreadyWarm

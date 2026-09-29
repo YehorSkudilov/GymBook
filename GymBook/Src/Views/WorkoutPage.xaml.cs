@@ -1,14 +1,16 @@
+using System.Collections.ObjectModel;
+using AppSkeleton;
 using GymBook.ViewModels;
 
 namespace GymBook.Views;
 
 public partial class WorkoutPage : SheetPage
 {
-    // How far the next exercise slides in from, and for how long.
-    const double SlideDistance = 48;
-    const uint SlideLength = 240;
-
-    int _shownIndex = -1;
+    // A page per exercise: what the exercise pager (a CView, like the app's tabs) swipes between. Kept per exercise, so
+    // one moved or added keeps its page (and where it's scrolled to).
+    readonly ObservableCollection<CNavItem> _pages = [];
+    readonly Dictionary<WorkoutExerciseViewModel, CNavItem> _pageFor = [];
+    bool _showQueued;
 
     public WorkoutPage(WorkoutViewModel viewModel)
     {
@@ -17,29 +19,58 @@ public partial class WorkoutPage : SheetPage
         HorizontalMouseScroll.Attach(Strip);
         viewModel.ExerciseFinished += (exercise, all) => Dispatcher.Dispatch(() => _ = CelebrateAsync(exercise.Name, all));
         viewModel.RestFinished += () => Dispatcher.Dispatch(() => _ = ShowBannerAsync("timer", "#3F7DFF", "Rest over", "Time for your next set"));
+
+        ExercisePager.CNavIconItems = _pages;
+        // Swiped to an exercise: the pager is already showing it, so it just becomes the current one.
+        ExercisePager.SwipeNavigationCommand = new Command<CNavItem>(item => _ = viewModel.SelectExercise((WorkoutExerciseViewModel)item.Page.BindingContext));
+        viewModel.Exercises.CollectionChanged += (_, _) =>
+        {
+            SyncPages(viewModel);
+            QueueShowCurrent(viewModel);
+        };
         viewModel.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName != nameof(WorkoutViewModel.CurrentIndex))
-                return;
-            var index = viewModel.CurrentIndex;
-            // Before the new exercise is bound in: hide the old one and park the body on the side it comes from.
-            var animate = _shownIndex >= 0 && index != _shownIndex && ExerciseBody.Width > 0;
-            if (animate)
-            {
-                ExerciseBody.AbortAnimation("slide");
-                ExerciseBody.Opacity = 0;
-                ExerciseBody.TranslationX = index > _shownIndex ? SlideDistance : -SlideDistance;
-            }
-            _shownIndex = index;
-            Dispatcher.Dispatch(() =>
-            {
-                ScrollStripTo(index);
-                // Each exercise starts at its top.
-                _ = ExerciseScroll.ScrollToAsync(0, 0, false);
-                if (animate)
-                    SlideIn();
-            });
+            if (e.PropertyName == nameof(WorkoutViewModel.CurrentIndex))
+                QueueShowCurrent(viewModel);
         };
+        SyncPages(viewModel);
+        QueueShowCurrent(viewModel);
+    }
+
+    // The pages in the exercises' order: the same page for an exercise already there, a new one for one just added.
+    void SyncPages(WorkoutViewModel vm)
+    {
+        foreach (var gone in _pageFor.Keys.Except(vm.Exercises).ToList())
+            _pageFor.Remove(gone);
+        var wanted = vm.Exercises.Select(e =>
+        {
+            if (!_pageFor.TryGetValue(e, out var item))
+                _pageFor[e] = item = new CNavItem { PageName = e.Name, Page = new WorkoutExerciseView { BindingContext = e } };
+            return item;
+        }).ToList();
+        if (wanted.SequenceEqual(_pages))
+            return;
+        _pages.Clear();
+        foreach (var item in wanted)
+            _pages.Add(item);
+    }
+
+    // After whatever changed the exercises or the current one has finished (the current index can follow a change to the
+    // list a moment later): the pager slides over to the current exercise, and its photo scrolls into view. The first
+    // one, or one after the one on screen was removed, comes in without a slide.
+    void QueueShowCurrent(WorkoutViewModel vm)
+    {
+        if (_showQueued)
+            return;
+        _showQueued = true;
+        Dispatcher.Dispatch(() =>
+        {
+            _showQueued = false;
+            if (vm.CurrentExercise is not { } current || !_pageFor.TryGetValue(current, out var item))
+                return;
+            ExercisePager.SetContent(item);
+            ScrollStripTo(vm.CurrentIndex);
+        });
     }
 
     int _celebrationId;
@@ -96,18 +127,6 @@ public partial class WorkoutPage : SheetPage
         if (id != _bannerId)
             return;
         await Task.WhenAll(Banner.FadeTo(0, 260, Easing.CubicIn), Banner.TranslateTo(0, -24, 260, Easing.CubicIn));
-    }
-
-    void SlideIn()
-    {
-        var slide = new Animation();
-        slide.Add(0, 1, new Animation(v => ExerciseBody.TranslationX = v, ExerciseBody.TranslationX, 0, Easing.CubicOut));
-        slide.Add(0, 0.8, new Animation(v => ExerciseBody.Opacity = v, 0, 1));
-        slide.Commit(ExerciseBody, "slide", length: SlideLength, finished: (_, _) =>
-        {
-            ExerciseBody.TranslationX = 0;
-            ExerciseBody.Opacity = 1;
-        });
     }
 
     // Keeps the current exercise's photo in view as you swipe through the workout.

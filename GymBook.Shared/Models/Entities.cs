@@ -59,27 +59,45 @@ public class WorkoutPlan : ISyncEntity
     /// </summary>
     [MaxItems(1000)]
     public List<int>? RestDaysDone { get; set; }
-    // How the plan is run week to week (see the app's PlanCycle). All on by default; switched in the plan's ··· menu.
+    // How the plan is run week to week (see the app's PlanCycle). Its own values when <see cref="OwnTraining"/>; otherwise
+    // kept at the profile's defaults (Track RIR, DefaultDeloads, DefaultPeriodization) as they change. Set in its Plan settings.
     /// <summary>Reps in reserve: a target per exercise, and logged with each set. Off: weight and reps only.</summary>
     public bool UseRir { get; set; } = true;
     /// <summary>A lighter week (about half the sets, easier effort) after every 4 weeks of training.</summary>
     public bool Deloads { get; set; } = true;
     /// <summary>Effort and volume build over each 4-week block, instead of the same prescription every week.</summary>
     public bool Periodization { get; set; } = true;
+    /// <summary>The plan has its own RIR, deloads, periodization and target RIR, instead of following the profile's defaults.</summary>
+    public bool OwnTraining { get; set; }
     /// <summary>
-    /// This plan's own warm-up settings, as JSON (the app's WarmupSettings). Null: the profile's, which are the
-    /// defaults for every plan.
+    /// The reps in reserve every exercise of the plan aims for, unless it has its own (<see cref="PlanExercise.CustomRir"/>).
+    /// Null: what the goal suggests for each exercise. Only with <see cref="OwnTraining"/>.
+    /// </summary>
+    [Range(0, 10)]
+    public int? TargetRir { get; set; }
+    /// <summary>
+    /// This plan's own warm-up settings, as JSON (the app's WarmupSettings), kept as they are when the profile's change.
+    /// Null: the profile's, which are the defaults for every plan. The rest after a warm-up set is with the other rest
+    /// times (<see cref="WarmupRestSeconds"/>).
     /// </summary>
     [MaxLength(SyncLimits.TextLength)]
     public string? Warmups { get; set; }
     /// <summary>
-    /// This plan's default rest after a working set of a compound or an isolation exercise. Null: the profile's (or,
-    /// without one, what the plan's goal suggests). Each exercise can still have its own (<see cref="PlanExercise.CustomRest"/>).
+    /// The plan has its own rest times (<see cref="CompoundRestSeconds"/>, <see cref="IsolationRestSeconds"/>,
+    /// <see cref="WarmupRestSeconds"/>), kept as they are when the profile's change. Otherwise it follows the profile's.
+    /// </summary>
+    public bool OwnRest { get; set; }
+    /// <summary>
+    /// With <see cref="OwnRest"/>: this plan's rest after a working set of a compound or an isolation exercise (null: the
+    /// profile's, for plans from before). Each exercise can still have its own (<see cref="PlanExercise.CustomRest"/>).
     /// </summary>
     [Range(15, 600)]
     public int? CompoundRestSeconds { get; set; }
     [Range(15, 600)]
     public int? IsolationRestSeconds { get; set; }
+    /// <summary>With <see cref="OwnRest"/>: this plan's rest after a warm-up set.</summary>
+    [Range(15, 600)]
+    public int? WarmupRestSeconds { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
 }
@@ -106,6 +124,18 @@ public class PlanExercise
     public int RestSeconds { get; set; } = 120;
     /// <summary>The rest was set for this exercise itself, so the plan's default rest doesn't change it.</summary>
     public bool CustomRest { get; set; }
+    /// <summary>The target RIR was set for this exercise itself; otherwise it's kept at the plan's (see WorkoutPlan.TargetRir).</summary>
+    public bool CustomRir { get; set; }
+    /// <summary>
+    /// This exercise's own warm-up sets, as percent × reps ("50x8, 75x4"; empty for none). Null: the plan's, for its kind
+    /// of exercise.
+    /// </summary>
+    [MaxLength(SyncLimits.NameLength)]
+    public string? Warmups { get; set; }
+    /// <summary>Whether this exercise lightens in the plan's deload weeks; null: as the plan does.</summary>
+    public bool? Deloads { get; set; }
+    /// <summary>Whether this exercise builds over each 4-week block; null: as the plan does.</summary>
+    public bool? Periodization { get; set; }
 }
 
 public class WorkoutSession : ISyncEntity
@@ -207,6 +237,10 @@ public class UserProfile
     public bool AutoRestTimer { get; set; } = true;
     public bool WarmupSuggestions { get; set; } = true;
     public bool TrackRir { get; set; } = true;
+    /// <summary>What a new plan starts with for its <see cref="WorkoutPlan.Deloads"/>; each plan then has its own.</summary>
+    public bool DefaultDeloads { get; set; } = true;
+    /// <summary>What a new plan starts with for its <see cref="WorkoutPlan.Periodization"/>; each plan then has its own.</summary>
+    public bool DefaultPeriodization { get; set; } = true;
     public bool OnboardingDone { get; set; }
     [MaxLength(SyncLimits.IdLength)]
     public string? ActivePlanId { get; set; }

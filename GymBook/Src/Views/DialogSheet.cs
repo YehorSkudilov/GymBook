@@ -13,7 +13,8 @@ public class DialogSheet : SheetPage
     readonly TaskCompletionSource<string?> _result = new();
     string? _choice;
 
-    DialogSheet(string title, string? message, Func<DialogSheet, View> body)
+    /// <param name="closeButton">An X at the top right that cancels, for a long sheet whose Cancel is far down.</param>
+    DialogSheet(string title, string? message, Func<DialogSheet, View> body, bool closeButton = false)
     {
         Backdrop = Color.FromArgb("#B3000000");
         Shell.SetPresentationMode(this, PresentationMode.ModalNotAnimated);
@@ -25,7 +26,28 @@ public class DialogSheet : SheetPage
             header.Add(new Label { Text = message, Style = Resource<Style>("Caption"), FontSize = 15 });
 
         var stack = new VerticalStackLayout { Padding = new Thickness(20, 22, 20, 18), Spacing = 16 };
-        stack.Add(header);
+        if (closeButton)
+        {
+            var top = new Grid { ColumnSpacing = 12, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Auto)] };
+            top.Add(header, 0);
+            var close = new ImageButton
+            {
+                Source = Resource<ImageSource>("IconClose"),
+                WidthRequest = 36,
+                HeightRequest = 36,
+                Padding = 8,
+                CornerRadius = 18,
+                BackgroundColor = Resource<Color>("Surface2"),
+                VerticalOptions = LayoutOptions.Start,
+                Command = new Command(() => Choose(null)),
+            };
+            top.Add(close, 1);
+            stack.Add(top);
+        }
+        else
+        {
+            stack.Add(header);
+        }
         stack.Add(body(this));
 
         var sheet = new Border
@@ -48,7 +70,8 @@ public class DialogSheet : SheetPage
 
     /// <summary>
     /// A menu: the options as rows (the destructive one in red), then Cancel. Resolves to the chosen option. Any
-    /// <paramref name="switches"/> go above them, flipped in place without closing the menu.
+    /// <paramref name="switches"/> go above them, flipped in place without closing the menu. A long menu (switches, or
+    /// many options, like the plan's ···) also has an X at the top to close it, its Cancel being far down.
     /// </summary>
     public static Task<string?> Menu(string title, string? destructive, string[] options, IReadOnlyList<MenuSwitch>? switches = null) =>
         Show(new DialogSheet(title, null, s =>
@@ -73,10 +96,12 @@ public class DialogSheet : SheetPage
                     card.Add(Divider());
                 card.Add(s.Row(all[i], all[i] == destructive));
             }
-            list.Add(Card(card));
+            // Switches alone (nothing to pick): no empty card.
+            if (all.Length > 0)
+                list.Add(Card(card));
             list.Add(s.Button("Cancel", "SecondaryButton", null));
             return list;
-        }));
+        }, closeButton: switches is { Count: > 0 } || options.Length + (destructive == null ? 0 : 1) >= 7));
 
     static BoxView Divider() => new() { HeightRequest = 1, Color = Resource<Color>("Stroke"), Margin = new Thickness(18, 0) };
 
@@ -182,15 +207,16 @@ public class DialogSheet : SheetPage
     /// </summary>
     public static async Task<(int Min, int Max)?> Reps(string title, int min, int max)
     {
-        var exact = new NumberInput(new NumberField("Reps", max, 1, 50));
-        var low = new NumberInput(new NumberField("Min", min, 1, 50));
-        var high = new NumberInput(new NumberField("Max", max, 1, 50));
+        var exact = new NumberInput(new NumberField("Reps", max, 0, NumberField.NoLimit));
+        var low = new NumberInput(new NumberField("Min", min, 0, NumberField.NoLimit));
+        var high = new NumberInput(new NumberField("Max", max, 0, NumberField.NoLimit));
         var isRange = min != max;
         var sheet = new DialogSheet(title, "Reps per set", s =>
         {
-            var range = new Grid { ColumnSpacing = 14, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
-            range.Add(low.View, 0);
-            range.Add(high.View, 1);
+            // Max under min: side by side, the two don't fit on narrow phones.
+            var range = new VerticalStackLayout { Spacing = 16 };
+            range.Add(low.View);
+            range.Add(high.View);
 
             // Exact | Range: two halves of one toggle, like the calendar's.
             var toggle = new Grid { ColumnSpacing = 2, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
@@ -232,7 +258,8 @@ public class DialogSheet : SheetPage
             body.Add(range);
             // As it is now: nothing to carry over yet.
             Show(isRange);
-            return s.SaveCancel(body, "Save", () => "ok");
+            // Read what's typed: the box being typed in may not have lost focus yet.
+            return s.SaveCancel(body, "Save", () => $"{exact.Read()},{low.Read()},{high.Read()}");
         });
         if (await DialogSheet.Show(sheet) == null)
             return null;
@@ -245,11 +272,11 @@ public class DialogSheet : SheetPage
     /// <summary>
     /// A rest time: minutes and seconds typed in the middle ("2:30"; "2.30" too, as number keyboards may lack ":"; or just
     /// seconds, "90"), between − and + that step
-    /// 15 seconds. Kept between 15 seconds and 10 minutes. Resolves to seconds, or null when cancelled.
+    /// 15 seconds. From no rest up to 99:59, as much as the box shows. Resolves to seconds, or null when cancelled.
     /// </summary>
     public static async Task<int?> RestTime(string title, int seconds)
     {
-        const int StepSeconds = 15, Min = 15, Max = 600;
+        const int StepSeconds = 15, Min = 0, Max = 99 * 60 + 59;
         var value = Math.Clamp(seconds, Min, Max);
         var entry = new Entry
         {
@@ -428,7 +455,7 @@ public class DialogSheet : SheetPage
             {
                 Text = Value.ToString(),
                 Keyboard = Keyboard.Numeric,
-                MaxLength = 2,
+                MaxLength = field.Max.ToString().Length,
                 FontSize = 28,
                 FontFamily = "OpenSansSemibold",
                 HorizontalTextAlignment = TextAlignment.Center,
@@ -567,4 +594,8 @@ public class DialogSheet : SheetPage
 public record MenuSwitch(string Title, string? Detail, bool IsOn, Action<bool> Changed);
 
 /// <summary>A number in <see cref="DialogSheet.Numbers"/>: its label, starting value and limits.</summary>
-public record NumberField(string Label, int Value, int Min, int Max);
+public record NumberField(string Label, int Value, int Min, int Max)
+{
+    /// <summary>A Max for numbers with no real limit (as high as the box can show).</summary>
+    public const int NoLimit = 999;
+}

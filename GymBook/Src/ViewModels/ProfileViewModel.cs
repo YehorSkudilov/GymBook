@@ -24,14 +24,11 @@ public partial class ProfileViewModel(
     [ObservableProperty] string bodyWeightText = "";
     [ObservableProperty] string compoundRestText = "";
     [ObservableProperty] string isolationRestText = "";
-    [ObservableProperty] string goalText = "";
     [ObservableProperty] string experienceText = "";
-    [ObservableProperty] string daysText = "";
-    [ObservableProperty] string durationText = "";
-    [ObservableProperty] string equipmentText = "";
     [ObservableProperty] bool autoRest;
     [ObservableProperty] bool trackRir;
-    [ObservableProperty] bool trainNeck;
+    [ObservableProperty] bool defaultDeloads;
+    [ObservableProperty] bool defaultPeriodization;
     [ObservableProperty] string ageText = "";
     [ObservableProperty] string bodyFatText = "";
     [ObservableProperty] string trainingSinceText = "";
@@ -100,24 +97,29 @@ public partial class ProfileViewModel(
         AgeText = P.BirthYear is { } year ? $"{DateTime.Now.Year - year}" : "Not set";
         BodyFatText = P.BodyFatPercent is { } bf ? $"{bf:0.#}%" : "Not set";
         TrainingSinceText = P.TrainingSince is { } started ? TrainingAge(started) : "Not set";
-        TrainNeck = P.TrainNeck;
         CompoundRestText = RestLabel(P.CompoundRestSeconds);
         IsolationRestText = RestLabel(P.IsolationRestSeconds);
-        GoalText = P.Goal.Display();
         ExperienceText = P.Experience.Display();
-        DaysText = $"{P.DaysPerWeek} days";
-        DurationText = $"{P.SessionMinutes} min";
-        EquipmentText = P.EquipmentAccess.Display();
         AutoRest = P.AutoRestTimer;
         WarmupSettings.Refresh();
         TrackRir = P.TrackRir;
+        DefaultDeloads = P.DefaultDeloads;
+        DefaultPeriodization = P.DefaultPeriodization;
         Version = $"GymBook {AppInfo.Current.VersionString}";
         _loading = false;
     }
 
     partial void OnAutoRestChanged(bool value) => Update(() => P.AutoRestTimer = value);
-    partial void OnTrackRirChanged(bool value) => Update(() => P.TrackRir = value);
-    partial void OnTrainNeckChanged(bool value) => Update(() => P.TrainNeck = value);
+    // The training defaults: plans following them (not those with their own, in their Plan settings) follow along.
+    partial void OnTrackRirChanged(bool value) => UpdateTraining(() => P.TrackRir = value);
+    partial void OnDefaultDeloadsChanged(bool value) => UpdateTraining(() => P.DefaultDeloads = value);
+    partial void OnDefaultPeriodizationChanged(bool value) => UpdateTraining(() => P.DefaultPeriodization = value);
+
+    void UpdateTraining(Action change) => Update(() =>
+    {
+        change();
+        PlanTraining.ApplyToPlans(store);
+    });
 
     // How long the user has trained, bucketed: they pick a range rather than remember a date.
     static readonly (string Label, double Years)[] TrainingAges =
@@ -252,22 +254,7 @@ public partial class ProfileViewModel(
         t => P.TrainingSince = DateTime.Today.AddDays(-t.Years * 365));
 
     [RelayCommand]
-    Task EditGoal() => Pick("Goal", TrainingGoals.All, g => g.Display(), g => P.Goal = g);
-
-    [RelayCommand]
     Task EditExperience() => Pick("Experience", Enum.GetValues<Experience>(), e => e.Display(), e => P.Experience = e);
-
-    [RelayCommand]
-    Task EditDays() => Pick("Training days per week", [2, 3, 4, 5, 6], d => $"{d} days", d => P.DaysPerWeek = d);
-
-    [RelayCommand]
-    Task EditDuration() => Pick("Session length", [30, 45, 60, 90], m => $"{m} min", m => P.SessionMinutes = m);
-
-    [RelayCommand]
-    Task EditEquipment() => Pick("Equipment", Enum.GetValues<EquipmentAccess>(), e => e.Display(), e => P.EquipmentAccess = e);
-
-    [RelayCommand]
-    Task NewPlan() => GoTo(Routes.Wizard);
 
     [RelayCommand]
     Task OpenHistory() => GoTo(Routes.History);

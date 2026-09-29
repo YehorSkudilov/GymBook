@@ -27,7 +27,7 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             if (ex == null)
                 continue;
             // A muscle an earlier exercise already worked needs only a lighter warm-up.
-            session.Exercises.Add(CreateExercise(ex, pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir, pe.RestSeconds, warmups, worked.Contains(ex.PrimaryMuscle)));
+            session.Exercises.Add(CreateExercise(ex, pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir, pe.RestSeconds, warmups, worked.Contains(ex.PrimaryMuscle), planned));
             worked.Add(ex.PrimaryMuscle);
         }
         return Begin(session);
@@ -42,7 +42,9 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         return session;
     }
 
-    public SessionExercise CreateExercise(Exercise ex, int sets, int repMin, int repMax, int rir, int rest, WarmupSettings warmups, bool alreadyWarm)
+    /// <summary>An exercise of a workout: its suggested sets, after its warm-ups (its own, from <paramref name="planned"/>, or the settings').</summary>
+    public SessionExercise CreateExercise(Exercise ex, int sets, int repMin, int repMax, int rir, int rest, WarmupSettings warmups, bool alreadyWarm,
+        PlanExercise? planned = null)
     {
         var suggestion = engine.Suggest(ex, sets, repMin, repMax, rir);
         var se = new SessionExercise
@@ -54,8 +56,9 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             RestSeconds = rest,
             Recommendation = suggestion.Note,
         };
-        if (warmups.Enabled && suggestion.Sets.Count > 0)
-            se.Sets.AddRange(engine.Warmups(ex, suggestion.Sets[0].WeightKg, warmups, alreadyWarm));
+        var steps = warmups.StepsFor(planned, ex, alreadyWarm);
+        if (steps.Count > 0 && suggestion.Sets.Count > 0)
+            se.Sets.AddRange(engine.Warmups(ex, suggestion.Sets[0].WeightKg, warmups, steps));
         se.Sets.AddRange(suggestion.Sets);
         return se;
     }

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:SheetPage
+    x:Class="GymBook.Views.PlanSettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:GymBook.Controls"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PlanSettingsViewModel"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
+
+    <!-- A plan's rest times, warm-ups and training, from its ··· menu: each the profile's defaults (followed as they change)
+         or the plan's own. Saved with the plan's other changes. -->
+    <views:SheetPage.Resources>
+        <Style x:Key="Row" TargetType="Grid">
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="ColumnDefinitions" Value="*,Auto,Auto" />
+            <Setter Property="ColumnSpacing" Value="8" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+        </Style>
+        <Style x:Key="SwitchRow" TargetType="Grid" BasedOn="{StaticResource Row}">
+            <Setter Property="Padding" Value="16,6" />
+        </Style>
+        <Style x:Key="RowValue" TargetType="Label">
+            <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="Chevron" TargetType="Image">
+            <Setter Property="Source" Value="{StaticResource IconChevronRight}" />
+            <Setter Property="WidthRequest" Value="16" />
+            <Setter Property="HeightRequest" Value="16" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="Divider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Margin" Value="16,0" />
+            <Setter Property="Color" Value="{StaticResource Surface2}" />
+        </Style>
+        <Style x:Key="SectionTitle" TargetType="Label">
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="17" />
+            <Setter Property="Margin" Value="6,8,0,0" />
+        </Style>
+        <!-- Exercises with their own: how many, and a way to put them all on the plan's -->
+        <Style x:Key="ToAllRow" TargetType="Grid">
+            <Setter Property="ColumnDefinitions" Value="*,Auto" />
+            <Setter Property="ColumnSpacing" Value="8" />
+            <Setter Property="Padding" Value="6,0" />
+        </Style>
+    </views:SheetPage.Resources>
+
+    <Grid>
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnBackdropTapped" />
+        </Grid.GestureRecognizers>
+        <Border VerticalOptions="End" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0" Margin="0,40,0,0">
+            <!-- Swallows taps, so only the dimmed area above closes the sheet. -->
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer />
+            </Border.GestureRecognizers>
+            <ScrollView>
+                <VerticalStackLayout Spacing="12" Padding="10,22,10,18">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="10,0">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Plan settings" Style="{StaticResource H2}" FontSize="20" />
+                            <Label Text="Each part uses your defaults from the Profile tab, changing when they do, or this plan's own."
+                                   Style="{StaticResource Caption}" FontSize="14" />
+                        </VerticalStackLayout>
+                        <ImageButton Grid.Column="1" Source="{StaticResource IconClose}" WidthRequest="36" HeightRequest="36" Padding="8"
+                                     CornerRadius="18" BackgroundColor="{StaticResource Surface2}" VerticalOptions="Start" Clicked="OnDoneClicked" />
+                    </Grid>
+
+                    <!-- Rest -->
+                    <Label Text="Rest" Style="{StaticResource SectionTitle}" />
+                    <controls:ModeToggle IsOwn="{Binding OwnRest}" />
+                    <Border Style="{StaticResource Card}" Padding="0" Opacity="{Binding RestOpacity}"
+                            InputTransparent="{Binding OwnRest, Converter={StaticResource Not}}">
+                        <VerticalStackLayout>
+                            <Grid Style="{StaticResource Row}">
+                                <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditCompoundRestCommand}" /></Grid.GestureRecognizers>
+                                <Label Text="Compound lifts" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding CompoundRestText}" Style="{StaticResource RowValue}" />
+                                <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+                            <Grid Style="{StaticResource Row}">
+                                <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditIsolationRestCommand}" /></Grid.GestureRecognizers>
+                                <Label Text="Isolation" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding IsolationRestText}" Style="{StaticResource RowValue}" />
+                                <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+                            <Grid Style="{StaticResource Row}">
+                                <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditWarmupRestCommand}" /></Grid.GestureRecognizers>
+                                <Label Text="Warm-up sets" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding WarmupRestText}" Style="{StaticResource RowValue}" />
+                                <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                    <Grid Style="{StaticResource ToAllRow}" IsVisible="{Binding HasOwnRestExercises}">
+                        <Label Text="{Binding OwnRestExercisesText}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="Use plan's for all" Style="{StaticResource SmallButton}" Command="{Binding RestToAllCommand}" />
+                    </Grid>
+
+                    <!-- Warm-ups -->
+                    <Label Text="Warm-ups" Style="{StaticResource SectionTitle}" />
+                    <controls:ModeToggle IsOwn="{Binding OwnWarmups}" />
+                    <!-- Dimmed and untouchable on the defaults; the view itself is bound to the warm-up settings. -->
+                    <ContentView Opacity="{Binding WarmupsOpacity}" InputTransparent="{Binding OwnWarmups, Converter={StaticResource Not}}">
+                        <views:WarmupSettingsView BindingContext="{Binding Warmups}" />
+                    </ContentView>
+                    <Grid Style="{StaticResource ToAllRow}" IsVisible="{Binding HasOwnWarmupsExercises}">
+                        <Label Text="{Binding OwnWarmupsExercisesText}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="Use plan's for all" Style="{StaticResource SmallButton}" Command="{Binding WarmupsToAllCommand}" />
+                    </Grid>
+
+                    <!-- Training -->
+                    <Label Text="Training" Style="{StaticResource SectionTitle}" />
+                    <controls:ModeToggle IsOwn="{Binding OwnTraining}" />
+                    <Border Style="{StaticResource Card}" Padding="0" Opacity="{Binding TrainingOpacity}"
+                            InputTransparent="{Binding OwnTraining, Converter={StaticResource Not}}">
+                        <VerticalStackLayout>
+                            <Grid Style="{StaticResource SwitchRow}">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Reps in reserve (RIR)" />
+                                    <Label Text="A target effort for each exercise, logged with each set" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="2" IsToggled="{Binding UseRir}" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" IsVisible="{Binding UseRir}" />
+                            <Grid Style="{StaticResource Row}" IsVisible="{Binding UseRir}">
+                                <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditTargetRirCommand}" /></Grid.GestureRecognizers>
+                                <Label Text="Target RIR" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding TargetRirText}" Style="{StaticResource RowValue}" />
+                                <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+                            <Grid Style="{StaticResource SwitchRow}">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Deload weeks" />
+                                    <Label Text="A lighter week after every 4: about half the sets, easier effort" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="2" IsToggled="{Binding Deloads}" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+                            <Grid Style="{StaticResource SwitchRow}">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Periodization" />
+                                    <Label Text="Each 4-week block builds, hardest in week 4" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="2" IsToggled="{Binding Periodization}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                    <Grid Style="{StaticResource ToAllRow}" IsVisible="{Binding HasOwnRirExercises}">
+                        <Label Text="{Binding OwnRirExercisesText}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="Use plan's for all" Style="{StaticResource SmallButton}" Command="{Binding RirToAllCommand}" />
+                    </Grid>
+                    <Grid Style="{StaticResource ToAllRow}" IsVisible="{Binding HasOwnWeeksExercises}">
+                        <Label Text="{Binding OwnWeeksExercisesText}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="Use plan's for all" Style="{StaticResource SmallButton}" Command="{Binding WeeksToAllCommand}" />
+                    </Grid>
+
+                    <Button Text="Done" Style="{StaticResource PrimaryButton}" Margin="0,8,0,0" Clicked="OnDoneClicked" />
+                </VerticalStackLayout>
+            </ScrollView>
+        </Border>
+    </Grid>
+</views:SheetPage>

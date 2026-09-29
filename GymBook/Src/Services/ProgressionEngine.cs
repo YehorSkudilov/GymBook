@@ -274,11 +274,11 @@ public class ProgressionEngine(DataStore store, Units units)
     }
 
     /// <summary>
-    /// Warm-up sets before a first working set of <paramref name="workingKg"/>, by <paramref name="settings"/>: the
-    /// ramp for the kind of exercise, or the lighter one when <paramref name="alreadyWarm"/> (an earlier exercise in the
-    /// workout worked the same muscle). None for bodyweight moves, or when the working weight is too light to need them.
+    /// Warm-up sets <paramref name="steps"/> before a first working set of <paramref name="workingKg"/> (see
+    /// <see cref="WarmupSettings.StepsFor"/>). None for bodyweight moves, or when the working weight is too light to need
+    /// them by <paramref name="settings"/>.
     /// </summary>
-    public List<SetEntry> Warmups(Exercise ex, double workingKg, WarmupSettings settings, bool alreadyWarm = false)
+    public List<SetEntry> Warmups(Exercise ex, double workingKg, WarmupSettings settings, IReadOnlyList<WarmupStep> steps)
     {
         var list = new List<SetEntry>();
         if (ex.IsBodyweight || workingKg <= 0 || workingKg < settings.MinWorkingKg)
@@ -286,7 +286,7 @@ public class ProgressionEngine(DataStore store, Units units)
 
         // Never lighter than the empty bar.
         var floor = ex.Equipment == Equipment.Barbell ? 20 : 0;
-        foreach (var step in settings.Steps(WarmupSettings.KindOf(ex, alreadyWarm)))
+        foreach (var step in steps)
         {
             var (pct, reps) = (step.Percent / 100.0, step.Reps);
             var w = Math.Max(floor, units.Round(workingKg * pct, ex));

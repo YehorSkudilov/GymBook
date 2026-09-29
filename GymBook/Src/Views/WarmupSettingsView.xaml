@@ -44,7 +44,7 @@
                 </VerticalStackLayout>
                 <Switch Grid.Column="2" IsToggled="{Binding Enabled}" />
             </Grid>
-            <!-- The rest only matters with warm-ups on -->
+            <!-- The rest of it only matters with warm-ups on. The rest after a warm-up set is with the other rest times. -->
             <VerticalStackLayout IsVisible="{Binding Enabled}">
                 <BoxView Style="{StaticResource WarmupDivider}" />
                 <Grid Style="{StaticResource WarmupRow}">
@@ -94,13 +94,6 @@
                         <Label Text="No warm-ups below this working weight" Style="{StaticResource Caption}" FontSize="12" />
                     </VerticalStackLayout>
                     <Label Grid.Column="1" Text="{Binding MinWeightText}" Style="{StaticResource WarmupValue}" />
-                    <Image Grid.Column="2" Style="{StaticResource WarmupChevron}" />
-                </Grid>
-                <BoxView Style="{StaticResource WarmupDivider}" />
-                <Grid Style="{StaticResource WarmupRow}">
-                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditRestCommand}" /></Grid.GestureRecognizers>
-                    <Label Text="Rest after a warm-up set" VerticalOptions="Center" />
-                    <Label Grid.Column="1" Text="{Binding RestText}" Style="{StaticResource WarmupValue}" />
                     <Image Grid.Column="2" Style="{StaticResource WarmupChevron}" />
                 </Grid>
             </VerticalStackLayout>

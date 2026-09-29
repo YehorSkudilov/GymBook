@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Services;
@@ -79,7 +78,7 @@ public partial class WarmupSettingsViewModel : ObservableObject
     }
 
     // Ramps from none to four sets, lightest first; most set-ups are one of these.
-    static readonly WarmupStep[][] Presets =
+    internal static readonly WarmupStep[][] Presets =
     [
         [],
         [new(50, 12)],
@@ -114,10 +113,10 @@ public partial class WarmupSettingsViewModel : ObservableObject
         if (choice == Custom)
         {
             var text = await _dialogs.Prompt(title, "Each set as percent × reps, lightest first, e.g. 40x8, 60x5, 80x3",
-                string.Join(", ", _current().Steps(kind).Select(s => $"{s.Percent}x{s.Reps}")), Keyboard.Text, "Save");
+                WarmupSettings.FormatSteps(_current().Steps(kind)), Keyboard.Text, "Save");
             if (text == null)
                 return;
-            steps = Parse(text);
+            steps = WarmupSettings.ParseSteps(text);
             if (steps == null)
             {
                 await _dialogs.Alert("Couldn't read that", "Write each set as percent x reps (10–95% and 1–20 reps, up to 5 sets), e.g. 50x8, 75x4. Leave it empty for none.");
@@ -132,22 +131,6 @@ public partial class WarmupSettingsViewModel : ObservableObject
     }
 
     static bool Same(IReadOnlyList<WarmupStep> a, IReadOnlyList<WarmupStep> b) => a.SequenceEqual(b);
-
-    static readonly Regex Step = new(@"(\d+)\s*%?\s*[x×*]\s*(\d+)", RegexOptions.IgnoreCase);
-
-    /// <summary>"40x8, 60x5" into warm-up sets, lightest first; null when it doesn't make sense.</summary>
-    static List<WarmupStep>? Parse(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text) || text.Trim().Equals("none", StringComparison.OrdinalIgnoreCase))
-            return [];
-        var matches = Step.Matches(text);
-        if (matches.Count is 0 or > 5)
-            return null;
-        var steps = matches.Select(m => new WarmupStep(int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value))).ToList();
-        if (steps.Any(s => s.Percent is < 10 or > 95 || s.Reps is < 1 or > 20))
-            return null;
-        return [.. steps.OrderBy(s => s.Percent)];
-    }
 
     [RelayCommand]
     async Task EditMinWeight()

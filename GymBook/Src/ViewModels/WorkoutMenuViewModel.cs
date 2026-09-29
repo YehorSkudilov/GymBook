@@ -35,7 +35,8 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
         Name = _workout.Name;
         StartText = started.Date == DateTime.Today ? $"Today, {started:t}" : $"{started:ddd d MMM}, {started:t}";
         TrackRir = store.Profile.TrackRir;
-        CanTrackRir = store.GetPlan(store.Data.ActiveSession?.PlanId)?.UseRir != false;
+        // Only a plan with its own training settings and RIR off rules it out; one on the defaults follows this switch.
+        CanTrackRir = store.GetPlan(store.Data.ActiveSession?.PlanId) is not { OwnTraining: true, UseRir: false };
         AutoRest = store.Profile.AutoRestTimer;
         _loading = false;
         Tick();
@@ -57,7 +58,12 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
             DurationText = Units.Clock(DateTime.Now - started);
     }
 
-    partial void OnTrackRirChanged(bool value) => UpdateProfile(p => p.TrackRir = value);
+    // The default for plans' RIR too: plans following the defaults follow it.
+    partial void OnTrackRirChanged(bool value) => UpdateProfile(p =>
+    {
+        p.TrackRir = value;
+        Services.PlanTraining.ApplyToPlans(store);
+    });
 
     partial void OnAutoRestChanged(bool value) => UpdateProfile(p => p.AutoRestTimer = value);
 

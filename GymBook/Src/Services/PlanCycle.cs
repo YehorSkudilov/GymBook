@@ -25,18 +25,23 @@ public static class PlanCycle
 
     /// <summary>
     /// What to do on <paramref name="pe"/> in plan week <paramref name="week"/>: a copy of it with the week's sets and
-    /// reps in reserve. Rep ranges and rest stay as planned.
+    /// reps in reserve. Rep ranges and rest stay as planned. An exercise can sit out the deload week, or not build over
+    /// the block (or build in a plan that doesn't), by its own setting (see <see cref="PlanTraining.Weeks"/>).
     /// </summary>
     public static PlanExercise ForWeek(WorkoutPlan plan, PlanExercise pe, int week)
     {
         var sets = pe.Sets;
         var rir = pe.TargetRir;
+        var (deloads, periodization) = PlanTraining.Weeks(plan, pe);
         if (IsDeload(plan, week))
         {
-            sets = Math.Max(1, (sets + 1) / 2);
-            rir = Math.Min(5, rir + 3);
+            if (deloads)
+            {
+                sets = Math.Max(1, (sets + 1) / 2);
+                rir = Math.Min(5, rir + 3);
+            }
         }
-        else if (plan.Periodization)
+        else if (periodization)
         {
             var w = WeekInCycle(plan, week);
             if (w == 1)
@@ -55,6 +60,10 @@ public static class PlanCycle
             TargetRir = rir,
             RestSeconds = pe.RestSeconds,
             CustomRest = pe.CustomRest,
+            CustomRir = pe.CustomRir,
+            Warmups = pe.Warmups,
+            Deloads = pe.Deloads,
+            Periodization = pe.Periodization,
         };
     }
 
