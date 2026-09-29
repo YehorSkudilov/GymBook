@@ -204,7 +204,7 @@ public partial class ProfileViewModel(
             PlanRest.Apply(plan, P, store.GetExercise);
 
         // The workout in progress was set up with the old rest: ask.
-        var affected = new List<(SessionExercise Exercise, int Rest)>();
+        var affected = new List<(SessionExercise Exercise, int Seconds)>();
         if (store.Data.ActiveSession is { } session)
         {
             var plan = store.GetPlan(session.PlanId);
@@ -212,7 +212,7 @@ public partial class ProfileViewModel(
                 if (store.GetExercise(se.ExerciseId) is { } ex && ex.Mechanic == mechanic)
                     affected.Add((se, plan == null ? PlanRest.FromProfile(P.Goal, P, ex) : PlanRest.DefaultFor(plan, P, ex)));
         }
-        if (affected.Any(a => a.Exercise.RestSeconds != a.Rest) && await dialogs.Confirm("Use it now too?",
+        if (affected.Any(a => a.Exercise.RestSeconds != a.Seconds) && await dialogs.Confirm("Use it now too?",
                 $"Change the rest for the {title.ToLowerInvariant()} in the workout in progress as well.", "Change", "Not this workout"))
         {
             foreach (var (se, rest) in affected)
