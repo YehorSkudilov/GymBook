@@ -137,12 +137,24 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
         }
         Quota = response.Quota ?? Quota;
 
-        var plan = new WorkoutPlan { Name = response.Name, Description = response.Description, Goal = answers.Goal };
-        plan.Workouts = ToWorkouts(response, answers, []);
+        // Run exactly as written: its own rest times (not the profile's), its own rest days when the source gives them,
+        // and no deloads or periodization changing its weeks (they can be switched on in its training options).
+        var plan = new WorkoutPlan
+        {
+            Name = response.Name,
+            Description = response.Description,
+            Goal = answers.Goal,
+            Deloads = false,
+            Periodization = false,
+        };
+        plan.Workouts = ToWorkouts(response, answers, [], keepRest: true);
         if (plan.Workouts.Count == 0)
             throw new InvalidOperationException("The imported plan has no workouts.");
         plan.DaysPerWeek = plan.Workouts.Count;
-        plan.RestDays = [.. PlanSchedule.DefaultRestDays(plan.Workouts.Count).Order()];
+        var days = plan.Workouts.Count + response.RestDays.Count;
+        plan.RestDays = response.RestDays.Count > 0 && days <= PlanLimits.MaxDays && response.RestDays.All(d => d >= 0 && d < days)
+            ? [.. response.RestDays.Distinct().Order()]
+            : [.. PlanSchedule.DefaultRestDays(plan.Workouts.Count).Order()];
         return plan;
     }
 
@@ -468,8 +480,9 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     /// <summary>
     /// The AI's workouts as plan workouts. Workouts keep the ids of the ones at the same position in
     /// <paramref name="previous"/>, so logged sessions still count toward the plan's weeks after a change.
+    /// <paramref name="keepRest"/>: an imported plan keeps the rest times it came with.
     /// </summary>
-    List<PlanWorkout> ToWorkouts(GeneratePlanResponse response, UserProfile answers, List<PlanWorkout> previous)
+    List<PlanWorkout> ToWorkouts(GeneratePlanResponse response, UserProfile answers, List<PlanWorkout> previous, bool keepRest = false)
     {
         var workouts = new List<PlanWorkout>();
         foreach (var w in response.Workouts)
@@ -483,7 +496,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
                 if (store.GetExercise(e.ExerciseId) is not { } ex)
                     continue;
                 // A rest time the user set wins, except where the AI was asked to change it on a plan being edited.
-                var rest = previous.Count == 0 ? TrainingGoals.RestOverride(answers, ex) ?? e.RestSeconds : e.RestSeconds;
+                var rest = previous.Count == 0 && !keepRest ? TrainingGoals.RestOverride(answers, ex) ?? e.RestSeconds : e.RestSeconds;
                 workout.Exercises.Add(new PlanExercise
                 {
                     ExerciseId = ex.Id,

@@ -9,6 +9,19 @@
     Shell.NavBarIsVisible="False"
     Backdrop="#B3000000">
 
+    <!-- Its own row styles: the Profile page's Row and Divider are local to that page, and a missing one crashes on open. -->
+    <ContentPage.Resources>
+        <Style x:Key="OptionRow" TargetType="Grid">
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="ColumnSpacing" Value="12" />
+        </Style>
+        <Style x:Key="OptionDivider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Margin" Value="16,0" />
+            <Setter Property="Color" Value="{StaticResource Surface2}" />
+        </Style>
+    </ContentPage.Resources>
+
     <!-- The plan's training options, switched here and saved with the plan's other changes -->
     <Grid>
         <Grid.GestureRecognizers>
@@ -27,7 +40,7 @@
 
                 <Border Style="{StaticResource Card}" Padding="0">
                     <VerticalStackLayout>
-                        <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
+                        <Grid Style="{StaticResource OptionRow}" ColumnDefinitions="*,Auto">
                             <VerticalStackLayout VerticalOptions="Center" Spacing="2">
                                 <Label Text="Reps in reserve (RIR)" />
                                 <Label Text="A target effort for each exercise, and logged with each set. Off: just weight and reps."
@@ -35,8 +48,8 @@
                             </VerticalStackLayout>
                             <Switch Grid.Column="1" IsToggled="{Binding UseRir}" VerticalOptions="Center" />
                         </Grid>
-                        <BoxView Style="{StaticResource Divider}" />
-                        <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
+                        <BoxView Style="{StaticResource OptionDivider}" />
+                        <Grid Style="{StaticResource OptionRow}" ColumnDefinitions="*,Auto">
                             <VerticalStackLayout VerticalOptions="Center" Spacing="2">
                                 <Label Text="Deload weeks" />
                                 <Label Text="After every 4 weeks, a lighter week: about half the sets and easier effort, to recover and come back stronger."
@@ -44,8 +57,8 @@
                             </VerticalStackLayout>
                             <Switch Grid.Column="1" IsToggled="{Binding Deloads}" VerticalOptions="Center" />
                         </Grid>
-                        <BoxView Style="{StaticResource Divider}" />
-                        <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
+                        <BoxView Style="{StaticResource OptionDivider}" />
+                        <Grid Style="{StaticResource OptionRow}" ColumnDefinitions="*,Auto">
                             <VerticalStackLayout VerticalOptions="Center" Spacing="2">
                                 <Label Text="Periodization" />
                                 <Label Text="Each 4-week block builds: an easier first week, then an extra set in weeks 3 and 4, and the hardest effort in week 4."

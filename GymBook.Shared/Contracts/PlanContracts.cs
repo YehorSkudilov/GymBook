@@ -9,6 +9,8 @@ public static class PlanLimits
     public const int MaxCandidates = 800;
     public const int MaxDays = 7;
     public const int MaxExercisesPerDay = 12;
+    /// <summary>An imported plan keeps its workouts as long as the source has them, up to this.</summary>
+    public const int MaxExercisesPerImportedDay = 20;
     public const int MaxQuestions = 6;
     public const int MaxOptions = 6;
     public const int QuestionLength = 300;
@@ -90,6 +92,11 @@ public class GeneratePlanResponse
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public List<GeneratedWorkout> Workouts { get; set; } = [];
+    /// <summary>
+    /// An imported plan: where its source puts rest days (0-based over workouts and rest days together). Empty when
+    /// the source doesn't say, and for plans the AI designs.
+    /// </summary>
+    public List<int> RestDays { get; set; } = [];
     /// <summary>What's left after this one.</summary>
     public PlanQuotaResponse? Quota { get; set; }
 }
