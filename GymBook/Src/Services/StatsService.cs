@@ -173,8 +173,12 @@ public class StatsService(DataStore store, RecoveryService recovery)
         return list;
     }
 
-    /// <summary>Workouts per week the user aims for: the profile's training days or the active plan's, whichever is higher.</summary>
-    public int WeeklyTarget => Math.Max(1, Math.Max(store.Profile.DaysPerWeek, store.ActivePlan?.DaysPerWeek ?? 0));
+    /// <summary>
+    /// Workouts per week the user aims for: the active plan's workouts (its rest days don't count), or without a plan the
+    /// profile's training days. Counted from the workouts themselves, not the plan's stored day count, which edits to
+    /// its days don't keep up to date.
+    /// </summary>
+    public int WeeklyTarget => Math.Max(1, store.ActivePlan is { Workouts.Count: > 0 } plan ? plan.Workouts.Count : store.Profile.DaysPerWeek);
 
     /// <summary>
     /// Consecutive weeks that hit <see cref="WeeklyTarget"/>. The current week only adds to the streak once it

@@ -1,6 +1,6 @@
 namespace GymBook.Views;
 
-public partial class ChipBar : ContentView
+public partial class ChipBar : Controls.HorizontalDragArea
 {
     public ChipBar()
     {

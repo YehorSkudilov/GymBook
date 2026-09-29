@@ -12,6 +12,7 @@ public record MuscleRecovery(MuscleGroup Muscle, double Recovery, DateTime? Read
 /// </summary>
 public class RecoveryService(DataStore store)
 {
+    // How far back workouts still count (recovery takes three days at most), and how far ahead the previews look.
     const double MaxHours = 96;
 
     public Dictionary<MuscleGroup, double> Compute(DateTime at) => Details(at).ToDictionary(r => r.Muscle, r => r.Recovery);
@@ -20,18 +21,44 @@ public class RecoveryService(DataStore store)
     {
         var result = Enum.GetValues<MuscleGroup>().ToDictionary(m => m, m => new MuscleRecovery(m, 1, null, null, 0));
 
-        foreach (var session in store.History.Where(s => s.EndedAt <= at).TakeWhile(s => (at - s.EndedAt!.Value).TotalHours < MaxHours))
+        // Workouts that ended by then, and one still going on at that moment, counted by the sets done so far (so a
+        // look through a workout shows the fatigue building exercise by exercise).
+        foreach (var session in store.History.Where(s => s.StartedAt <= at).TakeWhile(s => (at - s.EndedAt!.Value).TotalHours < MaxHours))
         {
-            var hours = (at - session.EndedAt!.Value).TotalHours;
-            foreach (var (muscle, sets) in SetsPerMuscle(session))
+            var during = at < session.EndedAt!.Value;
+            var hours = during ? 0 : (at - session.EndedAt!.Value).TotalHours;
+            foreach (var (muscle, sets) in SetsPerMuscle(session, during ? at : null))
             {
-                var needed = Math.Clamp(24 + sets * 8, 24, MaxHours);
-                var recovered = Math.Clamp(hours / needed, 0, 1);
+                var needed = HoursToRecover(muscle, sets);
+                var recovered = RecoveredAfter(hours / needed);
                 if (recovered < result[muscle].Recovery)
                     result[muscle] = new MuscleRecovery(muscle, recovered, session.EndedAt!.Value.AddHours(needed), session, sets);
             }
         }
         return [.. result.Values];
+    }
+
+    /// <summary>
+    /// How long a muscle takes to recover fully from <paramref name="sets"/> hard sets: a day for a little work, 5 hours
+    /// more per set, up to three days; smaller muscles bounce back quicker than the big movers of the legs and back.
+    /// </summary>
+    static double HoursToRecover(MuscleGroup muscle, double sets) => Math.Clamp(24 + sets * 5, 24, 72) * SizeFactor(muscle);
+
+    static double SizeFactor(MuscleGroup muscle) => muscle switch
+    {
+        MuscleGroup.Quads or MuscleGroup.Hamstrings or MuscleGroup.Glutes or MuscleGroup.Back or MuscleGroup.LowerBack => 1,
+        MuscleGroup.Chest => 0.9,
+        _ => 0.75,
+    };
+
+    /// <summary>
+    /// Recovery by the share of the time elapsed: most of it in the first part, levelling off towards the end (not a
+    /// straight line, which undersold the first day).
+    /// </summary>
+    static double RecoveredAfter(double share)
+    {
+        var x = Math.Clamp(share, 0, 1);
+        return 1 - (1 - x) * (1 - x);
     }
 
     /// <summary>Below this a muscle is still "Recovering" or "Fatigued" and shouldn't take much work yet.</summary>
@@ -99,8 +126,11 @@ public class RecoveryService(DataStore store)
         return sets;
     }
 
-    /// <summary>Primary muscles get one set each; secondary muscles get half a set.</summary>
-    public Dictionary<MuscleGroup, double> SetsPerMuscle(WorkoutSession session)
+    /// <summary>
+    /// Primary muscles get one set each; secondary muscles get half a set. With <paramref name="upTo"/>, only the sets
+    /// done by then count (partway through the workout); sets without a time count as done when it ended.
+    /// </summary>
+    public Dictionary<MuscleGroup, double> SetsPerMuscle(WorkoutSession session, DateTime? upTo = null)
     {
         var sets = new Dictionary<MuscleGroup, double>();
         foreach (var se in session.Exercises)
@@ -108,7 +138,7 @@ public class RecoveryService(DataStore store)
             var ex = store.GetExercise(se.ExerciseId);
             if (ex == null)
                 continue;
-            var count = se.Sets.Count(s => s.IsCompleted && !s.IsWarmup);
+            var count = se.Sets.Count(s => s.IsCompleted && !s.IsWarmup && (upTo is not { } cutoff || (s.CompletedAt ?? session.EndedAt ?? session.StartedAt) <= cutoff));
             if (count == 0)
                 continue;
             sets[ex.PrimaryMuscle] = sets.GetValueOrDefault(ex.PrimaryMuscle) + count;

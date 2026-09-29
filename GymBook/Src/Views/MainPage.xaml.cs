@@ -36,7 +36,7 @@ public partial class MainPage : ContentPage
         [
             // Icons with a solid body, so the filled version (selected) looks different from the outline one; line-only
             // icons like format_list_bulleted and insights look the same in both.
-            new() { Glyph = "list_alt", PageName = "Exercises", Page = exercises, Color = color },
+            new() { Glyph = "assignment", PageName = "Exercises", Page = exercises, Color = color },
             new() { Glyph = "event_note", PageName = "Plans", Page = plans, Color = color },
             new()
             {

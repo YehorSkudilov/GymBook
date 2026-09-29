@@ -1,6 +1,6 @@
 namespace GymBook.Controls;
 
-public enum StatIcon { Workouts, Sets, Volume }
+public enum StatIcon { Workouts, Sets, Volume, Target }
 
 /// <summary>
 /// A small animated icon over a stat on Home's week card: a dumbbell lifting (workouts), three bars filling in turn
@@ -33,6 +33,9 @@ public class StatIconView : AnimatedDrawingView
                 break;
             case StatIcon.Sets:
                 DrawSets(canvas, cx, cy, s, t);
+                break;
+            case StatIcon.Target:
+                DrawTarget(canvas, cx, cy, s, t);
                 break;
             default:
                 DrawFlame(canvas, cx, cy, s, t);
@@ -88,6 +91,23 @@ public class StatIconView : AnimatedDrawingView
             var filled = Math.Max(width, h * Ease(fill));
             canvas.FillRoundedRectangle(x, bottom - filled, width, filled, width / 2);
         }
+    }
+
+    // A target: a ring rippling out from a bullseye that beats, like hitting the week's goal.
+    static void DrawTarget(ICanvas canvas, float cx, float cy, float s, float t)
+    {
+        var r = s * 0.4f;
+        canvas.StrokeColor = Blue;
+        canvas.StrokeSize = s * 0.07f;
+        canvas.DrawCircle(cx, cy, r);
+        canvas.DrawCircle(cx, cy, r * 0.62f);
+        // A ripple running outwards, fading as it goes.
+        var ripple = t % 1.6f / 1.6f;
+        canvas.StrokeColor = Blue.WithAlpha(0.5f * (1 - ripple));
+        canvas.DrawCircle(cx, cy, r * (0.3f + 0.75f * ripple));
+        var beat = 1 + 0.18f * MathF.Max(0, MathF.Sin(t * 5));
+        canvas.FillColor = Blue;
+        canvas.FillCircle(cx, cy, r * 0.26f * beat);
     }
 
     // A flame that flickers and sways: the work put in.

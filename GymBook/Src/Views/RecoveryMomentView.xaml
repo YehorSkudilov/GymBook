@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<!-- Picks the moment a recovery map shows: one of the day's workouts, before or after it, and a slider to move earlier
-     or later from there. Used on the calendar's day card and on the recovery details page, bound to a RecoveryMoment. -->
+<!-- Picks the moment a recovery map shows: a timeline of the day zoomed in on its workouts, one stop per exercise, with the
+     moments around them. Slide along it or tap a stop. Used on the calendar's day card and on the recovery details page,
+     bound to a RecoveryMoment. -->
 <ContentView
     x:Class="GymBook.Views.RecoveryMomentView"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -8,48 +9,32 @@
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:RecoveryMoment">
 
-    <VerticalStackLayout Spacing="10">
-        <!-- Which workout (a dropdown when the day had several) and before or after it -->
-        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding HasWorkouts}">
-            <Border Style="{StaticResource InputBox}" HeightRequest="40" Padding="10,0" IsVisible="{Binding HasSeveral}">
-                <Picker ItemsSource="{Binding WorkoutNames}" SelectedIndex="{Binding SelectedIndex}" Title="Workout"
-                        TextColor="{StaticResource TextPrimary}" TitleColor="{StaticResource TextTertiary}" FontSize="14" />
-            </Border>
-            <Label Text="{Binding WorkoutName}" IsVisible="{Binding HasSeveral, Converter={StaticResource Not}}"
-                   FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" LineBreakMode="TailTruncation" />
-            <!-- Before | After -->
-            <Border Grid.Column="1" BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="3"
-                    VerticalOptions="Center">
-                <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="2">
-                    <Border BackgroundColor="{Binding BeforeBackground}" StrokeShape="RoundRectangle 9" StrokeThickness="0" Padding="12,6">
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding BeforeCommand}" />
-                        </Border.GestureRecognizers>
-                        <Label Text="Before" TextColor="{Binding BeforeText}" FontFamily="OpenSansSemibold" FontSize="13" />
-                    </Border>
-                    <Border Grid.Column="1" BackgroundColor="{Binding AfterBackground}" StrokeShape="RoundRectangle 9" StrokeThickness="0" Padding="12,6">
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding AfterCommand}" />
-                        </Border.GestureRecognizers>
-                        <Label Text="After" TextColor="{Binding AfterText}" FontFamily="OpenSansSemibold" FontSize="13" />
-                    </Border>
-                </Grid>
-            </Border>
-        </Grid>
+    <VerticalStackLayout Spacing="8">
+        <Label Text="{Binding When}" FontFamily="OpenSansSemibold" FontSize="13" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
 
-        <!-- The moment shown, and the slider centred on it -->
-        <VerticalStackLayout Spacing="2">
-            <Grid ColumnDefinitions="*,Auto">
-                <Label Text="{Binding When}" FontFamily="OpenSansSemibold" FontSize="13" VerticalOptions="Center" />
-                <Button Grid.Column="1" Text="Reset" Style="{StaticResource SmallButton}" IsVisible="{Binding IsShifted}" Command="{Binding ResetCommand}" />
-            </Grid>
-            <!-- Maximum before Minimum: the minimum can only go negative once the maximum allows the range. -->
-            <Slider Maximum="{x:Static vm:RecoveryMoment.MaxHours}" Minimum="{x:Static vm:RecoveryMoment.MinHours}" Value="{Binding Hours}"
-                    MinimumTrackColor="{StaticResource Accent}" MaximumTrackColor="{StaticResource Surface3}" ThumbColor="{StaticResource Accent}" />
-            <Grid ColumnDefinitions="*,*">
-                <Label Text="−7 days" Style="{StaticResource Caption}" FontSize="11" />
-                <Label Grid.Column="1" Text="+4 days" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End" />
-            </Grid>
-        </VerticalStackLayout>
+        <!-- Stop to stop -->
+        <Slider Minimum="0" Maximum="{Binding MaxIndex}" Value="{Binding Index}" IsVisible="{Binding HasSteps}"
+                MinimumTrackColor="{StaticResource Accent}" MaximumTrackColor="{StaticResource Surface3}" ThumbColor="{StaticResource Accent}" />
+
+        <!-- Every stop by name; the one shown is highlighted and kept in view -->
+        <ScrollView x:Name="Strip" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+            <HorizontalStackLayout x:Name="StripItems" BindableLayout.ItemsSource="{Binding Steps}" Spacing="6">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:RecoveryStep">
+                        <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="10,6"
+                                MinimumWidthRequest="72">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="1">
+                                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontFamily="OpenSansSemibold" FontSize="12"
+                                       HorizontalOptions="Center" MaximumWidthRequest="130" LineBreakMode="TailTruncation" />
+                                <Label Text="{Binding Time}" TextColor="{Binding TextColor}" Opacity="0.7" FontSize="10" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </HorizontalStackLayout>
+        </ScrollView>
     </VerticalStackLayout>
 </ContentView>

@@ -69,7 +69,12 @@ public static class MauiProgram
 
 #if ANDROID
         // Hold-and-drag reordering (plan exercises and days), with a native long-press so quick swipes still scroll.
-        builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.ReorderItem, ReorderItemHandler>());
+        builder.ConfigureMauiHandlers(handlers =>
+        {
+            handlers.AddHandler<Controls.ReorderItem, ReorderItemHandler>();
+            // Sideways strips on a tab (the exercise filter chips) keep their drag from the swiping tabs.
+            handlers.AddHandler<Controls.HorizontalDragArea, HorizontalDragAreaHandler>();
+        });
 
         // The tabs swipe sideways (AppSkeleton's CView takes over any mostly-horizontal drag), which would steal the
         // drag from a slider on a tab, like Home's recovery preview. A slider claims the gesture as soon as it's

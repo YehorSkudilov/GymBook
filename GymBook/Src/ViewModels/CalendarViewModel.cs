@@ -27,19 +27,24 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     [ObservableProperty] List<SessionItem> selectedSessions = [];
     [ObservableProperty] bool selectedIsEmpty;
 
-    // Muscle recovery on the selected day, at the moment picked under the map: before or after one of its workouts
-    // (or that morning), moved with a slider.
+    // Muscle recovery on the selected day: going into it, or after everything done on it (a toggle under the map).
     [ObservableProperty] IDrawable recoveryMap = MuscleMapDrawable.Empty;
     [ObservableProperty] string recoveryTitle = "";
     [ObservableProperty] string recoverySummary = "";
     [ObservableProperty] bool canOpenRecovery = true;
 
-    /// <summary>The moment the map shows; shared with the recovery details page it opens.</summary>
-    public RecoveryMoment Moment { get; } = new();
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(BeforeBackground), nameof(AfterBackground), nameof(BeforeText), nameof(AfterText))]
+    bool isAfterDay;
 
-    bool _momentHooked;
-    // The day (and how many workouts it had) the moment was set up for: a refresh of the same day keeps what was picked.
-    (DateTime Day, int Count)? _momentFor;
+    // The Before this day | After this day toggle: the chosen half lit up.
+    static readonly Color ToggleOn = Color.FromArgb("#3F7DFF"), ToggleOnText = Colors.White, ToggleOffText = Color.FromArgb("#9AA3B5");
+    public Color BeforeBackground => IsAfterDay ? Colors.Transparent : ToggleOn;
+    public Color AfterBackground => IsAfterDay ? ToggleOn : Colors.Transparent;
+    public Color BeforeText => IsAfterDay ? ToggleOffText : ToggleOnText;
+    public Color AfterText => IsAfterDay ? ToggleOnText : ToggleOffText;
+
+    DateTime _recoveryDay = DateTime.Today;
 
     public override Task OnAppearingAsync()
     {
@@ -73,6 +78,11 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
 
         // Six Monday-first weeks cover every month; days outside it render as blanks.
         var gridStart = StatsService.WeekStart(_month);
+        // Weeks that reached the target (judged against today's target, like the streak).
+        var target = stats.WeeklyTarget;
+        var hitWeeks = Enumerable.Range(0, 6)
+            .Where(w => Enumerable.Range(0, 7).Sum(d => _byDay[gridStart.AddDays(w * 7 + d)].Count()) >= target)
+            .ToHashSet();
         Days = Enumerable.Range(0, 42).Select(i =>
         {
             var d = gridStart.AddDays(i);
@@ -85,6 +95,8 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
                 IsSelected = d == _selected,
                 Count = _byDay[d].Count(),
                 SelectCommand = new RelayCommand(() => Select(d), () => inMonth),
+                WeekHit = hitWeeks.Contains(i / 7),
+                Weekday = i % 7,
             };
         }).ToList();
 
@@ -106,39 +118,47 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
         SelectedIsEmpty = HasSelection && SelectedSessions.Count == 0;
     }
 
-    /// <summary>A newly selected day starts before its first workout (or that morning); the moment picker takes it from there.</summary>
+    /// <summary>The toggle only makes sense on a day with a workout to be after.</summary>
+    [ObservableProperty] bool hasDayWorkouts;
+
     void UpdateRecovery(DateTime day)
     {
-        if (!_momentHooked)
-        {
-            _momentHooked = true;
-            Moment.Changed += (_, _) => ShowRecovery();
-        }
-        var key = (day, _byDay[day].Count());
-        if (_momentFor == key)
-        {
-            ShowRecovery();
-            return;
-        }
-        _momentFor = key;
-        Moment.SetDay(day, _byDay[day]);
+        _recoveryDay = day;
+        HasDayWorkouts = _byDay[day].Any(s => s.EndedAt != null);
+        if (!HasDayWorkouts && IsAfterDay)
+            IsAfterDay = false;
+        ShowRecovery();
     }
+
+    /// <summary>When the day's last workout ended; null on a day without one.</summary>
+    DateTime? LastWorkoutEnd => _byDay[_recoveryDay].Select(s => s.EndedAt).Max();
+
+    partial void OnIsAfterDayChanged(bool value) => ShowRecovery();
+
+    [RelayCommand]
+    void BeforeDay() => IsAfterDay = false;
+
+    [RelayCommand]
+    void AfterDay() => IsAfterDay = true;
+
+    /// <summary>Going into the day (its start), or right after its last workout was finished.</summary>
+    DateTime RecoveryAt => IsAfterDay && LastWorkoutEnd is { } end ? end : _recoveryDay;
 
     void ShowRecovery()
     {
-        var at = Moment.At;
+        var at = RecoveryAt;
         var rec = recovery.Compute(at);
         RecoveryMap = MuscleMapDrawable.ForRecovery(rec);
-        RecoveryTitle = at > DateTime.Now.AddMinutes(5) ? "Muscle recovery (forecast)" : "Muscle recovery";
+        RecoveryTitle = IsAfterDay && LastWorkoutEnd is { } end ? $"Muscle recovery after the last workout ({end:HH:mm})" : "Muscle recovery going into the day";
         var tired = rec.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
         RecoverySummary = tired.Count == 0
             ? $"Every muscle group {(at < DateTime.Now ? "was" : "is")} fresh."
             : $"Recovering: {string.Join(", ", tired)}";
     }
 
-    /// <summary>The details page, on the same workout, side and slider position.</summary>
+    /// <summary>The details page, on this day's timeline: its first stop for Before, the end of its last workout for After.</summary>
     [RelayCommand]
-    Task OpenRecovery() => GoTo($"{Routes.Recovery}?{Moment.Query}");
+    Task OpenRecovery() => GoTo($"{Routes.Recovery}?day={_recoveryDay:yyyy-MM-dd}&stop={(IsAfterDay ? "after" : "0")}");
 
     void Select(DateTime day)
     {
@@ -179,6 +199,14 @@ public class CalendarDayItem
     public required bool IsSelected { get; init; }
     public required int Count { get; init; }
     public required ICommand SelectCommand { get; init; }
+    /// <summary>Its week reached the weekly workout target: the row gets a band behind it.</summary>
+    public bool WeekHit { get; init; }
+    /// <summary>0 for Monday … 6 for Sunday: the band's rounded ends go on the first and last day.</summary>
+    public int Weekday { get; init; }
+
+    public bool ShowBandStart => WeekHit && Weekday == 0;
+    public bool ShowBandMiddle => WeekHit && Weekday is > 0 and < 6;
+    public bool ShowBandEnd => WeekHit && Weekday == 6;
 
     public bool Done => Count > 0;
     public string Text => InMonth ? Day : "";

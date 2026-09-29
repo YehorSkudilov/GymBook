@@ -105,7 +105,8 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
         {
             Name = p.Name,
             Description = p.Description,
-            Meta = $"{p.Workouts.Count} workouts · {p.Workouts.Sum(w => w.Exercises.Count)} exercises · {p.DaysPerWeek}x/week",
+            // Training days are the workouts; rest days don't count.
+            Meta = $"{p.Workouts.Count} workouts a week · {p.Workouts.Sum(w => w.Exercises.Count)} exercises",
             IsActive = p.Id == store.Data.ActivePlanId,
             Suggestions = ai.PendingSuggestions(p),
             OpenCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Plan}?id={p.Id}")),
@@ -359,7 +360,8 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         saved.Name = copy.Name;
         saved.Description = copy.Description;
         saved.Goal = copy.Goal;
-        saved.DaysPerWeek = copy.DaysPerWeek;
+        // Training days per week: its workouts, whatever edits did to its days.
+        saved.DaysPerWeek = Math.Max(1, copy.Workouts.Count);
         saved.Workouts = copy.Workouts;
         saved.RestDays = copy.RestDays;
         saved.UseRir = copy.UseRir;

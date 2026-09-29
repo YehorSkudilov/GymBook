@@ -45,7 +45,7 @@ public partial class RecoveryViewModel : BaseViewModel, IQueryAttributable
     public RecoveryMoment Moment { get; } = new();
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) =>
-        Moment.TryApply(query, day => store.History.Where(s => s.StartedAt.Date == day));
+        Moment.Apply(query, day => store.History.Where(s => s.StartedAt.Date == day), store.GetExercise);
 
     public override Task OnAppearingAsync()
     {
