@@ -27,8 +27,8 @@ public class AuthController(
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request, CancellationToken ct)
     {
-        var email = request.Email.Trim();
-        var user = new AppUser { UserName = email, Email = email };
+        var address = request.Email.Trim();
+        var user = new AppUser { UserName = address, Email = address };
         var result = await users.CreateAsync(user, request.Password);
         if (!result.Succeeded)
         {

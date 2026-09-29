@@ -113,7 +113,7 @@ public class OpenAiPlanGenerator(HttpClient http, OpenAiOptions options, ILogger
             context.AppendLine("- Hard sets per week, last 4 weeks: " + string.Join(", ", p.WeeklySets.Select(v => $"{v.Muscle} {v.Sets:0.#}")));
         context.AppendLine();
         context.AppendLine("Recent sessions per exercise, newest first (weight kg x reps @ reps in reserve):");
-        foreach (var h in request.History)
+        foreach (var h in p.History)
         {
             context.AppendLine($"{h.ExerciseId} ({Name(h.ExerciseId)}):");
             if (h.Sessions.Count == 0)
