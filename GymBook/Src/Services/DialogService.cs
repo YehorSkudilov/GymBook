@@ -21,6 +21,19 @@ public class DialogService
     public Task<string?> ActionSheet(string title, string? destructive, IReadOnlyList<MenuSwitch> switches, params string[] options) =>
         DialogSheet.Menu(title, destructive, options, switches);
 
+    /// <summary>Whole numbers, each typed (two digits) or stepped with − and +; null when cancelled.</summary>
+    public Task<int[]?> Numbers(string title, string? message, string accept, params NumberField[] fields) =>
+        DialogSheet.Numbers(title, message, fields, accept);
+
+    /// <summary>Reps per set, exact or a range; (min, max), the same twice for exact, or null when cancelled.</summary>
+    public Task<(int Min, int Max)?> Reps(string title, int min, int max) => DialogSheet.Reps(title, min, max);
+
+    /// <summary>An amount to add or subtract, typed or stepped; signed (negative to subtract), or null when cancelled.</summary>
+    public Task<double?> Change(string title, string? message, string unit, double step) => DialogSheet.Change(title, message, unit, step);
+
+    /// <summary>A rest time in seconds, typed as m:ss or stepped by 15 s; null when cancelled.</summary>
+    public Task<int?> RestTime(string title, int seconds) => DialogSheet.RestTime(title, seconds);
+
     public Task<string?> Prompt(string title, string message, string? initial = null, Keyboard? keyboard = null, string accept = "Save") =>
         DialogSheet.Prompt(title, message, initial ?? "", keyboard ?? Keyboard.Text, accept);
 

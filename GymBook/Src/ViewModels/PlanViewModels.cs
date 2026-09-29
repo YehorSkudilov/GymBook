@@ -110,36 +110,26 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, boo
         Changed();
     }
 
-    /// <summary>The sets pill: how many working sets.</summary>
+    /// <summary>The sets pill: how many working sets, typed or stepped.</summary>
     [RelayCommand]
     async Task PickSets()
     {
-        var counts = Enumerable.Range(1, 8).ToList();
-        var labels = counts.Select(c => (c == 1 ? "1 set" : $"{c} sets") + (c == Model.Sets ? "  ✓" : "")).ToList();
-        var choice = await dialogs.ActionSheet($"{Name} · working sets", null, [.. labels]);
-        var index = choice == null ? -1 : labels.IndexOf(choice);
-        if (index < 0)
+        if (await dialogs.Numbers(Name, "Working sets", "Save", new Views.NumberField("Sets", Model.Sets, 1, 10)) is not [var sets])
             return;
-        Model.Sets = counts[index];
+        Model.Sets = sets;
         Changed();
     }
 
-    // The usual rep ranges, heavy to light; any other is set on the opened row.
-    static readonly (int Min, int Max)[] RepRanges = [(1, 3), (3, 5), (4, 6), (5, 8), (6, 10), (8, 12), (10, 15), (12, 15), (12, 20), (15, 25)];
-
-    /// <summary>The reps pill: the rep range, from the usual ones.</summary>
+    /// <summary>
+    /// The reps pill: an exact number of reps, or a range (lowest and highest), typed or stepped. Exact is kept as the
+    /// same number twice.
+    /// </summary>
     [RelayCommand]
     async Task PickReps()
     {
-        var ranges = RepRanges.ToList();
-        if (!ranges.Contains((Model.RepMin, Model.RepMax)))
-            ranges.Insert(0, (Model.RepMin, Model.RepMax));
-        var labels = ranges.Select(r => $"{r.Min}–{r.Max} reps" + (r == (Model.RepMin, Model.RepMax) ? "  ✓" : "")).ToList();
-        var choice = await dialogs.ActionSheet($"{Name} · reps per set", null, [.. labels]);
-        var index = choice == null ? -1 : labels.IndexOf(choice);
-        if (index < 0)
+        if (await dialogs.Reps(Name, Model.RepMin, Model.RepMax) is not { } reps)
             return;
-        (Model.RepMin, Model.RepMax) = ranges[index];
+        (Model.RepMin, Model.RepMax) = reps;
         Changed();
     }
 }

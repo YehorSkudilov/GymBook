@@ -156,7 +156,7 @@
                                                         <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" LineBreakMode="TailTruncation" />
                                                         <Label Text="{Binding Equipment}" Style="{StaticResource Caption}" />
                                                     </VerticalStackLayout>
-                                                    <!-- Tap either to pick it; the ▾ says so. Rep range details and rest are on the opened row. -->
+                                                    <!-- Tap either for a number popup: sets, or the rep range (lowest and highest). Rest and RIR are on the opened row. -->
                                                     <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                                         <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
                                                             <Border.GestureRecognizers>
@@ -180,8 +180,10 @@
 
                                             <!-- Opened: change it right here -->
                                             <VerticalStackLayout Spacing="10" IsVisible="{Binding IsExpanded}">
-                                                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
-                                                    <Border Grid.Row="1" Style="{StaticResource InnerCard}" Padding="10,8" IsVisible="{Binding ShowRir}">
+                                                <!-- The rep range is on the Reps pill above -->
+                                                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                                    <!-- Fills the row, so it's as tall as the rest card beside it -->
+                                                    <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8" IsVisible="{Binding ShowRir}" VerticalOptions="Fill">
                                                         <VerticalStackLayout Spacing="6">
                                                             <Label Text="TARGET RIR" Style="{StaticResource Overline}" FontSize="10" />
                                                             <Grid ColumnDefinitions="Auto,*,Auto">
@@ -191,28 +193,8 @@
                                                             </Grid>
                                                         </VerticalStackLayout>
                                                     </Border>
-                                                    <Border Style="{StaticResource InnerCard}" Padding="10,8">
-                                                        <VerticalStackLayout Spacing="6">
-                                                            <Label Text="REP RANGE" Style="{StaticResource Overline}" FontSize="10" />
-                                                            <Label Text="{Binding RepsText}" FontFamily="OpenSansSemibold" FontSize="17" HorizontalOptions="Center" />
-                                                            <Grid ColumnDefinitions="*,*" ColumnSpacing="6">
-                                                                <HorizontalStackLayout Spacing="4" HorizontalOptions="Center">
-                                                                    <Button Text="−" Style="{StaticResource StepButton}" WidthRequest="28" MinimumWidthRequest="28" Command="{Binding RepsDownCommand}" />
-                                                                    <Button Text="+" Style="{StaticResource StepButton}" WidthRequest="28" MinimumWidthRequest="28" Command="{Binding RepsUpCommand}" />
-                                                                </HorizontalStackLayout>
-                                                                <HorizontalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center">
-                                                                    <Button Text="−" Style="{StaticResource StepButton}" WidthRequest="28" MinimumWidthRequest="28" Command="{Binding RangeDownCommand}" />
-                                                                    <Button Text="+" Style="{StaticResource StepButton}" WidthRequest="28" MinimumWidthRequest="28" Command="{Binding RangeUpCommand}" />
-                                                                </HorizontalStackLayout>
-                                                            </Grid>
-                                                            <Grid ColumnDefinitions="*,*">
-                                                                <Label Text="min" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" />
-                                                                <Label Grid.Column="1" Text="max" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" />
-                                                            </Grid>
-                                                        </VerticalStackLayout>
-                                                    </Border>
                                                     <!-- The plan's default rest, or this exercise's own, which can go back to the default -->
-                                                    <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8">
+                                                    <Border Style="{StaticResource InnerCard}" Padding="10,8">
                                                         <VerticalStackLayout Spacing="6">
                                                             <Label Text="REST" Style="{StaticResource Overline}" FontSize="10" />
                                                             <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">

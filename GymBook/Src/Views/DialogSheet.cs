@@ -156,6 +156,321 @@ public class DialogSheet : SheetPage
         return Show(sheet);
     }
 
+    /// <summary>
+    /// One or more whole numbers side by side, each a two-digit box between − and +, with Save and Cancel. Resolves to
+    /// the numbers, each kept within its field's limits, or null when cancelled.
+    /// </summary>
+    public static async Task<int[]?> Numbers(string title, string? message, IReadOnlyList<NumberField> fields, string accept)
+    {
+        var inputs = fields.Select(f => new NumberInput(f)).ToList();
+        var sheet = new DialogSheet(title, message, s =>
+        {
+            var row = new Grid { ColumnSpacing = 14 };
+            for (var i = 0; i < inputs.Count; i++)
+            {
+                row.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                row.Add(inputs[i].View, i);
+            }
+            return s.SaveCancel(row, accept, () => string.Join(",", inputs.Select(x => x.Read())));
+        });
+        return await Show(sheet) == null ? null : [.. inputs.Select(x => x.Value)];
+    }
+
+    /// <summary>
+    /// Reps per set: an exact number, or a range (lowest and highest), switched at the top. Resolves to (min, max), the
+    /// same number twice for exact reps, or null when cancelled.
+    /// </summary>
+    public static async Task<(int Min, int Max)?> Reps(string title, int min, int max)
+    {
+        var exact = new NumberInput(new NumberField("Reps", max, 1, 50));
+        var low = new NumberInput(new NumberField("Min", min, 1, 50));
+        var high = new NumberInput(new NumberField("Max", max, 1, 50));
+        var isRange = min != max;
+        var sheet = new DialogSheet(title, "Reps per set", s =>
+        {
+            var range = new Grid { ColumnSpacing = 14, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
+            range.Add(low.View, 0);
+            range.Add(high.View, 1);
+
+            // Exact | Range: two halves of one toggle, like the calendar's.
+            var toggle = new Grid { ColumnSpacing = 2, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
+            var exactHalf = Half("Exact reps");
+            var rangeHalf = Half("Rep range");
+            toggle.Add(exactHalf, 0);
+            toggle.Add(rangeHalf, 1);
+            void Show(bool ranged)
+            {
+                // Carry the number over: exact from the top of the range, the range around the exact number.
+                if (ranged && !isRange)
+                {
+                    var v = exact.Read();
+                    low.Set(v);
+                    high.Set(v);
+                }
+                else if (!ranged && isRange)
+                    exact.Set(high.Read());
+                isRange = ranged;
+                exact.View.IsVisible = !ranged;
+                range.IsVisible = ranged;
+                Paint(exactHalf, !ranged);
+                Paint(rangeHalf, ranged);
+            }
+            exactHalf.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => Show(false)) });
+            rangeHalf.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => Show(true)) });
+            var wrap = new Border
+            {
+                BackgroundColor = Resource<Color>("Surface2"),
+                StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
+                StrokeThickness = 0,
+                Padding = 3,
+                Content = toggle,
+            };
+
+            var body = new VerticalStackLayout { Spacing = 16 };
+            body.Add(wrap);
+            body.Add(exact.View);
+            body.Add(range);
+            // As it is now: nothing to carry over yet.
+            Show(isRange);
+            return s.SaveCancel(body, "Save", () => "ok");
+        });
+        if (await DialogSheet.Show(sheet) == null)
+            return null;
+        if (!isRange)
+            return (exact.Value, exact.Value);
+        // Entered the wrong way round: swapped.
+        return (Math.Min(low.Value, high.Value), Math.Max(low.Value, high.Value));
+    }
+
+    /// <summary>
+    /// A rest time: minutes and seconds typed in the middle ("2:30"; "2.30" too, as number keyboards may lack ":"; or just
+    /// seconds, "90"), between − and + that step
+    /// 15 seconds. Kept between 15 seconds and 10 minutes. Resolves to seconds, or null when cancelled.
+    /// </summary>
+    public static async Task<int?> RestTime(string title, int seconds)
+    {
+        const int StepSeconds = 15, Min = 15, Max = 600;
+        var value = Math.Clamp(seconds, Min, Max);
+        var entry = new Entry
+        {
+            Text = Clock(value),
+            Keyboard = Keyboard.Numeric,
+            MaxLength = 5,
+            FontSize = 28,
+            FontFamily = "OpenSansSemibold",
+            HorizontalTextAlignment = TextAlignment.Center,
+            VerticalOptions = LayoutOptions.Center,
+        };
+        static string Clock(int s) => $"{s / 60}:{s % 60:00}";
+        int Read()
+        {
+            var text = (entry.Text ?? "").Trim().Replace('.', ':').Replace(',', ':');
+            var parts = text.Split(':');
+            if (parts.Length == 2 && int.TryParse(parts[0], out var m) && int.TryParse(parts[1], out var sec))
+                value = Math.Clamp(m * 60 + sec, Min, Max);
+            else if (parts.Length == 1 && int.TryParse(parts[0], out var only))
+                // A small number is minutes ("2"), a bigger one seconds ("90").
+                value = Math.Clamp(only <= 10 ? only * 60 : only, Min, Max);
+            return value;
+        }
+        void Set(int v)
+        {
+            value = Math.Clamp(v, Min, Max);
+            entry.Text = Clock(value);
+        }
+        entry.Unfocused += (_, _) => Set(Read());
+
+        var sheet = new DialogSheet(title, "Minutes and seconds, e.g. 2:30", s =>
+        {
+            Button Step(string text, int delta)
+            {
+                var b = new Button { Text = text, Style = Resource<Style>("StepButton"), WidthRequest = 48, HeightRequest = 48, FontSize = 22, CornerRadius = 14 };
+                b.Clicked += (_, _) => Set(Read() + delta);
+                return b;
+            }
+            var box = new Border { Style = Resource<Style>("InputBox"), HeightRequest = 60, Content = entry };
+            var line = new Grid { ColumnSpacing = 8, ColumnDefinitions = [new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto)] };
+            line.Add(Step("−", -StepSeconds), 0);
+            line.Add(box, 1);
+            line.Add(Step("+", StepSeconds), 2);
+            return s.SaveCancel(line, "Save", () => "ok");
+        });
+        return await Show(sheet) == null ? null : Read();
+    }
+
+    /// <summary>One half of a two-way toggle (Exact | Range, Add | Subtract): tap to pick it.</summary>
+    static Border Half(string text) => new()
+    {
+        StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 9 },
+        StrokeThickness = 0,
+        Padding = new Thickness(0, 9),
+        Content = new Label { Text = text, FontFamily = "OpenSansSemibold", FontSize = 14, HorizontalOptions = LayoutOptions.Center },
+    };
+
+    static void Paint(Border half, bool on)
+    {
+        half.BackgroundColor = on ? Resource<Color>("Accent") : Colors.Transparent;
+        ((Label)half.Content!).TextColor = on ? Colors.White : Resource<Color>("TextSecondary");
+    }
+
+    /// <summary>The two halves in the toggle's grey track.</summary>
+    static Border Toggle(Border left, Border right)
+    {
+        var grid = new Grid { ColumnSpacing = 2, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
+        grid.Add(left, 0);
+        grid.Add(right, 1);
+        return new Border
+        {
+            BackgroundColor = Resource<Color>("Surface2"),
+            StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
+            StrokeThickness = 0,
+            Padding = 3,
+            Content = grid,
+        };
+    }
+
+    /// <summary>
+    /// An amount to add or subtract (e.g. weight across sets): Add | Subtract at the top, then the amount, typed or
+    /// stepped by <paramref name="step"/>. Resolves to the signed amount (negative to subtract), or null when cancelled.
+    /// </summary>
+    public static async Task<double?> Change(string title, string? message, string unit, double step)
+    {
+        var subtract = false;
+        var amount = step;
+        var entry = new Entry
+        {
+            Text = Format(amount),
+            Keyboard = Keyboard.Numeric,
+            MaxLength = 6,
+            FontSize = 28,
+            FontFamily = "OpenSansSemibold",
+            HorizontalTextAlignment = TextAlignment.Center,
+            VerticalOptions = LayoutOptions.Center,
+        };
+        static string Format(double v) => v.ToString("0.##", System.Globalization.CultureInfo.CurrentCulture);
+        double Read()
+        {
+            var text = entry.Text?.Replace(',', '.') ?? "";
+            if (double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var v) && v >= 0)
+                amount = Math.Min(v, 999);
+            return amount;
+        }
+        void Set(double v)
+        {
+            amount = Math.Clamp(Math.Round(v, 2), 0, 999);
+            entry.Text = Format(amount);
+        }
+        entry.Unfocused += (_, _) => Set(Read());
+
+        var sheet = new DialogSheet(title, message, s =>
+        {
+            var add = Half("+  Add");
+            var less = Half("−  Subtract");
+            void Pick(bool minus)
+            {
+                subtract = minus;
+                Paint(add, !minus);
+                Paint(less, minus);
+            }
+            add.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => Pick(false)) });
+            less.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => Pick(true)) });
+            Pick(false);
+
+            Button Step(string text, int direction)
+            {
+                var b = new Button { Text = text, Style = Resource<Style>("StepButton"), WidthRequest = 48, HeightRequest = 48, FontSize = 22, CornerRadius = 14 };
+                b.Clicked += (_, _) => Set(Read() + direction * step);
+                return b;
+            }
+            var box = new Border { Style = Resource<Style>("InputBox"), HeightRequest = 60, Content = entry };
+            var line = new Grid { ColumnSpacing = 8, ColumnDefinitions = [new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto)] };
+            line.Add(Step("−", -1), 0);
+            line.Add(box, 1);
+            line.Add(Step("+", 1), 2);
+            var number = new VerticalStackLayout { Spacing = 6 };
+            number.Add(new Label { Text = unit.ToUpperInvariant(), Style = Resource<Style>("Overline"), FontSize = 11, HorizontalOptions = LayoutOptions.Center });
+            number.Add(line);
+
+            var body = new VerticalStackLayout { Spacing = 16 };
+            body.Add(Toggle(add, less));
+            body.Add(number);
+            return s.SaveCancel(body, "Apply", () => "ok");
+        });
+        if (await Show(sheet) == null)
+            return null;
+        var value = Read();
+        return subtract ? -value : value;
+    }
+
+    /// <summary><paramref name="content"/>, then the main button (resolving to <paramref name="result"/>) and Cancel.</summary>
+    View SaveCancel(View content, string accept, Func<string> result)
+    {
+        var layout = new VerticalStackLayout { Spacing = 8 };
+        layout.Add(content);
+        var save = new Button { Text = accept, Style = Resource<Style>("PrimaryButton"), Margin = new Thickness(0, 12, 0, 0) };
+        save.Clicked += (_, _) => Choose(result());
+        layout.Add(save);
+        layout.Add(Button("Cancel", "SecondaryButton", null));
+        return layout;
+    }
+
+    /// <summary>A labelled whole number: a two-digit box between − and +, kept within the field's limits.</summary>
+    sealed class NumberInput
+    {
+        readonly NumberField _field;
+        readonly Entry _entry;
+
+        public NumberInput(NumberField field)
+        {
+            _field = field;
+            Value = Math.Clamp(field.Value, field.Min, field.Max);
+            _entry = new Entry
+            {
+                Text = Value.ToString(),
+                Keyboard = Keyboard.Numeric,
+                MaxLength = 2,
+                FontSize = 28,
+                FontFamily = "OpenSansSemibold",
+                HorizontalTextAlignment = TextAlignment.Center,
+                VerticalOptions = LayoutOptions.Center,
+            };
+            _entry.Unfocused += (_, _) => Set(Read());
+            var box = new Border { Style = Resource<Style>("InputBox"), HeightRequest = 60, Content = _entry };
+            var line = new Grid { ColumnSpacing = 8, ColumnDefinitions = [new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto)] };
+            line.Add(Step("−", -1), 0);
+            line.Add(box, 1);
+            line.Add(Step("+", 1), 2);
+            var stack = new VerticalStackLayout { Spacing = 6 };
+            stack.Add(new Label { Text = field.Label.ToUpperInvariant(), Style = Resource<Style>("Overline"), FontSize = 11, HorizontalOptions = LayoutOptions.Center });
+            stack.Add(line);
+            View = stack;
+        }
+
+        public View View { get; }
+        public int Value { get; private set; }
+
+        /// <summary>What's typed (kept within the limits), or the last value when it isn't a number.</summary>
+        public int Read()
+        {
+            if (int.TryParse(_entry.Text, out var v))
+                Value = Math.Clamp(v, _field.Min, _field.Max);
+            return Value;
+        }
+
+        public void Set(int value)
+        {
+            Value = Math.Clamp(value, _field.Min, _field.Max);
+            _entry.Text = Value.ToString();
+        }
+
+        Button Step(string text, int delta)
+        {
+            var b = new Button { Text = text, Style = Resource<Style>("StepButton"), WidthRequest = 48, HeightRequest = 48, FontSize = 22, CornerRadius = 14 };
+            b.Clicked += (_, _) => Set(Read() + delta);
+            return b;
+        }
+    }
+
     /// <summary>Like <see cref="Prompt"/>, for a password: hidden as it's typed, with a button to show it.</summary>
     public static Task<string?> PasswordPrompt(string title, string message, string accept)
     {
@@ -250,3 +565,6 @@ public class DialogSheet : SheetPage
 
 /// <summary>An on/off setting in a <see cref="DialogSheet.Menu"/>, applied through <see cref="Changed"/> as it's flipped.</summary>
 public record MenuSwitch(string Title, string? Detail, bool IsOn, Action<bool> Changed);
+
+/// <summary>A number in <see cref="DialogSheet.Numbers"/>: its label, starting value and limits.</summary>
+public record NumberField(string Label, int Value, int Min, int Max);

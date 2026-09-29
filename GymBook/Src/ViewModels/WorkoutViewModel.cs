@@ -108,10 +108,6 @@ public partial class WorkoutViewModel(
     internal Units Units => units;
     /// <summary>The warm-up settings of this workout's plan, or the profile's.</summary>
     internal WarmupSettings Warmups => workouts.WarmupsFor(_session);
-
-    /// <summary>Whether an exercise before <paramref name="vm"/> already worked its main muscle, so it needs only a light warm-up.</summary>
-    internal bool AlreadyWarm(WorkoutExerciseViewModel vm) =>
-        Exercises.TakeWhile(e => e != vm).Any(e => e.Exercise.PrimaryMuscle == vm.Exercise.PrimaryMuscle);
     internal ProgressionEngine Engine => engine;
     internal DialogService Dialogs => dialogs;
     /// <summary>The goal the exercises are coached for: the plan's, or the profile's for a workout outside a plan.</summary>
@@ -236,20 +232,6 @@ public partial class WorkoutViewModel(
         Exercises.Remove(vm);
         CurrentIndex = Math.Clamp(CurrentIndex, 0, Math.Max(0, Exercises.Count - 1));
         OnCurrentIndexChanged(CurrentIndex);
-        OnStructureChanged();
-    }
-
-    internal void Move(WorkoutExerciseViewModel vm, int delta)
-    {
-        var i = Exercises.IndexOf(vm);
-        var j = i + delta;
-        if (_session == null || i < 0 || j < 0 || j >= Exercises.Count)
-            return;
-        Exercises.Move(i, j);
-        _session.Exercises.RemoveAt(i);
-        _session.Exercises.Insert(j, vm.Model);
-        CurrentIndex = j;
-        OnCurrentIndexChanged(j);
         OnStructureChanged();
     }
 
@@ -490,7 +472,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(WarmupText))]
     bool showWarmups;
     public bool HasWarmups => Model.Sets.Any(s => s.IsWarmup);
-    public bool HasOpenWarmups => Model.Sets.Any(s => s.IsWarmup && !s.IsCompleted);
+    public bool HasOpenWarmups => Sets.Any(s => s.Model.IsWarmup && !s.IsSettled);
     public string WarmupText
     {
         get
@@ -629,24 +611,22 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         OnSkipsChanged();
     }
 
-    /// <summary>Skips every working set still to do, or, when they're all skipped already, brings them back.</summary>
+    /// <summary>Skips every set still to do, warm-ups included, or, when the working sets are all skipped already, brings them all back.</summary>
     [RelayCommand]
     void SkipExercise()
     {
-        var open = Sets.Where(s => !s.Model.IsWarmup && !s.IsCompleted).ToList();
-        if (open.Count == 0)
+        if (!Sets.Any(s => !s.Model.IsWarmup && !s.IsCompleted))
             return;
         var skip = !IsSkipped;
-        foreach (var s in open)
+        // Warm-ups too: they stay in the table, marked skipped, like the working sets.
+        foreach (var s in Sets.Where(s => !s.IsCompleted))
             s.IsSkipped = skip;
-        // Nothing to warm up for any more.
-        if (skip && HasOpenWarmups)
-            SkipWarmups();
         OnSkipsChanged();
     }
 
     void OnSkipsChanged()
     {
+        OnPropertyChanged(nameof(HasOpenWarmups));
         OnPropertyChanged(nameof(IsSkipped));
         OnPropertyChanged(nameof(SkipExerciseText));
         OnPropertyChanged(nameof(CanSkipExercise));
@@ -726,10 +706,9 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             await NothingOpen();
             return;
         }
-        // Increment is in the unit shown.
-        var step = $"{Units.Increment(Exercise):0.##}";
+        const string change = "Add or subtract…";
         var choice = await _parent.Dialogs.ActionSheet($"Weight for the {Count(open)} left", null,
-            "Set one weight for all", $"All + {step} {Units.Label}", $"All − {step} {Units.Label}", "Same as the last set done");
+            "Set one weight for all", change, "Same as the last set done");
         switch (choice)
         {
             case "Set one weight for all":
@@ -743,10 +722,14 @@ public partial class WorkoutExerciseViewModel : ObservableObject
                     foreach (var s in open)
                         s.WeightText = last.WeightText;
                 break;
-            case { } nudge when nudge.StartsWith("All"):
-                var steps = nudge.Contains('+') ? 1 : -1;
+            case change:
+                // Typed in the unit shown, stepped by the exercise's usual increment (e.g. 2.5 kg for a barbell).
+                if (await _parent.Dialogs.Change($"Change the {Count(open)} left", "The same amount on or off each set still to do",
+                        Units.Label, Units.Increment(Exercise)) is not { } delta || delta == 0)
+                    return;
+                var deltaKg = Units.FromDisplay(delta);
                 foreach (var s in open)
-                    s.WeightText = Units.Format(Units.Step(s.Model.WeightKg, Exercise, steps));
+                    s.WeightText = Units.Format(Math.Max(0, s.Model.WeightKg + deltaKg));
                 break;
             default:
                 return;
@@ -834,8 +817,8 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     async Task Menu()
     {
         string[] options = CanSkipExercise
-            ? [SkipExerciseText, "Add warm-up sets", "Exercise details", "Change rest time", "Move earlier", "Move later"]
-            : ["Add warm-up sets", "Exercise details", "Change rest time", "Move earlier", "Move later"];
+            ? [SkipExerciseText, "Exercise details", "Change rest time"]
+            : ["Exercise details", "Change rest time"];
         var choice = await _parent.Dialogs.ActionSheet(Name, "Remove exercise", options);
         if (choice == SkipExerciseText)
         {
@@ -848,53 +831,21 @@ public partial class WorkoutExerciseViewModel : ObservableObject
                 if (await _parent.Dialogs.Confirm("Remove exercise?", $"Remove {Name} and its sets from this workout?", "Remove"))
                     _parent.Remove(this);
                 break;
-            case "Add warm-up sets":
-                AddWarmups();
-                break;
             case "Exercise details":
                 await Help();
                 break;
             case "Change rest time":
-                var pick = await _parent.Dialogs.ActionSheet("Rest between sets", null, "0:45", "1:00", "1:30", "2:00", "2:30", "3:00", "4:00", "5:00");
-                if (pick != null)
+                if (await _parent.Dialogs.RestTime($"{Name} · rest between sets", Model.RestSeconds) is { } seconds)
                 {
-                    var parts = pick.Split(':');
-                    Model.RestSeconds = int.Parse(parts[0]) * 60 + int.Parse(parts[1]);
+                    Model.RestSeconds = seconds;
                     OnPropertyChanged(nameof(TargetText));
                     OnPropertyChanged(nameof(Tip));
                     _parent.OnStructureChanged();
                 }
                 break;
-            case "Move earlier":
-                _parent.Move(this, -1);
-                break;
-            case "Move later":
-                _parent.Move(this, 1);
-                break;
         }
     }
 
-    void AddWarmups()
-    {
-        var working = Model.Sets.FirstOrDefault(s => !s.IsWarmup)?.WeightKg ?? 0;
-        var settings = _parent.Warmups;
-        var warmups = _parent.Engine.Warmups(Exercise, working, settings, _parent.AlreadyWarm(this));
-        if (warmups.Count == 0)
-        {
-            _ = _parent.Dialogs.Alert("No warm-ups needed",
-                $"None are set for this kind of exercise, or its weight is under {Units.FormatWithUnit(settings.MinWorkingKg)}. Change warm-ups in your profile or the plan's ··· menu.");
-            return;
-        }
-        Model.Sets.RemoveAll(s => s.IsWarmup && !s.IsCompleted);
-        foreach (var row in Sets.Where(s => s.Model.IsWarmup && !s.IsCompleted).ToList())
-            Sets.Remove(row);
-        Model.Sets.InsertRange(0, warmups);
-        for (var i = 0; i < warmups.Count; i++)
-            Sets.Insert(i, new SetRowViewModel(this, warmups[i]));
-        ShowWarmups = true;
-        Renumber();
-        _parent.OnStructureChanged();
-    }
 }
 
 /// <summary>A row of the set table. Only the current row is edited in place; tapping another row makes it current.</summary>
