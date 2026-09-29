@@ -144,6 +144,10 @@ public partial class HomeViewModel(
         Greeting = string.IsNullOrWhiteSpace(profile.Name) ? part : $"{part}, {profile.Name}";
         DateText = DateTime.Today.ToString("dddd, d MMMM");
 
+        // Close any gap in the plan weeks (an empty week before one with progress) before showing them.
+        if (store.CompactPlanWeeks())
+            store.Save();
+
         var plan = store.ActivePlan;
         HasPlan = plan is { Workouts.Count: > 0 };
         if (plan is { Workouts.Count: > 0 })

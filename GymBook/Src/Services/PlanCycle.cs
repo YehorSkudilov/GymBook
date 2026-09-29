@@ -54,6 +54,7 @@ public static class PlanCycle
             RepMax = pe.RepMax,
             TargetRir = rir,
             RestSeconds = pe.RestSeconds,
+            CustomRest = pe.CustomRest,
         };
     }
 

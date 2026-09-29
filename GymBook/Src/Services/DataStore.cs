@@ -72,14 +72,18 @@ public class DataStore
 
     /// <summary>
     /// After workouts are deleted or a week is reset: every plan's weeks renumbered so none is left empty before one
-    /// with progress (see <see cref="PlanProgress.CompactWeeks"/>). Saving is up to the caller.
+    /// with progress (see <see cref="PlanProgress.CompactWeeks"/>). Also on showing the plan, for gaps from before this
+    /// existed (or synced from another device). Saving is up to the caller.
     /// </summary>
-    public void CompactPlanWeeks()
+    /// <returns>Whether any plan was renumbered.</returns>
+    public bool CompactPlanWeeks()
     {
         var sessions = History.ToList();
         if (Data.ActiveSession is { } active && sessions.All(s => s.Id != active.Id))
             sessions.Add(active);
+        var changed = false;
         foreach (var plan in Data.Plans)
-            PlanProgress.CompactWeeks(plan, sessions);
+            changed |= PlanProgress.CompactWeeks(plan, sessions);
+        return changed;
     }
 }

@@ -106,6 +106,12 @@ public partial class WorkoutViewModel(
     public bool TrackRir => store.Profile.TrackRir && store.GetPlan(_session?.PlanId)?.UseRir != false;
 
     internal Units Units => units;
+    /// <summary>The warm-up settings of this workout's plan, or the profile's.</summary>
+    internal WarmupSettings Warmups => workouts.WarmupsFor(_session);
+
+    /// <summary>Whether an exercise before <paramref name="vm"/> already worked its main muscle, so it needs only a light warm-up.</summary>
+    internal bool AlreadyWarm(WorkoutExerciseViewModel vm) =>
+        Exercises.TakeWhile(e => e != vm).Any(e => e.Exercise.PrimaryMuscle == vm.Exercise.PrimaryMuscle);
     internal ProgressionEngine Engine => engine;
     internal DialogService Dialogs => dialogs;
     /// <summary>The goal the exercises are coached for: the plan's, or the profile's for a workout outside a plan.</summary>
@@ -202,7 +208,7 @@ public partial class WorkoutViewModel(
         if (set.IsCompleted && !set.Model.IsWarmup && exercise.IsDone)
             ExerciseFinished?.Invoke(exercise, CanFinish);
         if (set.IsCompleted && store.Profile.AutoRestTimer)
-            StartRest(set.Model.IsWarmup ? store.Profile.WarmupRestSeconds : exercise.Model.RestSeconds);
+            StartRest(set.Model.IsWarmup ? Warmups.RestSeconds : exercise.Model.RestSeconds);
         // Its last set done: move straight on to the next exercise (the rest timer keeps running over it).
         if (set.IsCompleted && exercise.IsDone && Exercises.IndexOf(exercise) == CurrentIndex)
             _ = AdvanceAfterAsync(exercise);
@@ -316,7 +322,7 @@ public partial class WorkoutViewModel(
             return;
         foreach (var ex in picked)
         {
-            var se = workouts.CreateAdHoc(ex);
+            var se = workouts.CreateAdHoc(ex, _session);
             _session.Exercises.Add(se);
             AddExerciseVm(se);
         }
@@ -871,10 +877,12 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     void AddWarmups()
     {
         var working = Model.Sets.FirstOrDefault(s => !s.IsWarmup)?.WeightKg ?? 0;
-        var warmups = _parent.Engine.Warmups(Exercise, working);
+        var settings = _parent.Warmups;
+        var warmups = _parent.Engine.Warmups(Exercise, working, settings, _parent.AlreadyWarm(this));
         if (warmups.Count == 0)
         {
-            _ = _parent.Dialogs.Alert("No warm-ups needed", "Warm-up sets are suggested for compound lifts of 20 kg or more.");
+            _ = _parent.Dialogs.Alert("No warm-ups needed",
+                $"None are set for this kind of exercise, or its weight is under {Units.FormatWithUnit(settings.MinWorkingKg)}. Change warm-ups in your profile or the plan's ··· menu.");
             return;
         }
         Model.Sets.RemoveAll(s => s.IsWarmup && !s.IsCompleted);

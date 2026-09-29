@@ -60,7 +60,8 @@
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                             <Button Text="Review" Style="{StaticResource SmallButton}" BackgroundColor="{StaticResource Accent}" TextColor="White"
                                     Command="{Binding ImproveWithAiCommand}" />
-                            <Button Grid.Column="1" Text="Not now" Style="{StaticResource SmallButton}" Command="{Binding DismissSuggestionsCommand}" />
+                            <!-- Put off until next week's check, which brings them (or new ones) back -->
+                            <Button Grid.Column="1" Text="Next week" Style="{StaticResource SmallButton}" Command="{Binding DismissSuggestionsCommand}" />
                         </Grid>
                     </VerticalStackLayout>
                 </Border>
@@ -155,12 +156,19 @@
                                                         <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" LineBreakMode="TailTruncation" />
                                                         <Label Text="{Binding Equipment}" Style="{StaticResource Caption}" />
                                                     </VerticalStackLayout>
+                                                    <!-- Tap either to pick it; the ▾ says so. Rep range details and rest are on the opened row. -->
                                                     <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
                                                         <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
-                                                            <Label Text="{Binding Sets}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
+                                                            <Border.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding PickSetsCommand}" />
+                                                            </Border.GestureRecognizers>
+                                                            <Label Text="{Binding Sets, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
                                                         </Border>
                                                         <Border Grid.Column="1" BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
-                                                            <Label Text="{Binding Reps}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
+                                                            <Border.GestureRecognizers>
+                                                                <TapGestureRecognizer Command="{Binding PickRepsCommand}" />
+                                                            </Border.GestureRecognizers>
+                                                            <Label Text="{Binding Reps, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
                                                         </Border>
                                                     </Grid>
                                                 </VerticalStackLayout>
@@ -173,17 +181,7 @@
                                             <!-- Opened: change it right here -->
                                             <VerticalStackLayout Spacing="10" IsVisible="{Binding IsExpanded}">
                                                 <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
-                                                    <Border Style="{StaticResource InnerCard}" Padding="10,8">
-                                                        <VerticalStackLayout Spacing="6">
-                                                            <Label Text="SETS" Style="{StaticResource Overline}" FontSize="10" />
-                                                            <Grid ColumnDefinitions="Auto,*,Auto">
-                                                                <Button Text="−" Style="{StaticResource StepButton}" Command="{Binding SetsDownCommand}" />
-                                                                <Label Grid.Column="1" Text="{Binding SetsText}" FontFamily="OpenSansSemibold" FontSize="17" HorizontalOptions="Center" VerticalOptions="Center" />
-                                                                <Button Grid.Column="2" Text="+" Style="{StaticResource StepButton}" Command="{Binding SetsUpCommand}" />
-                                                            </Grid>
-                                                        </VerticalStackLayout>
-                                                    </Border>
-                                                    <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8" IsVisible="{Binding ShowRir}">
+                                                    <Border Grid.Row="1" Style="{StaticResource InnerCard}" Padding="10,8" IsVisible="{Binding ShowRir}">
                                                         <VerticalStackLayout Spacing="6">
                                                             <Label Text="TARGET RIR" Style="{StaticResource Overline}" FontSize="10" />
                                                             <Grid ColumnDefinitions="Auto,*,Auto">
@@ -193,7 +191,7 @@
                                                             </Grid>
                                                         </VerticalStackLayout>
                                                     </Border>
-                                                    <Border Grid.Row="1" Style="{StaticResource InnerCard}" Padding="10,8">
+                                                    <Border Style="{StaticResource InnerCard}" Padding="10,8">
                                                         <VerticalStackLayout Spacing="6">
                                                             <Label Text="REP RANGE" Style="{StaticResource Overline}" FontSize="10" />
                                                             <Label Text="{Binding RepsText}" FontFamily="OpenSansSemibold" FontSize="17" HorizontalOptions="Center" />
@@ -213,7 +211,8 @@
                                                             </Grid>
                                                         </VerticalStackLayout>
                                                     </Border>
-                                                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8">
+                                                    <!-- The plan's default rest, or this exercise's own, which can go back to the default -->
+                                                    <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8">
                                                         <VerticalStackLayout Spacing="6">
                                                             <Label Text="REST" Style="{StaticResource Overline}" FontSize="10" />
                                                             <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
@@ -221,6 +220,13 @@
                                                                 <Label Grid.Column="1" Text="{Binding RestText}" FontFamily="OpenSansSemibold" FontSize="17" HorizontalOptions="Center" VerticalOptions="Center" />
                                                                 <Button Grid.Column="2" Text="+" Style="{StaticResource StepButton}" Command="{Binding RestUpCommand}" />
                                                             </Grid>
+                                                            <Label Text="{Binding RestSource}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" />
+                                                            <Label Text="Reset to plan default" TextColor="{StaticResource Accent}" FontSize="12" FontFamily="OpenSansSemibold"
+                                                                   HorizontalOptions="Center" IsVisible="{Binding IsCustomRest}" Padding="0,2">
+                                                                <Label.GestureRecognizers>
+                                                                    <TapGestureRecognizer Command="{Binding ResetRestCommand}" />
+                                                                </Label.GestureRecognizers>
+                                                            </Label>
                                                         </VerticalStackLayout>
                                                     </Border>
                                                 </Grid>

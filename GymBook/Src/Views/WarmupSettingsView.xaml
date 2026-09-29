@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- The warm-up settings rows, bound to a WarmupSettingsViewModel: the Warm-ups section of the profile, and a plan's own
+     warm-ups sheet. Its own row styles: the profile page's are local to that page. -->
+<ContentView
+    x:Class="GymBook.Views.WarmupSettingsView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:WarmupSettingsViewModel">
+
+    <ContentView.Resources>
+        <Style x:Key="WarmupRow" TargetType="Grid">
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="ColumnDefinitions" Value="*,Auto,Auto" />
+            <Setter Property="ColumnSpacing" Value="8" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+        </Style>
+        <Style x:Key="WarmupValue" TargetType="Label">
+            <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="HorizontalTextAlignment" Value="End" />
+            <Setter Property="MaximumWidthRequest" Value="170" />
+        </Style>
+        <Style x:Key="WarmupChevron" TargetType="Image">
+            <Setter Property="Source" Value="{StaticResource IconChevronRight}" />
+            <Setter Property="WidthRequest" Value="16" />
+            <Setter Property="HeightRequest" Value="16" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="WarmupDivider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Margin" Value="16,0" />
+            <Setter Property="Color" Value="{StaticResource Surface2}" />
+        </Style>
+    </ContentView.Resources>
+
+    <Border Style="{StaticResource Card}" Padding="0">
+        <VerticalStackLayout>
+            <Grid Style="{StaticResource WarmupRow}" Padding="16,6">
+                <VerticalStackLayout VerticalOptions="Center">
+                    <Label Text="Warm-up sets" />
+                    <Label Text="{Binding SourceText}" Style="{StaticResource Caption}" FontSize="12" />
+                </VerticalStackLayout>
+                <Switch Grid.Column="2" IsToggled="{Binding Enabled}" />
+            </Grid>
+            <!-- The rest only matters with warm-ups on -->
+            <VerticalStackLayout IsVisible="{Binding Enabled}">
+                <BoxView Style="{StaticResource WarmupDivider}" />
+                <Grid Style="{StaticResource WarmupRow}">
+                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditBarbellCommand}" /></Grid.GestureRecognizers>
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label Text="Barbell compounds" />
+                        <Label Text="Squats, bench, deadlifts, rows" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="{Binding BarbellText}" Style="{StaticResource WarmupValue}" />
+                    <Image Grid.Column="2" Style="{StaticResource WarmupChevron}" />
+                </Grid>
+                <BoxView Style="{StaticResource WarmupDivider}" />
+                <Grid Style="{StaticResource WarmupRow}">
+                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditCompoundCommand}" /></Grid.GestureRecognizers>
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label Text="Other compounds" />
+                        <Label Text="Dumbbell, machine and cable presses, pulls, lunges" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="{Binding CompoundText}" Style="{StaticResource WarmupValue}" />
+                    <Image Grid.Column="2" Style="{StaticResource WarmupChevron}" />
+                </Grid>
+                <BoxView Style="{StaticResource WarmupDivider}" />
+                <Grid Style="{StaticResource WarmupRow}">
+                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditIsolationCommand}" /></Grid.GestureRecognizers>
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label Text="Isolation" />
+                        <Label Text="Curls, raises, extensions, flyes" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="{Binding IsolationText}" Style="{StaticResource WarmupValue}" />
+                    <Image Grid.Column="2" Style="{StaticResource WarmupChevron}" />
+                </Grid>
+                <BoxView Style="{StaticResource WarmupDivider}" />
+                <Grid Style="{StaticResource WarmupRow}">
+                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditAlreadyWarmCommand}" /></Grid.GestureRecognizers>
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label Text="Muscles already warm" />
+                        <Label Text="When an earlier exercise worked the same muscle" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="{Binding AlreadyWarmText}" Style="{StaticResource WarmupValue}" />
+                    <Image Grid.Column="2" Style="{StaticResource WarmupChevron}" />
+                </Grid>
+                <BoxView Style="{StaticResource WarmupDivider}" />
+                <Grid Style="{StaticResource WarmupRow}">
+                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditMinWeightCommand}" /></Grid.GestureRecognizers>
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label Text="Light weights" />
+                        <Label Text="No warm-ups below this working weight" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="{Binding MinWeightText}" Style="{StaticResource WarmupValue}" />
+                    <Image Grid.Column="2" Style="{StaticResource WarmupChevron}" />
+                </Grid>
+                <BoxView Style="{StaticResource WarmupDivider}" />
+                <Grid Style="{StaticResource WarmupRow}">
+                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditRestCommand}" /></Grid.GestureRecognizers>
+                    <Label Text="Rest after a warm-up set" VerticalOptions="Center" />
+                    <Label Grid.Column="1" Text="{Binding RestText}" Style="{StaticResource WarmupValue}" />
+                    <Image Grid.Column="2" Style="{StaticResource WarmupChevron}" />
+                </Grid>
+            </VerticalStackLayout>
+            <!-- Back to where they came from: the defaults, or for a plan the profile's -->
+            <VerticalStackLayout IsVisible="{Binding IsOwn}">
+                <BoxView Style="{StaticResource WarmupDivider}" />
+                <Grid Style="{StaticResource WarmupRow}">
+                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding ResetCommand}" /></Grid.GestureRecognizers>
+                    <Label Text="{Binding ResetText}" TextColor="{StaticResource Accent}" VerticalOptions="Center" />
+                </Grid>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </Border>
+</ContentView>

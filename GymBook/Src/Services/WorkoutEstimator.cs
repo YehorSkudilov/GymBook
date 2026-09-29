@@ -9,7 +9,7 @@ namespace GymBook.Services;
 /// </summary>
 public class WorkoutEstimator(DataStore store)
 {
-    const double SetupSeconds = 20, TransitionSeconds = 60, WarmupRestSeconds = 60, WarmupSets = 3, WarmupReps = 5;
+    const double SetupSeconds = 20, TransitionSeconds = 60;
 
     // Pace: how long the last few sessions of a workout really took, against what this estimate said for them.
     const int PaceSessions = 5, MinPaceSessions = 2;
@@ -24,7 +24,9 @@ public class WorkoutEstimator(DataStore store)
 
     double Seconds(IEnumerable<(Exercise? Exercise, int Sets, int RepMin, int RepMax, int RestSeconds)> exercises, Goal goal)
     {
-        var warmups = store.Profile.WarmupSuggestions;
+        // The warm-ups as set in the profile: each exercise's ramp, or the lighter one once its muscle is warm.
+        var warmups = WarmupSettings.Global(store.Profile);
+        var worked = new HashSet<MuscleGroup>();
         var seconds = 0.0;
         var count = 0;
         foreach (var (ex, sets, repMin, repMax, rest) in exercises)
@@ -33,8 +35,11 @@ public class WorkoutEstimator(DataStore store)
                 continue;
             var perRep = TrainingGoals.SecondsPerRep(goal, ex);
             seconds += sets * (SetupSeconds + (repMin + repMax) / 2.0 * perRep) + (sets - 1) * rest;
-            if (warmups && ex is { Mechanic: Mechanic.Compound, IsBodyweight: false } && !TrainingGoals.IsExplosive(ex))
-                seconds += WarmupSets * (SetupSeconds + WarmupReps * perRep + WarmupRestSeconds);
+            if (warmups.Enabled && ex is { IsBodyweight: false } && !TrainingGoals.IsExplosive(ex))
+                seconds += warmups.Steps(WarmupSettings.KindOf(ex, worked.Contains(ex.PrimaryMuscle)))
+                    .Sum(s => SetupSeconds + s.Reps * perRep + warmups.RestSeconds);
+            if (ex != null)
+                worked.Add(ex.PrimaryMuscle);
             count++;
         }
         return count == 0 ? 0 : seconds + (count - 1) * TransitionSeconds;

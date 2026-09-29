@@ -219,27 +219,12 @@
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
-                    <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditWarmupRestCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Rest: warm-up sets" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="{Binding WarmupRestText}" Style="{StaticResource RowValue}" />
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}" Padding="16,6">
                         <VerticalStackLayout VerticalOptions="Center">
                             <Label Text="Auto-start rest timer" />
                             <Label Text="Start the timer when you tick off a set" Style="{StaticResource Caption}" FontSize="12" />
                         </VerticalStackLayout>
                         <Switch Grid.Column="2" IsToggled="{Binding AutoRest}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
-                    <Grid Style="{StaticResource Row}" Padding="16,6">
-                        <VerticalStackLayout VerticalOptions="Center">
-                            <Label Text="Warm-up sets" />
-                            <Label Text="Add ramp-up sets to heavy compound lifts" Style="{StaticResource Caption}" FontSize="12" />
-                        </VerticalStackLayout>
-                        <Switch Grid.Column="2" IsToggled="{Binding Warmups}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}" Padding="16,6">
@@ -259,6 +244,12 @@
                     </Grid>
                 </VerticalStackLayout>
             </Border>
+
+            <!-- Warm-ups: the defaults every plan uses, unless a plan has its own (its ··· menu) -->
+            <Label Text="WARM-UPS" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+            <views:WarmupSettingsView BindingContext="{Binding WarmupSettings}" />
+            <Label Text="Every plan uses these unless you change its own in the plan's ··· menu. Percentages are of your first working set's weight."
+                   Style="{StaticResource Caption}" FontSize="12" Margin="4,0" />
 
             <Label Text="DATA" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0">

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:SheetPage
+    x:Class="GymBook.Views.PlanWarmupsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:WarmupSettingsViewModel"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
+
+    <!-- A plan's own warm-ups, from its ··· menu: the profile's until changed, and saved with the plan's other changes. -->
+    <Grid>
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnBackdropTapped" />
+        </Grid.GestureRecognizers>
+        <Border VerticalOptions="End" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0" Margin="0,40,0,0">
+            <!-- Swallows taps, so only the dimmed area above closes the sheet. -->
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer />
+            </Border.GestureRecognizers>
+            <ScrollView>
+                <VerticalStackLayout Spacing="16" Padding="10,22,10,18">
+                    <VerticalStackLayout Spacing="6" Padding="10,0">
+                        <Label Text="Warm-ups for this plan" Style="{StaticResource H2}" FontSize="20" />
+                        <Label Text="Starts from your profile's warm-ups. Change them here for this plan only; they're saved with the plan's other changes."
+                               Style="{StaticResource Caption}" FontSize="14" />
+                    </VerticalStackLayout>
+                    <views:WarmupSettingsView />
+                    <Button Text="Done" Style="{StaticResource PrimaryButton}" Clicked="OnDoneClicked" />
+                </VerticalStackLayout>
+            </ScrollView>
+        </Border>
+    </Grid>
+</views:SheetPage>

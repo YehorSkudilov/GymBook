@@ -17,13 +17,18 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             PlanWorkoutId = workout.Id,
             PlanWeek = week ?? new PlanProgress(plan, store.History).FirstOpenWeek(workout),
         };
+        var warmups = WarmupSettings.For(plan, store.Profile);
+        var worked = new HashSet<MuscleGroup>();
         foreach (var planned in workout.Exercises)
         {
             // This week's version of it: a deload, or the block's build-up (see PlanCycle).
             var pe = PlanCycle.ForWeek(plan, planned, session.PlanWeek ?? 1);
             var ex = store.GetExercise(pe.ExerciseId);
-            if (ex != null)
-                session.Exercises.Add(CreateExercise(ex, pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir, pe.RestSeconds));
+            if (ex == null)
+                continue;
+            // A muscle an earlier exercise already worked needs only a lighter warm-up.
+            session.Exercises.Add(CreateExercise(ex, pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir, pe.RestSeconds, warmups, worked.Contains(ex.PrimaryMuscle)));
+            worked.Add(ex.PrimaryMuscle);
         }
         return Begin(session);
     }
@@ -37,7 +42,7 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         return session;
     }
 
-    public SessionExercise CreateExercise(Exercise ex, int sets, int repMin, int repMax, int rir, int rest)
+    public SessionExercise CreateExercise(Exercise ex, int sets, int repMin, int repMax, int rir, int rest, WarmupSettings warmups, bool alreadyWarm)
     {
         var suggestion = engine.Suggest(ex, sets, repMin, repMax, rir);
         var se = new SessionExercise
@@ -49,18 +54,27 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             RestSeconds = rest,
             Recommendation = suggestion.Note,
         };
-        if (store.Profile.WarmupSuggestions && suggestion.Sets.Count > 0)
-            se.Sets.AddRange(engine.Warmups(ex, suggestion.Sets[0].WeightKg));
+        if (warmups.Enabled && suggestion.Sets.Count > 0)
+            se.Sets.AddRange(engine.Warmups(ex, suggestion.Sets[0].WeightKg, warmups, alreadyWarm));
         se.Sets.AddRange(suggestion.Sets);
         return se;
     }
 
-    /// <summary>Defaults for an exercise added on the fly, based on the user's goal.</summary>
-    public SessionExercise CreateAdHoc(Exercise ex)
+    /// <summary>
+    /// Defaults for an exercise added on the fly to <paramref name="session"/>, based on the user's goal, with the
+    /// warm-ups and rest of the session's plan (if it's from one).
+    /// </summary>
+    public SessionExercise CreateAdHoc(Exercise ex, WorkoutSession? session)
     {
+        var plan = store.GetPlan(session?.PlanId);
         var p = PlanGenerator.Prescription(store.Profile, ex);
-        return CreateExercise(ex, p.Sets, p.RepMin, p.RepMax, p.TargetRir, p.RestSeconds);
+        var rest = plan == null ? p.RestSeconds : PlanRest.DefaultFor(plan, store.Profile, ex);
+        var warm = session?.Exercises.Any(e => store.GetExercise(e.ExerciseId)?.PrimaryMuscle == ex.PrimaryMuscle) == true;
+        return CreateExercise(ex, p.Sets, p.RepMin, p.RepMax, p.TargetRir, rest, WarmupSettings.For(plan, store.Profile), warm);
     }
+
+    /// <summary>The warm-up settings for <paramref name="session"/>: its plan's, or the profile's.</summary>
+    public WarmupSettings WarmupsFor(WorkoutSession? session) => WarmupSettings.For(store.GetPlan(session?.PlanId), store.Profile);
 
     public void Save() => store.Save();
 
@@ -143,6 +157,8 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
                 RepMax = planned.RepMax,
                 TargetRir = planned.TargetRir,
                 RestSeconds = se.RestSeconds,
+                // Rest changed during the workout: this exercise's own from now on.
+                CustomRest = planned.CustomRest || se.RestSeconds != planned.RestSeconds,
             };
             if (updated.Sets != planned.Sets)
                 changes.Add($"{Name(planned.ExerciseId)}: {planned.Sets} → {updated.Sets} sets");

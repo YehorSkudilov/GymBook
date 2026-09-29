@@ -66,6 +66,20 @@ public class WorkoutPlan : ISyncEntity
     public bool Deloads { get; set; } = true;
     /// <summary>Effort and volume build over each 4-week block, instead of the same prescription every week.</summary>
     public bool Periodization { get; set; } = true;
+    /// <summary>
+    /// This plan's own warm-up settings, as JSON (the app's WarmupSettings). Null: the profile's, which are the
+    /// defaults for every plan.
+    /// </summary>
+    [MaxLength(SyncLimits.TextLength)]
+    public string? Warmups { get; set; }
+    /// <summary>
+    /// This plan's default rest after a working set of a compound or an isolation exercise. Null: the profile's (or,
+    /// without one, what the plan's goal suggests). Each exercise can still have its own (<see cref="PlanExercise.CustomRest"/>).
+    /// </summary>
+    [Range(15, 600)]
+    public int? CompoundRestSeconds { get; set; }
+    [Range(15, 600)]
+    public int? IsolationRestSeconds { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
 }
@@ -88,7 +102,10 @@ public class PlanExercise
     public int RepMin { get; set; } = 8;
     public int RepMax { get; set; } = 12;
     public int TargetRir { get; set; } = 2;
+    /// <summary>The rest used for this exercise: its own if <see cref="CustomRest"/>, otherwise kept at the plan's default.</summary>
     public int RestSeconds { get; set; } = 120;
+    /// <summary>The rest was set for this exercise itself, so the plan's default rest doesn't change it.</summary>
+    public bool CustomRest { get; set; }
 }
 
 public class WorkoutSession : ISyncEntity
@@ -180,6 +197,13 @@ public class UserProfile
     /// <summary>Rest after a warm-up set.</summary>
     [Range(15, 600)]
     public int WarmupRestSeconds { get; set; } = 60;
+    /// <summary>
+    /// The warm-up sets for each kind of exercise, as JSON (the app's WarmupSettings); null for the defaults. On/off and
+    /// the rest after them are <see cref="WarmupSuggestions"/> and <see cref="WarmupRestSeconds"/>. Every plan uses these
+    /// unless it has its own.
+    /// </summary>
+    [MaxLength(SyncLimits.TextLength)]
+    public string? Warmups { get; set; }
     public bool AutoRestTimer { get; set; } = true;
     public bool WarmupSuggestions { get; set; } = true;
     public bool TrackRir { get; set; } = true;

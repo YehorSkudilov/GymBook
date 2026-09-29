@@ -66,16 +66,18 @@ public class PlanProgress
     /// them (a workout, the one in progress, or a rest day done) are numbered 1, 2, 3… again in order, so an empty week
     /// never sits before a week with progress. E.g. weeks 0/6, 1/6 become week 1 with 1/6.
     /// </summary>
-    public static void CompactWeeks(WorkoutPlan plan, IEnumerable<WorkoutSession> sessions)
+    /// <returns>Whether anything was renumbered.</returns>
+    public static bool CompactWeeks(WorkoutPlan plan, IEnumerable<WorkoutSession> sessions)
     {
         var progress = new PlanProgress(plan, sessions);
         var used = progress._sessions.Select(progress.WeekOf).Concat((plan.RestDaysDone ?? []).Select(k => k / 1000)).Distinct().Order().ToList();
         var map = used.Select((week, i) => (week, number: i + 1)).ToDictionary(x => x.week, x => x.number);
         if (map.All(x => x.Key == x.Value))
-            return;
+            return false;
         foreach (var s in progress._sessions)
             s.PlanWeek = map[progress.WeekOf(s)];
         plan.RestDaysDone = plan.RestDaysDone?.Select(k => map[k / 1000] * 1000 + k % 1000).ToList();
+        return true;
     }
 
     static int RestKey(int day, int week) => week * 1000 + day;

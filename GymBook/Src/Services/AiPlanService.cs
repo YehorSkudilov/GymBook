@@ -16,7 +16,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     // A failed check (offline, quota used up) is retried after this, not on every resume.
     static readonly TimeSpan RetryInterval = TimeSpan.FromHours(6);
     const int MinSessionsForCheck = 3;
-    // Reviews are kept per plan on this device, so the weekly check's result (and a "Not now") survives restarts.
+    // Reviews are kept per plan on this device, so the weekly check's result (and a "Next week") survives restarts.
     const string ReviewKey = "ai.review.";
     const string ReviewedPlansKey = "ai.review.plans";
 
@@ -209,7 +209,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
 
     /// <summary>
     /// How many suggestions that change the plan are waiting for the active plan: the weekly check found them and the
-    /// user hasn't said "Not now" or applied them all. 0 for any other plan, which only gets reviews when asked.
+    /// user hasn't said "Next week" or applied them all. 0 for any other plan, which only gets reviews when asked.
     /// </summary>
     public int PendingSuggestions(WorkoutPlan plan)
     {
@@ -218,7 +218,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
         return LastReview(plan)?.Review.Suggestions.Count(s => s.Changes.Count > 0) ?? 0;
     }
 
-    /// <summary>"Not now", or everything applied: no badge until the next weekly check finds something.</summary>
+    /// <summary>"Next week", or everything applied: no badge until the next weekly check finds something.</summary>
     public void Dismiss(WorkoutPlan plan)
     {
         Preferences.Default.Set(Key(plan, "dismissed"), true);
@@ -402,7 +402,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
         if (c.TargetRir >= 0)
             e.TargetRir = c.TargetRir;
         if (c.RestSeconds > 0)
-            e.RestSeconds = c.RestSeconds;
+            (e.RestSeconds, e.CustomRest) = (c.RestSeconds, true);
     }
 
     /// <summary>The wizard's answers the AI needs, for a saved plan: its own goal and days, the rest from the profile.</summary>
@@ -505,6 +505,8 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
                     RepMax = e.RepMax,
                     TargetRir = e.TargetRir,
                     RestSeconds = rest,
+                    // An imported plan's rest times are as written: each exercise keeps its own.
+                    CustomRest = keepRest,
                 });
             }
             if (workout.Exercises.Count > 0)

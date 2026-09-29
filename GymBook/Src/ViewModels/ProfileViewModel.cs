@@ -24,14 +24,12 @@ public partial class ProfileViewModel(
     [ObservableProperty] string bodyWeightText = "";
     [ObservableProperty] string compoundRestText = "";
     [ObservableProperty] string isolationRestText = "";
-    [ObservableProperty] string warmupRestText = "";
     [ObservableProperty] string goalText = "";
     [ObservableProperty] string experienceText = "";
     [ObservableProperty] string daysText = "";
     [ObservableProperty] string durationText = "";
     [ObservableProperty] string equipmentText = "";
     [ObservableProperty] bool autoRest;
-    [ObservableProperty] bool warmups;
     [ObservableProperty] bool trackRir;
     [ObservableProperty] bool trainNeck;
     [ObservableProperty] string ageText = "";
@@ -46,6 +44,20 @@ public partial class ProfileViewModel(
     [ObservableProperty] string syncDetailsSummary = "";
 
     UserProfile P => store.Profile;
+
+    WarmupSettingsViewModel? _warmupSettings;
+
+    /// <summary>The Warm-ups section: the defaults every plan uses unless it has its own.</summary>
+    public WarmupSettingsViewModel WarmupSettings => _warmupSettings ??= new(
+        () => Services.WarmupSettings.Global(P),
+        Services.WarmupSettings.Defaults,
+        s =>
+        {
+            Services.WarmupSettings.SaveGlobal(P, s);
+            store.Save();
+        },
+        () => !Services.WarmupSettings.Global(P).SameAs(Services.WarmupSettings.Defaults()),
+        "Reset to recommended defaults", "the recommended defaults", dialogs, units);
 
     public override Task OnAppearingAsync()
     {
@@ -91,21 +103,19 @@ public partial class ProfileViewModel(
         TrainNeck = P.TrainNeck;
         CompoundRestText = RestLabel(P.CompoundRestSeconds);
         IsolationRestText = RestLabel(P.IsolationRestSeconds);
-        WarmupRestText = Units.Rest(P.WarmupRestSeconds);
         GoalText = P.Goal.Display();
         ExperienceText = P.Experience.Display();
         DaysText = $"{P.DaysPerWeek} days";
         DurationText = $"{P.SessionMinutes} min";
         EquipmentText = P.EquipmentAccess.Display();
         AutoRest = P.AutoRestTimer;
-        Warmups = P.WarmupSuggestions;
+        WarmupSettings.Refresh();
         TrackRir = P.TrackRir;
         Version = $"GymBook {AppInfo.Current.VersionString}";
         _loading = false;
     }
 
     partial void OnAutoRestChanged(bool value) => Update(() => P.AutoRestTimer = value);
-    partial void OnWarmupsChanged(bool value) => Update(() => P.WarmupSuggestions = value);
     partial void OnTrackRirChanged(bool value) => Update(() => P.TrackRir = value);
     partial void OnTrainNeckChanged(bool value) => Update(() => P.TrainNeck = value);
 
@@ -176,10 +186,10 @@ public partial class ProfileViewModel(
     [RelayCommand]
     Task EditIsolationRest() => EditRest("Isolation exercises", Mechanic.Isolation, s => P.IsolationRestSeconds = s);
 
-    [RelayCommand]
-    Task EditWarmupRest() => Pick("Rest after warm-up sets", RestTimes, s => Units.Rest(s), s => P.WarmupRestSeconds = s);
-
-    /// <summary>Picks the rest for one kind of exercise, then offers to use it in the plans and the workout in progress.</summary>
+    /// <summary>
+    /// Picks the rest for one kind of exercise. Plans without their own rest for it follow along, except exercises
+    /// with a rest of their own (see <see cref="PlanRest"/>); the workout in progress is offered it too.
+    /// </summary>
     async Task EditRest(string title, Mechanic mechanic, Action<int?> apply)
     {
         List<int?> values = [null, .. RestTimes.Select(s => (int?)s)];
@@ -189,26 +199,24 @@ public partial class ProfileViewModel(
             return;
         apply(values[index]);
 
-        // Everything already set up with a rest time: plan exercises, and the workout in progress.
-        var affected = new List<(Goal Goal, Exercise Exercise, Action<int> Update)>();
-        void Add(Goal goal, string exerciseId, Action<int> update)
-        {
-            if (store.GetExercise(exerciseId) is { } ex && ex.Mechanic == mechanic)
-                affected.Add((goal, ex, update));
-        }
+        // The plans inherit it.
         foreach (var plan in store.Data.Plans)
-            foreach (var pe in plan.Workouts.SelectMany(w => w.Exercises))
-                Add(plan.Goal, pe.ExerciseId, s => pe.RestSeconds = s);
-        if (store.Data.ActiveSession is { } session)
-            foreach (var se in session.Exercises)
-                Add(store.GetPlan(session.PlanId)?.Goal ?? P.Goal, se.ExerciseId, s => se.RestSeconds = s);
+            PlanRest.Apply(plan, P, store.GetExercise);
 
-        if (affected.Count > 0 && await dialogs.Confirm("Update your plans?",
-                $"Use this rest for the {title.ToLowerInvariant()} already in your plans and the workout in progress. Otherwise it applies to exercises you add from now on.",
-                "Update", "Only new exercises"))
+        // The workout in progress was set up with the old rest: ask.
+        var affected = new List<(SessionExercise Exercise, int Rest)>();
+        if (store.Data.ActiveSession is { } session)
         {
-            foreach (var (goal, ex, update) in affected)
-                update(TrainingGoals.Prescription(goal, P.Experience, ex, P).RestSeconds);
+            var plan = store.GetPlan(session.PlanId);
+            foreach (var se in session.Exercises)
+                if (store.GetExercise(se.ExerciseId) is { } ex && ex.Mechanic == mechanic)
+                    affected.Add((se, plan == null ? PlanRest.FromProfile(P.Goal, P, ex) : PlanRest.DefaultFor(plan, P, ex)));
+        }
+        if (affected.Any(a => a.Exercise.RestSeconds != a.Rest) && await dialogs.Confirm("Use it now too?",
+                $"Change the rest for the {title.ToLowerInvariant()} in the workout in progress as well.", "Change", "Not this workout"))
+        {
+            foreach (var (se, rest) in affected)
+                se.RestSeconds = rest;
         }
         store.Save();
         Refresh();
