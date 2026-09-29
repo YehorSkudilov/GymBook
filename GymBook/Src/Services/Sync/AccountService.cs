@@ -10,6 +10,11 @@ public class AccountService(ApiClient api, AuthSession session, DataStore store,
     public bool HasPassword => session.HasPassword;
     public bool CanUseGoogle => google.IsAvailable;
 
+    /// <summary>Signed in with an email that hasn't been verified yet: the app asks for the code before anything else.</summary>
+    public bool NeedsEmailVerification => session.IsSignedIn && !session.EmailVerified;
+
+    public Task EnsureLoadedAsync() => session.EnsureLoadedAsync();
+
     /// <summary>Signed in or out, or the email or password changed.</summary>
     public event EventHandler? Changed
     {
@@ -60,6 +65,25 @@ public class AccountService(ApiClient api, AuthSession session, DataStore store,
     {
         var account = await api.ConfirmEmailChangeAsync(newEmail.Trim(), code.Trim());
         await session.SetEmailAsync(account.Email);
+        // The code also proved the new address, which may be what makes the account verified.
+        if (!session.EmailVerified && account.EmailVerified)
+            await ActivateVerifiedAsync();
+    }
+
+    public Task SendVerificationCodeAsync() => api.SendVerificationCodeAsync();
+
+    /// <summary>Verifies the email with the emailed code, then syncs what was held back.</summary>
+    public async Task VerifyEmailAsync(string code)
+    {
+        await api.VerifyEmailAsync(code.Trim());
+        await ActivateVerifiedAsync();
+    }
+
+    // The access token says whether the email is verified: renew it so sync is let through, then catch up.
+    async Task ActivateVerifiedAsync()
+    {
+        await api.RefreshSessionAsync();
+        await sync.SyncNowAsync();
     }
 
     /// <summary>Whether signing out now would lose changes that haven't reached the server.</summary>

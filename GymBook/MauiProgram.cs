@@ -64,6 +64,7 @@ public static class MauiProgram
         AddPage<ExercisePickerPage, ExercisePickerViewModel>(builder.Services);
         AddPage<AccountPage, AccountViewModel>(builder.Services);
         AddPage<ManageAccountPage, ManageAccountViewModel>(builder.Services);
+        AddPage<VerifyEmailPage, VerifyEmailViewModel>(builder.Services);
         AddPage<SyncDetailsPage, SyncDetailsViewModel>(builder.Services);
         AddPage<RecoveryPage, RecoveryViewModel>(builder.Services);
 

@@ -58,6 +58,22 @@ public class ApiClient(HttpClient http, AuthSession session)
         await EnsureSuccessAsync(response);
     }
 
+    /// <summary>Emails a code for <see cref="VerifyEmailAsync"/>.</summary>
+    public async Task SendVerificationCodeAsync(CancellationToken ct = default)
+    {
+        using var response = await SendWithTokenAsync(() => new HttpRequestMessage(HttpMethod.Post, "api/account/verify-email/send"), ct);
+        await EnsureSuccessAsync(response);
+    }
+
+    public Task<AccountResponse> VerifyEmailAsync(string code, CancellationToken ct = default) =>
+        SendAuthorizedAsync<VerifyEmailRequest, AccountResponse>("api/account/verify-email", new() { Code = code }, ct);
+
+    /// <summary>
+    /// Renews the session now, e.g. once the email is verified: the access token says whether it is, so the old one
+    /// would still be refused by sync.
+    /// </summary>
+    public Task RefreshSessionAsync(CancellationToken ct = default) => GetAccessTokenAsync(forceRefresh: true, ct);
+
     public Task<AccountResponse> ConfirmEmailChangeAsync(string newEmail, string code, CancellationToken ct = default) =>
         SendAuthorizedAsync<ConfirmEmailChangeRequest, AccountResponse>("api/account/email/confirm", new() { NewEmail = newEmail, Code = code }, ct);
 
@@ -211,7 +227,13 @@ public class ApiClient(HttpClient http, AuthSession session)
         }
         var message = problem?.Errors?.Values.SelectMany(e => e).FirstOrDefault()
             ?? problem?.Title
-            ?? (response.StatusCode == HttpStatusCode.TooManyRequests ? "Too many attempts. Please wait a minute and try again." : "Something went wrong. Please try again.");
+            ?? response.StatusCode switch
+            {
+                HttpStatusCode.TooManyRequests => "Too many attempts. Please wait a minute and try again.",
+                // Authorization refuses without a body; for a signed-in user that means the email isn't verified yet.
+                HttpStatusCode.Forbidden => "Verify your email to sync and use AI plans.",
+                _ => "Something went wrong. Please try again.",
+            };
         throw new ApiException(response.StatusCode, message);
     }
 

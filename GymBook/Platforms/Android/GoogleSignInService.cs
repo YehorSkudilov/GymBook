@@ -42,7 +42,7 @@ public class GoogleSignInService : IGoogleSignIn
         if (!IsAvailable || Microsoft.Maui.ApplicationModel.Platform.CurrentActivity is not { } activity)
             return Task.CompletedTask;
         var done = new TaskCompletionSource();
-        Client(activity).SignOut().AddOnCompleteListener(new OnComplete(done));
+        Client(activity).SignOut().AddOnCompleteListener(new SignOutListener(done));
         return done.Task;
     }
 
@@ -73,7 +73,7 @@ public class GoogleSignInService : IGoogleSignIn
         return true;
     }
 
-    sealed class OnComplete(TaskCompletionSource done) : Java.Lang.Object, Android.Gms.Tasks.IOnCompleteListener
+    sealed class SignOutListener(TaskCompletionSource done) : Java.Lang.Object, Android.Gms.Tasks.IOnCompleteListener
     {
         public void OnComplete(Android.Gms.Tasks.Task task) => done.TrySetResult();
     }

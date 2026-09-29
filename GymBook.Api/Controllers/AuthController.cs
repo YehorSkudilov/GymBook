@@ -36,6 +36,8 @@ public class AuthController(
                 ModelState.AddModelError(error.Code.Contains("Password") ? nameof(request.Password) : nameof(request.Email), error.Description);
             return ValidationProblem(ModelState);
         }
+        // Best effort: the app's verification screen can always ask for another code.
+        await AccountController.SendVerificationCodeAsync(user, email, users, log, ct);
         return await tokens.IssueAsync(user, ct: ct);
     }
 

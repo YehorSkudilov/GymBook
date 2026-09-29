@@ -12,6 +12,7 @@ public class AuthSession
     const string UserIdKey = "auth.user_id";
     const string EmailKey = "auth.email";
     const string HasPasswordKey = "auth.has_password";
+    const string EmailVerifiedKey = "auth.email_verified";
 
     readonly Lazy<Task> _load;
 
@@ -22,6 +23,9 @@ public class AuthSession
 
     /// <summary>False for a Google account without a password: it confirms with Google where others type the password.</summary>
     public bool HasPassword { get; private set; } = true;
+
+    /// <summary>False until the emailed code is entered; the app then asks for it before anything else.</summary>
+    public bool EmailVerified { get; private set; } = true;
     public string? RefreshToken { get; private set; }
     public string? AccessToken { get; private set; }
     public DateTimeOffset AccessTokenExpiresAt { get; private set; }
@@ -41,6 +45,8 @@ public class AuthSession
             Email = await SecureStorage.Default.GetAsync(EmailKey);
             // Sessions from before Google sign-in existed have no entry, and they all have a password.
             HasPassword = await SecureStorage.Default.GetAsync(HasPasswordKey) != "false";
+            // Unknown for sessions from before verification existed: the next token renewal tells.
+            EmailVerified = await SecureStorage.Default.GetAsync(EmailVerifiedKey) != "false";
         }
         catch (Exception)
         {
@@ -56,7 +62,8 @@ public class AuthSession
         await SecureStorage.Default.SetAsync(UserIdKey, auth.UserId);
         await SecureStorage.Default.SetAsync(EmailKey, auth.Email);
         await SecureStorage.Default.SetAsync(HasPasswordKey, auth.HasPassword ? "true" : "false");
-        (RefreshToken, UserId, Email, HasPassword) = (auth.RefreshToken, auth.UserId, auth.Email, auth.HasPassword);
+        await SecureStorage.Default.SetAsync(EmailVerifiedKey, auth.EmailVerified ? "true" : "false");
+        (RefreshToken, UserId, Email, HasPassword, EmailVerified) = (auth.RefreshToken, auth.UserId, auth.Email, auth.HasPassword, auth.EmailVerified);
         (AccessToken, AccessTokenExpiresAt) = (auth.AccessToken, auth.AccessTokenExpiresAt);
         Changed?.Invoke(this, EventArgs.Empty);
     }
@@ -75,6 +82,7 @@ public class AuthSession
         SecureStorage.Default.Remove(UserIdKey);
         SecureStorage.Default.Remove(EmailKey);
         SecureStorage.Default.Remove(HasPasswordKey);
+        SecureStorage.Default.Remove(EmailVerifiedKey);
         RefreshToken = UserId = Email = AccessToken = null;
         Changed?.Invoke(this, EventArgs.Empty);
     }

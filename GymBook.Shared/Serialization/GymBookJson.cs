@@ -44,6 +44,7 @@ public static class GymBookJson
 [JsonSerializable(typeof(ChangePasswordRequest))]
 [JsonSerializable(typeof(ChangeEmailRequest))]
 [JsonSerializable(typeof(ConfirmEmailChangeRequest))]
+[JsonSerializable(typeof(VerifyEmailRequest))]
 [JsonSerializable(typeof(AuthResponse))]
 [JsonSerializable(typeof(AccountResponse))]
 [JsonSerializable(typeof(ApiProblem))]

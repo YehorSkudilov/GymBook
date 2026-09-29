@@ -12,7 +12,7 @@ public enum AccountMode { SignIn, Register, ResetPassword }
 /// Sign in, create an account, or reset a forgotten password with a code sent by email. Shown modally from Profile
 /// and from the first-run welcome screen.
 /// </summary>
-public partial class AccountViewModel(AccountService account, DataStore store) : BaseViewModel
+public partial class AccountViewModel(AccountService account, DataStore store, IServiceProvider services) : BaseViewModel
 {
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSignIn), nameof(IsRegister), nameof(IsReset), nameof(Title), nameof(Subtitle), nameof(SubmitText),
@@ -157,6 +157,8 @@ public partial class AccountViewModel(AccountService account, DataStore store) :
         // Signing in on a fresh device can bring back a finished profile: skip the first-run wizard.
         if (store.Profile.OnboardingDone && Shell.Current == null)
             App.ShowMainShell();
+        // A new account (or one never verified) verifies its email before going on.
+        await Views.VerifyEmailPage.ShowIfNeededAsync(services);
     }
 
     async Task RunAsync(Func<Task> action)

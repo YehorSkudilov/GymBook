@@ -46,8 +46,10 @@ builder.Services.AddIdentityCore<AppUser>(o =>
         o.Lockout.AllowedForNewUsers = true;
         o.Lockout.MaxFailedAccessAttempts = 5;
         o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-        // Password reset and email change codes are six digits to type from an email, not links. They're derived
-        // from the security stamp, so nothing is stored and a used code stops working once the change is made.
+        // Email verification, password reset and email change codes are six digits to type from an email, not links.
+        // They're derived from the security stamp, so nothing is stored and a used code stops working once the change
+        // is made.
+        o.Tokens.EmailConfirmationTokenProvider = TokenOptions.DefaultEmailProvider;
         o.Tokens.PasswordResetTokenProvider = TokenOptions.DefaultEmailProvider;
         o.Tokens.ChangeEmailTokenProvider = TokenOptions.DefaultEmailProvider;
     })
@@ -82,9 +84,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Every endpoint requires a signed-in user unless it explicitly opts out with [AllowAnonymous].
+// Every endpoint requires a signed-in user with a verified email unless it opts out: [AllowAnonymous], or the account
+// endpoints' AnyAccount policy, which is where the email gets verified (or corrected).
 builder.Services.AddAuthorizationBuilder()
-    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
+    .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().RequireClaim(AuthPolicies.EmailVerifiedClaim, "true").Build())
+    .AddPolicy(AuthPolicies.AnyAccount, p => p.RequireAuthenticatedUser());
 
 var authPerMinute = builder.Configuration.GetValue("RateLimiting:AuthPerMinute", 10);
 builder.Services.AddRateLimiter(o =>

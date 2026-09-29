@@ -29,6 +29,14 @@ public partial class ManageAccountPage : SheetPage
             OnSubmit(sender, e);
     }
 
+    void OnCodeCompleted(object? sender, EventArgs e)
+    {
+        if (ViewModel.Resetting)
+            NewEntry.Focus();
+        else
+            OnSubmit(sender, e);
+    }
+
     void OnNewCompleted(object? sender, EventArgs e) => ConfirmEntry.Focus();
 
     void OnSubmit(object? sender, EventArgs e) => ViewModel.SubmitCommand.Execute(null);

@@ -1,6 +1,7 @@
 using GymBook.Api.Auth;
 using GymBook.Api.Data;
 using GymBook.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -9,6 +10,8 @@ namespace GymBook.Api.Controllers;
 
 [ApiController]
 [Route("api/account")]
+// Open before the email is verified: this is where it gets verified, or corrected if it was mistyped.
+[Authorize(Policy = AuthPolicies.AnyAccount)]
 public class AccountController(
     UserManager<AppUser> users,
     SignInManager<AppUser> signIn,
@@ -25,6 +28,75 @@ public class AccountController(
         if (user == null)
             return Unauthorized();
         return await ToResponseAsync(user);
+    }
+
+    /// <summary>Emails a code for <see cref="VerifyEmail"/>. Nothing to do when the email is already verified.</summary>
+    [HttpPost("verify-email/send")]
+    [EnableRateLimiting(RateLimits.Auth)]
+    public async Task<IActionResult> SendVerificationCode(CancellationToken ct)
+    {
+        var user = await users.FindByIdAsync(currentUser.UserId!);
+        if (user == null)
+            return Unauthorized();
+        if (user.EmailConfirmed)
+            return NoContent();
+
+        switch (await SendVerificationCodeAsync(user, email, users, log, ct))
+        {
+            case false:
+                return Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "A code was just sent. Wait a minute before asking for another.");
+            case null:
+                return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Couldn't send the email. Please try again later.");
+        }
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Marks the email verified with the emailed code. The access token still says unverified until it's renewed, so
+    /// the app refreshes its session afterwards.
+    /// </summary>
+    [HttpPost("verify-email")]
+    [EnableRateLimiting(RateLimits.Auth)]
+    public async Task<ActionResult<AccountResponse>> VerifyEmail(VerifyEmailRequest request)
+    {
+        var user = await users.FindByIdAsync(currentUser.UserId!);
+        if (user == null)
+            return Unauthorized();
+        if (user.EmailConfirmed)
+            return await ToResponseAsync(user);
+        // Wrong codes count towards the lockout, so the six digits can't be guessed.
+        if (await users.IsLockedOutAsync(user))
+            return Problem(statusCode: StatusCodes.Status403Forbidden, title: "Too many wrong codes. Try again in 15 minutes.");
+
+        var result = await users.ConfirmEmailAsync(user, request.Code.Trim());
+        if (!result.Succeeded)
+        {
+            await users.AccessFailedAsync(user);
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "That code is wrong or has expired.");
+        }
+        await users.ResetAccessFailedCountAsync(user);
+        return await ToResponseAsync(user);
+    }
+
+    /// <summary>
+    /// Emails an email verification code. True when sent, false when one was sent within the last minute, null when
+    /// sending failed. Shared with registration, which sends the first code by itself.
+    /// </summary>
+    internal static async Task<bool?> SendVerificationCodeAsync(AppUser user, EmailSender email, UserManager<AppUser> users, ILogger log, CancellationToken ct)
+    {
+        if (user.Email == null || !email.IsAvailable)
+            return null;
+        var code = await users.GenerateEmailConfirmationTokenAsync(user);
+        try
+        {
+            return await email.SendCodeAsync(user.Email, "verify-email", "Verify your GymBook email",
+                $"Your GymBook verification code is {code}. Enter it in the app to finish setting up your account. It's valid for 5 minutes.\n\nIf you didn't create a GymBook account, you can ignore this email.", ct);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            log.LogError(e, "Couldn't send an email verification code");
+            return null;
+        }
     }
 
     /// <summary>
@@ -160,6 +232,7 @@ public class AccountController(
         CreatedAt = user.CreatedAt,
         HasPassword = await users.HasPasswordAsync(user),
         HasGoogle = (await users.GetLoginsAsync(user)).Any(l => l.LoginProvider == GoogleTokenVerifier.Provider),
+        EmailVerified = user.EmailConfirmed || !email.IsAvailable,
     };
 
     ActionResult IncorrectPassword() => Problem(statusCode: StatusCodes.Status403Forbidden, title: "Incorrect password.");

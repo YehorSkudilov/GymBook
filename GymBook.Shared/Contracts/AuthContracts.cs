@@ -83,6 +83,13 @@ public class ConfirmEmailChangeRequest
     public string Code { get; set; } = "";
 }
 
+public class VerifyEmailRequest
+{
+    /// <summary>The code emailed to the account's address.</summary>
+    [Required, MaxLength(AuthLimits.MaxCodeLength)]
+    public string Code { get; set; } = "";
+}
+
 /// <summary>Proof it's really the owner: the password, or for an account without one a fresh Google ID token.</summary>
 public class DeleteAccountRequest
 {
@@ -104,6 +111,12 @@ public class AuthResponse
 
     /// <summary>False for an account made with Google that has no password (yet).</summary>
     public bool HasPassword { get; set; } = true;
+
+    /// <summary>
+    /// False until the user enters the code emailed to them. Until then syncing and AI plans are refused, and the app
+    /// asks for the code.
+    /// </summary>
+    public bool EmailVerified { get; set; }
 }
 
 public class AccountResponse
@@ -113,6 +126,7 @@ public class AccountResponse
     public DateTimeOffset CreatedAt { get; set; }
     public bool HasPassword { get; set; }
     public bool HasGoogle { get; set; }
+    public bool EmailVerified { get; set; }
 }
 
 /// <summary>The subset of RFC 7807 problem details the app reads from error responses.</summary>

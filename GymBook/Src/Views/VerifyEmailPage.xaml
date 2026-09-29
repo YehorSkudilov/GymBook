@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:SheetPage
+    x:Class="GymBook.Views.VerifyEmailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:VerifyEmailViewModel"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#E6000000">
+
+    <!-- Like the other sheets, but with no close button: it stays until the email is verified -->
+    <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
+        <ScrollView Padding="20,32,20,20">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="✉" FontSize="44" HorizontalOptions="Start" />
+                <Label Text="Verify your email" Style="{StaticResource Title}" FontSize="28" />
+                <Label Style="{StaticResource Caption}" FontSize="15">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="Enter the code we sent to " />
+                            <Span Text="{Binding Email}" TextColor="{StaticResource TextPrimary}" FontFamily="OpenSansSemibold" />
+                            <Span Text=" to finish setting up your account. Syncing and AI plans start once it's verified." />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+
+                <Grid ColumnDefinitions="*,Auto" Margin="0,14,0,0">
+                    <Label Text="CODE" Style="{StaticResource Overline}" VerticalOptions="Center" />
+                    <Button Grid.Column="1" Text="Resend code" Style="{StaticResource GhostButton}" FontSize="13" Padding="4,0" HeightRequest="28"
+                            Command="{Binding ResendCodeCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+                </Grid>
+                <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                    <Entry Text="{Binding Code}" Placeholder="123456" Keyboard="Numeric" MaxLength="16" FontSize="20" CharacterSpacing="4"
+                           ReturnType="Go" ReturnCommand="{Binding VerifyCommand}" />
+                </Border>
+
+                <Label Text="{Binding Info}" Style="{StaticResource Caption}" FontSize="13" />
+                <Label Text="{Binding Error}" TextColor="{StaticResource Danger}" FontSize="14" />
+
+                <Grid Margin="0,8,0,0">
+                    <Button Text="Verify" Style="{StaticResource PrimaryButton}" Command="{Binding VerifyCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="White" HeightRequest="24" />
+                </Grid>
+
+                <Label Text="Can't find it? Check your spam folder, or fix the address if it's wrong." Style="{StaticResource Caption}" FontSize="12"
+                       HorizontalTextAlignment="Center" Margin="0,8,0,0" />
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
+                    <Button Text="Change email" Style="{StaticResource GhostButton}" Command="{Binding ChangeEmailCommand}" />
+                    <Button Text="Sign out" Style="{StaticResource GhostButton}" TextColor="{StaticResource TextSecondary}" Command="{Binding SignOutCommand}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Border>
+</views:SheetPage>

@@ -20,6 +20,11 @@ public partial class ManageAccountViewModel(AccountService account, DialogServic
     [NotifyPropertyChangedFor(nameof(Subtitle), nameof(SubmitText), nameof(ShowCurrentPassword), nameof(ShowCode))]
     bool codeSent;
 
+    /// <summary>The current password was forgotten: a reset code went to the account's email and replaces it.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Title), nameof(Subtitle), nameof(ShowCurrentPassword), nameof(ShowCode), nameof(CodeReturnType))]
+    bool resetting;
+
     [ObservableProperty] string currentPassword = "";
     [ObservableProperty] string newPassword = "";
     [ObservableProperty] string confirmPassword = "";
@@ -32,10 +37,11 @@ public partial class ManageAccountViewModel(AccountService account, DialogServic
     public bool IsEmail => Change == AccountChange.Email;
     bool HasPassword => account.HasPassword;
 
-    public string Title => IsEmail ? "Change email" : HasPassword ? "Change password" : "Set a password";
+    public string Title => Resetting ? "Reset password" : IsEmail ? "Change email" : HasPassword ? "Change password" : "Set a password";
 
     public string Subtitle => Change switch
     {
+        _ when Resetting => $"We sent a code to {account.Email}. Enter it with your new password. Other devices will be signed out.",
         AccountChange.Email when CodeSent => $"We sent a code to {NewEmail.Trim()}. Enter it to switch your account to that address.",
         AccountChange.Email => $"You sign in with {account.Email}. We'll send a code to the new address to make sure it's yours.",
         _ when HasPassword => "You'll stay signed in here; other devices will be signed out.",
@@ -45,8 +51,10 @@ public partial class ManageAccountViewModel(AccountService account, DialogServic
     public string SubmitText => IsEmail ? CodeSent ? "Change email" : "Send code" : "Save password";
 
     /// <summary>Proves it's the owner, not someone holding an unlocked phone. Google accounts have none to ask for.</summary>
-    public bool ShowCurrentPassword => HasPassword && !(IsEmail && CodeSent);
-    public bool ShowCode => IsEmail && CodeSent;
+    public bool ShowCurrentPassword => HasPassword && !Resetting && !(IsEmail && CodeSent);
+    public bool ShowCode => Resetting || (IsEmail && CodeSent);
+    // Resetting, the new password comes after the code; for an email change the code is the last field.
+    public ReturnType CodeReturnType => Resetting ? ReturnType.Next : ReturnType.Go;
     public string PasswordHint => $"At least {AuthLimits.MinPasswordLength} characters";
 
     [RelayCommand]
@@ -61,7 +69,13 @@ public partial class ManageAccountViewModel(AccountService account, DialogServic
 
         await RunAsync(async () =>
         {
-            if (IsPassword)
+            if (Resetting)
+            {
+                await account.ResetPasswordAsync(account.Email!, Code, NewPassword);
+                await Close();
+                await dialogs.Alert("Password saved", "Use your new password next time you sign in.");
+            }
+            else if (IsPassword)
             {
                 await account.ChangePasswordAsync(CurrentPassword, NewPassword);
                 await Close();
@@ -94,6 +108,31 @@ public partial class ManageAccountViewModel(AccountService account, DialogServic
         if (ShowCode && string.IsNullOrWhiteSpace(Code))
             return "Enter the code from the email.";
         return null;
+    }
+
+    /// <summary>
+    /// The current password is forgotten: emails a reset code to the account's address and asks for it instead.
+    /// From the email change too, since that needs the password first.
+    /// </summary>
+    [RelayCommand]
+    Task ForgotPassword()
+    {
+        Error = "";
+        return RunAsync(async () =>
+        {
+            await account.SendPasswordResetCodeAsync(account.Email!);
+            Change = AccountChange.Password;
+            CodeSent = false;
+            CurrentPassword = Code = "";
+            Resetting = true;
+        });
+    }
+
+    [RelayCommand]
+    Task ResendCode()
+    {
+        Error = "";
+        return RunAsync(() => account.SendPasswordResetCodeAsync(account.Email!));
     }
 
     /// <summary>Back to the address field, e.g. after a typo in it.</summary>

@@ -38,7 +38,7 @@ public class JwtOptions
 /// Issues short-lived JWT access tokens and opaque, rotating refresh tokens. Refresh tokens are stored only
 /// as hashes; presenting one that was already rotated is treated as theft and revokes the whole family.
 /// </summary>
-public class TokenService(JwtOptions options, ApiDbContext db, TimeProvider clock)
+public class TokenService(JwtOptions options, ApiDbContext db, TimeProvider clock, EmailSender email)
 {
     public async Task<AuthResponse> IssueAsync(AppUser user, Guid? familyId = null, CancellationToken ct = default)
     {
@@ -55,6 +55,7 @@ public class TokenService(JwtOptions options, ApiDbContext db, TimeProvider cloc
             {
                 [JwtRegisteredClaimNames.Sub] = user.Id,
                 [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString("N"),
+                [AuthPolicies.EmailVerifiedClaim] = IsVerified(user) ? "true" : "false",
             },
             SigningCredentials = new SigningCredentials(options.Key, SecurityAlgorithms.HmacSha256),
         });
@@ -80,6 +81,7 @@ public class TokenService(JwtOptions options, ApiDbContext db, TimeProvider cloc
             RefreshToken = refreshToken,
             RefreshTokenExpiresAt = refreshExpires,
             HasPassword = user.PasswordHash != null,
+            EmailVerified = IsVerified(user),
         };
     }
 
@@ -143,5 +145,17 @@ public class TokenService(JwtOptions options, ApiDbContext db, TimeProvider cloc
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, now), ct);
     }
 
+    // Without a way to send the code nobody could verify, so the requirement only applies once email is set up.
+    bool IsVerified(AppUser user) => user.EmailConfirmed || !email.IsAvailable;
+
     static string Hash(string token) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+}
+
+public static class AuthPolicies
+{
+    /// <summary>In the access token: "true" once the account's email is verified. Everything but the account endpoints requires it.</summary>
+    public const string EmailVerifiedClaim = "email_verified";
+
+    /// <summary>Signed in, verified or not: for the account endpoints, where the email gets verified or corrected.</summary>
+    public const string AnyAccount = "any-account";
 }

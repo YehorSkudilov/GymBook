@@ -336,9 +336,7 @@ public partial class ProfileViewModel(
         ShowOnboarding();
     }
 
-    static void ShowOnboarding() =>
-        Application.Current!.Windows[0].Page = Application.Current.Handler!.MauiContext!.Services
-            .GetRequiredService<PlanWizardPage>().ForOnboarding();
+    static void ShowOnboarding() => App.ShowOnboarding();
 
     [RelayCommand]
     async Task Export()
