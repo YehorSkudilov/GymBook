@@ -138,7 +138,7 @@
                                     <!-- The row itself follows the finger; the others slide aside. A solid background so it covers them. -->
                                     <controls:ReorderItem MoveCommand="{Binding MoveCommand}">
                                     <Border BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="0,4">
-                                        <VerticalStackLayout Spacing="12">
+                                        <VerticalStackLayout>
                                             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="14">
                                                 <Grid.GestureRecognizers>
                                                     <TapGestureRecognizer Command="{Binding ToggleCommand}" />
@@ -178,30 +178,34 @@
                                                        VerticalOptions="Fill" VerticalTextAlignment="Center" Padding="12,0" Margin="-12,0,0,0" />
                                             </Grid>
 
-                                            <!-- Opened: change it right here -->
-                                            <VerticalStackLayout Spacing="10" IsVisible="{Binding IsExpanded}">
+                                            <!-- Opened: change it right here. Grows open and folds away; the gap above it is padding, so that animates too. -->
+                                            <VerticalStackLayout Spacing="10" Padding="0,12,0,0" controls:AnimatedVisibility.IsShown="{Binding IsExpanded}">
                                                 <!-- The rep range is on the Reps pill above -->
                                                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                                                     <!-- Fills the row, so it's as tall as the rest card beside it -->
                                                     <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8" IsVisible="{Binding ShowRir}" VerticalOptions="Fill">
                                                         <VerticalStackLayout Spacing="6">
                                                             <Label Text="TARGET RIR" Style="{StaticResource Overline}" FontSize="10" />
-                                                            <Grid ColumnDefinitions="Auto,*,Auto">
-                                                                <Button Text="−" Style="{StaticResource StepButton}" Command="{Binding RirDownCommand}" />
-                                                                <Label Grid.Column="1" Text="{Binding RirText}" FontFamily="OpenSansSemibold" FontSize="17" HorizontalOptions="Center" VerticalOptions="Center" />
-                                                                <Button Grid.Column="2" Text="+" Style="{StaticResource StepButton}" Command="{Binding RirUpCommand}" />
-                                                            </Grid>
+                                                            <!-- Tap for a number popup, like the sets and reps pills -->
+                                                            <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
+                                                                <Border.GestureRecognizers>
+                                                                    <TapGestureRecognizer Command="{Binding PickRirCommand}" />
+                                                                </Border.GestureRecognizers>
+                                                                <Label Text="{Binding RirText, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
+                                                            </Border>
                                                         </VerticalStackLayout>
                                                     </Border>
                                                     <!-- The plan's default rest, or this exercise's own, which can go back to the default -->
                                                     <Border Style="{StaticResource InnerCard}" Padding="10,8">
                                                         <VerticalStackLayout Spacing="6">
                                                             <Label Text="REST" Style="{StaticResource Overline}" FontSize="10" />
-                                                            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
-                                                                <Button Text="−" Style="{StaticResource StepButton}" Command="{Binding RestDownCommand}" />
-                                                                <Label Grid.Column="1" Text="{Binding RestText}" FontFamily="OpenSansSemibold" FontSize="17" HorizontalOptions="Center" VerticalOptions="Center" />
-                                                                <Button Grid.Column="2" Text="+" Style="{StaticResource StepButton}" Command="{Binding RestUpCommand}" />
-                                                            </Grid>
+                                                            <!-- Tap for a number popup: minutes and seconds -->
+                                                            <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
+                                                                <Border.GestureRecognizers>
+                                                                    <TapGestureRecognizer Command="{Binding PickRestCommand}" />
+                                                                </Border.GestureRecognizers>
+                                                                <Label Text="{Binding RestText, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
+                                                            </Border>
                                                             <Label Text="{Binding RestSource}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" />
                                                             <Label Text="Reset to plan default" TextColor="{StaticResource Accent}" FontSize="12" FontFamily="OpenSansSemibold"
                                                                    HorizontalOptions="Center" IsVisible="{Binding IsCustomRest}" Padding="0,2">

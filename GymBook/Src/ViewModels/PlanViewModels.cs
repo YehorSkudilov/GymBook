@@ -90,10 +90,6 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, boo
     [RelayCommand] void RepsDown() { Model.RepMin = Math.Max(1, Model.RepMin - 1); Changed(); }
     [RelayCommand] void RangeUp() { Model.RepMax = Math.Min(50, Model.RepMax + 1); Changed(); }
     [RelayCommand] void RangeDown() { Model.RepMax = Math.Max(Model.RepMin, Model.RepMax - 1); Changed(); }
-    [RelayCommand] void RirUp() { Model.TargetRir = Math.Min(5, Model.TargetRir + 1); Changed(); }
-    [RelayCommand] void RirDown() { Model.TargetRir = Math.Max(0, Model.TargetRir - 1); Changed(); }
-    [RelayCommand] void RestUp() => SetRest(Math.Min(600, Model.RestSeconds + 15));
-    [RelayCommand] void RestDown() => SetRest(Math.Max(15, Model.RestSeconds - 15));
 
     // A rest changed here is this exercise's own (unless it lands back on the plan's default), so the default no longer moves it.
     void SetRest(int seconds)
@@ -118,6 +114,27 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, boo
             return;
         Model.Sets = sets;
         Changed();
+    }
+
+    /// <summary>The target RIR pill: reps in reserve, typed or stepped.</summary>
+    [RelayCommand]
+    async Task PickRir()
+    {
+        if (await dialogs.Numbers(Name, "Target reps in reserve", "Save", new Views.NumberField("RIR", Model.TargetRir, 0, 10)) is not [var rir])
+            return;
+        Model.TargetRir = rir;
+        Changed();
+    }
+
+    /// <summary>The rest pill: minutes and seconds between sets, typed or stepped.</summary>
+    [RelayCommand]
+    async Task PickRest()
+    {
+        if (await dialogs.Numbers(Name, "Rest between sets", "Save",
+                new Views.NumberField("Min", Model.RestSeconds / 60, 0, 10),
+                new Views.NumberField("Sec", Model.RestSeconds % 60, 0, 59)) is not [var minutes, var seconds])
+            return;
+        SetRest(minutes * 60 + seconds);
     }
 
     /// <summary>
