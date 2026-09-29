@@ -28,6 +28,17 @@ public class EmailSender(SmtpOptions options, IHostEnvironment env, IMemoryCache
 
     public bool IsAvailable => options.IsConfigured || env.IsDevelopment();
 
+    static readonly byte[] Logo = ReadLogo();
+
+    static byte[] ReadLogo()
+    {
+        using var stream = typeof(EmailSender).Assembly.GetManifestResourceStream("EmailLogo.png")
+            ?? throw new InvalidOperationException("The EmailLogo.png resource is missing.");
+        using var copy = new MemoryStream();
+        stream.CopyTo(copy);
+        return copy.ToArray();
+    }
+
     /// <summary>Sends a code. False (and nothing sent) when one went to this address for this purpose within the last minute.</summary>
     public async Task<bool> SendCodeAsync(string to, string purpose, CodeEmail mail, CancellationToken ct)
     {
@@ -48,8 +59,13 @@ public class EmailSender(SmtpOptions options, IHostEnvironment env, IMemoryCache
         message.From.Add(new MailboxAddress(options.FromName, options.FromAddress));
         message.To.Add(MailboxAddress.Parse(to));
         message.Subject = mail.Subject;
-        // The styled version, with the plain one for mail apps that don't show HTML.
-        message.Body = new BodyBuilder { TextBody = mail.ToText(), HtmlBody = mail.ToHtml() }.ToMessageBody();
+        // The styled version, with the plain one for mail apps that don't show HTML. The logo travels inside the email
+        // (a cid: image): mail apps don't show SVG, and Gmail drops data: URLs.
+        var body = new BodyBuilder { TextBody = mail.ToText() };
+        var logo = body.LinkedResources.Add("gymbook.png", Logo, new ContentType("image", "png"));
+        logo.ContentId = MimeKit.Utils.MimeUtils.GenerateMessageId();
+        body.HtmlBody = mail.ToHtml($"cid:{logo.ContentId}");
+        message.Body = body.ToMessageBody();
 
         try
         {
@@ -83,7 +99,8 @@ public record CodeEmail(string Subject, string Heading, string Intro, string Cod
 
     public string ToText() => $"{Heading}\n\n{Intro}\n\n{Code}\n\nIt's valid for 5 minutes.\n\n{Footer}\n\n- GymBook";
 
-    public string ToHtml()
+    /// <summary>The styled email; <paramref name="logoSrc"/> is where the logo image is, e.g. a cid: reference to the attached one.</summary>
+    public string ToHtml(string logoSrc)
     {
         static string E(string s) => System.Net.WebUtility.HtmlEncode(s);
         return $"""
@@ -100,8 +117,13 @@ public record CodeEmail(string Subject, string Heading, string Intro, string Cod
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:{Bg};">
               <tr><td align="center" style="padding:32px 16px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;">
-                  <tr><td style="padding:0 4px 20px;font-family:{Font};font-size:20px;font-weight:700;color:{TextPrimary};">
-                    <span style="color:{Accent};">&#9632;</span>&nbsp;GymBook
+                  <tr><td style="padding:0 4px 20px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                      <td style="vertical-align:middle;padding-right:10px;">
+                        <img src="{E(logoSrc)}" width="32" height="32" alt="" style="display:block;border:0;outline:none;width:32px;height:32px;">
+                      </td>
+                      <td style="vertical-align:middle;font-family:{Font};font-size:20px;font-weight:700;color:{TextPrimary};">GymBook</td>
+                    </tr></table>
                   </td></tr>
                   <tr><td style="background:{Surface};border:1px solid {Stroke};border-radius:20px;padding:28px 24px;">
                     <div style="font-family:{Font};font-size:24px;font-weight:700;color:{TextPrimary};margin:0 0 10px;">{E(Heading)}</div>

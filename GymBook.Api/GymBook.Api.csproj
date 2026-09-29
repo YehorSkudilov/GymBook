@@ -21,4 +21,9 @@
     <ProjectReference Include="..\GymBook.Shared\GymBook.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The logo in the emails (see Auth/EmailSender.cs), rendered from the app's splash logo. -->
+    <EmbeddedResource Include="Auth\EmailLogo.png" LogicalName="EmailLogo.png" />
+  </ItemGroup>
+
 </Project>
