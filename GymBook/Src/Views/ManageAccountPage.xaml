@@ -74,7 +74,7 @@
                     <Label Text="{Binding PasswordHint}" Style="{StaticResource Caption}" FontSize="12" />
                 </VerticalStackLayout>
 
-                <Label Text="{Binding Error}" TextColor="{StaticResource Danger}" FontSize="14" Margin="0,4,0,0" />
+                <skeleton:CLabel Text="{Binding Error}" TextColor="{StaticResource Danger}" FontSize="14" Margin="0,4,0,0" />
 
                 <Grid Margin="0,8,0,0">
                     <Button Text="{Binding SubmitText}" Style="{StaticResource PrimaryButton}" Command="{Binding SubmitCommand}"
