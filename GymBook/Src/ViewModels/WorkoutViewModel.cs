@@ -32,8 +32,8 @@ public partial class WorkoutViewModel(
 
     /// <summary>The exercise on screen; the page and the photo strip both follow it.</summary>
     [ObservableProperty] int currentIndex;
-    // Set when an exercise's last set is done: move on to the next one once the rest is over.
-    int? _advanceTo;
+    // How long the finished exercise stays on screen after its last tick, so the tick is seen before moving on.
+    const int AdvanceDelayMs = 700;
 
     public WorkoutExerciseViewModel? CurrentExercise => Exercises.ElementAtOrDefault(CurrentIndex);
 
@@ -66,11 +66,32 @@ public partial class WorkoutViewModel(
         return Task.CompletedTask;
     }
 
-    void AdvanceIfPending()
+    /// <summary>The next exercise after <paramref name="index"/> with sets still to do, wrapping round to earlier ones; null when all are done.</summary>
+    int? NextOpen(int index)
     {
-        if (_advanceTo is { } next && next < Exercises.Count)
+        for (var step = 1; step < Exercises.Count; step++)
+        {
+            var i = (index + step) % Exercises.Count;
+            if (!Exercises[i].IsDone)
+                return i;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// After an exercise's last set is ticked: on to the next one with sets left, or, when that was the last one, offer
+    /// to finish the workout. Nothing happens if the user moved or un-ticked meanwhile.
+    /// </summary>
+    async Task AdvanceAfterAsync(WorkoutExerciseViewModel finished)
+    {
+        await Task.Delay(AdvanceDelayMs);
+        var index = Exercises.IndexOf(finished);
+        if (index != CurrentIndex || !finished.IsDone)
+            return;
+        if (NextOpen(index) is { } next)
             CurrentIndex = next;
-        _advanceTo = null;
+        else if (Exercises.All(e => e.IsDone))
+            await FinishAsync("All exercises done");
     }
 
     public string UnitLabel => units.Label.ToUpperInvariant();
@@ -133,7 +154,6 @@ public partial class WorkoutViewModel(
         if (left <= TimeSpan.Zero)
         {
             IsResting = false;
-            AdvanceIfPending();
             try
             {
                 HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
@@ -162,12 +182,11 @@ public partial class WorkoutViewModel(
     {
         workouts.Save();
         UpdateProgress();
-        var index = Exercises.IndexOf(exercise);
-        _advanceTo = set.IsCompleted && exercise.IsDone && index == CurrentIndex && index + 1 < Exercises.Count ? index + 1 : null;
         if (set.IsCompleted && store.Profile.AutoRestTimer)
             StartRest(set.Model.IsWarmup ? store.Profile.WarmupRestSeconds : exercise.Model.RestSeconds);
-        else
-            AdvanceIfPending();
+        // Its last set done: move straight on to the next exercise (the rest timer keeps running over it).
+        if (set.IsCompleted && exercise.IsDone && Exercises.IndexOf(exercise) == CurrentIndex)
+            _ = AdvanceAfterAsync(exercise);
     }
 
     internal void OnStructureChanged()
@@ -226,11 +245,7 @@ public partial class WorkoutViewModel(
     }
 
     [RelayCommand]
-    void SkipRest()
-    {
-        IsResting = false;
-        AdvanceIfPending();
-    }
+    void SkipRest() => IsResting = false;
 
     /// <summary>The round timer button: rests for the current exercise's rest time.</summary>
     [RelayCommand]
@@ -289,7 +304,10 @@ public partial class WorkoutViewModel(
     }
 
     [RelayCommand]
-    async Task Finish()
+    Task Finish() => FinishAsync("Finish workout");
+
+    /// <summary>Finishes the workout after confirming (with <paramref name="title"/>); unfinished sets are dropped.</summary>
+    async Task FinishAsync(string title)
     {
         var all = Exercises.SelectMany(e => e.Sets).ToList();
         var done = all.Count(s => s.IsCompleted);
@@ -306,7 +324,7 @@ public partial class WorkoutViewModel(
         var message = open > 0
             ? $"{open} unfinished set{(open == 1 ? "" : "s")} will be removed. Finish the workout?"
             : "Great work! Save this workout?";
-        if (!await dialogs.Confirm("Finish workout", message, "Finish", "Cancel"))
+        if (!await dialogs.Confirm(title, message, "Finish", "Cancel"))
             return;
 
         IsResting = false;
@@ -316,6 +334,34 @@ public partial class WorkoutViewModel(
             await GoTo($"../{Routes.Session}?id={session.Id}&finished=true");
         else
             await GoBack();
+    }
+
+    /// <summary>
+    /// Starts the workout over: every set unticked, the clock from now, back to the first exercise. The exercises and the
+    /// weights and reps filled in stay.
+    /// </summary>
+    [RelayCommand]
+    async Task Reset()
+    {
+        if (_session == null || !await dialogs.Confirm("Reset workout?", "Every set is unticked and the clock starts again. Exercises, weights and reps stay.", "Reset", "Cancel"))
+            return;
+        IsResting = false;
+        foreach (var set in _session.Exercises.SelectMany(e => e.Sets))
+        {
+            set.IsCompleted = false;
+            set.CompletedAt = null;
+        }
+        _session.StartedAt = DateTime.Now;
+        workouts.Save();
+
+        // Rebuilt from the session, so every row, warm-up fold and piece of advice starts fresh too.
+        Exercises.Clear();
+        foreach (var se in _session.Exercises)
+            AddExerciseVm(se);
+        CurrentIndex = 0;
+        OnCurrentIndexChanged(CurrentIndex);
+        UpdateProgress();
+        Tick();
     }
 
     [RelayCommand]

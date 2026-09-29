@@ -168,7 +168,7 @@ public partial class HomeViewModel(
         if (plan == null || _next is not { } next)
             return;
         var week = _nextWeek;
-        await StartWorkoutAsync(workouts, dialogs, () => workouts.StartFromPlan(plan, next, week));
+        await StartPlannedWorkoutAsync(workouts, dialogs, recovery, plan, next, week);
     }
 
     /// <summary>Tapping the Up next card previews that day, like tapping it in the week below.</summary>

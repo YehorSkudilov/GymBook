@@ -12,6 +12,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     static readonly Color Accent = Color.FromArgb("#3F7DFF");
     static readonly Color Violet = Color.FromArgb("#7C5CFF");
     static readonly Color Green = Color.FromArgb("#2ED47A");
+    static readonly Color Orange = Color.FromArgb("#FF8A3D");
 
     [ObservableProperty] string totalWorkouts = "0";
     [ObservableProperty] string thisMonth = "0";
@@ -26,6 +27,18 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     [ObservableProperty] List<MuscleBarItem> muscleSets = [];
     [ObservableProperty] List<LineItem> records = [];
     [ObservableProperty] bool hasRecords;
+
+    // Strength: the overall trend, one lift at a time, and the biggest recent gains.
+    [ObservableProperty] IDrawable? strengthTrendChart;
+    [ObservableProperty] string strengthTrendText = "";
+    [ObservableProperty] bool hasStrengthTrend;
+    [ObservableProperty] IDrawable? liftChart;
+    [ObservableProperty] string liftSummary = "";
+    [ObservableProperty] bool hasLifts;
+    [ObservableProperty] List<LineItem> gains = [];
+    [ObservableProperty] bool hasGains;
+    public System.Collections.ObjectModel.ObservableCollection<ChipItem> LiftChips { get; } = [];
+    string? _liftId;
 
     public override Task OnAppearingAsync()
     {
@@ -73,7 +86,73 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             OpenCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Exercise}?id={r.Exercise.Id}")),
         }).ToList();
         HasRecords = Records.Count > 0;
+        ShowStrength();
         return Task.CompletedTask;
+    }
+
+    const int TrendWeeks = 12;
+
+    void ShowStrength()
+    {
+        var lifts = stats.TrackedLifts(8);
+        HasLifts = lifts.Count > 0;
+
+        var trend = stats.StrengthTrend(lifts.Take(5).ToList(), TrendWeeks);
+        HasStrengthTrend = trend.Count >= 2;
+        StrengthTrendChart = new LineChartDrawable(trend, Orange, v => $"{v - 100:+0;−0;0}%");
+        var change = trend.Count >= 2 ? trend[^1].Value - trend[0].Value : 0;
+        StrengthTrendText = !HasStrengthTrend
+            ? "Train your main lifts for a couple of weeks to see the trend."
+            : $"{(change >= 0 ? "Up" : "Down")} {Math.Abs(change):0.#}% across your top {Math.Min(5, lifts.Count)} lifts since {trend[0].Label}";
+
+        LiftChips.Clear();
+        if (_liftId == null || lifts.All(l => l.Id != _liftId))
+            _liftId = lifts.FirstOrDefault()?.Id;
+        foreach (var lift in lifts)
+            LiftChips.Add(new ChipItem(lift.Name, lift.Id, SelectLift) { IsSelected = lift.Id == _liftId });
+        ShowLift();
+
+        Gains = [.. stats.Gains(90, 5).Select(g => new LineItem
+        {
+            Title = g.Exercise.Name,
+            Detail = $"{units.FormatWithUnit(g.FromKg)} → {units.FormatWithUnit(g.ToKg)} · {g.Sessions} sessions",
+            Value = $"{g.Percent:+0;−0;0}%",
+            OpenCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Exercise}?id={g.Exercise.Id}")),
+        })];
+        HasGains = Gains.Count > 0;
+    }
+
+    void SelectLift(ChipItem chip)
+    {
+        _liftId = chip.Value as string;
+        foreach (var c in LiftChips)
+            c.IsSelected = c == chip;
+        ShowLift();
+    }
+
+    /// <summary>The chosen lift's estimated 1RM per session, with the gain since its first one and its best.</summary>
+    void ShowLift()
+    {
+        if (_liftId == null)
+        {
+            LiftChart = null;
+            LiftSummary = "";
+            return;
+        }
+        var history = stats.E1RmHistory(_liftId);
+        LiftChart = new LineChartDrawable(history.TakeLast(20).Select(p => p with { Value = units.ToDisplay(p.Value) }).ToList(), Accent, v => $"{v:0.#}");
+        if (history.Count == 0)
+        {
+            LiftSummary = "";
+            return;
+        }
+        var first = history[0].Value;
+        var latest = history[^1].Value;
+        var best = history.Max(p => p.Value);
+        var gain = history.Count > 1
+            ? $" · {(latest >= first ? "+" : "−")}{units.FormatWithUnit(Math.Abs(latest - first))} ({(latest / first - 1) * 100:+0;−0;0}%) since {history[0].Label}"
+            : "";
+        LiftSummary = $"Estimated 1RM {units.FormatWithUnit(latest)}{gain} · best {units.FormatWithUnit(best)}";
     }
 
     [RelayCommand]

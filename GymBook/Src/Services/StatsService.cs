@@ -63,6 +63,68 @@ public class StatsService(DataStore store, RecoveryService recovery)
             .Select(p => new ChartPoint(p.StartedAt.ToString("d MMM", CultureInfo.CurrentCulture), p.best))
             .ToList();
 
+    /// <summary>The loaded lifts trained in the most sessions, most first: the ones worth charting strength for.</summary>
+    public List<Exercise> TrackedLifts(int max) =>
+        [.. store.History
+            .SelectMany(s => s.Exercises.Where(e => e.Sets.Any(x => x.IsCompleted && !x.IsWarmup && x.WeightKg > 0)).Select(e => e.ExerciseId).Distinct())
+            .GroupBy(id => id)
+            .Select(g => (Exercise: store.GetExercise(g.Key), Sessions: g.Count()))
+            .Where(x => x.Exercise is { IsBodyweight: false })
+            .OrderByDescending(x => x.Sessions)
+            .Take(max)
+            .Select(x => x.Exercise!)];
+
+    /// <summary>Each session's best estimated 1RM for the exercise, oldest first.</summary>
+    List<(DateTime Date, double E1Rm)> BestPerSession(string exerciseId) =>
+        [.. store.History.Reverse()
+            .Select(s => (s.StartedAt, best: s.Exercises.Where(e => e.ExerciseId == exerciseId)
+                .SelectMany(e => e.Sets).Where(x => x.IsCompleted && !x.IsWarmup)
+                .Select(x => ProgressionEngine.E1Rm(x.WeightKg, x.Reps, x.Rir)).DefaultIfEmpty(0).Max()))
+            .Where(p => p.best > 0)];
+
+    /// <summary>
+    /// Overall strength, week by week: for each of <paramref name="lifts"/>, the latest estimated 1RM by that week's end
+    /// against its first one, averaged, with 100 as where the lifts started (110 = 10% stronger). Weeks before any of the
+    /// lifts were trained are left out.
+    /// </summary>
+    public List<ChartPoint> StrengthTrend(IReadOnlyList<Exercise> lifts, int weeks)
+    {
+        var histories = lifts.Select(l => BestPerSession(l.Id)).Where(h => h.Count > 0).ToList();
+        var start = WeekStart(DateTime.Today).AddDays(-7 * (weeks - 1));
+        var points = new List<ChartPoint>();
+        for (var i = 0; i < weeks; i++)
+        {
+            var from = start.AddDays(7 * i);
+            var end = from.AddDays(7);
+            var ratios = histories
+                .Select(h => (First: h[0].E1Rm, Latest: h.LastOrDefault(p => p.Date < end)))
+                .Where(x => x.Latest.E1Rm > 0)
+                .Select(x => x.Latest.E1Rm / x.First)
+                .ToList();
+            if (ratios.Count > 0)
+                points.Add(new ChartPoint(from.ToString("d MMM", CultureInfo.CurrentCulture), ratios.Average() * 100));
+        }
+        return points;
+    }
+
+    /// <summary>How a lift's estimated 1RM changed over the last <paramref name="days"/>: its first session then against the better of its last two (so one off day doesn't hide the trend).</summary>
+    public record LiftGain(Exercise Exercise, double FromKg, double ToKg, int Sessions)
+    {
+        public double Percent => FromKg > 0 ? (ToKg / FromKg - 1) * 100 : 0;
+    }
+
+    /// <summary>The lifts trained at least twice in the last <paramref name="days"/>, biggest gain first.</summary>
+    public List<LiftGain> Gains(int days, int max)
+    {
+        var since = DateTime.Today.AddDays(-days);
+        return [.. TrackedLifts(30)
+            .Select(l => (Lift: l, History: BestPerSession(l.Id).Where(p => p.Date >= since).ToList()))
+            .Where(x => x.History.Count >= 2)
+            .Select(x => new LiftGain(x.Lift, x.History[0].E1Rm, x.History.TakeLast(2).Max(p => p.E1Rm), x.History.Count))
+            .OrderByDescending(g => g.Percent)
+            .Take(max)];
+    }
+
     public PersonalRecord? BestFor(string exerciseId, string? excludeSessionId = null)
     {
         PersonalRecord? best = null;

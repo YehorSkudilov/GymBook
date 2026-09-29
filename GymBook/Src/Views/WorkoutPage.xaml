@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
+    xmlns:controls="clr-namespace:GymBook.Controls"
     x:DataType="vm:WorkoutViewModel"
     Shell.PresentationMode="ModalNotAnimated"
     Shell.NavBarIsVisible="False"
@@ -140,7 +141,8 @@
                                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding Sets}" Spacing="6">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="vm:SetRowViewModel">
-                                            <Grid IsVisible="{Binding IsVisible}" ColumnDefinitions="48,*,*,Auto,*,56" ColumnSpacing="8" MinimumHeightRequest="52">
+                                            <!-- Warm-up rows fold away and open with an animation -->
+                                            <Grid controls:AnimatedVisibility.IsShown="{Binding IsVisible}" ColumnDefinitions="48,*,*,Auto,*,56" ColumnSpacing="8" MinimumHeightRequest="52">
                                                 <!-- Tapping a row that isn't being logged opens it for editing. -->
                                                 <Grid.GestureRecognizers>
                                                     <TapGestureRecognizer Command="{Binding EditCommand}" />

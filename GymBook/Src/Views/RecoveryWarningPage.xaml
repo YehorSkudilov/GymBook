@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:SheetPage
+    x:Class="GymBook.Views.RecoveryWarningPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:RecoveryWarningViewModel"
+    Shell.PresentationMode="ModalNotAnimated"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
+
+    <!-- A sheet before a workout whose muscles are still recovering: how far along they are, and what to do instead. -->
+    <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
+        <Grid RowDefinitions="Auto,*,Auto">
+            <Button Text="Not now" Style="{StaticResource GhostButton}" FontSize="17" HorizontalOptions="Start" Margin="12,8,8,0"
+                    Command="{Binding NotNowCommand}" />
+
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Padding="20,4,20,24" Spacing="16">
+
+                    <!-- What's wrong -->
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                        <VerticalStackLayout Spacing="6" VerticalOptions="Center">
+                            <HorizontalStackLayout Spacing="8">
+                                <Image WidthRequest="22" HeightRequest="22" VerticalOptions="Center">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="{Binding BatteryGlyph}" Color="{Binding BatteryColor}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="{Binding LevelText}" Style="{StaticResource Overline}" TextColor="{Binding BatteryColor}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="26" />
+                            <Label Text="{Binding Summary}" Style="{StaticResource Caption}" FontSize="15" />
+                        </VerticalStackLayout>
+                        <GraphicsView Grid.Column="1" Drawable="{Binding Map}" WidthRequest="110" HeightRequest="150" VerticalOptions="Center" />
+                    </Grid>
+
+                    <!-- Drag ahead to see them recover: the map, the muscles below and the battery all follow -->
+                    <VerticalStackLayout Spacing="2">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="{Binding When}" FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" />
+                            <Button Grid.Column="1" Text="Now" Style="{StaticResource SmallButton}" IsVisible="{Binding IsPreview}" Command="{Binding NowCommand}" />
+                        </Grid>
+                        <Slider Maximum="{Binding MaxHours}" Minimum="0" Value="{Binding Hours}"
+                                MinimumTrackColor="{StaticResource Accent}" MaximumTrackColor="{StaticResource Surface3}" ThumbColor="{StaticResource Accent}" />
+                        <Grid ColumnDefinitions="*,*">
+                            <Label Text="Now" Style="{StaticResource Caption}" FontSize="11" />
+                            <Label Grid.Column="1" Text="Fully recovered" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End" />
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <!-- Each tired muscle -->
+                    <Border Style="{StaticResource Card}" Padding="16,14">
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Muscles}" Spacing="14">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:TiredMuscleItem">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                                            <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Status}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding Percent}" TextColor="{Binding Color}" FontFamily="OpenSansSemibold" FontSize="15" VerticalOptions="Center" />
+                                        </Grid>
+                                        <ProgressBar Progress="{Binding Progress}" ProgressColor="{Binding Color}" HeightRequest="6" />
+                                        <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Suggestion -->
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="SUGGESTION" Style="{StaticResource Overline}" />
+                        <Border Style="{StaticResource Card}" Padding="16,14" IsVisible="{Binding HasAlternative}" Stroke="{StaticResource Success}" StrokeThickness="1">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Image WidthRequest="26" HeightRequest="26" VerticalOptions="Center">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="swap_horiz" Color="{StaticResource Success}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                    <Label Text="{Binding AlternativeName}" FontFamily="OpenSansSemibold" FontSize="16" />
+                                    <Label Text="{Binding AlternativeDetail}" Style="{StaticResource Caption}" FontSize="13" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                        <Label Text="{Binding Advice}" Style="{StaticResource Caption}" FontSize="14" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Choices -->
+            <VerticalStackLayout Grid.Row="2" Padding="16,8,16,16" Spacing="8">
+                <Button Text="{Binding AlternativeText}" Style="{StaticResource PrimaryButton}" IsVisible="{Binding HasAlternative}"
+                        Command="{Binding AlternativeCommand}" />
+                <Button Text="{Binding StartAnywayText}" Style="{StaticResource SecondaryButton}" Command="{Binding StartAnywayCommand}" />
+            </VerticalStackLayout>
+        </Grid>
+    </Border>
+</views:SheetPage>

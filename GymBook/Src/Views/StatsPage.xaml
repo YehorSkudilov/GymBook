@@ -43,6 +43,67 @@
                 </Border>
             </Grid>
 
+            <!-- Strength: overall trend across the main lifts -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Strength trend" Style="{StaticResource H3}" />
+                    <Label Text="{Binding StrengthTrendText}" Style="{StaticResource Caption}" FontSize="12" />
+                    <GraphicsView Drawable="{Binding StrengthTrendChart}" HeightRequest="170" IsVisible="{Binding HasStrengthTrend}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Strength: one lift at a time -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasLifts}">
+                <VerticalStackLayout Spacing="10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Lift progression" Style="{StaticResource H3}" />
+                        <Label Text="Estimated one-rep max each time you trained it." Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <ScrollView x:Name="LiftStrip" Orientation="Horizontal" HorizontalScrollBarVisibility="Never" Margin="-16,0">
+                        <HorizontalStackLayout BindableLayout.ItemsSource="{Binding LiftChips}" Spacing="8" Padding="16,0">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ChipItem">
+                                    <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,7">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                        </Border.GestureRecognizers>
+                                        <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </ScrollView>
+                    <Label Text="{Binding LiftSummary}" Style="{StaticResource Caption}" FontSize="12" />
+                    <GraphicsView Drawable="{Binding LiftChart}" HeightRequest="170" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Strength: biggest recent gains -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasGains}">
+                <VerticalStackLayout Spacing="10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="Biggest gains" Style="{StaticResource H3}" />
+                        <Label Text="Estimated one-rep max, last 3 months." Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Gains}" Spacing="4">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:LineItem">
+                                <Grid ColumnDefinitions="*,Auto" Padding="0,6">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                                    </Grid.GestureRecognizers>
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="14" />
+                                        <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" Text="{Binding Value}" FontFamily="OpenSansSemibold" TextColor="{StaticResource Success}" VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
             <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Weekly volume" Style="{StaticResource H3}" />

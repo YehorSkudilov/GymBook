@@ -90,6 +90,16 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
             await workout.FinishCommand.ExecuteAsync(null);
     }
 
+    /// <summary>Closes the sheet, then starts the workout over (after its own confirmation).</summary>
+    [RelayCommand]
+    async Task Reset()
+    {
+        var workout = _workout;
+        await GoBack();
+        if (workout != null)
+            await workout.ResetCommand.ExecuteAsync(null);
+    }
+
     [RelayCommand]
     async Task Discard()
     {

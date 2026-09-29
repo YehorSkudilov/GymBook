@@ -34,6 +34,57 @@ public class RecoveryService(DataStore store)
         return [.. result.Values];
     }
 
+    /// <summary>Below this a muscle is still "Recovering" or "Fatigued" and shouldn't take much work yet.</summary>
+    public const double ReadyThreshold = 0.6;
+
+    /// <summary>A muscle gets a warning only when the workout gives it at least this many sets (secondary work counts half).</summary>
+    const double MeaningfulSets = 2;
+
+    /// <summary>
+    /// The muscles <paramref name="workout"/> works that aren't recovered enough at <paramref name="at"/>, most tired
+    /// first; empty when it's fine to train. Uses the planned sets, weighted like logged ones.
+    /// </summary>
+    public List<MuscleRecovery> NotReady(PlanWorkout workout, DateTime at)
+    {
+        var planned = PlannedSets(workout);
+        var recovery = Details(at).ToDictionary(r => r.Muscle);
+        return [.. planned
+            .Where(p => p.Value >= MeaningfulSets && recovery[p.Key].Recovery < ReadyThreshold)
+            .Select(p => recovery[p.Key])
+            .OrderBy(r => r.Recovery)];
+    }
+
+    /// <summary>
+    /// The plan's workout best suited to train at <paramref name="at"/> instead of <paramref name="instead"/>: one that
+    /// works nothing still recovering, with the freshest muscles (weighted by its sets). Null when none qualifies.
+    /// </summary>
+    public PlanWorkout? FreshAlternative(WorkoutPlan plan, PlanWorkout instead, DateTime at)
+    {
+        var recovery = Compute(at);
+        return plan.Workouts
+            .Where(w => w != instead && w.Exercises.Count > 0 && NotReady(w, at).Count == 0)
+            .Select(w => (Workout: w, Sets: PlannedSets(w)))
+            .Where(x => x.Sets.Count > 0)
+            .OrderByDescending(x => x.Sets.Sum(s => s.Value * recovery[s.Key]) / x.Sets.Sum(s => s.Value))
+            .Select(x => x.Workout)
+            .FirstOrDefault();
+    }
+
+    /// <summary>Like <see cref="SetsPerMuscle"/>, for the sets a plan workout prescribes.</summary>
+    Dictionary<MuscleGroup, double> PlannedSets(PlanWorkout workout)
+    {
+        var sets = new Dictionary<MuscleGroup, double>();
+        foreach (var pe in workout.Exercises)
+        {
+            if (store.GetExercise(pe.ExerciseId) is not { } ex)
+                continue;
+            sets[ex.PrimaryMuscle] = sets.GetValueOrDefault(ex.PrimaryMuscle) + pe.Sets;
+            foreach (var m in ex.SecondaryMuscles)
+                sets[m] = sets.GetValueOrDefault(m) + pe.Sets * 0.5;
+        }
+        return sets;
+    }
+
     /// <summary>Primary muscles get one set each; secondary muscles get half a set.</summary>
     public Dictionary<MuscleGroup, double> SetsPerMuscle(WorkoutSession session)
     {

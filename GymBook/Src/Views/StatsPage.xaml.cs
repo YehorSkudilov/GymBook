@@ -8,5 +8,6 @@ public partial class StatsPage : TabView
     {
         InitializeComponent();
         BindingContext = viewModel;
+        HorizontalMouseScroll.Attach(LiftStrip);
     }
 }

@@ -45,7 +45,7 @@
     <!-- A sheet over the workout: name, timing, finish or discard, and the logging settings. Changes apply as they're made. -->
     <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
         <Grid RowDefinitions="Auto,*">
-            <Button Text="Done" Style="{StaticResource GhostButton}" FontSize="17" HorizontalOptions="Start" Margin="12,8,8,0"
+            <Button Text="Close" Style="{StaticResource GhostButton}" FontSize="17" HorizontalOptions="Start" Margin="12,8,8,0"
                     Command="{Binding CloseCommand}" />
 
             <ScrollView Grid.Row="1">
@@ -105,6 +105,18 @@
                                     </Image.Source>
                                 </Image>
                                 <Label Text="Complete" Style="{StaticResource MenuLabel}" TextColor="{StaticResource Accent}" />
+                            </Grid>
+                            <!-- Start over: sets unticked, clock restarted -->
+                            <Grid Style="{StaticResource MenuRow}">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ResetCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Image Style="{StaticResource MenuIcon}">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="restart_alt" Color="{StaticResource TextSecondary}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="Reset" Style="{StaticResource MenuLabel}" />
                             </Grid>
                             <Grid Style="{StaticResource MenuRow}">
                                 <Grid.GestureRecognizers>

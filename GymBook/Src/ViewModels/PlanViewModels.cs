@@ -116,7 +116,7 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     }
 }
 
-public partial class PlanDetailViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, WorkoutEstimator estimator, AiPlanService ai)
+public partial class PlanDetailViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, WorkoutEstimator estimator, AiPlanService ai, RecoveryService recovery)
     : BaseViewModel, IQueryAttributable
 {
     string? _id;
@@ -232,7 +232,7 @@ public partial class PlanDetailViewModel(DataStore store, WorkoutService workout
             return GoTo($"{Routes.Session}?id={done.Id}");
         if (w.Exercises.Count == 0)
             return dialogs.Alert("Empty workout", "Add exercises to this workout first.");
-        return StartWorkoutAsync(workouts, dialogs, () => workouts.StartFromPlan(plan, w, _week));
+        return StartPlannedWorkoutAsync(workouts, dialogs, recovery, plan, w, _week);
     }
 
     /// <summary>Opens the muscle breakdown for the selected day, with a switch to the whole plan.</summary>
