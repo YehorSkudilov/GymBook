@@ -8,7 +8,7 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>Month-by-month view of finished workouts; tap a day to list what was done on it.</summary>
-public partial class CalendarViewModel(DataStore store, StatsService stats, Units units, RecoveryService recovery) : BaseViewModel
+public partial class CalendarViewModel(DataStore store, StatsService stats, Units units, RecoveryService recovery, DialogService dialogs) : BaseViewModel
 {
     DateTime _month = FirstOfMonth(DateTime.Today);
     DateTime? _selected = DateTime.Today;
@@ -160,6 +160,35 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     /// <summary>The details page, on this day's timeline: its first stop for Before, the end of its last workout for After.</summary>
     [RelayCommand]
     Task OpenRecovery() => GoTo($"{Routes.Recovery}?day={_recoveryDay:yyyy-MM-dd}&stop={(IsAfterDay ? "after" : "0")}");
+
+    /// <summary>The ··· beside the selected day's date: its recovery details, or discard all its workouts.</summary>
+    [RelayCommand]
+    async Task DayOptions()
+    {
+        if (_selected is not { } day)
+            return;
+        var sessions = _byDay[day].ToList();
+        var discard = sessions.Count switch
+        {
+            0 => null,
+            1 => "Discard workout",
+            _ => $"Discard all {sessions.Count} workouts",
+        };
+        var choice = await dialogs.ActionSheet(day.ToString("dddd, d MMMM"), discard, "Recovery details");
+        if (choice == "Recovery details")
+            await OpenRecovery();
+        else if (choice != null && choice == discard)
+        {
+            var title = sessions.Count == 1 ? "Discard workout?" : $"Discard {sessions.Count} workouts?";
+            var what = sessions.Count == 1 ? $"{sessions[0].Name} is" : "They're";
+            if (!await dialogs.Confirm(title, $"{what} removed from your history and statistics. This can't be undone.", "Discard"))
+                return;
+            foreach (var s in sessions)
+                store.Data.Sessions.Remove(s);
+            store.Save();
+            await OnAppearingAsync();
+        }
+    }
 
     void Select(DateTime day)
     {

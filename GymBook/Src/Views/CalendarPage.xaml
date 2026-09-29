@@ -102,7 +102,13 @@
 
             <!-- Selected day -->
             <VerticalStackLayout IsVisible="{Binding HasSelection}" Spacing="10">
-                <Label Text="{Binding SelectedTitle}" Style="{StaticResource H3}" />
+                <!-- The date, with the day's ··· at the far end: discard all its workouts, or the recovery details -->
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <Label Text="{Binding SelectedTitle}" Style="{StaticResource H3}" VerticalOptions="Center" />
+                    <ImageButton Grid.Column="1" Source="{StaticResource IconMore}" WidthRequest="36" HeightRequest="30" Padding="6,3"
+                                 BackgroundColor="{StaticResource Surface2}" CornerRadius="15" VerticalOptions="Center"
+                                 Command="{Binding DayOptionsCommand}" />
+                </Grid>
                 <!-- Finished workouts, like the plan days on the Workout tab; tap one for what was done and its stats. -->
                 <Border Style="{StaticResource Card}" Padding="16,6" IsVisible="{Binding SelectedIsEmpty, Converter={StaticResource Not}}">
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding SelectedSessions}">

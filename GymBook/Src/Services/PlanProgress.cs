@@ -52,6 +52,15 @@ public class PlanProgress
     int WeekOf(WorkoutSession s) =>
         s.PlanWeek ?? Math.Max(1, (StatsService.WeekStart(s.StartedAt) - StatsService.WeekStart(_plan.CreatedAt)).Days / 7 + 1);
 
+    /// <summary>Every finished session that counts toward <paramref name="week"/>.</summary>
+    public List<WorkoutSession> SessionsIn(int week) => _sessions.Where(s => WeekOf(s) == week).ToList();
+
+    /// <summary>Whether anything in <paramref name="week"/> is done: a workout or a rest day.</summary>
+    public bool HasAnythingDone(int week) => Enumerable.Range(0, Days.Count).Any(d => IsDayDone(d, week));
+
+    /// <summary>Unmarks every rest day of <paramref name="week"/>.</summary>
+    public static void ClearRestDays(WorkoutPlan plan, int week) => plan.RestDaysDone?.RemoveAll(k => k / 1000 == week);
+
     static int RestKey(int day, int week) => week * 1000 + day;
 
     public static void SetRestDone(WorkoutPlan plan, int day, int week, bool done)

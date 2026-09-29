@@ -316,6 +316,28 @@ public partial class HomeViewModel(
     [RelayCommand]
     Task StartEmpty() => StartWorkoutAsync(workouts, dialogs, workouts.StartEmpty);
 
+    /// <summary>
+    /// Starts a plan week over: every day open again. The week is what's in the calendar, so its workouts are deleted
+    /// (from the calendar, History and stats too) and its rest days unmarked.
+    /// </summary>
+    async Task ResetWeek(WorkoutPlan plan, PlanProgress progress, int week)
+    {
+        var sessions = progress.SessionsIn(week);
+        var message = sessions.Count switch
+        {
+            0 => "Its rest days are marked not done again.",
+            1 => "Its workout is deleted, from the calendar and your stats too. This can't be undone.",
+            _ => $"Its {sessions.Count} workouts are deleted, from the calendar and your stats too. This can't be undone.",
+        };
+        if (!await dialogs.Confirm($"Reset week {week}?", message, "Reset"))
+            return;
+        foreach (var session in sessions)
+            store.Data.Sessions.Remove(session);
+        PlanProgress.ClearRestDays(plan, week);
+        store.Save();
+        Refresh();
+    }
+
     /// <summary>The ··· beside the week's plan: options for the plan itself.</summary>
     [RelayCommand]
     async Task PlanOptions()
@@ -327,9 +349,16 @@ public partial class HomeViewModel(
         var options = new List<string> { "Edit plan" };
         if (others.Count > 0)
             options.Add("Switch plan");
+        // The week shown below: start it over.
+        var week = _week;
+        var progress = new PlanProgress(plan, store.History);
+        var reset = progress.HasAnythingDone(week) ? $"Reset week {week}" : null;
 
-        switch (await dialogs.ActionSheet(plan.Name, null, [.. options]))
+        switch (await dialogs.ActionSheet(plan.Name, reset, [.. options]))
         {
+            case { } choice when choice == reset:
+                await ResetWeek(plan, progress, week);
+                break;
             case "Edit plan":
                 await GoTo($"{Routes.Plan}?id={plan.Id}");
                 break;

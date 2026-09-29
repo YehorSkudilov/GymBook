@@ -8,8 +8,8 @@
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:StatsViewModel">
 
-    <!-- Each time the tab comes into view (IsShowing): the cards rise in one after another, the numbers count up and
-         the charts draw themselves in. The little icons animate while it's on screen. -->
+    <!-- Each time the tab comes into view (IsShowing): the numbers count up and the charts draw themselves in. The
+         cards themselves are just there, no fading in. The little icons animate while it's on screen. -->
     <ContentView.Resources>
         <Style x:Key="StatTile" TargetType="Border" BasedOn="{StaticResource Card}">
             <Setter Property="Padding" Value="14,12" />
@@ -29,7 +29,7 @@
 
             <!-- The totals, with an animated icon each -->
             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
-                <Border Style="{StaticResource StatTile}" controls:Rise.When="{Binding IsShowing}">
+                <Border Style="{StaticResource StatTile}">
                     <Grid ColumnDefinitions="*,Auto">
                         <VerticalStackLayout>
                             <Label controls:CountUp.Text="{Binding TotalWorkouts}" controls:CountUp.Replay="{Binding IsShowing}" Style="{StaticResource StatValue}" />
@@ -38,7 +38,7 @@
                         <controls:StatIconView Grid.Column="1" Icon="Workouts" IsRunning="{Binding IsShowing}" WidthRequest="34" HeightRequest="34" VerticalOptions="Start" />
                     </Grid>
                 </Border>
-                <Border Grid.Column="1" Style="{StaticResource StatTile}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="60">
+                <Border Grid.Column="1" Style="{StaticResource StatTile}">
                     <Grid ColumnDefinitions="*,Auto">
                         <VerticalStackLayout>
                             <Label controls:CountUp.Text="{Binding ThisMonth}" controls:CountUp.Replay="{Binding IsShowing}" Style="{StaticResource StatValue}" />
@@ -47,7 +47,7 @@
                         <controls:StatIconView Grid.Column="1" Icon="Calendar" IsRunning="{Binding IsShowing}" WidthRequest="34" HeightRequest="34" VerticalOptions="Start" />
                     </Grid>
                 </Border>
-                <Border Grid.Row="1" Style="{StaticResource StatTile}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="120">
+                <Border Grid.Row="1" Style="{StaticResource StatTile}">
                     <Grid ColumnDefinitions="*,Auto">
                         <VerticalStackLayout>
                             <Label controls:CountUp.Text="{Binding TotalVolume}" controls:CountUp.Replay="{Binding IsShowing}" Style="{StaticResource StatValue}" />
@@ -56,7 +56,7 @@
                         <controls:StatIconView Grid.Column="1" Icon="Sets" IsRunning="{Binding IsShowing}" WidthRequest="34" HeightRequest="34" VerticalOptions="Start" />
                     </Grid>
                 </Border>
-                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource StatTile}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="180">
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource StatTile}">
                     <Grid ColumnDefinitions="*,Auto">
                         <VerticalStackLayout>
                             <Label controls:CountUp.Text="{Binding Streak}" controls:CountUp.Replay="{Binding IsShowing}" Style="{StaticResource StatValue}" />
@@ -68,7 +68,7 @@
             </Grid>
 
             <!-- How often: every day of the last 16 weeks -->
-            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="220">
+            <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <controls:StatIconView Icon="Calendar" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
@@ -82,7 +82,7 @@
             </Border>
 
             <!-- Strength: overall trend across the main lifts -->
-            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="260">
+            <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <controls:StatIconView Icon="Trend" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
@@ -97,7 +97,7 @@
             </Border>
 
             <!-- Strength: one lift at a time -->
-            <Border Style="{StaticResource Card}" IsVisible="{Binding HasLifts}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="300">
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasLifts}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <controls:StatIconView Icon="Workouts" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
@@ -129,7 +129,7 @@
             </Border>
 
             <!-- Strength: biggest recent gains -->
-            <Border Style="{StaticResource Card}" IsVisible="{Binding HasGains}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="340">
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasGains}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <controls:StatIconView Icon="Target" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
@@ -157,7 +157,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="380">
+            <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <controls:StatIconView Icon="Volume" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
@@ -170,7 +170,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="420">
+            <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <controls:StatIconView Icon="Target" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
@@ -181,7 +181,7 @@
             </Border>
 
             <!-- How long workouts take -->
-            <Border Style="{StaticResource Card}" IsVisible="{Binding HasDuration}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="460">
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasDuration}">
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <controls:StatIconView Icon="Clock" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
@@ -195,7 +195,7 @@
             </Border>
 
             <!-- How the work is split across the body -->
-            <Border Style="{StaticResource Card}" IsVisible="{Binding HasSplit}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="500">
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasSplit}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <controls:StatIconView Icon="Pie" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
@@ -224,7 +224,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="540">
+            <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <controls:StatIconView Icon="Sets" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
@@ -249,7 +249,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="580">
+            <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="8">
                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
                         <controls:StatIconView Icon="Scale" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" VerticalOptions="Start" />
@@ -264,7 +264,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Border Style="{StaticResource Card}" controls:Rise.When="{Binding IsShowing}" controls:Rise.Delay="620">
+            <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="10">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                         <controls:StatIconView Icon="Trophy" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
