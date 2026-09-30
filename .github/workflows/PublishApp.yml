@@ -187,9 +187,10 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      # Only the Android workload - the full `maui` one also pulls in iOS, Mac Catalyst and wasm tooling.
+      # Only the Android workload, at the runner's installed workload version - without --skip-manifest-update
+      # the CLI first updates every workload Visual Studio preinstalled on the image (iOS, Mac Catalyst, wasm...).
       - name: Install MAUI Android workload
-        run: dotnet workload install maui-android
+        run: dotnet workload install maui-android --skip-manifest-update
 
       # =========================
       # KEYSTORE
@@ -348,9 +349,10 @@ jobs:
         with:
           dotnet-version: 10.0.x
 
-      # Only the Windows workload - the full `maui` one also pulls in iOS, Mac Catalyst and wasm tooling.
+      # Only the Windows workload, at the runner's installed workload version - without --skip-manifest-update
+      # the CLI first updates every workload Visual Studio preinstalled on the image (iOS, Mac Catalyst, Android...).
       - name: Install MAUI Windows workload
-        run: dotnet workload install maui-windows
+        run: dotnet workload install maui-windows --skip-manifest-update
 
       # =========================
       # PACKAGE IDENTITY
