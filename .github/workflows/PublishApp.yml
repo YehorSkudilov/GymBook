@@ -502,7 +502,9 @@ jobs:
   build-ios:
     needs: version
     if: ${{ inputs.publish_ios }}
-    runs-on: macos-27
+    # The Xcode 27 image (public preview, Apple silicon), which the current MAUI iOS workload needs. Once Xcode 27 is on
+    # the regular images, macos-latest works again.
+    runs-on: xcode-27
 
     steps:
       # The version job pushed a bump commit, so check out the branch tip rather than the triggering SHA.
