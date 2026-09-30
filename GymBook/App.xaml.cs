@@ -32,7 +32,7 @@ public partial class App : Application
         Page root = _store.Profile.OnboardingDone
             ? new AppShell()
             : _services.GetRequiredService<PlanWizardPage>().ForOnboarding();
-        var window = new Window(root) { Title = "GymBook" };
+        var window = new Window(root) { Title = "Gym Book" };
 #if WINDOWS
         // The layout is designed for phones; open desktop builds at a phone-like size.
         window.Width = 440;

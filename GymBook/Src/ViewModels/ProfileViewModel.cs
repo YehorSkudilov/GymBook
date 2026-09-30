@@ -105,7 +105,7 @@ public partial class ProfileViewModel(
         TrackRir = P.TrackRir;
         DefaultDeloads = P.DefaultDeloads;
         DefaultPeriodization = P.DefaultPeriodization;
-        Version = $"GymBook {AppInfo.Current.VersionString}";
+        Version = $"Gym Book {AppInfo.Current.VersionString}";
         _loading = false;
     }
 
@@ -336,7 +336,7 @@ public partial class ProfileViewModel(
     [RelayCommand]
     async Task Export()
     {
-        await Share.Default.RequestAsync(new ShareFileRequest("GymBook data", new ShareFile(store.ExportJson(), "application/json")));
+        await Share.Default.RequestAsync(new ShareFileRequest("Gym Book data", new ShareFile(store.ExportJson(), "application/json")));
     }
 
     [RelayCommand]

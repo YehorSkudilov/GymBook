@@ -175,7 +175,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         switch (step)
         {
             case Step.Welcome:
-                Title = "Welcome to GymBook";
+                Title = "Welcome to Gym Book";
                 Subtitle = "Your training log that tells you what to lift next. Answer a few questions and we'll build a plan around you.";
                 break;
             case Step.About:

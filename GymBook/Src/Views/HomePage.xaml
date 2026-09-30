@@ -222,7 +222,7 @@
             <Border IsVisible="{Binding HasPlan, Converter={StaticResource Not}}" Style="{StaticResource Card}" Padding="18">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="No active plan" Style="{StaticResource H2}" />
-                    <Label Text="Answer a few questions and GymBook builds a personalised plan with automatic progression." Style="{StaticResource Caption}" />
+                    <Label Text="Answer a few questions and Gym Book builds a personalised plan with automatic progression." Style="{StaticResource Caption}" />
                     <Button Text="Create my plan" Style="{StaticResource PrimaryButton}" Command="{Binding CreatePlanCommand}" />
                 </VerticalStackLayout>
             </Border>

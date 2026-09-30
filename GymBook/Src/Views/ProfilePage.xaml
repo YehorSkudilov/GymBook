@@ -82,7 +82,7 @@
                     <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding SignInCommand}" /></Grid.GestureRecognizers>
                     <VerticalStackLayout VerticalOptions="Center">
                         <Label Text="Sign in to back up and sync" TextColor="{StaticResource Accent}" />
-                        <Label Text="Keep your workouts safe and use GymBook on all your devices" Style="{StaticResource Caption}" FontSize="12" />
+                        <Label Text="Keep your workouts safe and use Gym Book on all your devices" Style="{StaticResource Caption}" FontSize="12" />
                     </VerticalStackLayout>
                     <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                 </Grid>

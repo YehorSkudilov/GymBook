@@ -29,7 +29,7 @@
 		<MauiXamlInflator>SourceGen</MauiXamlInflator>
 
 		<!-- Display name -->
-		<ApplicationTitle>GymBook</ApplicationTitle>
+		<ApplicationTitle>Gym Book</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.yehorskudilov.gymbook</ApplicationId>

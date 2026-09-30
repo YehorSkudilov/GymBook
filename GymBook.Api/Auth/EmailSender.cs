@@ -12,7 +12,7 @@ public class SmtpOptions
     public string Username { get; set; } = "";
     public string Password { get; set; } = "";
     public string FromAddress { get; set; } = "";
-    public string FromName { get; set; } = "GymBook";
+    public string FromName { get; set; } = "Gym Book";
 
     public bool IsConfigured => !string.IsNullOrWhiteSpace(Host) && !string.IsNullOrWhiteSpace(FromAddress);
 }
@@ -123,7 +123,7 @@ public record CodeEmail(string Subject, string Heading, string Intro, string Cod
         TextPrimary = "#F4F6FB", TextSecondary = "#9AA3B5", TextTertiary = "#626B7E", Accent = "#3F7DFF";
     const string Font = "'Open Sans','Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
-    public string ToText() => $"{Heading}\n\n{Intro}\n\n{Code}\n\nIt's valid for 5 minutes.\n\n{Footer}\n\n- GymBook";
+    public string ToText() => $"{Heading}\n\n{Intro}\n\n{Code}\n\nIt's valid for 5 minutes.\n\n{Footer}\n\n- Gym Book";
 
     /// <summary>The styled email; <paramref name="logoSrc"/> is where the logo image is, e.g. a cid: reference to the attached one.</summary>
     public string ToHtml(string logoSrc)
@@ -148,7 +148,7 @@ public record CodeEmail(string Subject, string Heading, string Intro, string Cod
                       <td style="vertical-align:middle;padding-right:10px;">
                         <img src="{E(logoSrc)}" width="32" height="32" alt="" style="display:block;border:0;outline:none;width:32px;height:32px;">
                       </td>
-                      <td style="vertical-align:middle;font-family:{Font};font-size:20px;font-weight:700;color:{TextPrimary};">GymBook</td>
+                      <td style="vertical-align:middle;font-family:{Font};font-size:20px;font-weight:700;color:{TextPrimary};">Gym Book</td>
                     </tr></table>
                   </td></tr>
                   <tr><td style="background:{Surface};border:1px solid {Stroke};border-radius:20px;padding:28px 24px;">

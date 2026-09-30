@@ -74,7 +74,7 @@ jobs:
             Smtp__Username=${{ vars.SMTP_USERNAME }}
             Smtp__Password=${{ secrets.SMTP_PASSWORD }}
             Smtp__FromAddress=${{ vars.SMTP_FROM_ADDRESS }}
-            Smtp__FromName=GymBook
+            Smtp__FromName=Gym Book
 
             # Google sign-in: Web OAuth client ID (leave unset to turn it off)
             Google__ClientId=${{ vars.GOOGLE_WEB_CLIENT_ID }}

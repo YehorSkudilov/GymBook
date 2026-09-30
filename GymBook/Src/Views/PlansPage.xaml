@@ -53,7 +53,7 @@
             <Border Style="{StaticResource Card}" Padding="18">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Build a new plan" Style="{StaticResource H3}" />
-                    <Label Text="Let GymBook generate a plan for your goal, schedule and equipment, start from scratch, or import one you already have." Style="{StaticResource Caption}" />
+                    <Label Text="Let Gym Book generate a plan for your goal, schedule and equipment, start from scratch, or import one you already have." Style="{StaticResource Caption}" />
                     <!-- AI plans left for signed-in users -->
                     <HorizontalStackLayout Spacing="6" IsVisible="{Binding HasAiQuota}">
                         <Image WidthRequest="16" HeightRequest="16" VerticalOptions="Center">

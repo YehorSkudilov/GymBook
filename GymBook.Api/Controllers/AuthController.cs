@@ -115,9 +115,9 @@ public class AuthController(
         try
         {
             await email.SendCodeAsync(user.Email, "reset-password", new CodeEmail(
-                "Your GymBook password reset code",
+                "Your Gym Book password reset code",
                 "Reset your password",
-                "Enter this code in GymBook, then choose a new password.",
+                "Enter this code in Gym Book, then choose a new password.",
                 code,
                 "If you didn't ask to reset your password, you can ignore this email. Your password stays as it is."), ct);
         }

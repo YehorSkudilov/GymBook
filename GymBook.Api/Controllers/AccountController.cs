@@ -90,11 +90,11 @@ public class AccountController(
         try
         {
             return await email.SendCodeAsync(user.Email, "verify-email", new CodeEmail(
-                "Verify your GymBook email",
+                "Verify your Gym Book email",
                 "Verify your email",
-                "Enter this code in GymBook to finish setting up your account.",
+                "Enter this code in Gym Book to finish setting up your account.",
                 code,
-                "If you didn't create a GymBook account, you can ignore this email."), ct);
+                "If you didn't create a Gym Book account, you can ignore this email."), ct);
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {
@@ -161,9 +161,9 @@ public class AccountController(
         try
         {
             if (!await email.SendCodeAsync(newEmail, "change-email", new CodeEmail(
-                    "Confirm your new GymBook email",
+                    "Confirm your new Gym Book email",
                     "Confirm your new email",
-                    "Enter this code in GymBook to sign in with this address from now on.",
+                    "Enter this code in Gym Book to sign in with this address from now on.",
                     code,
                     "If you didn't ask for this, you can ignore this email. Your account stays as it is."), ct))
                 return Problem(statusCode: StatusCodes.Status429TooManyRequests, title: "A code was just sent, or today's codes are used up. Check your inbox and spam, or try again later.");
