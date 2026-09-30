@@ -502,7 +502,7 @@ jobs:
   build-ios:
     needs: version
     if: ${{ inputs.publish_ios }}
-    runs-on: macos-26
+    runs-on: macos-27
 
     steps:
       # The version job pushed a bump commit, so check out the branch tip rather than the triggering SHA.
