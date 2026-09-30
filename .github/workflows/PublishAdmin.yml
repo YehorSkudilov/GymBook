@@ -1,0 +1,74 @@
+name: Publish Admin
+
+on:
+  workflow_dispatch:
+  # Lets Publish.yml call this as a reusable workflow - see that file's deploy-admin job.
+  workflow_call:
+
+jobs:
+
+# ==================================================
+# DEPLOY ADMIN SITE
+# ==================================================
+  deploy-admin:
+    runs-on: ubuntu-latest
+
+    # Only deploy from the main branch
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 20m
+          script: |
+            set -e
+
+            echo "Deploying GymBook admin site..."
+
+            # The same checkout the API deploys from (/opt/GymBook). The lock keeps deploys running side by side
+            # from resetting it at the same time.
+            cd /opt/GymBook
+
+            echo "Pulling latest code..."
+            flock /tmp/gymbook-deploy-git.lock -c "git fetch origin && git reset --hard origin/main"
+
+            cd GymBook.Admin
+
+            # See GymBook.Admin/.env.example.
+            echo "Writing .env..."
+            cat > .env <<'ENVEOF'
+            ADMIN_PORT=${{ vars.ADMIN_PORT }}
+            API_BASE_URL=${{ vars.API_BASE_URL }}
+            SESSION_SECRET=${{ secrets.ADMIN_SESSION_SECRET }}
+            ENVEOF
+
+            echo "Building latest image..."
+            docker compose build --pull
+
+            echo "Restarting container..."
+            docker compose up -d --remove-orphans
+
+            echo "Waiting for the admin site to respond..."
+            PORT=$(grep '^ADMIN_PORT=' .env | cut -d= -f2)
+            for i in $(seq 1 30); do
+              # The sign-in page answers without a session.
+              if curl -fsS "http://127.0.0.1:$PORT/login" > /dev/null; then
+                echo "Admin site is up."
+                break
+              fi
+              if [ "$i" = 30 ]; then
+                echo "Admin site did not respond; recent logs:"
+                docker compose logs --tail 100 admin
+                exit 1
+              fi
+              sleep 2
+            done
+
+            echo "Removing dangling images..."
+            docker image prune -f
+
+            echo "Deployment complete!"

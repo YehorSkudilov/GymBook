@@ -34,7 +34,8 @@ jobs:
             cd /opt/GymBook
 
             echo "Pulling latest code..."
-            git fetch origin && git reset --hard origin/main
+            # The lock keeps deploys running side by side (API, website, admin) from resetting it at the same time.
+            flock /tmp/gymbook-deploy-git.lock -c "git fetch origin && git reset --hard origin/main"
 
             cd GymBook.Api
 
@@ -78,6 +79,9 @@ jobs:
 
             # Google sign-in: Web OAuth client ID (leave unset to turn it off)
             Google__ClientId=${{ vars.GOOGLE_WEB_CLIENT_ID }}
+
+            # Admin site: accounts made SuperAdmin at startup (comma-separated; sign up in the app first)
+            Admin__BootstrapEmails=${{ vars.ADMIN_BOOTSTRAP_EMAILS }}
 
             # Rate limits
             RateLimiting__AuthPerMinute=10

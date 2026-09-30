@@ -41,6 +41,11 @@ on:
         type: boolean
         default: true
 
+      publish_ios:
+        description: "iOS (TestFlight)"
+        type: boolean
+        default: true
+
 jobs:
 
   # ==================================================
@@ -53,7 +58,21 @@ jobs:
     secrets: inherit
 
   # ==================================================
-  # VERSION BUMP + BUILD ANDROID/WINDOWS + RELEASE
+  # DEPLOY WEBSITE
+  # ==================================================
+  deploy-web:
+    uses: ./.github/workflows/PublishWeb.yml
+    secrets: inherit
+
+  # ==================================================
+  # DEPLOY ADMIN SITE
+  # ==================================================
+  deploy-admin:
+    uses: ./.github/workflows/PublishAdmin.yml
+    secrets: inherit
+
+  # ==================================================
+  # VERSION BUMP + BUILD ANDROID/WINDOWS/IOS + RELEASE
   # ==================================================
   publish-app:
     uses: ./.github/workflows/PublishApp.yml
@@ -62,4 +81,5 @@ jobs:
       release_channel: ${{ inputs.release_channel }}
       publish_android: ${{ inputs.publish_android }}
       publish_windows: ${{ inputs.publish_windows }}
+      publish_ios: ${{ inputs.publish_ios }}
     secrets: inherit

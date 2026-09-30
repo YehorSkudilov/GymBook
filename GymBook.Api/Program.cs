@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using GymBook.Api;
+using GymBook.Api.Admin;
 using GymBook.Api.Auth;
 using GymBook.Api.Data;
 using GymBook.Api.Plans;
@@ -81,6 +82,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             RequireSignedTokens = true,
             ClockSkew = TimeSpan.FromSeconds(30),
             NameClaimType = "sub",
+            RoleClaimType = AuthPolicies.RoleClaim,
         };
     });
 
@@ -88,7 +90,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // endpoints' AnyAccount policy, which is where the email gets verified (or corrected).
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().RequireClaim(AuthPolicies.EmailVerifiedClaim, "true").Build())
-    .AddPolicy(AuthPolicies.AnyAccount, p => p.RequireAuthenticatedUser());
+    .AddPolicy(AuthPolicies.AnyAccount, p => p.RequireAuthenticatedUser())
+    // The admin site (see Admin/AdminRoles.cs).
+    .AddPolicy(AuthPolicies.AdminAccess, p => p.RequireAuthenticatedUser().RequireClaim(AuthPolicies.EmailVerifiedClaim, "true")
+        .RequireRole(AdminRoles.Admin, AdminRoles.SuperAdmin))
+    .AddPolicy(AuthPolicies.SuperAdminOnly, p => p.RequireAuthenticatedUser().RequireClaim(AuthPolicies.EmailVerifiedClaim, "true")
+        .RequireRole(AdminRoles.SuperAdmin));
 
 var authPerMinute = builder.Configuration.GetValue("RateLimiting:AuthPerMinute", 10);
 builder.Services.AddRateLimiter(o =>
@@ -151,6 +158,10 @@ if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Databas
     using var scope = app.Services.CreateScope();
     scope.ServiceProvider.GetRequiredService<ApiDbContext>().Database.Migrate();
 }
+
+// The first SuperAdmin(s), from Admin__BootstrapEmails.
+using (var scope = app.Services.CreateScope())
+    await AdminBootstrapper.RunAsync(scope.ServiceProvider, app.Configuration);
 
 if (!app.Environment.IsDevelopment())
 {

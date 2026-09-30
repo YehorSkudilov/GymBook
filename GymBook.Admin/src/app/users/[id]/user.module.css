@@ -1,0 +1,152 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  justify-self: start;
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.back:hover {
+  color: var(--text);
+}
+
+/* ---------- Header ---------- */
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+}
+
+.heroText {
+  display: grid;
+  gap: 6px;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.heroText h1 {
+  font-size: 26px;
+}
+
+.heroMeta {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  gap: 8px 28px;
+  margin: 0;
+}
+
+.heroMeta dt,
+.facts dt {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.heroMeta dd,
+.facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .heroMeta {
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+/* ---------- Profile facts ---------- */
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  margin: 0;
+}
+
+/* ---------- Plans ---------- */
+
+.plans {
+  display: grid;
+  gap: 10px;
+}
+
+.plan {
+  display: grid;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.planActive {
+  box-shadow: inset 0 0 0 1.5px var(--success);
+}
+
+.planTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.plan .faint {
+  font-size: 12px;
+}
+
+/* ---------- AI quota ---------- */
+
+.quotas {
+  display: grid;
+  gap: 18px;
+}
+
+.quota {
+  display: grid;
+  gap: 8px;
+}
+
+.quotaTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+}
+
+/* ---------- Actions ---------- */
+
+.actions {
+  display: grid;
+}
+
+.actionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(44, 50, 64, 0.6);
+}
+
+.actionRow:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.actionRow:first-child {
+  padding-top: 0;
+}
+
+.actionRow > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.actionRow span {
+  color: var(--text-3);
+  font-size: 13px;
+}

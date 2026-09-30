@@ -15,6 +15,13 @@ public class AppUser : IdentityUser
     /// <summary>Bumped on every sync write; each written record is stamped with it so clients can pull "everything after N".</summary>
     [ConcurrencyCheck]
     public long SyncVersion { get; set; }
+
+    /// <summary>
+    /// Null for everyone but the people running Gym Book: <see cref="Admin.AdminRoles.Admin"/> or
+    /// <see cref="Admin.AdminRoles.SuperAdmin"/>, which open the admin site (see <see cref="Admin.AdminRoles"/>).
+    /// </summary>
+    [MaxLength(16)]
+    public string? AdminRole { get; set; }
 }
 
 public class RefreshToken

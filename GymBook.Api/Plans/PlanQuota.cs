@@ -81,9 +81,8 @@ public class PlanQuota(ApiDbContext db, PlanQuotaSettings settings, TimeProvider
 
         var now = time.GetUtcNow();
         var since = now - options.Window;
-        // Ones that fell out of the window aren't needed any more.
-        await db.PlanGenerations.Where(g => g.UserId == userId && g.Kind == kind && g.CreatedAt <= since).ExecuteDeleteAsync(ct);
-        var used = await db.PlanGenerations.CountAsync(g => g.UserId == userId && g.Kind == kind, ct);
+        // Older ones are kept (not deleted once out of the window) for the admin site's AI usage history.
+        var used = await db.PlanGenerations.CountAsync(g => g.UserId == userId && g.Kind == kind && g.CreatedAt > since, ct);
         if (used >= options.Limit)
             return null;
 

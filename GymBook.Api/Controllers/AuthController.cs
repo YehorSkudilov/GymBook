@@ -97,6 +97,9 @@ public class AuthController(
             if (!linked.Succeeded)
                 return Problem(statusCode: StatusCodes.Status500InternalServerError, title: "Couldn't link your Google account.");
         }
+        // Password sign-in refuses these through Identity's lockout; Google sign-in has to check itself.
+        if (Admin.AccountStatus.IsDisabled(user))
+            return Problem(statusCode: StatusCodes.Status403Forbidden, title: "This account has been disabled.");
         return await tokens.IssueAsync(user, ct: ct);
     }
 

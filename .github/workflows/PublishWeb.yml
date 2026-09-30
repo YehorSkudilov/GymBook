@@ -1,0 +1,76 @@
+name: Publish Web
+
+on:
+  workflow_dispatch:
+  # Lets Publish.yml call this as a reusable workflow - see that file's deploy-web job.
+  workflow_call:
+
+jobs:
+
+# ==================================================
+# DEPLOY WEBSITE
+# ==================================================
+  deploy-web:
+    runs-on: ubuntu-latest
+
+    # Only deploy from the main branch
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          command_timeout: 20m
+          script: |
+            set -e
+
+            echo "Deploying GymBook website..."
+
+            # The same checkout the API deploys from (/opt/GymBook). The lock keeps deploys running side by side
+            # from resetting it at the same time.
+            cd /opt/GymBook
+
+            echo "Pulling latest code..."
+            flock /tmp/gymbook-deploy-git.lock -c "git fetch origin && git reset --hard origin/main"
+
+            cd GymBook.Web
+
+            # See GymBook.Web/.env.example. Store links are baked into the pages at build time; an empty one shows
+            # that platform as "Coming soon".
+            echo "Writing .env..."
+            cat > .env <<'ENVEOF'
+            WEB_PORT=${{ vars.WEB_PORT }}
+            NEXT_PUBLIC_SITE_URL=${{ vars.WEB_SITE_URL }}
+            NEXT_PUBLIC_APP_STORE_URL=${{ vars.APP_STORE_URL }}
+            NEXT_PUBLIC_PLAY_STORE_URL=${{ vars.PLAY_STORE_URL }}
+            NEXT_PUBLIC_MS_STORE_URL=${{ vars.MS_STORE_URL }}
+            ENVEOF
+
+            echo "Building latest image..."
+            docker compose build --pull
+
+            echo "Restarting container..."
+            docker compose up -d --remove-orphans
+
+            echo "Waiting for the site to respond..."
+            PORT=$(grep '^WEB_PORT=' .env | cut -d= -f2)
+            for i in $(seq 1 30); do
+              if curl -fsS "http://127.0.0.1:$PORT/health" > /dev/null; then
+                echo "Website is up."
+                break
+              fi
+              if [ "$i" = 30 ]; then
+                echo "Website did not respond; recent logs:"
+                docker compose logs --tail 100 web
+                exit 1
+              fi
+              sleep 2
+            done
+
+            echo "Removing dangling images..."
+            docker image prune -f
+
+            echo "Deployment complete!"
