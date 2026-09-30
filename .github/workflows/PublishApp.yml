@@ -96,6 +96,7 @@ jobs:
       new_version: ${{ steps.bump.outputs.version }}
       version_code: ${{ steps.bump.outputs.version_code }}
       bumped: ${{ steps.bump.outputs.bumped }}
+      xcode_version: ${{ steps.set_xcode.outputs.xcode_version }}
 
     steps:
       - name: Check a platform is selected
@@ -103,6 +104,16 @@ jobs:
         run: |
           echo "Select at least one platform to publish"
           exit 1
+
+      # The Xcode the iOS build uses: the IOS_XCODE_VERSION variable when set (it must be one installed on the macOS
+      # runner, e.g. 26.6), otherwise the newest stable one there.
+      - name: Set Xcode version
+        id: set_xcode
+        run: |
+          XCODE_VERSION="${{ vars.IOS_XCODE_VERSION }}"
+          XCODE_VERSION="${XCODE_VERSION:-latest-stable}"
+          echo "Xcode version: $XCODE_VERSION"
+          echo "xcode_version=$XCODE_VERSION" >> $GITHUB_OUTPUT
 
       - uses: actions/checkout@v6
 
@@ -512,13 +523,12 @@ jobs:
       # XCODE + .NET + MAUI
       # =========================
 
-      # The MAUI iOS workload only builds with the Xcode version it was made for. The newest stable one usually
-      # matches the newest workload; if the build complains about the Xcode version, pin it in the IOS_XCODE_VERSION
-      # variable (e.g. 26.0).
-      - name: Select Xcode
-        uses: maxim-lobanov/setup-xcode@v1
+      # The MAUI iOS workload only builds with the Xcode version it was made for. The version job picks it (see its
+      # Set Xcode version step); pin it with the IOS_XCODE_VERSION variable if the build complains.
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1.6.0
         with:
-          xcode-version: ${{ vars.IOS_XCODE_VERSION || 'latest-stable' }}
+          xcode-version: ${{ needs.version.outputs.xcode_version }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
