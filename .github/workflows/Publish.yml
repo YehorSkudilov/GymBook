@@ -31,6 +31,16 @@ on:
           - beta
           - production
 
+      publish_android:
+        description: "Android (Google Play)"
+        type: boolean
+        default: true
+
+      publish_windows:
+        description: "Windows (Microsoft Store)"
+        type: boolean
+        default: true
+
 jobs:
 
   # ==================================================
@@ -43,11 +53,13 @@ jobs:
     secrets: inherit
 
   # ==================================================
-  # VERSION BUMP + BUILD ANDROID + RELEASE
+  # VERSION BUMP + BUILD ANDROID/WINDOWS + RELEASE
   # ==================================================
   publish-app:
     uses: ./.github/workflows/PublishApp.yml
     with:
       version_bump: ${{ inputs.version_bump }}
       release_channel: ${{ inputs.release_channel }}
+      publish_android: ${{ inputs.publish_android }}
+      publish_windows: ${{ inputs.publish_windows }}
     secrets: inherit

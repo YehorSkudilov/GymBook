@@ -34,6 +34,16 @@ on:
           - beta
           - production
 
+      publish_android:
+        description: "Android (Google Play)"
+        type: boolean
+        default: true
+
+      publish_windows:
+        description: "Windows (Microsoft Store)"
+        type: boolean
+        default: true
+
   # Lets Publish.yml call this as a reusable workflow instead of keeping its own copy
   # of the version-bump/build/release jobs - see that file's publish-app job. Inputs
   # are re-declared as plain strings since workflow_call doesn't support the `choice`
@@ -53,6 +63,16 @@ on:
         type: string
         default: internal
 
+      publish_android:
+        description: "Android (Google Play)"
+        type: boolean
+        default: true
+
+      publish_windows:
+        description: "Windows (Microsoft Store)"
+        type: boolean
+        default: true
+
 jobs:
 
   # ==================================================
@@ -68,6 +88,12 @@ jobs:
       bumped: ${{ steps.bump.outputs.bumped }}
 
     steps:
+      - name: Check a platform is selected
+        if: ${{ !inputs.publish_android && !inputs.publish_windows }}
+        run: |
+          echo "Select at least one platform to publish"
+          exit 1
+
       - uses: actions/checkout@v6
 
       - name: Bump MAUI version
@@ -132,8 +158,9 @@ jobs:
   # BUILD ANDROID
   # ==================================================
 
-  build:
+  build-android:
     needs: version
+    if: ${{ inputs.publish_android }}
     runs-on: windows-latest
 
     steps:
@@ -287,21 +314,168 @@ jobs:
           status: completed
 
   # ==================================================
+  # BUILD WINDOWS
+  # ==================================================
+
+  build-windows:
+    needs: version
+    if: ${{ inputs.publish_windows }}
+    runs-on: windows-latest
+
+    steps:
+      # The version job pushed a bump commit, so check out the branch tip rather than the triggering SHA.
+      - name: Checkout GymBook
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
+          path: GymBook
+
+      - name: Checkout AppSkeleton
+        uses: actions/checkout@v6
+        with:
+          repository: YehorSkudilov/AppSkeleton
+          token: ${{ secrets.REPO_TOKEN }}
+          path: AppSkeleton
+
+      # =========================
+      # .NET + MAUI
+      # =========================
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      # =========================
+      # PACKAGE IDENTITY
+      # =========================
+
+      # The Store only accepts a package whose identity matches the one reserved in Partner Center
+      # (Product identity page): set it in the MSSTORE_PACKAGE_NAME, MSSTORE_PUBLISHER and
+      # MSSTORE_PUBLISHER_DISPLAY_NAME variables. The Store needs the fourth version part to be 0.
+      - name: Set package identity
+        shell: pwsh
+        env:
+          MSSTORE_PACKAGE_NAME: ${{ vars.MSSTORE_PACKAGE_NAME }}
+          MSSTORE_PUBLISHER: ${{ vars.MSSTORE_PUBLISHER }}
+          MSSTORE_PUBLISHER_DISPLAY_NAME: ${{ vars.MSSTORE_PUBLISHER_DISPLAY_NAME }}
+        run: |
+          foreach ($name in "MSSTORE_PACKAGE_NAME", "MSSTORE_PUBLISHER", "MSSTORE_PUBLISHER_DISPLAY_NAME") {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "$name variable is not set"
+            }
+          }
+
+          $file = Resolve-Path "GymBook/GymBook/Platforms/Windows/Package.appxmanifest"
+          [xml]$xml = Get-Content $file -Raw
+
+          $xml.Package.Identity.Name = $env:MSSTORE_PACKAGE_NAME
+          $xml.Package.Identity.Publisher = $env:MSSTORE_PUBLISHER
+          $xml.Package.Identity.Version = "${{ needs.version.outputs.new_version }}.0"
+          $xml.Package.Properties.PublisherDisplayName = $env:MSSTORE_PUBLISHER_DISPLAY_NAME
+
+          $xml.Save($file.Path)
+
+      # =========================
+      # BUILD MSIX
+      # =========================
+
+      # Local builds stay unpackaged (WindowsPackageType=None in the csproj); CI packages it as MSIX.
+      # Left unsigned - the Store signs it on ingestion.
+      - name: Publish Windows MSIX
+        shell: pwsh
+        run: |
+          dotnet publish "${{ env.PROJECT_PATH }}" `
+            -c Release `
+            -f net10.0-windows10.0.19041.0 `
+            /p:RuntimeIdentifierOverride=win-x64 `
+            /p:WindowsPackageType=MSIX `
+            /p:GenerateAppxPackageOnBuild=true `
+            /p:AppxPackageSigningEnabled=false `
+            "/p:ApiBaseUrl=${{ vars.API_BASE_URL }}" `
+            "/p:GoogleWebClientId=${{ vars.GOOGLE_WEB_CLIENT_ID }}"
+
+      # =========================
+      # FIND MSIX
+      # =========================
+
+      - name: Find MSIX
+        id: find_msix
+        shell: pwsh
+        run: |
+          # AppPackages also holds the Windows App SDK runtime packages under Dependencies - skip those.
+          $file = Get-ChildItem -Recurse -Filter *.msix |
+            Where-Object { $_.FullName -like "*AppPackages*" -and $_.FullName -notlike "*\Dependencies\*" } |
+            Select-Object -First 1
+
+          if ($null -eq $file) {
+            Write-Host "No MSIX found"
+            Get-ChildItem -Recurse -Filter *.msix
+            throw "MSIX not found"
+          }
+
+          $posix = $file.FullName -replace "\\", "/"
+
+          Write-Host "MSIX: $posix"
+          echo "file=$posix" >> $env:GITHUB_OUTPUT
+
+      # =========================
+      # UPLOAD ARTIFACT
+      # =========================
+
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msix
+          path: ${{ steps.find_msix.outputs.file }}
+
+      # =============================
+      # MICROSOFT STORE UPLOAD
+      # =============================
+
+      # Needs a Microsoft Entra app added to Partner Center (Account settings > User management >
+      # Microsoft Entra applications, Manager role): AZURE_AD_TENANT_ID, AZURE_AD_CLIENT_ID,
+      # AZURE_AD_CLIENT_SECRET and MSSTORE_SELLER_ID secrets, plus the app's Store ID (9N...)
+      # in the MSSTORE_PRODUCT_ID variable. Creates and commits a new submission.
+      - name: Setup Microsoft Store CLI
+        uses: microsoft/setup-msstore-cli@v1
+
+      - name: Upload MSIX to Microsoft Store
+        shell: pwsh
+        run: |
+          msstore reconfigure `
+            --tenantId "${{ secrets.AZURE_AD_TENANT_ID }}" `
+            --sellerId "${{ secrets.MSSTORE_SELLER_ID }}" `
+            --clientId "${{ secrets.AZURE_AD_CLIENT_ID }}" `
+            --clientSecret "${{ secrets.AZURE_AD_CLIENT_SECRET }}"
+          if ($LASTEXITCODE -ne 0) { throw "msstore reconfigure failed" }
+
+          msstore publish "${{ steps.find_msix.outputs.file }}" -id "${{ vars.MSSTORE_PRODUCT_ID }}"
+          if ($LASTEXITCODE -ne 0) { throw "msstore publish failed" }
+
+  # ==================================================
   # RELEASE
   # ==================================================
 
   release:
-    needs: [version, build]
+    needs: [version, build-android, build-windows]
+    # Runs once every selected platform succeeded - an unselected one is skipped, not failed.
+    if: ${{ !cancelled() && needs.version.result == 'success' && !contains(needs.*.result, 'failure') }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Download AAB
+        if: ${{ inputs.publish_android }}
         uses: actions/download-artifact@v4
         with:
           name: android-aab
           path: dist
 
       - name: Download APK
+        if: ${{ inputs.publish_android }}
         uses: actions/download-artifact@v4
         with:
           name: android-apk
