@@ -35,8 +35,8 @@
 		<ApplicationId>com.yehorskudilov.gymbook</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.25</ApplicationDisplayVersion>
-		<ApplicationVersion>1000025</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.27</ApplicationDisplayVersion>
+		<ApplicationVersion>1000027</ApplicationVersion>
 
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
