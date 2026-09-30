@@ -53,7 +53,8 @@
 	</ItemGroup>
 	<!-- iOS -->
 	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'ios'">
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="1" />
+		<!-- The App Store rejects icons with transparency, so fill the background with the app's colour. -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="1" Color="#0B0D12" />
 	</ItemGroup>
 	<!-- macOS (MacCatalyst) -->
 	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'maccatalyst'">
