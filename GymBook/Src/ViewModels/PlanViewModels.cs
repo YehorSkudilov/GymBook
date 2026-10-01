@@ -578,7 +578,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
     /// <summary>After any edit: nothing is saved, the page just shows it (and that there are unsaved changes).</summary>
     void Edited() => Refresh();
 
-    /// <summary>"Save changes" in the plan's ··· menu: the draft becomes the plan.</summary>
+    /// <summary>Save in the title bar, or "Save changes" in the plan's ··· menu: the draft becomes the plan.</summary>
     [RelayCommand]
     void Save()
     {

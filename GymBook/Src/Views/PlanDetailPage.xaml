@@ -16,6 +16,16 @@
         <BackButtonBehavior Command="{Binding BackCommand}" />
     </Shell.BackButtonBehavior>
 
+    <!-- The title, with Save at the far end of the bar while there are unsaved changes (also in the ··· menu). -->
+    <Shell.TitleView>
+        <Grid ColumnDefinitions="*,Auto" Padding="0,0,10,0">
+            <Label Text="Edit plan" TextColor="{StaticResource TextPrimary}" FontFamily="OpenSansSemibold" FontSize="20"
+                   VerticalOptions="Center" LineBreakMode="TailTruncation" />
+            <Button Grid.Column="1" Text="Save" Style="{StaticResource SmallButton}" BackgroundColor="{StaticResource Accent}" TextColor="White"
+                    VerticalOptions="Center" IsVisible="{Binding HasChanges}" Command="{Binding SaveCommand}" />
+        </Grid>
+    </Shell.TitleView>
+
     <Grid RowDefinitions="*,Auto">
         <ScrollView>
             <VerticalStackLayout Padding="0,4,0,24" Spacing="18">
@@ -25,10 +35,10 @@
                     <VerticalStackLayout Spacing="2">
                         <Label Text="{Binding Name}" Style="{StaticResource H2}" TextColor="{StaticResource Accent}" LineBreakMode="TailTruncation" />
                         <Label Text="{Binding Meta}" Style="{StaticResource Caption}" FontSize="12" />
-                        <!-- Edits aren't saved until "Save changes" in the ··· menu. -->
+                        <!-- Edits aren't saved until Save in the title bar (or "Save changes" in the ··· menu). -->
                         <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource WarningSoft}" IsVisible="{Binding HasChanges}"
                                 HorizontalOptions="Start" Padding="8,2" Margin="0,4,0,0">
-                            <Label Text="Unsaved changes · save from ···" TextColor="{StaticResource Warning}" FontSize="11" FontFamily="OpenSansSemibold" />
+                            <Label Text="Unsaved changes" TextColor="{StaticResource Warning}" FontSize="11" FontFamily="OpenSansSemibold" />
                         </Border>
                     </VerticalStackLayout>
                     <Border Grid.Column="1" Style="{StaticResource Pill}" BackgroundColor="{StaticResource SuccessSoft}"
