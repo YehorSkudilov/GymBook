@@ -1,9 +1,13 @@
 # Exercise library rewrite — handoff (2026-10-01)
 
+**Current continuation status is in the root [`HANDOFF.md`](../../HANDOFF.md); it supersedes all progress snapshots below.**
+This file remains the reference for exercise-library structure and curation rules.
+
 The scraped free-exercise-db catalogue (ExerciseCatalog.json, tools/import-exercises.mjs, photos) was deleted and
 replaced by a hand-written library in `GymBook/Src/Services/Exercises/`:
 
-- `ExerciseLibrary.cs` — core: `Def` type, `Find`, `Canonical`/`IsAlias`, `Details`, `Thumbnail` (video thumbnail).
+- `ExerciseLibrary.cs` — core: `Def` type, `Find`, `Canonical`/`IsAlias`, `Details`, `Thumbnail` (bundled WebP path,
+  null when the generated asset manifest has no image for that exercise).
 - `ExerciseLibrary.<Region>.cs` — 12 region files (Chest, Back, Shoulders, Arms, Legs, PosteriorChain, Core, Neck,
   Power, Cardio, Pilates, Mobility), 734 exercises with Summary, Steps, Tips, Category, Level, Hold, Video.
 - `ExerciseLibrary.Aliases.cs` — 660 old dataset ids → new ids. Never change or remove an id; rename freely.
@@ -14,11 +18,12 @@ YouTube player + form tips), exercise list kind chips (Pilates/Yoga/Stretching/M
 DataStore.MigrateExerciseIds (called from HomeViewModel), AiPlanService candidates skip Stretch/Yoga/Mobility,
 PlanGenerator ids, Wear csproj links `Exercises\*.cs`.
 
-**Not built or tested yet.** One compile error (raw string `$$"""` in ExerciseViewModels.VideoPage) was fixed.
+**The app has not been built or tested.** Fractional video chapter times are supported by `ExerciseVideo` doubles;
+YouTube URLs round those values to integer seconds.
 
 ## Left to do
 
-Done 2026-10-01 (second session): all 734 exercises have a verified video. Mobility picks are in
+Earlier-session snapshot (superseded by root `HANDOFF.md`): all 734 exercises had an initial video. Mobility picks are in
 `logs/videos-Mobility.md`, the 11 former gaps in `logs/videos-extra.md`, Chest log now has real titles. The six
 "weak" picks were re-checked against their Summaries and kept.
 
@@ -38,8 +43,8 @@ outdoor_cycling kept (no closer match exists on YouTube).
 - `CURATE_BRIEF.md` + `curate/chunks.json`: how the reputable-source video curation (fourth session, multi-agent) picked
   videos and timecodes; 35 chunks of ~22 exercises.
 - `thumbs.mjs`: the AI exercise pictures (OpenAI gpt-image-2, low quality, one consistent style) into
-  `GymBook/Resources/Raw/exercises/<id>.webp`; needs OPENAI_API_KEY and sharp. Paced to 5 images a minute (the
-  account limit); re-running skips existing files, so a new exercise only needs `--only <id>`.
+  `GymBook/Resources/Raw/exercises/<id>.webp`; needs OPENAI_API_KEY and sharp. Re-running skips existing files;
+  project keys are paced individually with `--per-minute`, and concurrent workers must have disjoint `--only` sets.
 
 - `node check.mjs` — validates every region file (ids, names, enums, required ids), writes `library.json`, prints
   per-file counts and how many have a video. Run after any edit.
