@@ -12,21 +12,12 @@ remove an id.
   736 (`node tools/exercises/sync-thumbnail-manifest.mjs` refreshes it). The website mockup's four pictures are in
   `GymBook.Web/public/exercises/` and `PhoneMockup.tsx` uses `/exercises/<id>.webp`. The OpenAI keys that were here
   are no longer needed and were removed (they expire 2026-10-02 anyway).
-- **Offline animations (in progress).** The exercise page has an "Animation | Video" toggle above the
-  demonstration. It opens on the animation every time. Offline, the video half is greyed out and can't be picked, and
-  the page goes back to the animation when the connection drops. When the connection comes back, the video loads again
-  from scratch. The web view stays invisible until the player page has loaded, and a failed load is cleared without
-  being shown (`YouTubePlayer.LoadFailed`), so no connection error page is ever visible. The animations are short
-  silent looping MP4s (`Resources/Raw/exercise-animations/<id>.mp4`, 288 px, 24 fps, ~40–70 KB each; a GIF of the same
-  frames was ~10× bigger) played by CommunityToolkit.Maui.MediaElement 10.0.0 (registered in MauiProgram with no
-  Android foreground service, TextureView). Until an exercise has one, its picture shows in its place.
-  Made by `tools/exercises/veo.mjs` with Google Veo 3.1 Lite (Gemini API, GEMINI_API_KEY): the thumbnail is the
-  first and last frame of an 8 s clip (the only length Veo takes with both), so the same figure does one rep and
-  the clip loops; cropped to a square around the movement, silent. $0.05/s → $0.40 a clip, only successful clips are
-  charged; `--max-clips` is a hard limit. Raw clips are kept (git-ignored) in `tools/exercises/veo-raw/` for
-  re-cropping (`--recrop`). Tried and dropped: gpt-image storyboards (the person changed every frame, interpolation
-  ghosted), a code-drawn rig (not detailed enough), Sora (shut down 2026-09-24). Known Veo quirk: the blue muscle
-  glow sometimes spreads to the calves mid-rep. First batch: 28 common exercises; the rest await the owner's go.
+- **Exercise page: Picture | Video toggle.** A toggle above the demonstration; it opens on the exercise's picture
+  every time. Offline the video half is greyed out and can't be picked, and the page goes back to the picture when
+  the connection drops; when it's back the video loads afresh. The web view stays invisible until the player page
+  has loaded, and a failed load is cleared without being shown (`YouTubePlayer.LoadFailed`), so no connection error
+  page is ever visible. (Generated offline animations were tried and dropped: gpt-image storyboards, a code-drawn
+  rig and Veo clips; a bought animation library may come later.)
 - **Search, filters, replace.** `Src/Services/ExercisePatterns.cs` sorts every exercise (custom ones by name) into a
   movement pattern (chest press, rear delt, hinge, row...). Search shows a "Similar exercises" section after the
   matches: the rest of a pattern the query names ("reverse flys" → Reverse Pec Deck, Face Pull), or the closest
@@ -75,10 +66,8 @@ rounds).
 - Pictures in exercise rows, plan/workout cards, home and calendar strips (`AspectFill`, `Margin="-1"`); custom
   exercises keep their initials.
 - Exercise page: embedded video starts/ends at the set times, including fractional ones.
-- Exercise page media toggle: opens on the animation; the MP4 loops silently on Android, iOS and Windows (and stops
-  when leaving the page); airplane mode on the video greys the toggle and switches to the animation; back online the
-  video loads; no web view error page ever. NuGet restore with MediaElement's AndroidX Media3 packages next to the
-  Play services ones.
+- Exercise page Picture | Video toggle: opens on the picture; airplane mode on the video greys the toggle and switches
+  to the picture; back online the video loads; no web view error page ever.
 - Exercises tab: "reverse flys", "military press", "pec dec"; the "Similar exercises" heading; filter sheet levels
   shrinking as upper ones are picked, counts; muscle chips hiding; replace (Similar) for a bench press, a reverse fly.
 

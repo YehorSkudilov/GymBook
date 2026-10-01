@@ -2,7 +2,7 @@ namespace GymBook.Controls;
 
 /// <summary>
 /// Two halves of one toggle: a setting's defaults, or its own ("Use defaults | Custom"), like the reps popup's
-/// Exact | Range, or the exercise page's Animation | Video. Bind <see cref="IsOwn"/> both ways; tapping a half sets it.
+/// Exact | Range, or the exercise page's Picture | Video. Bind <see cref="IsOwn"/> both ways; tapping a half sets it.
 /// With <see cref="OwnEnabled"/> false the second half is greyed out and can't be chosen.
 /// </summary>
 public class ModeToggle : ContentView

@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Controls;
@@ -296,25 +295,20 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     public string WatchText => HasVideo ? "Open in YouTube" : "Search form videos";
     ExerciseVideo? _video;
 
-    // The demonstration: a looping animation video shipped in the app (or the exercise's picture until it has one), and
-    // the YouTube video. The animation shows first every time the page opens; the video only with a connection,
-    // so the web view never gets to show a connection error.
+    // The demonstration: the exercise's picture, shipped in the app, and the YouTube video. The picture shows first
+    // every time the page opens; the video only with a connection, so the web view never gets to show a connection
+    // error.
     [ObservableProperty] bool hasMedia;
     [ObservableProperty] bool hasMediaChoice;
-    [ObservableProperty] bool hasAnimation;
-    /// <summary>The animation video while it's on screen (null otherwise, which stops it).</summary>
-    [ObservableProperty] MediaSource? animation;
-    [ObservableProperty] bool hasAnimationVideo;
-    /// <summary>The exercise's picture: under the animation while it starts, or in its place when there's none.</summary>
+    [ObservableProperty] bool hasPicture;
     [ObservableProperty] ImageSource? picture;
     [ObservableProperty] bool showVideo;
     [ObservableProperty] bool canShowVideo;
     [ObservableProperty] bool showsVideo;
-    [ObservableProperty] bool showsAnimation;
+    [ObservableProperty] bool showsPicture;
     [ObservableProperty] bool videoOffline;
-    /// <summary>The player's embed URL; null whenever the video isn't on screen (offline, the animation chosen, the page left).</summary>
+    /// <summary>The player's embed URL; null whenever the video isn't on screen (offline, the picture chosen, the page left).</summary>
     [ObservableProperty] string? videoUrl;
-    string? _animation;
     bool _visible, _videoFailed;
     [ObservableProperty] string tags = "";
     [ObservableProperty] bool hasTags;
@@ -326,7 +320,7 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
         _id = query["id"]?.ToString();
-        // Opening an exercise always starts on the animation.
+        // Opening an exercise always starts on the picture.
         ShowVideo = false;
     }
 
@@ -354,12 +348,10 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         var details = ExerciseLibrary.Details(ex.Id);
         _video = details?.Video;
         HasVideo = _video != null;
-        _animation = ExerciseLibrary.Animation(ex.Id);
         Picture = ExerciseLibrary.Thumbnail(ex.Id) is { } thumbnail
             ? ImageSource.FromStream(async _ => await FileSystem.OpenAppPackageFileAsync(thumbnail))
             : null;
-        HasAnimationVideo = _animation != null;
-        HasAnimation = HasAnimationVideo || Picture != null;
+        HasPicture = Picture != null;
         UpdateMedia();
         Tags = details == null ? "" : $"{details.Category} · {details.Level}";
         HasTags = details != null;
@@ -419,7 +411,7 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         UpdateMedia();
     });
 
-    /// <summary>The player couldn't load the video (its page was cleared before showing): back to the animation.</summary>
+    /// <summary>The player couldn't load the video (its page was cleared before showing): back to the picture.</summary>
     public void VideoLoadFailed()
     {
         _videoFailed = true;
@@ -427,23 +419,20 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     }
 
     /// <summary>
-    /// Which of the animation and the video shows. Without a connection the animation does and the video can't be
-    /// chosen; when the connection is back the video can be chosen again and loads afresh (its URL went through null).
+    /// Which of the picture and the video shows. Without a connection the picture does and the video can't be chosen;
+    /// when the connection is back the video can be chosen again and loads afresh (its URL went through null).
     /// </summary>
     void UpdateMedia()
     {
         CanShowVideo = HasVideo && !_videoFailed && Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
-        HasMedia = HasVideo || HasAnimation;
-        HasMediaChoice = HasVideo && HasAnimation;
-        if (!CanShowVideo && HasAnimation)
+        HasMedia = HasVideo || HasPicture;
+        HasMediaChoice = HasVideo && HasPicture;
+        if (!CanShowVideo && HasPicture)
             ShowVideo = false;
-        ShowsVideo = HasVideo && (ShowVideo || !HasAnimation);
-        ShowsAnimation = HasAnimation && !ShowsVideo;
+        ShowsVideo = HasVideo && (ShowVideo || !HasPicture);
+        ShowsPicture = HasPicture && !ShowsVideo;
         VideoOffline = ShowsVideo && !CanShowVideo;
         VideoUrl = _visible && ShowsVideo && CanShowVideo ? _video?.EmbedUrl : null;
-        var animation = _visible && ShowsAnimation ? _animation : null;
-        if (animation != (Animation as ResourceMediaSource)?.Path)
-            Animation = animation == null ? null : MediaSource.FromResource(animation);
     }
 
     /// <summary>The demonstration in the YouTube app; without one, a search for form videos.</summary>
