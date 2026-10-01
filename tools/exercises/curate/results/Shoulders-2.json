@@ -8,8 +8,8 @@
     "title": "How To Do Front Plate Raises",
     "timeSource": "whole",
     "chapter": null,
-    "note": "15s PureGym demo; replaces Rehab My Patient",
-    "verdict": null
+    "note": "verified: PureGym 15s plate front raise demo, embeds; 15s PureGym demo; replaces Rehab My Patient",
+    "verdict": "ok"
   },
   {
     "id": "lateral_raise",
@@ -20,8 +20,8 @@
     "title": "Lateral Raise",
     "timeSource": "whole",
     "chapter": null,
-    "note": "11s RP demo; replaces DeltaBolic short",
-    "verdict": null
+    "note": "verified: RP 11s standing DB lateral raise, embeds; 11s RP demo; replaces DeltaBolic short",
+    "verdict": "ok"
   },
   {
     "id": "seated_lateral_raise",
@@ -32,8 +32,8 @@
     "title": "How To Do A Seated Lateral Raise",
     "timeSource": "whole",
     "chapter": null,
-    "note": "15s PureGym demo; replaces Rachel Gregory",
-    "verdict": null
+    "note": "verified: PureGym 15s seated DB lateral raise, embeds; 15s PureGym demo; replaces Rachel Gregory",
+    "verdict": "ok"
   },
   {
     "id": "lean_away_lateral_raise",
@@ -44,8 +44,8 @@
     "title": "The Best And Worst Shoulder Exercises",
     "timeSource": "chapter",
     "chapter": "Lean-Away Dumbbell Lateral Raise",
-    "note": "Jeff Nippard chapter; replaces Functional AF",
-    "verdict": null
+    "note": "verified: chapter 2:58-3:13 Lean-Away Dumbbell Lateral Raise, next chapter 193; Jeff Nippard chapter; replaces Functional AF",
+    "verdict": "ok"
   },
   {
     "id": "cable_y_raise",
@@ -56,8 +56,8 @@
     "title": "The Best And Worst Shoulder Exercises",
     "timeSource": "chapter",
     "chapter": "Cable Y-Raise",
-    "note": "Jeff Nippard chapter; current FormFocus was a repost of this video",
-    "verdict": null
+    "note": "verified: chapter 8:53-9:06 Cable Y-Raise, next chapter 546; Jeff Nippard chapter; current FormFocus was a repost of this video",
+    "verdict": "ok"
   },
   {
     "id": "cable_lateral_raise",
@@ -68,8 +68,8 @@
     "title": "How To Do Cable Lateral Raises",
     "timeSource": "whole",
     "chapter": null,
-    "note": "kept current (PureGym 15s demo)",
-    "verdict": null
+    "note": "verified: kept current PureGym 15s one-arm low cable lateral raise; kept current (PureGym 15s demo)",
+    "verdict": "ok"
   },
   {
     "id": "machine_lateral_raise",
@@ -80,8 +80,8 @@
     "title": "Machine Lateral Raise",
     "timeSource": "whole",
     "chapter": null,
-    "note": "kept current (RP 12s demo)",
-    "verdict": null
+    "note": "verified: kept current RP 12s; kept current (RP 12s demo)",
+    "verdict": "ok"
   },
   {
     "id": "band_lateral_raise",
@@ -92,8 +92,8 @@
     "title": "Band Lateral Raise",
     "timeSource": "whole",
     "chapter": null,
-    "note": "kept current (Men's Health 47s demo)",
-    "verdict": null
+    "note": "verified: kept current Men's Health 47s; kept current (Men's Health 47s demo)",
+    "verdict": "ok"
   },
   {
     "id": "reverse_fly",
@@ -104,20 +104,20 @@
     "title": "The Best And Worst Shoulder Exercises",
     "timeSource": "chapter",
     "chapter": "Bent Over Reverse Dumbbell Flye",
-    "note": "Jeff Nippard chapter; replaces daniellagimodierept (2012)",
-    "verdict": null
+    "note": "verified: chapter 11:36-11:58 Bent Over Reverse Dumbbell Flye, next chapter 718; Jeff Nippard chapter; replaces daniellagimodierept (2012)",
+    "verdict": "ok"
   },
   {
     "id": "cable_reverse_fly",
-    "videoId": "SgyUoY0IZ7A",
-    "start": 718,
+    "videoId": "qZlDovba6ik",
+    "start": null,
     "end": null,
-    "channel": "Jeff Nippard",
-    "title": "The Best And Worst Shoulder Exercises",
-    "timeSource": "chapter",
-    "chapter": "Reverse Cable Crossover",
-    "note": "Jeff Nippard last chapter (no end; may run into outro). Alternative: PureGym er15V96hG5U 15s. Replaces Labrada Nutrition",
-    "verdict": null
+    "channel": "SATS Nordic",
+    "title": "How to: Reverse Cable Crossover",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "fixed: Nippard last chapter 718 runs to 799s (81s, likely includes outro, no end possible); PureGym er15V96hG5U is one-arm, not crossed cables; SATS Nordic (gym chain) 8s demo of exact two-cable reverse crossover",
+    "verdict": "fixed"
   },
   {
     "id": "rear_delt_machine",
@@ -128,8 +128,8 @@
     "title": "Machine Reverse Flye",
     "timeSource": "whole",
     "chapter": null,
-    "note": "RP 13s demo; replaces FIT.nl",
-    "verdict": null
+    "note": "verified: RP 13s machine reverse flye (reverse pec deck); RP 13s demo; replaces FIT.nl",
+    "verdict": "ok"
   },
   {
     "id": "cable_upright_row",
@@ -140,8 +140,8 @@
     "title": "Cable Upright Row",
     "timeSource": "whole",
     "chapter": null,
-    "note": "RP 10s demo; replaces PureGym",
-    "verdict": null
+    "note": "verified: RP 10s cable upright row; RP 10s demo; replaces PureGym",
+    "verdict": "ok"
   },
   {
     "id": "db_upright_row",
@@ -152,8 +152,8 @@
     "title": "Dumbbell Upright Row",
     "timeSource": "whole",
     "chapter": null,
-    "note": "RP 12s demo; replaces Buff Dudes 1:44",
-    "verdict": null
+    "note": "verified: RP 12s dumbbell upright row; RP 12s demo; replaces Buff Dudes 1:44",
+    "verdict": "ok"
   },
   {
     "id": "face_pull",
@@ -164,8 +164,8 @@
     "title": "The Best And Worst Shoulder Exercises",
     "timeSource": "chapter",
     "chapter": "Rope Facepull",
-    "note": "Jeff Nippard chapter; alternative PureGym 0Po47vvj9g4 15s. Replaces Steev",
-    "verdict": null
+    "note": "verified: chapter 11:01-11:36 Rope Facepull, next chapter 696; Jeff Nippard chapter; alternative PureGym 0Po47vvj9g4 15s. Replaces Steev",
+    "verdict": "ok"
   },
   {
     "id": "chest_supported_reverse_fly",
@@ -176,8 +176,8 @@
     "title": "Chest Supported Reverse Fly",
     "timeSource": "whole",
     "chapter": null,
-    "note": "kept current: personal trainer, 23s demo on 45-degree bench; no reputable alternative found",
-    "verdict": null
+    "note": "verified: kept current personal trainer 23s, 45-degree bench face down; only alternatives were unlisted Shorts channels; kept current: personal trainer, 23s demo on 45-degree bench; no reputable alternative found",
+    "verdict": "ok"
   },
   {
     "id": "band_face_pull",
@@ -188,20 +188,20 @@
     "title": "Band Face Pull",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Men's Health 51s demo; replaces Runna",
-    "verdict": null
+    "note": "verified: Men's Health 51s band face pull; Men's Health 51s demo; replaces Runna",
+    "verdict": "ok"
   },
   {
     "id": "upright_row",
-    "videoId": "um3VVzqunPU",
-    "start": null,
-    "end": null,
-    "channel": "Renaissance Periodization",
-    "title": "Barbell Upright Row",
-    "timeSource": "whole",
-    "chapter": null,
-    "note": "RP 10s demo; title does not state grip width, check it is wide. Fallback: current -QXGSGrgfnY (unknown coach, titled wide grip)",
-    "verdict": null
+    "videoId": "nwkLwMRHMQo",
+    "start": 201,
+    "end": 234,
+    "channel": "Jeff Nippard",
+    "title": "How To Fix The Upright Row: Avoid Shoulder Pain & Maximize Growth",
+    "timeSource": "chapter",
+    "chapter": "Wide Grip",
+    "note": "fixed: RP um3VVzqunPU title does not confirm wide grip; Jeff Nippard chapter 3:21-3:54 \"Wide Grip\", next chapter 234",
+    "verdict": "fixed"
   },
   {
     "id": "band_pull_apart",
@@ -212,7 +212,7 @@
     "title": "How To Do Band Pull Aparts",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Rogue Fitness 29s demo (Matt Chan); replaces Tangelo chiropractor",
-    "verdict": null
+    "note": "verified: Rogue Fitness 29s band pull-apart; Rogue Fitness 29s demo (Matt Chan); replaces Tangelo chiropractor",
+    "verdict": "ok"
   }
 ]
