@@ -54,7 +54,7 @@ on:
       publish_macos:
         description: "macOS (Mac App Store / TestFlight)"
         type: boolean
-        default: true
+        default: false
 
       publish_wear:
         description: "Wear OS (Google Play, Wear OS track)"
