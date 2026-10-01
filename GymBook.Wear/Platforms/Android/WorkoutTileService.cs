@@ -46,12 +46,12 @@ public class WorkoutTileService : TileService
         }
     }
 
-    public override IListenableFuture OnTileRequest(RequestBuilders.TileRequest request)
+    protected override IListenableFuture OnTileRequest(RequestBuilders.TileRequest? request)
     {
         var future = ResolvableFuture.Create();
         try
         {
-            var device = request.DeviceConfiguration;
+            var device = request?.DeviceConfiguration;
             var (title, line, detail, color) = Content();
             var column = new LayoutElementBuilders.Column.Builder()
                 .SetHorizontalAlignment(LayoutElementBuilders.HorizontalAlignCenter)
@@ -74,7 +74,7 @@ public class WorkoutTileService : TileService
         return future;
     }
 
-    public override IListenableFuture OnTileResourcesRequest(RequestBuilders.ResourcesRequest requestParams)
+    protected override IListenableFuture OnTileResourcesRequest(RequestBuilders.ResourcesRequest? requestParams)
     {
         var future = ResolvableFuture.Create();
         future.Set(new ResourceBuilders.Resources.Builder().SetVersion(ResourcesVersion).Build());
