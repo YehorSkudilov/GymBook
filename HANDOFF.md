@@ -20,11 +20,13 @@ remove an id.
   silent looping MP4s (`Resources/Raw/exercise-animations/<id>.mp4`, 288 px, 24 fps, ~40–70 KB each; a GIF of the same
   frames was ~10× bigger) played by CommunityToolkit.Maui.MediaElement 10.0.0 (registered in MauiProgram with no
   Android foreground service, TextureView). Until an exercise has one, its picture shows in its place.
-  Made by `tools/exercises/anims.mjs`: gpt-image-2 draws a 3×2 storyboard of six poses from one fixed camera, a vision
-  model (gpt-5.4-mini) checks it (same angle, same figure, poses in order) and it's redrawn up to 3 times; the panels
-  are lined up, played there and back, and ffmpeg's motion interpolation adds the in-between frames. Storyboards are
-  kept in `tools/exercises/anim-sheets/` (`--from-sheets` rebuilds the videos without the API); ones that never passed
-  the check are listed in `tools/exercises/anim-review.txt` for a look (`--only id --force --hint "..."` redoes one).
+  Made by `tools/exercises/veo.mjs` with Google Veo 3.1 Lite (Gemini API, GEMINI_API_KEY): the thumbnail is the
+  first and last frame of an 8 s clip (the only length Veo takes with both), so the same figure does one rep and
+  the clip loops; cropped to a square around the movement, silent. $0.05/s → $0.40 a clip, only successful clips are
+  charged; `--max-clips` is a hard limit. Raw clips are kept (git-ignored) in `tools/exercises/veo-raw/` for
+  re-cropping (`--recrop`). Tried and dropped: gpt-image storyboards (the person changed every frame, interpolation
+  ghosted), a code-drawn rig (not detailed enough), Sora (shut down 2026-09-24). Known Veo quirk: the blue muscle
+  glow sometimes spreads to the calves mid-rep. First batch: 28 common exercises; the rest await the owner's go.
 - **Search, filters, replace.** `Src/Services/ExercisePatterns.cs` sorts every exercise (custom ones by name) into a
   movement pattern (chest press, rear delt, hinge, row...). Search shows a "Similar exercises" section after the
   matches: the rest of a pattern the query names ("reverse flys" → Reverse Pec Deck, Face Pull), or the closest

@@ -5,6 +5,7 @@ public static class ExerciseAnimationAssets
 {
     static readonly HashSet<string> Ids = new(StringComparer.Ordinal)
     {
+        "romanian_deadlift",
     };
 
     public static bool Exists(string id) => Ids.Contains(id);
