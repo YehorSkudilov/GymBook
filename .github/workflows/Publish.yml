@@ -46,6 +46,11 @@ on:
         type: boolean
         default: true
 
+      publish_macos:
+        description: "macOS (Mac App Store / TestFlight)"
+        type: boolean
+        default: true
+
 jobs:
 
   # ==================================================
@@ -72,7 +77,7 @@ jobs:
     secrets: inherit
 
   # ==================================================
-  # VERSION BUMP + BUILD ANDROID/WINDOWS/IOS + RELEASE
+  # VERSION BUMP + BUILD ANDROID/WINDOWS/IOS/MACOS + RELEASE
   # ==================================================
   publish-app:
     uses: ./.github/workflows/PublishApp.yml
@@ -82,4 +87,5 @@ jobs:
       publish_android: ${{ inputs.publish_android }}
       publish_windows: ${{ inputs.publish_windows }}
       publish_ios: ${{ inputs.publish_ios }}
+      publish_macos: ${{ inputs.publish_macos }}
     secrets: inherit
