@@ -9,6 +9,12 @@ public class GoogleOptions
     /// (even on Android), so it's what the tokens' audience is checked against. Empty turns Google sign-in off.
     /// </summary>
     public string ClientId { get; set; } = "";
+
+    /// <summary>
+    /// The iOS OAuth client ID. The iOS app signs in with it directly (no Google SDK to re-address the token to the Web
+    /// client), so its tokens' audience is this one. Optional: empty means only the Web client's tokens are accepted.
+    /// </summary>
+    public string IosClientId { get; set; } = "";
 }
 
 /// <summary>Checks ID tokens from Google sign-in on the device: signed by Google, for this app, not expired.</summary>
@@ -25,7 +31,8 @@ public class GoogleTokenVerifier(GoogleOptions options)
             return null;
         try
         {
-            return await GoogleJsonWebSignature.ValidateAsync(idToken, new GoogleJsonWebSignature.ValidationSettings { Audience = [options.ClientId] });
+            string[] audience = string.IsNullOrWhiteSpace(options.IosClientId) ? [options.ClientId] : [options.ClientId, options.IosClientId];
+            return await GoogleJsonWebSignature.ValidateAsync(idToken, new GoogleJsonWebSignature.ValidationSettings { Audience = audience });
         }
         catch (InvalidJwtException)
         {

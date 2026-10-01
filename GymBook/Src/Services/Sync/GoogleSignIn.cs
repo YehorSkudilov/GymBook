@@ -21,7 +21,13 @@ public static class GoogleConfig
 {
     // Baked in at build time from GoogleWebClientId / GOOGLE_WEB_CLIENT_ID / GymBook/.env - see GymBook.csproj.
     public static string WebClientId { get; } =
-        typeof(GoogleConfig).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == "GoogleWebClientId")?.Value ?? "";
+        Metadata("GoogleWebClientId");
+
+    // The iOS OAuth client, from GoogleIosClientId / GOOGLE_IOS_CLIENT_ID / GymBook/.env. iOS signs in with it directly.
+    public static string IosClientId { get; } = Metadata("GoogleIosClientId");
+
+    static string Metadata(string key) =>
+        typeof(GoogleConfig).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == key)?.Value ?? "";
 }
 
 /// <summary>Platforms without Google sign-in (yet).</summary>

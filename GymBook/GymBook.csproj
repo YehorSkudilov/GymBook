@@ -62,7 +62,8 @@
 	<!-- iOS -->
 	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'ios'">
 		<!-- The App Store rejects icons with transparency, so fill the background with the app's colour. -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="1" Color="#0B0D12" />
+		<!-- Scale 1 fits the book's full height to the icon, so the corner mask clips it; 0.65 leaves a margin around it. -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="0.65" Color="#0B0D12" />
 	</ItemGroup>
 	<!-- macOS (MacCatalyst) -->
 	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'maccatalyst'">
@@ -132,6 +133,14 @@
 		<GoogleWebClientId Condition="'$(GoogleWebClientId)' == '' and '$(_EnvFileContent)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvFileContent)', '(?m)^GOOGLE_WEB_CLIENT_ID=(.*?)\r?$').Groups[1].Value)</GoogleWebClientId>
 	</PropertyGroup>
 
+	<!-- The iOS OAuth client ID (Google Cloud Console, type iOS, bundle ID com.yehorskudilov.gymbook), the same value as the
+	     API's Google__IosClientId. Found the same ways (-p:GoogleIosClientId, GOOGLE_IOS_CLIENT_ID, GymBook/.env).
+	     Optional: without it the Google button is hidden on iOS. -->
+	<PropertyGroup>
+		<GoogleIosClientId Condition="'$(GoogleIosClientId)' == ''">$(GOOGLE_IOS_CLIENT_ID)</GoogleIosClientId>
+		<GoogleIosClientId Condition="'$(GoogleIosClientId)' == '' and '$(_EnvFileContent)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvFileContent)', '(?m)^GOOGLE_IOS_CLIENT_ID=(.*?)\r?$').Groups[1].Value)</GoogleIosClientId>
+	</PropertyGroup>
+
 	<Target Name="ValidateApiBaseUrl" BeforeTargets="BeforeBuild;CoreCompile">
 		<Error Condition="'$(ApiBaseUrl)' == ''" Text="ApiBaseUrl is not set. Set it via -p:ApiBaseUrl=https://..., an API_BASE_URL environment variable, or GymBook/.env (see .env.example)." />
 	</Target>
@@ -139,6 +148,7 @@
 	<ItemGroup>
 		<AssemblyMetadata Include="ApiBaseUrl" Value="$(ApiBaseUrl)" />
 		<AssemblyMetadata Include="GoogleWebClientId" Value="$(GoogleWebClientId)" />
+		<AssemblyMetadata Include="GoogleIosClientId" Value="$(GoogleIosClientId)" />
 	</ItemGroup>
 
 </Project>
