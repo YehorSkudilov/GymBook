@@ -166,5 +166,53 @@
     "chapter": "Rope Facepull",
     "note": "Jeff Nippard chapter; alternative PureGym 0Po47vvj9g4 15s. Replaces Steev",
     "verdict": null
+  },
+  {
+    "id": "chest_supported_reverse_fly",
+    "videoId": "G4KcUxqcXO8",
+    "start": null,
+    "end": null,
+    "channel": "Christian Lawal - Personal Trainer & Online coach",
+    "title": "Chest Supported Reverse Fly",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "kept current: personal trainer, 23s demo on 45-degree bench; no reputable alternative found",
+    "verdict": null
+  },
+  {
+    "id": "band_face_pull",
+    "videoId": "CSP7YpPv3ds",
+    "start": null,
+    "end": null,
+    "channel": "Men's Health",
+    "title": "Band Face Pull",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Men's Health 51s demo; replaces Runna",
+    "verdict": null
+  },
+  {
+    "id": "upright_row",
+    "videoId": "um3VVzqunPU",
+    "start": null,
+    "end": null,
+    "channel": "Renaissance Periodization",
+    "title": "Barbell Upright Row",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "RP 10s demo; title does not state grip width, check it is wide. Fallback: current -QXGSGrgfnY (unknown coach, titled wide grip)",
+    "verdict": null
+  },
+  {
+    "id": "band_pull_apart",
+    "videoId": "smSSXITNpCI",
+    "start": null,
+    "end": null,
+    "channel": "Rogue Fitness",
+    "title": "How To Do Band Pull Aparts",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Rogue Fitness 29s demo (Matt Chan); replaces Tangelo chiropractor",
+    "verdict": null
   }
 ]

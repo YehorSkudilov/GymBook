@@ -202,5 +202,53 @@
   "chapter": "",
   "note": "Kept current: physiotherapy/Pilates studio focused 43s demo",
   "verdict": "ok"
+ },
+ {
+  "id": "pilates_side_lying_inner_thigh_lift",
+  "videoId": "_BR4ZodkJ2M",
+  "start": null,
+  "end": null,
+  "channel": "Howcast",
+  "title": "How to Do a Side Lying Inner Thigh Leg Lift | Knee Exercises",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Fixed: Howcast physical-therapy series focused 2:16 side-lying inner thigh lift instead of personal channel",
+  "verdict": "fixed"
+ },
+ {
+  "id": "pilates_mermaid",
+  "videoId": "msZN5n5J69A",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Encyclopedia",
+  "title": "Mermaid ⎮The Most Important Spine Mobility Exercise in Pilates",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: NCPT-created Pilates Encyclopedia focused 45s Mermaid demo",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_reformer_footwork",
+  "videoId": "QDBzjlhKsco",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Reformer Exercise: Footwork | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: Pilates Anytime 7:17 tutorial whose chapters (setup, V position, arches, heels, Achilles stretch) are all footwork; whole video",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_reformer_leg_circles",
+  "videoId": "C3yKCk386MQ",
+  "start": null,
+  "end": null,
+  "channel": "Pilates & Fitness TV",
+  "title": "Leg Circles on the Pilates Reformer",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: Pilates instructor focused 1:42 Reformer leg circles tutorial",
+  "verdict": "ok"
  }
 ]
