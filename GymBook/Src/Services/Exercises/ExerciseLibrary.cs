@@ -52,7 +52,9 @@ public static partial class ExerciseLibrary
     /// A small picture of a built-in exercise: its illustration, shipped in the app as Resources/Raw/exercises/&lt;id&gt;.webp
     /// (made by tools/exercises/thumbs.mjs). Null for custom exercises, which show their muscle's initials instead.
     /// </summary>
-    public static string? Thumbnail(string id) => ById.ContainsKey(Canonical(id)) ? $"exercises/{Canonical(id)}.webp" : null;
+    public static string? Thumbnail(string id) => ById.ContainsKey(Canonical(id)) && ExerciseThumbnailAssets.Exists(Canonical(id))
+        ? $"exercises/{Canonical(id)}.webp"
+        : null;
 
     /// <summary>One exercise as it's written in the library files.</summary>
     sealed class Def(string id, string name, MuscleGroup primary, Equipment equipment, Mechanic mechanic)

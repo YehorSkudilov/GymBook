@@ -57,6 +57,7 @@ public record ExerciseThumb(string? Image, string Initial, Color Color, Color So
 {
     public bool HasImage => Image != null;
     public bool HasFallback => !HasImage;
+    public Color TileBackground => HasImage ? Color.FromArgb("#272C39") : Soft;
 
     public static ExerciseThumb For(Exercise ex) => new(
         ExerciseLibrary.Thumbnail(ex.Id),

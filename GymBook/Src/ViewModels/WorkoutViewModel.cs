@@ -539,9 +539,8 @@ public partial class WorkoutExerciseViewModel : ObservableObject
 
     /// <summary>Whether this is the exercise on screen; its photo is highlighted in the strip.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ThumbOpacity), nameof(ThumbStroke))]
+    [NotifyPropertyChangedFor(nameof(ThumbStroke))]
     bool isSelected;
-    public double ThumbOpacity => IsSelected ? 1 : 0.45;
     public Color ThumbStroke => IsSelected ? Color.FromArgb("#3F7DFF") : Colors.Transparent;
 
     [ObservableProperty]

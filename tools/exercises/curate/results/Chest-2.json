@@ -1,27 +1,27 @@
 [
   {
     "id": "single_arm_cable_fly",
-    "videoId": "vGGOR4DPDt0",
+    "videoId": "E_mT1JWOp90",
     "start": null,
     "end": null,
-    "channel": "Avid Fitness",
-    "title": "Single Arm Cable Chest Flies",
+    "channel": "Gerardi Performance",
+    "title": "How To Perform The Heavy Single Arm Cable Crossover For A Bigger Chest (Exercise Demonstration)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Replaced with Gerardi Performance coach demonstration.",
+    "verdict": "ok"
   },
   {
     "id": "pec_deck",
-    "videoId": "CRroep849bU",
+    "videoId": "O-OBCfyh9Fw",
     "start": null,
     "end": null,
-    "channel": "Workouts for men over 40",
-    "title": "Pec Deck Fly Proper Form | Machine Chest Fly Tutorial",
+    "channel": "Renaissance Periodization",
+    "title": "Pec Deck Flye",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Replaced low-view source with RP focused 12s pec deck demo.",
+    "verdict": "ok"
   },
   {
     "id": "band_fly",
@@ -32,20 +32,20 @@
     "title": "Band Chest Fly",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "svend_press",
-    "videoId": "7J8pLwyy_eM",
+    "videoId": "cIoUZOnypS8",
     "start": null,
     "end": null,
-    "channel": "Osamoje",
-    "title": "How To: Svend Press (standing)",
+    "channel": "Bodybuilding.com",
+    "title": "Svend Press | Exercise Guide",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Replaced unknown source with Bodybuilding.com 50s Svend press guide.",
+    "verdict": "ok"
   },
   {
     "id": "push_up",
@@ -56,8 +56,8 @@
     "title": "Proper Push-Up Form and Common Mistakes",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "wall_push_up",
@@ -80,8 +80,8 @@
     "title": "How to do an Incline Pushup | Tiger Fitness",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "knee_push_up",
@@ -92,8 +92,8 @@
     "title": "How to do a Modified Push-Up | Proper Form & Technique | NASM",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "wide_push_up",
@@ -121,51 +121,51 @@
   },
   {
     "id": "deficit_push_up",
-    "videoId": "1VDqyaVaovg",
-    "start": null,
-    "end": null,
-    "channel": "Kade Howell",
-    "title": "How To: Deficit Push-Ups | Form Tutorial",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "videoId": "ZCYPSaEjsWc",
+    "start": 22.379999,
+    "end": 66.599998,
+    "channel": "Alex Leonidas",
+    "title": "Deficit Pushups Change Everything!",
+    "timeSource": "chapter",
+    "chapter": "Maximizing range of motion",
+    "note": "Alex Leonidas chapter at 0:22.379999 to 1:06.599998 demonstrates deficit push-up technique.",
+    "verdict": "ok"
   },
   {
     "id": "band_push_up",
-    "videoId": "RYV6D14cI0s",
+    "videoId": "7Xu3D-TKKAw",
     "start": null,
     "end": null,
-    "channel": "LGN Lyfestile",
-    "title": "Resistance Band Push Up",
+    "channel": "National Academy of Sports Medicine (NASM)",
+    "title": "How to do a Band Push up",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Replaced unclear source with NASM 18s band push-up demo.",
+    "verdict": "ok"
   },
   {
     "id": "weighted_push_up",
-    "videoId": "z4oz6W1X10w",
-    "start": null,
-    "end": null,
-    "channel": "Ashton Fitness",
-    "title": "How to do weighted push ups (with a plate) #Calisthenics",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "videoId": "8sa2qDm8a6k",
+    "start": 47.080002,
+    "end": 83.839996,
+    "channel": "Alex Leonidas",
+    "title": "My #1 Weighted Pushup Setup",
+    "timeSource": "chapter",
+    "chapter": "Execution and benefits",
+    "note": "Alex Leonidas chapter at 0:47.080002 to 1:23.839996 demonstrates weighted push-ups.",
+    "verdict": "ok"
   },
   {
     "id": "archer_push_up",
-    "videoId": "rvHTofenk-Y",
-    "start": null,
+    "videoId": "MxVbNel13Ek",
+    "start": 133,
     "end": null,
-    "channel": "ShredCore",
-    "title": "How to Do a Perfect Archer Push-Up",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "channel": "Andrew Alinda",
+    "title": "Archer Push Ups Tutorial | With Progressions",
+    "timeSource": "chapter",
+    "chapter": "Progressions",
+    "note": "Andrew Alinda progression chapter starts at 2:13 and demonstrates archer push-up progressions.",
+    "verdict": "ok"
   },
   {
     "id": "ring_push_up",
@@ -176,8 +176,8 @@
     "title": "How to do Ring Push Ups!",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "one_arm_push_up",
@@ -188,20 +188,20 @@
     "title": "How to Do a 1-Arm Pushup (3 SIMPLE STEPS!)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "dips",
     "videoId": "yN6Q1UI_xkE",
-    "start": null,
-    "end": null,
+    "start": 161.28,
+    "end": 286.76001,
     "channel": "Jeff Nippard",
     "title": "How To Do Dips For A Bigger Chest and Shoulders (Fix Mistakes!)",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "timeSource": "chapter",
+    "chapter": "Proper dip execution",
+    "note": "Jeff Nippard chapter at 2:41.28 to 4:46.76001 demonstrates dip execution.",
+    "verdict": "ok"
   },
   {
     "id": "assisted_chest_dip",
@@ -212,8 +212,8 @@
     "title": "Assisted Dip (Chest Focused)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "weighted_chest_dip",
@@ -224,8 +224,8 @@
     "title": "Weighted Dips Tutorial 💪",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "ring_dip",
@@ -236,20 +236,20 @@
     "title": "How to do Ring Dips the right way!",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "db_pullover",
     "videoId": "tcHaHIQStsk",
-    "start": null,
-    "end": null,
+    "start": 427.5,
+    "end": 583.67999,
     "channel": "Mind Pump TV",
     "title": "How to Perform a PROPER Dumbbell Pullover (Target Chest of Lats) | MIND PUMP",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "timeSource": "chapter",
+    "chapter": "Targeting the pecs",
+    "note": "Mind Pump chapter at 7:07.5 to 9:43.67999 demonstrates the chest-targeted dumbbell pullover.",
+    "verdict": "ok"
   },
   {
     "id": "push_up_plus",
@@ -260,20 +260,20 @@
     "title": "Push Up Plus",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "scapular_push_up",
-    "videoId": "5YHZnEsE9hA",
+    "videoId": "NKekqeudgWs",
     "start": null,
     "end": null,
-    "channel": "Andrew Sacks",
-    "title": "Scapula Pushup",
+    "channel": "The Active Life",
+    "title": "Scap Push ups",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Replaced with The Active Life focused 16s scap push-up demo.",
+    "verdict": "ok"
   },
   {
     "id": "serratus_punch",
@@ -284,8 +284,8 @@
     "title": "Serratus Punch With Dumbbell",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused exact-movement demo; no stronger exact match was found in source searches.",
+    "verdict": "ok"
   },
   {
     "id": "wall_slide_lift_off",
