@@ -1,0 +1,26 @@
+[
+  {
+    "id": "pilates_side_kick_circles",
+    "videoId": "NdSJUeSOCxs",
+    "start": null,
+    "end": null,
+    "channel": "PILATESOLOGY",
+    "title": "Pilates Mat Encyclopedia: Side Kicks Circles",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Pilatesology Mat Encyclopedia 27s demo of the classical Side Kick Series circles (2024); replaces 106-view In & Up Pilates clip from 2015. Pilates Anytime only has the full Side Kick (front/back), Howcast is 2012.",
+    "verdict": "fixed"
+  },
+  {
+    "id": "pilates_clam",
+    "videoId": "gFyIjunfbbg",
+    "start": 0,
+    "end": 35,
+    "channel": "Hinge Health",
+    "title": "How to Do the Clamshell Exercise",
+    "timeSource": "chapter",
+    "chapter": "How to perform the exercise",
+    "note": "Hinge Health 2024 tutorial, bodyweight side-lying clamshell; chapter 0:00 (0.625s) to Muscle activation (35.035s). Replaces 12s LivAligned Pilates Short.",
+    "verdict": "fixed"
+  }
+]

@@ -31,7 +31,8 @@ remove an id.
 ## Judgement calls the owner may want to review
 
 Picks kept from smaller or older channels because no reputable alternative fitted the exact variant (all embed and
-show the right movement): Pilates side_kick_circles, clam; Howcast 2012 videos for hip_circles, swimming, seal;
+show the right movement): pilates_side_kick_circles, pilates_clam; Howcast 2012 videos for pilates_hip_circles,
+pilates_swimming, pilates_seal;
 Power sled_pull, landmine_rotational_punch, band_resisted_punch, sledgehammer_tire_strike; Shoulders
 standing_db_press, chest_supported_reverse_fly (alternative: DeltaBolic sIQNCJ6Xwsk), z_press (Buff Dudes; title
 doesn't say barbell), cable_internal_rotation, ytw_raise, planche_lean. Some agents truncated fractional
