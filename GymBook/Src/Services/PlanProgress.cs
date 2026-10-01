@@ -5,7 +5,10 @@ namespace GymBook.Services;
 /// <summary>
 /// Progress through a plan, week by week. A week is the plan's day order (<see cref="PlanSchedule.Days"/>) done once,
 /// in any order: a workout is done when a finished session from it counts toward that week, a rest day when it is
-/// marked finished. Finishing any workout of a week unlocks the next one.
+/// marked finished. A workout can also be skipped for a week, which moves Up next past it without counting as done.
+/// Finishing or skipping any workout of a week unlocks the next one.
+/// Rest days finished and workouts skipped are both stored in <see cref="WorkoutPlan.RestDaysDone"/> (days marked
+/// without a session, by week and day): a rest day's key means finished, a workout day's means skipped.
 /// </summary>
 public class PlanProgress
 {
@@ -17,12 +20,13 @@ public class PlanProgress
         _plan = plan;
         _sessions = history.Where(s => s.PlanId == plan.Id).ToList();
         Days = PlanSchedule.Days(plan);
-        LastUnlockedWeek = _sessions.Select(WeekOf).DefaultIfEmpty(0).Max() + 1;
+        var skipped = (plan.RestDaysDone ?? []).Where(k => Days.ElementAtOrDefault(k % 1000) != null).Select(k => k / 1000);
+        LastUnlockedWeek = _sessions.Select(WeekOf).Concat(skipped).DefaultIfEmpty(0).Max() + 1;
     }
 
     public List<PlanWorkout?> Days { get; }
 
-    /// <summary>The furthest week that can be opened: one past the last week with a finished workout.</summary>
+    /// <summary>The furthest week that can be opened: one past the last week with a workout finished or skipped.</summary>
     public int LastUnlockedWeek { get; }
 
     /// <summary>
@@ -37,19 +41,25 @@ public class PlanProgress
 
     public bool IsRestDone(int day, int week) => _plan.RestDaysDone?.Contains(RestKey(day, week)) == true;
 
-    public bool IsDayDone(int day, int week) => Days[day] is { } w ? SessionFor(w, week) != null : IsRestDone(day, week);
+    /// <summary>A workout day skipped in <paramref name="week"/>: marked without a session.</summary>
+    public bool IsSkipped(int day, int week) => Days.ElementAtOrDefault(day) != null && _plan.RestDaysDone?.Contains(RestKey(day, week)) == true;
+
+    /// <summary>Done or skipped in <paramref name="week"/>: either way, nothing left to do for it that week.</summary>
+    public bool IsHandled(PlanWorkout workout, int week) => SessionFor(workout, week) != null || IsSkipped(Days.IndexOf(workout), week);
+
+    public bool IsDayDone(int day, int week) => Days[day] is { } w ? IsHandled(w, week) : IsRestDone(day, week);
 
     /// <summary>Workouts finished in <paramref name="week"/>. Rest days don't count.</summary>
     public int WorkoutsDone(int week) => _plan.Workouts.Count(w => SessionFor(w, week) != null);
 
     public bool IsComplete(int week) => Enumerable.Range(0, Days.Count).All(d => IsDayDone(d, week));
 
-    /// <summary>The first unlocked week <paramref name="workout"/> isn't done in; the last unlocked week never has it done.</summary>
+    /// <summary>The first unlocked week <paramref name="workout"/> isn't done or skipped in; the last unlocked week never has it.</summary>
     public int FirstOpenWeek(PlanWorkout workout) =>
-        Enumerable.Range(1, LastUnlockedWeek).First(w => SessionFor(workout, w) == null);
+        Enumerable.Range(1, LastUnlockedWeek).First(w => !IsHandled(workout, w));
 
-    /// <summary>The first workout of <paramref name="week"/> that isn't done yet, in day order.</summary>
-    public PlanWorkout? NextWorkout(int week) => Days.OfType<PlanWorkout>().FirstOrDefault(w => SessionFor(w, week) == null);
+    /// <summary>The first workout of <paramref name="week"/> that isn't done or skipped yet, in day order.</summary>
+    public PlanWorkout? NextWorkout(int week) => Days.OfType<PlanWorkout>().FirstOrDefault(w => !IsHandled(w, week));
 
     /// <summary>
     /// What Up next starts: the first workout left in <paramref name="week"/>, or once that week is all done, in the
@@ -97,6 +107,9 @@ public class PlanProgress
     }
 
     static int RestKey(int day, int week) => week * 1000 + day;
+
+    /// <summary>Skips (or un-skips) the workout on <paramref name="day"/> for <paramref name="week"/>.</summary>
+    public static void SetSkipped(WorkoutPlan plan, int day, int week, bool skipped) => SetRestDone(plan, day, week, skipped);
 
     public static void SetRestDone(WorkoutPlan plan, int day, int week, bool done)
     {

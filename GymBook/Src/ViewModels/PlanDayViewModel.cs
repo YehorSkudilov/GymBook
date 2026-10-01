@@ -88,6 +88,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     [ObservableProperty] bool hasWhen;
     [ObservableProperty] bool isNext;
     [ObservableProperty] bool isDone;
+    [ObservableProperty] bool isSkipped;
     [ObservableProperty] bool isRestDay;
     [ObservableProperty] bool isWorkoutDay;
     [ObservableProperty] bool isEmptyDay;
@@ -120,7 +121,9 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         CanDiscard = false;
         var session = workout == null ? null : progress.SessionFor(workout, _week);
         Subtitle = PlanCycle.Describe(plan, _week) is { } phase ? $"{plan.Name} · Week {_week} · {phase}" : $"{plan.Name} · Week {_week}";
-        IsDone = progress.IsDayDone(_day, _week);
+        // A skipped workout isn't finished: it has its own pill.
+        IsDone = workout == null ? progress.IsRestDone(_day, _week) : session != null;
+        IsSkipped = workout != null && session == null && progress.IsSkipped(_day, _week);
         IsNext = workout != null && !IsDone && plan.Id == store.Data.ActivePlanId && workout == progress.NextWorkout(_week);
         IsRestDay = workout == null;
         IsWorkoutDay = workout != null;
@@ -218,6 +221,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         DayName = session.Name;
         Subtitle = plan == null ? "Workout" : session.PlanWeek is { } week ? $"{plan.Name} · Week {week}" : plan.Name;
         IsDone = true;
+        IsSkipped = false;
         IsNext = false;
         IsRestDay = false;
         IsWorkoutDay = true;
@@ -462,9 +466,24 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var plan = store.GetPlan(_planId);
         if (plan == null)
             return;
-        // Opens the plan page on this day.
-        if (await dialogs.ActionSheet(DayName, null, "Edit in plan") == "Edit in plan")
-            // One navigation: the sheet slides away as the plan comes in, with nothing in between.
-            await GoTo($"../{Routes.Plan}?id={plan.Id}&day={_day}");
+        // A workout not done this week can be skipped (Up next moves past it), or a skip undone. It can still be done either way.
+        const string skip = "Skip workout", unskip = "Undo skip", edit = "Edit in plan";
+        var progress = new PlanProgress(plan, store.History);
+        var options = new List<string>();
+        if (progress.Days.ElementAtOrDefault(_day) is { } workout && progress.SessionFor(workout, _week) == null)
+            options.Add(progress.IsSkipped(_day, _week) ? unskip : skip);
+        options.Add(edit);
+        switch (await dialogs.ActionSheet(DayName, null, [.. options]))
+        {
+            case skip or unskip:
+                PlanProgress.SetSkipped(plan, _day, _week, !progress.IsSkipped(_day, _week));
+                store.Save();
+                await OnAppearingAsync();
+                break;
+            case edit:
+                // One navigation: the sheet slides away as the plan comes in, with nothing in between.
+                await GoTo($"../{Routes.Plan}?id={plan.Id}&day={_day}");
+                break;
+        }
     }
 }

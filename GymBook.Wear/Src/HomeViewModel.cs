@@ -189,10 +189,11 @@ public partial class HomeViewModel : ObservableObject
             HasCard = false;
     }
 
-    /// <summary>Up next: the plan's next workout (in the shown week, or the first later week with one left), and how recovered its muscles are.</summary>
+    /// <summary>Up next: the plan's actual next workout, whichever week is shown, and how recovered its muscles are.</summary>
     void ShowUpNext(WorkoutPlan plan, PlanProgress progress)
     {
-        var (week, next) = progress.NextWorkoutFrom(_week) ?? (_week, progress.Days.OfType<PlanWorkout>().First());
+        var current = progress.CurrentWeek;
+        var (week, next) = progress.NextWorkoutFrom(current) ?? (current, progress.Days.OfType<PlanWorkout>().First());
         var now = DateTime.Now;
         var readiness = Math.Clamp(_recovery.Readiness(next, now), 0, 1);
         var tired = _recovery.NotReady(next, now);
@@ -278,7 +279,9 @@ public partial class HomeViewModel : ObservableObject
     void BuildDays(WorkoutPlan plan, PlanProgress progress)
     {
         var week = _week;
-        var next = progress.NextWorkout(week);
+        // Up next is marked only in its own week.
+        var upNext = progress.NextWorkoutFrom(progress.CurrentWeek);
+        var next = upNext is { } n && n.Week == week ? n.Workout : null;
         var active = _workouts.Active;
         var running = HasOwnWorkout && active?.PlanId == plan.Id && (active.PlanWeek ?? week) == week ? active.PlanWorkoutId : null;
         Days = progress.Days.Select((workout, day) =>
@@ -291,11 +294,13 @@ public partial class HomeViewModel : ObservableObject
             }
             var isRunning = workout.Id == running;
             var done = progress.SessionFor(workout, week) != null;
+            // Skipped on the phone: Up next moved past it.
+            var skipped = !done && progress.IsSkipped(day, week);
             var isNext = workout == next && !isRunning && running == null;
-            var badge = isRunning ? "▶" : done ? "✓" : (plan.Workouts.IndexOf(workout) + 1).ToString();
+            var badge = isRunning ? "▶" : done ? "✓" : skipped ? "»" : (plan.Workouts.IndexOf(workout) + 1).ToString();
             var badgeColor = isRunning || done ? Green : isNext ? Blue : Grey;
-            var status = isRunning ? "In progress" : done ? "Done" : isNext ? "Up next" : "";
-            var statusColor = isRunning || done ? Green : Blue;
+            var status = isRunning ? "In progress" : done ? "Done" : isNext ? "Up next" : skipped ? "Skipped" : "";
+            var statusColor = isRunning || done ? Green : skipped ? Grey : Blue;
             ICommand open = isRunning
                 ? new AsyncRelayCommand(ResumeWatchWorkout)
                 : new AsyncRelayCommand(() => StartAsync(plan, workout, week, confirm: true, again: done));

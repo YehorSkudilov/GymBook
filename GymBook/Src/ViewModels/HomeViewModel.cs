@@ -155,15 +155,17 @@ public partial class HomeViewModel(
         {
             var progress = new PlanProgress(plan, store.History);
             _week = _chosenPlanId == plan.Id ? Math.Min(_chosenWeek, progress.LastUnlockedWeek) : progress.CurrentWeek;
-            (_nextWeek, _next) = progress.NextWorkoutFrom(_week) ?? (_week, progress.Days.OfType<PlanWorkout>().First());
-            // Up next is always the plan's next workout (the same one the week below marks). Recovery only colours the
-            // card, and when it would hit muscles still recovering, names a fresher workout left this week.
+            // Up next is always the plan's actual next workout, whichever week is shown below (picking another week in
+            // the week menu doesn't change it). Recovery only colours the card, and when it would hit muscles still
+            // recovering, names a fresher workout left in its week.
+            var current = progress.CurrentWeek;
+            (_nextWeek, _next) = progress.NextWorkoutFrom(current) ?? (current, progress.Days.OfType<PlanWorkout>().First());
             var now = DateTime.Now;
             var next = _next;
             NextLabel = _nextWeek == _week ? "UP NEXT" : $"UP NEXT · WEEK {_nextWeek}";
             var tired = recovery.NotReady(next, now);
-            var fresher = tired.Count == 0 || _nextWeek != _week ? null : progress.Days.OfType<PlanWorkout>()
-                .Where(w => w != next && w.Exercises.Count > 0 && progress.SessionFor(w, _week) == null && recovery.NotReady(w, now).Count == 0)
+            var fresher = tired.Count == 0 ? null : progress.Days.OfType<PlanWorkout>()
+                .Where(w => w != next && w.Exercises.Count > 0 && !progress.IsHandled(w, _nextWeek) && recovery.NotReady(w, now).Count == 0)
                 .MaxBy(w => recovery.Readiness(w, now));
             ShowReadiness(recovery.Readiness(next, now), tired, fresher);
             BuildPlanWeek(plan, progress);
@@ -240,7 +242,8 @@ public partial class HomeViewModel(
     {
         var week = _week;
         PlanWeek = $"Week {week}";
-        var next = progress.NextWorkout(week);
+        // Up next is marked only in its own week.
+        var next = week == _nextWeek ? _next : null;
         // The day being done right now: marked as such, and it opens the running workout.
         var active = workouts.Active;
         var running = active?.PlanId == plan.Id && (active.PlanWeek ?? week) == week ? active.PlanWorkoutId : null;
@@ -262,6 +265,7 @@ public partial class HomeViewModel(
                 Name = w.Name,
                 Number = (plan.Workouts.IndexOf(w) + 1).ToString(),
                 IsDone = progress.SessionFor(w, week) != null,
+                IsSkipped = progress.SessionFor(w, week) == null && progress.IsSkipped(day, week),
                 IsNext = w == next && !isRunning && running == null,
                 IsRunning = isRunning,
                 Thumbnails = thumbs.Take(3).ToList(),
@@ -305,6 +309,21 @@ public partial class HomeViewModel(
             return;
         var week = _nextWeek;
         await StartPlannedWorkoutAsync(workouts, dialogs, recovery, plan, next, week);
+    }
+
+    /// <summary>Skip on the Up next card: skips that workout for its week, so Up next moves on to the one after.</summary>
+    [RelayCommand]
+    async Task SkipNext()
+    {
+        var plan = store.ActivePlan;
+        if (workouts.Active != null || plan == null || _next is not { } next)
+            return;
+        var day = PlanSchedule.Days(plan).IndexOf(next);
+        if (day < 0 || !await dialogs.Confirm($"Skip {next.Name}?", $"It's marked skipped for week {_nextWeek} and Up next moves on. You can still do it, or undo the skip, from its day.", "Skip"))
+            return;
+        PlanProgress.SetSkipped(plan, day, _nextWeek, true);
+        store.Save();
+        Refresh();
     }
 
     /// <summary>Tapping the Up next card previews that day, like tapping it in the week below.</summary>

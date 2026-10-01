@@ -129,10 +129,13 @@
                         <Label Text="{Binding NextMore}" Style="{StaticResource Caption}" FontFamily="OpenSansSemibold" VerticalOptions="Center" Margin="4,0,0,0" />
                     </HorizontalStackLayout>
 
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
                         <Label Text="{Binding NextWorkoutMeta}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                        <!-- Skips this workout for its week; Up next moves on. Not while a workout is running. -->
+                        <Button Grid.Column="1" Text="Skip" Style="{StaticResource SmallButton}" VerticalOptions="Center"
+                                IsVisible="{Binding IsWorkoutRunning, Converter={StaticResource Not}}" Command="{Binding SkipNextCommand}" />
                         <!-- The fresher you are, the more it invites a tap: grey and still when tired, vivid with a pulsing glow when ready. -->
-                        <Grid Grid.Column="1">
+                        <Grid Grid.Column="2">
                             <controls:ReadinessGlowView Shape="Button" Readiness="{Binding NextGlow}" Tint="{Binding StartColor}" IsRunning="{Binding IsShowing}"
                                                         Margin="-10" />
                             <Button Text="{Binding StartText}" Style="{StaticResource PrimaryButton}" HeightRequest="44" Padding="26,0"

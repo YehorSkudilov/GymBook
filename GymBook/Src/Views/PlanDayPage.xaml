@@ -50,6 +50,10 @@
                         <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource SuccessSoft}" IsVisible="{Binding IsDone}" Padding="12,6">
                             <Label Text="✓  Finished" TextColor="{StaticResource Success}" FontSize="13" FontFamily="OpenSansSemibold" />
                         </Border>
+                        <!-- Skipped this week from the ··· or Up next: Up next moved past it, but it can still be done. -->
+                        <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource Surface2}" IsVisible="{Binding IsSkipped}" Padding="12,6">
+                            <Label Text="Skipped" TextColor="{StaticResource TextSecondary}" FontSize="13" FontFamily="OpenSansSemibold" />
+                        </Border>
                     </HorizontalStackLayout>
 
                     <!-- A finished workout's numbers, 2 by 2 so they fit, each with how it compares with last time -->

@@ -72,6 +72,8 @@ public class PlanDayItem
     public required string Name { get; init; }
     public required string Number { get; init; }
     public bool IsDone { get; init; }
+    /// <summary>A workout skipped this week (not done).</summary>
+    public bool IsSkipped { get; init; }
     public bool IsNext { get; init; }
     /// <summary>The workout in progress right now: it opens that workout instead of the day.</summary>
     public bool IsRunning { get; init; }
@@ -82,12 +84,12 @@ public class PlanDayItem
 
     public bool HasThumbnails => Thumbnails.Count > 0;
     public bool HasMore => More.Length > 0;
-    public string Badge => IsRunning ? "▶" : IsDone ? "✓" : Number;
-    public Color BadgeColor => IsDone || IsRunning ? Color.FromArgb("#2ED47A") : IsNext ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#626B7E");
-    public Color NameColor => IsRest ? Color.FromArgb("#9AA3B5") : Color.FromArgb("#F4F6FB");
-    public string Status => IsRunning ? "In progress · tap to open" : IsNext ? "Up next" : "";
+    public string Badge => IsRunning ? "▶" : IsDone ? "✓" : IsSkipped ? "»" : Number;
+    public Color BadgeColor => IsDone || IsRunning ? Color.FromArgb("#2ED47A") : IsSkipped ? Color.FromArgb("#9AA3B5") : IsNext ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#626B7E");
+    public Color NameColor => IsRest || IsSkipped ? Color.FromArgb("#9AA3B5") : Color.FromArgb("#F4F6FB");
+    public string Status => IsRunning ? "In progress · tap to open" : IsNext ? "Up next" : IsSkipped ? "Skipped" : "";
     public bool HasStatus => Status.Length > 0;
-    public Color StatusColor => IsRunning ? Color.FromArgb("#2ED47A") : Color.FromArgb("#3F7DFF");
+    public Color StatusColor => IsRunning ? Color.FromArgb("#2ED47A") : IsSkipped ? Color.FromArgb("#9AA3B5") : Color.FromArgb("#3F7DFF");
 }
 
 public class WorkoutPreviewItem
