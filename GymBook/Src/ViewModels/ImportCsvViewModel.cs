@@ -162,20 +162,25 @@ public partial class ImportCsvViewModel : ObservableObject
     void UpdateMappingSummary()
     {
         var matched = _mappings.Count(m => m.Target != null);
-        var check = _mappings.Count(m => m.Target != null && m.Match.Confidence == MatchConfidence.Check && m.Target == m.Match.Exercise);
+        var check = Mappings.Count(m => m.Status == "Check");
+        var chosen = Mappings.Count(m => m.IsChosen);
         var created = _mappings.Count - matched;
         MappingSummary = $"{Count(_mappings.Count, "exercise")}: {matched} matched to the app's" +
-            (check > 0 ? $" ({check} worth a check)" : "") + (created > 0 ? $", {created} added as new" : "") + ". Tap one to change it.";
+            (check > 0 ? $" ({check} worth a check)" : "") + (created > 0 ? $", {created} added as new" : "") +
+            (chosen > 0 ? $", {chosen} chosen by you" : "") + ". Tap one to change it.";
     }
 
-    /// <summary>One exercise tapped: pick another of the app's, or keep it as a new exercise of its own.</summary>
+    /// <summary>
+    /// One exercise tapped: pick another of the app's, keep it as a new exercise of its own, or go back to the suggestion
+    /// (for a match, that's how it started: matched or worth a check again).
+    /// </summary>
     async Task Change(MappingItem item)
     {
         const string pick = "Pick an exercise", keep = "Add as a new exercise", suggested = "Use the suggestion";
         var options = new List<string> { pick };
         if (item.Mapping.Target != null)
             options.Add(keep);
-        if (item.Mapping.Match.Exercise is { } guess && item.Mapping.Target != guess)
+        if (item.Mapping.Match.Exercise is { } guess && (item.Mapping.Target != guess || item.IsChosen))
             options.Add(suggested);
         switch (await _dialogs.ActionSheet(item.Source, null, [.. options]))
         {
@@ -187,7 +192,7 @@ public partial class ImportCsvViewModel : ObservableObject
                 item.SetTarget(null);
                 break;
             case suggested:
-                item.SetTarget(item.Mapping.Match.Exercise);
+                item.UseSuggestion();
                 break;
         }
         UpdateMappingSummary();
@@ -251,13 +256,17 @@ public partial class MappingItem : ObservableObject
     public ExerciseMapping Mapping { get; }
     public IAsyncRelayCommand ChangeCommand { get; }
 
+    /// <summary>Settled by hand (even to the suggestion itself), so it's no longer worth a check.</summary>
+    public bool IsChosen { get; private set; }
+
     public string Source => Mapping.Source.Key;
     public string Uses => $"{Mapping.Uses}×";
 
     public string Target => Mapping.Target?.Name ?? $"New: {CsvImporter.Name(Mapping.Source)}";
 
-    /// <summary>Matched (green), matched but worth a look (amber), picked by hand (blue) or new (grey).</summary>
-    public string Status => Mapping.Target == null ? "New exercise"
+    /// <summary>Picked by hand (blue), matched (green), matched but worth a look (amber) or new (grey).</summary>
+    public string Status => IsChosen ? (Mapping.Target == null ? "Kept as new" : "Picked")
+        : Mapping.Target == null ? "New exercise"
         : Mapping.Target != Mapping.Match.Exercise ? "Picked"
         : Mapping.Match.Confidence == MatchConfidence.Check ? "Check"
         : "Matched";
@@ -266,13 +275,22 @@ public partial class MappingItem : ObservableObject
     {
         "Matched" => Color.FromArgb("#2ED47A"),
         "Check" => Color.FromArgb("#FFB020"),
-        "Picked" => Color.FromArgb("#3F7DFF"),
+        "Picked" or "Kept as new" => Color.FromArgb("#3F7DFF"),
         _ => Color.FromArgb("#9AA3B5"),
     };
 
-    public void SetTarget(Models.Exercise? exercise)
+    public void SetTarget(Models.Exercise? exercise) => SetTarget(exercise, chosen: true);
+
+    /// <summary>
+    /// Back to the app's suggestion. A match goes back to how it started (matched, or worth a check); an exercise that
+    /// had only a weak guess counts as picked, since it started as new.
+    /// </summary>
+    public void UseSuggestion() => SetTarget(Mapping.Match.Exercise, chosen: Mapping.Match.Confidence == MatchConfidence.None);
+
+    void SetTarget(Models.Exercise? exercise, bool chosen)
     {
         Mapping.Target = exercise;
+        IsChosen = chosen;
         OnPropertyChanged(nameof(Target));
         OnPropertyChanged(nameof(Status));
         OnPropertyChanged(nameof(StatusColor));
