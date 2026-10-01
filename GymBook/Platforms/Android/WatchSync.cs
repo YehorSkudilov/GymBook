@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Android.App;
 using Android.Gms.Extensions;
 using Android.Gms.Wearable;
 using GymBook.Contracts;
@@ -34,7 +35,7 @@ public class WatchSync(DataStore store, WatchLink link)
         try
         {
             var request = PutDataRequest.Create(WearPaths.Workout).SetData(json).SetUrgent();
-            await WearableClass.GetDataClient(Android.App.Application.Context).PutDataItem(request).AsAsync<IDataItem>();
+            await WearableClass.GetDataClient(Android.App.Application.Context).PutDataItem(request).AsAsync<Java.Lang.Object>();
         }
         catch (Exception e)
         {
