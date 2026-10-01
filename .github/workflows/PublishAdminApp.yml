@@ -204,15 +204,16 @@ jobs:
 
       # Unpackaged and self-contained (the .NET and Windows App SDK runtimes included) instead of the GymBook app's
       # MSIX: unzip anywhere and run GymBook.Admin.exe, nothing to install or sign. Self-contained is switched on in
-      # GymBook.Admin.csproj for a win-x64 build, not here: a /p: on the command line reaches AppSkeleton too, which has
-      # no architecture and refuses WindowsAppSDKSelfContained. -r, unlike /p:, isn't passed on to referenced libraries.
+      # GymBook.Admin.csproj for a build with an architecture, not here: a /p: on the command line reaches AppSkeleton too,
+      # which refuses WindowsAppSDKSelfContained. The architecture is MAUI's RuntimeIdentifierOverride, as in
+      # PublishApp.yml: -r would make restore look for a win-x64 runtime for the Android target too, which doesn't exist.
       - name: Publish Windows
         shell: pwsh
         run: |
           dotnet publish "${{ env.PROJECT_PATH }}" `
             -c Release `
             -f net10.0-windows10.0.19041.0 `
-            -r win-x64 `
+            /p:RuntimeIdentifierOverride=win-x64 `
             -o "$env:RUNNER_TEMP/admin-windows" `
             "/p:ApplicationVersion=${{ github.run_number }}" `
             "/p:ApiBaseUrl=${{ vars.API_BASE_URL }}"
