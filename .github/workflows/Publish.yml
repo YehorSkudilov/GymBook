@@ -9,6 +9,14 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
+      # GitHub's Run workflow form has no section titles, so these two do-nothing dropdowns stand in for them.
+      # Nothing reads them.
+      section_app:
+        description: "═══════════  App  ═══════════"
+        type: choice
+        options:
+          - "Gym Book app: version, Play channel and stores below"
+
       version_bump:
         description: "Version bump"
         required: true
@@ -32,33 +40,38 @@ on:
           - production
 
       publish_android:
-        description: "── Gym Book app ── Android (Google Play)"
+        description: "Android (Google Play)"
         type: boolean
         default: true
 
       publish_windows:
-        description: "── Gym Book app ── Windows (Microsoft Store)"
+        description: "Windows (Microsoft Store)"
         type: boolean
         default: true
 
       publish_ios:
-        description: "── Gym Book app ── iOS (TestFlight)"
+        description: "iOS (TestFlight)"
         type: boolean
         default: true
 
       publish_macos:
-        description: "── Gym Book app ── macOS (Mac App Store / TestFlight)"
+        description: "macOS (Mac App Store / TestFlight)"
         type: boolean
         default: true
 
-      # Admin app: builds attached to the run as artifacts, never uploaded anywhere.
+      section_admin:
+        description: "═══════════  Admin App  ═══════════"
+        type: choice
+        options:
+          - "Builds attached to the run, never uploaded"
+
       admin_windows:
-        description: "── Admin app ── Windows (.exe zip)"
+        description: "Windows (.exe zip)"
         type: boolean
         default: true
 
       admin_android:
-        description: "── Admin app ── Android (.apk)"
+        description: "Android (.apk)"
         type: boolean
         default: true
 
