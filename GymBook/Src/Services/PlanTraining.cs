@@ -28,8 +28,15 @@ public static class PlanTraining
             Apply(plan, store.Profile);
     }
 
-    /// <summary>Gives <paramref name="plan"/> its own training settings, starting from what it follows now.</summary>
-    public static void MakeOwn(WorkoutPlan plan) => plan.OwnTraining = true;
+    /// <summary>
+    /// Gives <paramref name="plan"/> its own training settings, starting with RIR, deloads and periodization all off
+    /// and the target RIR by goal: the user switches on what they want.
+    /// </summary>
+    public static void MakeOwn(WorkoutPlan plan)
+    {
+        plan.OwnTraining = true;
+        (plan.UseRir, plan.Deloads, plan.Periodization, plan.TargetRir) = (false, false, false, null);
+    }
 
     /// <summary>Back to the profile's defaults, following them as they change.</summary>
     public static void UseDefaults(WorkoutPlan plan, UserProfile profile)

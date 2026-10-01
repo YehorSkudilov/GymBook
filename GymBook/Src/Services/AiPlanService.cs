@@ -137,17 +137,16 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
         }
         Quota = response.Quota ?? Quota;
 
-        // Run exactly as written: its own rest times (not the profile's), its own rest days when the source gives them,
-        // and no deloads or periodization changing its weeks (they can be switched on in its training options).
+        // Its own rest times as written (not the profile's) and its own rest days when the source gives them. Training
+        // (RIR, deloads, periodization) follows the profile's defaults, like a generated plan; Custom in its settings
+        // starts with them all off.
         var plan = new WorkoutPlan
         {
             Name = response.Name,
             Description = response.Description,
             Goal = answers.Goal,
-            OwnTraining = true,
-            Deloads = false,
-            Periodization = false,
         };
+        PlanTraining.Apply(plan, answers);
         plan.Workouts = ToWorkouts(response, answers, [], keepRest: true);
         if (plan.Workouts.Count == 0)
             throw new InvalidOperationException("The imported plan has no workouts.");

@@ -82,6 +82,8 @@ public class CsvImporter(DataStore store, AiPlanService ai)
                 // Positions over all the days, workouts and rest days together, as the export lists them.
                 RestDays = [.. source.Days.Select((d, i) => (d, i)).Where(x => x.d.Exercises.Count == 0).Select(x => x.i)],
             };
+            // Training follows the profile's defaults, like any new plan.
+            PlanTraining.Apply(plan, store.Profile);
             foreach (var day in source.Days.Where(d => d.Exercises.Count > 0))
             {
                 var workout = new PlanWorkout { Name = day.Name };
