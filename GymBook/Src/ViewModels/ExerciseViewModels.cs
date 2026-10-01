@@ -276,13 +276,29 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     [ObservableProperty] IDrawable? chart;
     [ObservableProperty] List<LineItem> history = [];
     [ObservableProperty] bool isCustom;
-    [ObservableProperty] string? videoUrl;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WatchText))]
     bool hasVideo;
 
     public string WatchText => HasVideo ? "Open in YouTube" : "Search form videos";
     ExerciseVideo? _video;
+
+    // The demonstration: a looping animation shipped in the app (or the exercise's picture until it has one), and
+    // the YouTube video. The animation shows first every time the page opens; the video only with a connection,
+    // so the web view never gets to show a connection error.
+    [ObservableProperty] bool hasMedia;
+    [ObservableProperty] bool hasMediaChoice;
+    [ObservableProperty] bool hasAnimation;
+    [ObservableProperty] ImageSource? animation;
+    [ObservableProperty] bool showVideo;
+    [ObservableProperty] bool canShowVideo;
+    [ObservableProperty] bool showsVideo;
+    [ObservableProperty] bool showsAnimation;
+    [ObservableProperty] bool videoOffline;
+    /// <summary>The player's embed URL; null whenever the video isn't on screen (offline, the animation chosen, the page left).</summary>
+    [ObservableProperty] string? videoUrl;
+    string? _animationFor;
+    bool _visible, _videoFailed;
     [ObservableProperty] string tags = "";
     [ObservableProperty] bool hasTags;
     [ObservableProperty] List<LineItem> steps = [];
@@ -290,13 +306,23 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     [ObservableProperty] List<string> formTips = [];
     [ObservableProperty] bool hasFormTips;
 
-    public void ApplyQueryAttributes(IDictionary<string, object> query) => _id = query["id"]?.ToString();
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        _id = query["id"]?.ToString();
+        // Opening an exercise always starts on the animation.
+        ShowVideo = false;
+    }
 
     public override Task OnAppearingAsync()
     {
         var ex = store.GetExercise(_id ?? "");
         if (ex == null)
             return GoBack();
+
+        _visible = true;
+        _videoFailed = false;
+        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
+        Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
 
         Name = ex.Name;
         Subtitle = ex.Subtitle;
@@ -310,8 +336,15 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
 
         var details = ExerciseLibrary.Details(ex.Id);
         _video = details?.Video;
-        VideoUrl = _video?.EmbedUrl;
-        HasVideo = VideoUrl != null;
+        HasVideo = _video != null;
+        HasAnimation = ExerciseLibrary.Animation(ex.Id) != null || ExerciseLibrary.Thumbnail(ex.Id) != null;
+        if (_animationFor != ex.Id)
+        {
+            _animationFor = ex.Id;
+            Animation = null;
+            _ = LoadAnimationAsync(ex.Id);
+        }
+        UpdateMedia();
         Tags = details == null ? "" : $"{details.Category} · {details.Level}";
         HasTags = details != null;
         Steps = details?.Steps.Select((s, i) => new LineItem { Title = (i + 1).ToString(), Detail = s }).ToList() ?? [];
@@ -356,7 +389,85 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     public override void OnDisappearing()
     {
         base.OnDisappearing();
-        VideoUrl = null;
+        _visible = false;
+        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
+        UpdateMedia();
+    }
+
+    partial void OnShowVideoChanged(bool value) => UpdateMedia();
+
+    void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(() =>
+    {
+        // A new connection gets a new try at the video.
+        _videoFailed = false;
+        UpdateMedia();
+    });
+
+    /// <summary>The player couldn't load the video (its page was cleared before showing): back to the animation.</summary>
+    public void VideoLoadFailed()
+    {
+        _videoFailed = true;
+        UpdateMedia();
+    }
+
+    /// <summary>
+    /// Which of the animation and the video shows. Without a connection the animation does and the video can't be
+    /// chosen; when the connection is back the video can be chosen again and loads afresh (its URL went through null).
+    /// </summary>
+    void UpdateMedia()
+    {
+        CanShowVideo = HasVideo && !_videoFailed && Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
+        HasMedia = HasVideo || HasAnimation;
+        HasMediaChoice = HasVideo && HasAnimation;
+        if (!CanShowVideo && HasAnimation)
+            ShowVideo = false;
+        ShowsVideo = HasVideo && (ShowVideo || !HasAnimation);
+        ShowsAnimation = HasAnimation && !ShowsVideo;
+        VideoOffline = ShowsVideo && !CanShowVideo;
+        VideoUrl = _visible && ShowsVideo && CanShowVideo ? _video?.EmbedUrl : null;
+    }
+
+    async Task LoadAnimationAsync(string id)
+    {
+        var source = await AnimationSourceAsync(id);
+        if (_animationFor == id)
+            Animation = source;
+    }
+
+    /// <summary>The exercise's animation, or its picture while this build has no animation for it.</summary>
+    static async Task<ImageSource?> AnimationSourceAsync(string id)
+    {
+        if (ExerciseLibrary.Animation(id) is { } gif && await UnpackAsync(gif) is { } file)
+            return ImageSource.FromFile(file);
+        return ExerciseLibrary.Thumbnail(id) is { } picture
+            ? ImageSource.FromStream(async _ => await FileSystem.OpenAppPackageFileAsync(picture))
+            : null;
+    }
+
+    /// <summary>
+    /// A packaged animation as a file of its own, which animates on every platform (a stream may not): copied out of
+    /// the app package once per build.
+    /// </summary>
+    static async Task<string?> UnpackAsync(string asset)
+    {
+        var file = Path.Combine(FileSystem.CacheDirectory, "exercise-animations", AppInfo.BuildString, Path.GetFileName(asset));
+        if (File.Exists(file))
+            return file;
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+            var temp = file + ".tmp";
+            await using (var source = await FileSystem.OpenAppPackageFileAsync(asset))
+            await using (var target = File.Create(temp))
+                await source.CopyToAsync(target);
+            File.Move(temp, file, true);
+            return file;
+        }
+        catch (Exception)
+        {
+            // Not in this build or no room to copy it: the picture shows instead.
+            return null;
+        }
     }
 
     /// <summary>The demonstration in the YouTube app; without one, a search for form videos.</summary>

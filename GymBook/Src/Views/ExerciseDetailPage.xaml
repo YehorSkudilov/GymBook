@@ -19,10 +19,20 @@
                        TextColor="{StaticResource TextTertiary}" />
             </VerticalStackLayout>
 
-            <!-- The demonstration, trimmed to just the movement -->
-            <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding HasVideo}" HeightRequest="420" BackgroundColor="Black">
-                <controls:YouTubePlayer Url="{Binding VideoUrl}" />
-            </Border>
+            <!-- The demonstration: the looping animation (always first, and the only one offline) or the video, trimmed
+                 to just the movement -->
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding HasMedia}">
+                <controls:ModeToggle IsVisible="{Binding HasMediaChoice}" IsOwn="{Binding ShowVideo}" OwnEnabled="{Binding CanShowVideo}"
+                                     DefaultsText="Animation" OwnText="Video" />
+                <Border Style="{StaticResource Card}" Padding="0" HeightRequest="420" BackgroundColor="#151821">
+                    <Grid>
+                        <Image Source="{Binding Animation}" IsVisible="{Binding ShowsAnimation}" IsAnimationPlaying="True" Aspect="AspectFit" />
+                        <controls:YouTubePlayer Url="{Binding VideoUrl}" IsVisible="{Binding ShowsVideo}" LoadFailed="OnVideoLoadFailed" />
+                        <Label Text="The video needs a connection." IsVisible="{Binding VideoOffline}" Style="{StaticResource Caption}"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
 
             <Button Text="{Binding WatchText}" Style="{StaticResource SecondaryButton}" Command="{Binding WatchVideoCommand}"
                     IsVisible="{Binding IsCustom, Converter={StaticResource Not}}" />

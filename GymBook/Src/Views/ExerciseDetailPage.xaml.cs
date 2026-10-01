@@ -9,4 +9,6 @@ public partial class ExerciseDetailPage : BasePage
         InitializeComponent();
         BindingContext = viewModel;
     }
+
+    void OnVideoLoadFailed(object? sender, EventArgs e) => ((ExerciseDetailViewModel)BindingContext).VideoLoadFailed();
 }

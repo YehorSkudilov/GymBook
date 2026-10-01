@@ -12,6 +12,17 @@ remove an id.
   736 (`node tools/exercises/sync-thumbnail-manifest.mjs` refreshes it). The website mockup's four pictures are in
   `GymBook.Web/public/exercises/` and `PhoneMockup.tsx` uses `/exercises/<id>.webp`. The OpenAI keys that were here
   are no longer needed and were removed (they expire 2026-10-02 anyway).
+- **Offline animations: code done, GIFs not generated yet.** The exercise page has an "Animation | Video" toggle above
+  the demonstration. It opens on the animation every time. Offline, the video half is greyed out and can't be picked,
+  and the page goes back to the animation when the connection drops. When the connection comes back, the video loads
+  again from scratch. The web view stays invisible until the player page has loaded, and a failed load is cleared
+  without being shown (`YouTubePlayer.LoadFailed`), so no connection error page is ever visible. Until an exercise
+  has a GIF, its picture shows in place of the animation. Make the GIFs with
+  `OPENAI_API_KEY=key[,key] node tools/exercises/anims.mjs`: one image-edit request per exercise, using the thumbnail
+  as the reference, returns a 2×2 storyboard. The script plays its four frames start → end → start into
+  `Resources/Raw/exercise-animations/<id>.gif` (288 px, about 60–120 KB each), keeps the storyboard in
+  `tools/exercises/anim-sheets/`, and regenerates `ExerciseAnimationAssets.cs`. `--from-sheets` rebuilds the GIFs
+  (other `--size`/`--delays`) without the API, and `--only id --force --hint "..."` redoes a bad one.
 - **Videos: done.** All 35 curation chunks in `tools/exercises/curate/results/` are verified `.json` files and have
   been applied to `ExerciseLibrary.*.cs`; every change is logged in `tools/exercises/logs/videos-curated.md`.
   `node tools/exercises/check.mjs` reports `total 736 with video 736` and `no problems`. (736 since `cable_lean_away_lateral_raise` and `barbell_reverse_wrist_curl` were added; they aren't in a curation chunk).
@@ -51,6 +62,8 @@ rounds).
 - Pictures in exercise rows, plan/workout cards, home and calendar strips (`AspectFill`, `Margin="-1"`); custom
   exercises keep their initials.
 - Exercise page: embedded video starts/ends at the set times, including fractional ones.
+- Exercise page media toggle: opens on the animation; GIF animates on Android, iOS and Windows; airplane mode on the
+  video greys the toggle and switches to the animation; back online the video loads; no web view error page ever.
 
 ## Background: what these sessions built (none of it compiled yet)
 

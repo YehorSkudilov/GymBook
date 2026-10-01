@@ -96,24 +96,6 @@ let next = 0;
 await Promise.all(Array.from({ length: concurrency }, async () => { while (next < todo.length) await make(todo[next++]); }));
 // ExerciseLibrary needs to know which catalog IDs actually have packaged images so its initials fallback
 // remains visible for generated-but-not-yet-created thumbnails.
-const assetDir = new URL("../../GymBook/Resources/Raw/exercises/", import.meta.url);
-const manifestFile = new URL("../../GymBook/Src/Services/Exercises/ExerciseThumbnailAssets.cs", import.meta.url);
-const ids = readdirSync(assetDir).filter(name => name.endsWith(".webp")).map(name => name.slice(0, -5)).sort();
-const manifest = [
-  "// Generated from Resources/Raw/exercises by tools/exercises/thumbs.mjs.",
-  "namespace GymBook.Services;",
-  "",
-  "public static class ExerciseThumbnailAssets",
-  "{",
-  "    static readonly HashSet<string> Ids = new(StringComparer.Ordinal)",
-  "    {",
-  ...ids.map(id => `        \"${id}\",`),
-  "    };",
-  "",
-  "    public static bool Exists(string id) => Ids.Contains(id);",
-  "}",
-  "",
-].join("\n");
-writeFileSync(manifestFile, manifest);
-console.log(`Indexed ${ids.length} exercise thumbnail assets.`);
+const { syncManifests } = await import("./sync-thumbnail-manifest.mjs");
+syncManifests();
 console.log(`done ${done}, failed ${failed}; tokens in ${inputTokens}, out ${outputTokens}`);

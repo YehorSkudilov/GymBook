@@ -56,6 +56,15 @@ public static partial class ExerciseLibrary
         ? $"exercises/{Canonical(id)}.webp"
         : null;
 
+    /// <summary>
+    /// A looping demonstration of a built-in exercise in its picture's style, shown instead of the video offline:
+    /// shipped in the app as Resources/Raw/exercise-animations/&lt;id&gt;.gif (made by tools/exercises/anims.mjs).
+    /// Null when this build has none.
+    /// </summary>
+    public static string? Animation(string id) => ById.ContainsKey(Canonical(id)) && ExerciseAnimationAssets.Exists(Canonical(id))
+        ? $"exercise-animations/{Canonical(id)}.gif"
+        : null;
+
     /// <summary>One exercise as it's written in the library files.</summary>
     sealed class Def(string id, string name, MuscleGroup primary, Equipment equipment, Mechanic mechanic)
     {

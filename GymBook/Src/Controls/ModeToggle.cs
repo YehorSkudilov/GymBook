@@ -2,7 +2,8 @@ namespace GymBook.Controls;
 
 /// <summary>
 /// Two halves of one toggle: a setting's defaults, or its own ("Use defaults | Custom"), like the reps popup's
-/// Exact | Range. Bind <see cref="IsOwn"/> both ways; tapping a half sets it.
+/// Exact | Range, or the exercise page's Animation | Video. Bind <see cref="IsOwn"/> both ways; tapping a half sets it.
+/// With <see cref="OwnEnabled"/> false the second half is greyed out and can't be chosen.
 /// </summary>
 public class ModeToggle : ContentView
 {
@@ -15,10 +16,20 @@ public class ModeToggle : ContentView
     public static readonly BindableProperty OwnTextProperty = BindableProperty.Create(nameof(OwnText), typeof(string), typeof(ModeToggle),
         "Custom", propertyChanged: (b, _, v) => ((ModeToggle)b)._own.Text = (string)v);
 
+    public static readonly BindableProperty OwnEnabledProperty = BindableProperty.Create(nameof(OwnEnabled), typeof(bool), typeof(ModeToggle), true,
+        propertyChanged: (b, _, _) => ((ModeToggle)b).Paint());
+
     public bool IsOwn
     {
         get => (bool)GetValue(IsOwnProperty);
         set => SetValue(IsOwnProperty, value);
+    }
+
+    /// <summary>Whether the second half can be chosen; it's greyed out when not.</summary>
+    public bool OwnEnabled
+    {
+        get => (bool)GetValue(OwnEnabledProperty);
+        set => SetValue(OwnEnabledProperty, value);
     }
 
     public string DefaultsText
@@ -64,7 +75,11 @@ public class ModeToggle : ContentView
             Padding = new Thickness(0, 9),
             Content = label,
         };
-        half.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => IsOwn = own) });
+        half.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() =>
+        {
+            if (!own || OwnEnabled)
+                IsOwn = own;
+        }) });
         return (half, label);
     }
 
@@ -74,6 +89,7 @@ public class ModeToggle : ContentView
             return;
         Paint(_defaultsHalf, _defaults, !IsOwn);
         Paint(_ownHalf, _own, IsOwn);
+        _ownHalf.Opacity = OwnEnabled ? 1 : 0.4;
     }
 
     static void Paint(Border half, Label label, bool on)
