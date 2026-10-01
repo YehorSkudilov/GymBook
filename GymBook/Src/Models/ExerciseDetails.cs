@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace GymBook.Models;
 
 /// <summary>The kind of training an exercise is: decides how it's prescribed (explosive, held, easy-paced) and how it's grouped.</summary>
@@ -6,13 +8,15 @@ public enum ExerciseCategory { Strength, Plyometric, Olympic, Pilates, Yoga, Mob
 public enum ExerciseLevel { Beginner, Intermediate, Advanced }
 
 /// <summary>A demonstration on YouTube. <see cref="Start"/> and <see cref="End"/> (seconds) trim a longer video to the demonstration itself.</summary>
-public record ExerciseVideo(string YouTubeId, int? Start = null, int? End = null)
+public record ExerciseVideo(string YouTubeId, double? Start = null, double? End = null)
 {
-    public string WatchUrl => $"https://www.youtube.com/watch?v={YouTubeId}" + (Start is { } s ? $"&t={s}s" : "");
+    static string UrlSecond(double seconds) => Math.Round(seconds, MidpointRounding.AwayFromZero).ToString(CultureInfo.InvariantCulture);
+
+    public string WatchUrl => $"https://www.youtube.com/watch?v={YouTubeId}" + (Start is { } s ? $"&t={UrlSecond(s)}s" : "");
 
     /// <summary>The embedded player, playing just the demonstration.</summary>
     public string EmbedUrl => $"https://www.youtube.com/embed/{YouTubeId}?rel=0&playsinline=1&modestbranding=1"
-        + (Start is { } s ? $"&start={s}" : "") + (End is { } e ? $"&end={e}" : "");
+        + (Start is { } s ? $"&start={UrlSecond(s)}" : "") + (End is { } e ? $"&end={UrlSecond(e)}" : "");
 }
 
 /// <summary>

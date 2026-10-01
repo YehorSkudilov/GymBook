@@ -873,7 +873,7 @@ public static partial class ExerciseLibrary
                 "Breathe into your upper back to deepen the stretch.",
                 "Keep your lower back still; round only the upper back.",
             ],
-            Video = new("wT9Mnqbs1Dk"),
+            Video = new("eogvpyw4R3E"),
         },
         new("stretch_wrist_flexor", "Wrist Flexor Stretch", Forearms, Bodyweight, Isolation)
         {
@@ -948,7 +948,7 @@ public static partial class ExerciseLibrary
                 "Sit on a folded towel if your lower back rounds before you can lean forward.",
                 "Think about bringing your belly to your thigh, not your nose to your knee.",
             ],
-            Video = new("USWE5mCLIoE"),
+            Video = new("aJvfeuu71gw"),
         },
         new("stretch_supine_hamstring_strap", "Supine Hamstring Strap Stretch", Hamstrings, Band, Isolation)
         {
@@ -1183,7 +1183,7 @@ public static partial class ExerciseLibrary
                 "Keep your back flat; don't let your belly sag toward the floor.",
                 "Go wide gradually; this one is intense.",
             ],
-            Video = new("7d-4CkcXWVU"),
+            Video = new("6-JQqiI_Plo"),
         },
         new("stretch_kneeling_adductor", "Kneeling Adductor Stretch", Quads, Bodyweight, Isolation)
         {
@@ -1296,7 +1296,7 @@ public static partial class ExerciseLibrary
                 "Place a folded towel under your ankles if this is too intense.",
                 "Skip the knee lift if your knees complain.",
             ],
-            Video = new("GAqgG7Vm7Fc"),
+            Video = new("wLnYZRHLhnY"),
         },
 
         // Spine and trunk stretches
@@ -1497,7 +1497,7 @@ public static partial class ExerciseLibrary
                 "Lengthen both sides of the waist; don't collapse sideways to reach the floor.",
                 "Keep a micro-bend in the front knee rather than locking it.",
             ],
-            Video = new("S6gB0QHbWFE"),
+            Video = new("_1124fj0BeQ"),
         },
         new("yoga_extended_side_angle", "Extended Side Angle", Quads, Bodyweight, Compound)
         {
@@ -1598,7 +1598,7 @@ public static partial class ExerciseLibrary
                 "Use a block under the hand; it makes the pose far more stable.",
                 "Flex the lifted foot and reach through the heel.",
             ],
-            Video = new("PZRMY-fNr-k"),
+            Video = new("rvOcLOu3f7s"),
         },
         new("yoga_standing_forward_fold", "Standing Forward Fold", Hamstrings, Bodyweight, Isolation)
         {
@@ -1657,7 +1657,7 @@ public static partial class ExerciseLibrary
                 "Pad the back knee with a folded mat or blanket.",
                 "Lift up out of the lower back rather than collapsing into it.",
             ],
-            Video = new("6w_W1iXwF94"),
+            Video = new("qMPN9cCDCq8"),
         },
         new("yoga_pigeon", "Pigeon Pose", Glutes, Bodyweight, Compound)
         {

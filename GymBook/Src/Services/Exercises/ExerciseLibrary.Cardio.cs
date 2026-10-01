@@ -30,7 +30,7 @@ public static partial class ExerciseLibrary
                 "Take short, quick strides rather than long reaching ones.",
                 "Don't hold the handrails or the console while running.",
             ],
-            Video = new("UIyZUHq2UdU"),
+            Video = new("Ub0hsbjFCoY", 8, 20),
         },
         new("incline_treadmill_walk", "Incline Treadmill Walk", Glutes, Machine, Compound)
         {
@@ -49,7 +49,7 @@ public static partial class ExerciseLibrary
                 "Lean only slightly into the hill from your ankles, not by bending at the waist.",
                 "Don't hang on to the handrails; if you need them, lower the incline or speed.",
             ],
-            Video = new("HwXYMPGjlUg"),
+            Video = new("NAsObfFJXvE", 61.119999, 101.68),
         },
         new("curved_treadmill_run", "Curved Treadmill Run", Quads, Machine, Compound)
         {
@@ -296,7 +296,7 @@ public static partial class ExerciseLibrary
                 "Increase your weekly distance gradually, by about 10% at a time.",
                 "Don't overstride or slam your heels down far in front of you.",
             ],
-            Video = new("M9U9pk6yOIU"),
+            Video = new("k2L97eKS5qk"),
         },
         new("sprints", "Sprints", Quads, Bodyweight, Compound)
         {
@@ -339,7 +339,7 @@ public static partial class ExerciseLibrary
                 "Keep your head up and look up the hill, not at your feet.",
                 "Don't run back down hard; the walk down is your rest.",
             ],
-            Video = new("VzHQUh5jzsI", 27, 88),
+            Video = new("VzHQUh5jzsI", 27, 67),
         },
         new("shuttle_runs", "Shuttle Runs", Quads, Bodyweight, Compound)
         {
@@ -461,7 +461,7 @@ public static partial class ExerciseLibrary
                 "Keep your upper body relaxed with a slight bend in your elbows.",
                 "Don't grind a heavy gear at low cadence for long; it strains your knees.",
             ],
-            Video = new("4ssLDk1eX9w"),
+            Video = new("4ssLDk1eX9w", 14, 58),
         },
 
         // Jump rope
@@ -483,7 +483,7 @@ public static partial class ExerciseLibrary
                 "Turn the rope from your wrists, not by swinging your whole arms.",
                 "Don't land flat-footed or on your heels.",
             ],
-            Video = new("WA1xNoWA7yA"),
+            Video = new("XSY9AE72inM"),
         },
         new("boxer_skip", "Boxer Skip", Calves, Other, Compound)
         {
@@ -503,7 +503,7 @@ public static partial class ExerciseLibrary
                 "Keep your hands low and close to your hips.",
                 "Don't kick your feet back or lift them high.",
             ],
-            Video = new("fV73Ce3RiiQ"),
+            Video = new("fV73Ce3RiiQ", 36, 179),
         },
         new("high_knee_jump_rope", "High-Knee Jump Rope", Quads, Other, Compound)
         {
@@ -545,7 +545,7 @@ public static partial class ExerciseLibrary
                 "Practise single–single–double patterns before linking doubles.",
                 "Don't pike or kick your feet back to buy time; jump straight up.",
             ],
-            Video = new("ZmqgcpcM-SI"),
+            Video = new("82jNjDS19lg"),
         },
 
         // Bodyweight conditioning
@@ -568,7 +568,7 @@ public static partial class ExerciseLibrary
                 "Land softly with bent knees on the jump.",
                 "Don't flop down in a heap; control the drop to the floor.",
             ],
-            Video = new("fZx6nxKMq4E"),
+            Video = new("_7BXaQxvLjQ"),
         },
         new("burpee_box_jump_over", "Burpee Box Jump-Over", Quads, Bodyweight, Compound)
         {
@@ -609,7 +609,7 @@ public static partial class ExerciseLibrary
                 "Keep your hands under your shoulders.",
                 "Don't round your back as you squat down; bend your knees.",
             ],
-            Video = new("fysU2ldlXSY"),
+            Video = new("Id-g0YHkuVo"),
         },
         new("sprawl", "Sprawl", Quads, Bodyweight, Compound)
         {
@@ -649,7 +649,7 @@ public static partial class ExerciseLibrary
                 "Hold your shoulders over your hands throughout.",
                 "Don't bounce your hips up and down or let your back sag.",
             ],
-            Video = new("WN1ZemcpIck"),
+            Video = new("kLh-uczlPLg"),
         },
         new("jumping_jacks", "Jumping Jacks", Calves, Bodyweight, Compound)
         {
@@ -689,7 +689,7 @@ public static partial class ExerciseLibrary
                 "Swing your arms hard to help you jump higher.",
                 "Don't land stiff-legged.",
             ],
-            Video = new("lkYtECQYrWo"),
+            Video = new("VVEO_J1tIXU"),
         },
         new("high_knees", "High Knees", Quads, Bodyweight, Compound)
         {
@@ -749,7 +749,7 @@ public static partial class ExerciseLibrary
                 "Push from the outside edge of your trailing foot.",
                 "Don't cross or click your feet together.",
             ],
-            Video = new("W6wgZU8Ioos"),
+            Video = new("iBmvPEWt5og"),
         },
         new("bear_crawl", "Bear Crawl", Shoulders, Bodyweight, Compound)
         {
@@ -789,7 +789,7 @@ public static partial class ExerciseLibrary
                 "Keep your shoulders pulled down and back.",
                 "Don't let your hips sag towards the floor.",
             ],
-            Video = new("VbxDvCXaJw8"),
+            Video = new("pr-3rOyEjSI"),
         },
 
         // Equipment conditioning
@@ -851,7 +851,7 @@ public static partial class ExerciseLibrary
                 "Keep your core braced and back flat at the bottom.",
                 "Don't just use your arms; the power comes from your hips and lats.",
             ],
-            Video = new("zJVbXefebRI"),
+            Video = new("7wDx6mZDxA8"),
         },
         new("wall_ball", "Wall Ball", Quads, Other, Compound)
         {
@@ -871,7 +871,7 @@ public static partial class ExerciseLibrary
                 "Keep your chest up and elbows under the ball.",
                 "Don't stand too close or too far from the wall, or the ball will come back behind or in front of you.",
             ],
-            Video = new("0dozPCsvQDI"),
+            Video = new("U_wNNwNXKr8"),
         },
         new("med_ball_burpee", "Medicine Ball Burpee", Quads, Other, Compound)
         {
@@ -936,7 +936,7 @@ public static partial class ExerciseLibrary
                 "Bring each hand straight back to your guard after it punches.",
                 "Don't fully lock out your elbows on punches thrown into the air.",
             ],
-            Video = new("rdi5rX_rd58"),
+            Video = new("J4j3AOVWuHE"),
         },
         new("heavy_bag_rounds", "Heavy Bag Rounds", Shoulders, Other, Compound)
         {
@@ -976,7 +976,7 @@ public static partial class ExerciseLibrary
                 "Pump your arms in time with your feet.",
                 "Don't look down at your feet the whole way; glance ahead once you know the pattern.",
             ],
-            Video = new("z1OhMhCZa8I"),
+            Video = new("66oUAhI0nQQ"),
         },
     ];
 }

@@ -1077,7 +1077,7 @@ public static partial class ExerciseLibrary
                 "Keep the shoulders down and the movement led by the trunk, not just the arms.",
                 "Use a light spring; this is about control, not load.",
             ],
-            Video = new("PtAEvQbj5Ro"),
+            Video = new("2GQzUj38xhs"),
         },
         new("pilates_reformer_stomach_massage", "Reformer Stomach Massage", Abs, Other, Compound)
         {
@@ -1117,7 +1117,7 @@ public static partial class ExerciseLibrary
                 "Keep the hips level and stacked over the feet.",
                 "Use a light spring and open only as far as you can control the return.",
             ],
-            Video = new("OirVxTic1B4"),
+            Video = new("OirVxTic1B4", 5.5380001, 50.759998),
         },
         new("pilates_reformer_mermaid", "Reformer Mermaid", Abs, Other, Compound)
         {
@@ -1253,7 +1253,7 @@ public static partial class ExerciseLibrary
                 "Keep the head and chest curled up throughout.",
                 "Lower the legs only as far as your back stays still.",
             ],
-            Video = new("VzMG_pzUEmA"),
+            Video = new("VzMG_pzUEmA", 17.629999, 65),
         },
         new("pilates_reformer_teaser", "Reformer Teaser", Abs, Other, Compound)
         {
@@ -1272,7 +1272,7 @@ public static partial class ExerciseLibrary
                 "Use a light spring; the springs make the roll-down feel heavier than on the mat.",
                 "Keep the legs still and the chest lifted at the top.",
             ],
-            Video = new("6j_r7O7FgRs"),
+            Video = new("6j_r7O7FgRs", 24.959999, 104.36),
         },
 
         // Cadillac / tower
@@ -1353,7 +1353,7 @@ public static partial class ExerciseLibrary
                 "Keep the spine tall and still; don't lean back to press.",
                 "Resist the spring on the way up.",
             ],
-            Video = new("AfrudpR-NYo"),
+            Video = new("OSU3gDjHSgA"),
         },
         new("pilates_chair_pike", "Chair Pike", Abs, Other, Compound)
         {
@@ -1373,7 +1373,7 @@ public static partial class ExerciseLibrary
                 "Lift from the abdominals, not by jumping.",
                 "Keep the arms straight and the shoulders stable over the hands.",
             ],
-            Video = new("ZpZtS2ufb74"),
+            Video = new("S82d3pR6pG0", 65, 121),
         },
         new("pilates_chair_swan", "Chair Swan", LowerBack, Other, Compound)
         {
@@ -1433,7 +1433,7 @@ public static partial class ExerciseLibrary
                 "Press with the heels of the hands, not the fingers.",
                 "Don't let the shoulders hike up toward your ears.",
             ],
-            Video = new("Yf0VAkQoHqw"),
+            Video = new("87OLIcCO8WU"),
         },
         new("pilates_small_ball_roll_back", "Small Ball Roll-Back", Abs, Other, Compound)
         {

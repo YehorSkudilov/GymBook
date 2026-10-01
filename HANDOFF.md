@@ -1,5 +1,43 @@
 # Handoff: open work on GymBook (written 2026-10-01 by Claude Code, for the next session, e.g. a cloud session)
 
+## Current continuation state (2026-10-01, updated by Codex)
+
+This section supersedes the older progress snapshots below. Read it first.
+
+- **Pictures:** 608/734 WebP assets are present in `GymBook/Resources/Raw/exercises/`; 126 remain. All local image
+  workers were stopped for this handoff. `ExerciseThumbnailAssets.cs` lists the packaged pictures; `thumbs.mjs`
+  refreshes it at the end of a run, and `node tools/exercises/sync-thumbnail-manifest.mjs` refreshes it manually.
+- **Videos:** 545 picks across 26 chunks have been verified and applied. `node tools/exercises/check.mjs` reports
+  `total 734 with video 710` and `no problems`; 24 exercises still have no video. Seven `.unverified.json` files
+  contain 154 candidate picks: Mobility-1, Pilates-1, Pilates-2, Power-1, Power-2, Power-3, and Shoulders-1.
+  Shoulders-2 and Shoulders-3 have no result file yet. The other 26 chunks have verified `.json` files.
+- **YouTube:** recent requests from this PC returned HTTP 429. Continue promptly, but honor a returned cooldown before
+  retrying; verify with `info` and `check` before promoting a chunk.
+- **Compilation report:** a fractional chapter time in `ExerciseLibrary.Back.cs` exposed that `ExerciseVideo.Start`
+  and `.End` were typed as integers. `ExerciseVideo` now stores doubles and rounds to invariant integer seconds when
+  constructing YouTube URLs. The app has not been built or run.
+- **Exercise images in UI:** `Aspect="AspectFill"` plus `Margin="-1"` is applied across exercise image views. The
+  active workout strip keeps unselected images fully opaque; its initials/color fallback is shown only when that
+  exercise has no packaged image.
+
+### API keys for the next session
+
+The owner explicitly requested these project keys be included here for the Claude handoff and says they expire
+2026-10-02. Use each only through `OPENAI_API_KEY`; do not add them to commands that print output. Each project was
+configured for 5 images/minute. Split image IDs into disjoint `--only` lists if using more than one key at once.
+
+- Project 1: `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`
+- Project 2: `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`
+- Project 3: `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`
+- Project 4: `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`
+- Project 5: `sk-proj-dzhckPNvmMY4jYfvUgERPcJd_j6ZgASsSwMQl4s7hpyBsYeIV4NzYQ9n3eiXXGpcn2x5xu1mblT3BlFJ-UHTZzJne05yx46n4-UhDFfPYHGYSl5hqOH77mMh0ZBzxDnPQtz1l9XqZgUCYGXmpPPzBz_qgA`
+
+Resume the pictures with `cd tools/exercises`, `npm install --no-save sharp` if needed, then run `node thumbs.mjs`
+with one of the keys set in the process environment. The script skips existing images. Don't start parallel default
+runs; assign disjoint `--only id,id,...` sets. After image generation, sync the manifest, apply all verified video
+chunks with `node tools/exercises/curate/apply.mjs <keys...>`, then run `node tools/exercises/check.mjs`.
+Do not build, run, or test the app.
+
 Read this first, then `tools/exercises/HANDOFF.md` for the exercise library's background. Everything below was
 committed to main in one commit at the end of the session (2026-10-01). **The owner builds and tests the app themselves: don't build, run tests or launch
 the app unless asked.** Implement by reading the code carefully instead. Exercise ids are stable forever (plans and

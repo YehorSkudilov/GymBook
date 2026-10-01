@@ -50,7 +50,7 @@ public static partial class ExerciseLibrary
                 "Let the dumbbells come slightly together at the top, but don't clank them.",
                 "Don't drop your elbows far below the bench if your shoulders complain.",
             ],
-            Video = new("jAD1Nsuq3lM"),
+            Video = new("4_QuyfOCI5U"),
         },
         new("smith_bench_press", "Smith Machine Bench Press", Chest, Machine, Compound)
         {
@@ -185,7 +185,7 @@ public static partial class ExerciseLibrary
                 "Keep your elbows tucked close to your body.",
                 "Don't let the dumbbells drift apart at the bottom.",
             ],
-            Video = new("G2j_lJf6ljk"),
+            Video = new("Aq_wwRslKas"),
         },
         new("cable_chest_press", "Standing Cable Chest Press", Chest, Cable, Compound)
         {
@@ -321,7 +321,7 @@ public static partial class ExerciseLibrary
                 "Control the lowering; don't let the stack crash.",
                 "Don't let your shoulders roll forward off the pad.",
             ],
-            Video = new("2jwqJh21H0Y"),
+            Video = new("TrTSvn5-MTk"),
         },
 
         // Decline pressing
@@ -343,7 +343,7 @@ public static partial class ExerciseLibrary
                 "Keep your shoulder blades pulled back.",
                 "Don't lower the bar toward your neck.",
             ],
-            Video = new("SAfNLBU4kUs"),
+            Video = new("FFyGwcLnDYc", 34.398998, 54.132999),
         },
         new("decline_db_press", "Decline Dumbbell Press", Chest, Dumbbell, Compound)
         {
@@ -442,7 +442,7 @@ public static partial class ExerciseLibrary
                 "Lean slightly forward and stay still; only your arms move.",
                 "Don't let the cables pull your arms back further than your shoulders like.",
             ],
-            Video = new("W6gpl6Obw7I"),
+            Video = new("I-Ue34qLxc4"),
         },
         new("high_to_low_cable_fly", "High-to-Low Cable Fly", Chest, Cable, Isolation)
         {
@@ -461,7 +461,7 @@ public static partial class ExerciseLibrary
                 "Lean your torso slightly forward from the hips.",
                 "Don't turn it into a pushdown by bending and straightening your elbows.",
             ],
-            Video = new("8Um35Es-ROE"),
+            Video = new("8Um35Es-ROE", 39, 103),
         },
         new("low_to_high_cable_fly", "Low-to-High Cable Fly", Chest, Cable, Isolation)
         {
@@ -518,7 +518,7 @@ public static partial class ExerciseLibrary
                 "Hold a fixed upright with your free hand if it helps you stay still.",
                 "Don't bend your elbow to shorten the lever.",
             ],
-            Video = new("vGGOR4DPDt0"),
+            Video = new("E_mT1JWOp90"),
         },
         new("pec_deck", "Pec Deck", Chest, Machine, Isolation)
         {
@@ -537,7 +537,7 @@ public static partial class ExerciseLibrary
                 "Set the start position so the stretch is comfortable for your shoulders.",
                 "Don't let the weight stack yank your arms back.",
             ],
-            Video = new("CRroep849bU"),
+            Video = new("O-OBCfyh9Fw"),
         },
         new("band_fly", "Band Chest Fly", Chest, Band, Isolation)
         {
@@ -575,7 +575,7 @@ public static partial class ExerciseLibrary
                 "Keep your shoulders down and your ribs down.",
                 "Don't let the plates sag toward the floor as you press.",
             ],
-            Video = new("7J8pLwyy_eM"),
+            Video = new("cIoUZOnypS8"),
         },
 
         // Push-ups
@@ -713,7 +713,7 @@ public static partial class ExerciseLibrary
                 "Make sure the blocks or handles can't slide or tip.",
                 "Don't sink deeper than your shoulders can control.",
             ],
-            Video = new("1VDqyaVaovg"),
+            Video = new("ZCYPSaEjsWc", 22.379999, 66.599998),
         },
         new("band_push_up", "Banded Push-Up", Chest, Band, Compound)
         {
@@ -733,7 +733,7 @@ public static partial class ExerciseLibrary
                 "Choke up on the band to make it harder.",
                 "Don't let the extra resistance break your straight body line.",
             ],
-            Video = new("RYV6D14cI0s"),
+            Video = new("7Xu3D-TKKAw"),
         },
         new("weighted_push_up", "Weighted Push-Up", Chest, Other, Compound)
         {
@@ -753,7 +753,7 @@ public static partial class ExerciseLibrary
                 "Add weight in small jumps.",
                 "Don't let the load make your hips sag.",
             ],
-            Video = new("z4oz6W1X10w"),
+            Video = new("8sa2qDm8a6k", 47.080002, 83.839996),
         },
         new("archer_push_up", "Archer Push-Up", Chest, Bodyweight, Compound)
         {
@@ -773,7 +773,7 @@ public static partial class ExerciseLibrary
                 "Keep your hips square to the floor.",
                 "Don't rush; control the shift to each side.",
             ],
-            Video = new("rvHTofenk-Y"),
+            Video = new("MxVbNel13Ek", 133),
         },
         new("ring_push_up", "Ring Push-Up", Chest, Other, Compound)
         {
@@ -835,7 +835,7 @@ public static partial class ExerciseLibrary
                 "Keep your shoulders down away from your ears.",
                 "Don't drop too deep if your shoulders feel pinched at the bottom.",
             ],
-            Video = new("yN6Q1UI_xkE"),
+            Video = new("yN6Q1UI_xkE", 161.28, 286.76001),
         },
         new("assisted_chest_dip", "Assisted Chest Dip", Chest, Machine, Compound)
         {
@@ -916,7 +916,7 @@ public static partial class ExerciseLibrary
                 "Keep your ribs down so your lower back doesn't arch.",
                 "Don't go further back than your shoulders comfortably allow.",
             ],
-            Video = new("tcHaHIQStsk"),
+            Video = new("tcHaHIQStsk", 427.5, 583.67999),
         },
 
         // Serratus
@@ -955,7 +955,7 @@ public static partial class ExerciseLibrary
                 "Keep your body straight and your hips still.",
                 "Don't let your head drop as your chest sinks.",
             ],
-            Video = new("5YHZnEsE9hA"),
+            Video = new("NKekqeudgWs"),
         },
         new("serratus_punch", "Dumbbell Serratus Punch", Chest, Dumbbell, Isolation)
         {

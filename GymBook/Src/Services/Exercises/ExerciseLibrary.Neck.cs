@@ -533,7 +533,7 @@ public static partial class ExerciseLibrary
                 "Don't swing your head or bounce at the bottom.",
                 "Stop for dizziness, especially when lifting your head after the lowered position.",
             ],
-            Video = new("aM657RnN9XE"),
+            Video = new("aM657RnN9XE", 6.4640002, 24.24),
         },
         new("lying_neck_extension", "Lying Neck Extension", Neck, Bodyweight, Isolation)
         {
@@ -949,7 +949,7 @@ public static partial class ExerciseLibrary
                 "Keep the balls off the spine itself.",
                 "Stop for headache, dizziness or tingling.",
             ],
-            Video = new("W4Wbx5TzJcU"),
+            Video = new("P3RIddl_rlY"),
         },
     ];
 }

@@ -95,7 +95,7 @@ public static partial class ExerciseLibrary
                 "Stay braced on the box: don't relax and rock back.",
                 "Keep your shins near vertical and knees pushed out.",
             ],
-            Video = new("hy0nD5YwExI"),
+            Video = new("rMEPHwNhQfo"),
         },
         new("pause_squat", "Pause Squat", Quads, Barbell, Compound)
         {
@@ -115,7 +115,7 @@ public static partial class ExerciseLibrary
                 "Keep your back tight and your knees out during the pause.",
                 "Don't relax or sink lower during the hold.",
             ],
-            Video = new("0ELH2NcFLZA"),
+            Video = new("nknf16JJTZo"),
         },
         new("safety_bar_squat", "Safety Bar Squat", Quads, Barbell, Compound)
         {
@@ -135,7 +135,7 @@ public static partial class ExerciseLibrary
                 "Keep your elbows down and the handles close.",
                 "Don't let your upper back round under the load.",
             ],
-            Video = new("WZi_C9ne320"),
+            Video = new("b2jmZyptN64", 72.799004, 137.03999),
         },
         new("zercher_squat", "Zercher Squat", Quads, Barbell, Compound)
         {
@@ -195,7 +195,7 @@ public static partial class ExerciseLibrary
                 "Lower feet on the platform target the quads more.",
                 "Don't let your heels lift or your knees cave in.",
             ],
-            Video = new("hglQExHCM9Q"),
+            Video = new("0tn5K9NlCfo"),
         },
         new("belt_squat", "Belt Squat", Quads, Machine, Compound)
         {
@@ -214,7 +214,7 @@ public static partial class ExerciseLibrary
                 "Use the handles for balance only, not to pull yourself up.",
                 "Don't let your knees cave in at the bottom.",
             ],
-            Video = new("9fEloOw3hTo"),
+            Video = new("YgYwEo5WN5o", 20.48, 50.238998),
         },
         new("pendulum_squat", "Pendulum Squat", Quads, Machine, Compound)
         {
@@ -371,7 +371,7 @@ public static partial class ExerciseLibrary
                 "Keep the heel of the working leg flat on the floor.",
                 "Don't force depth your hips and ankles don't have yet.",
             ],
-            Video = new("C5YrOdyJjks"),
+            Video = new("iPZNB5GsOnM"),
         },
         new("split_squat", "Split Squat", Quads, Bodyweight, Compound)
         {
@@ -430,7 +430,7 @@ public static partial class ExerciseLibrary
                 "Build up with assisted pistols or box pistols first.",
                 "Don't let your knee collapse inward.",
             ],
-            Video = new("uR0mlXTmfiI"),
+            Video = new("bH3mRwnAN88"),
         },
         new("assisted_pistol_squat", "Assisted Pistol Squat", Quads, Bodyweight, Compound)
         {
@@ -702,7 +702,7 @@ public static partial class ExerciseLibrary
                 "Keep your front knee tracking over your toes.",
                 "Don't cross back so far that you twist your knee.",
             ],
-            Video = new("cVYnf2CFO9M"),
+            Video = new("cVYnf2CFO9M", 30.99),
         },
 
         // Step-ups and step-downs

@@ -8,8 +8,8 @@
     "title": "The PERFECT Squat (5 Steps)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Jeremy Ethier?s concise tutorial demonstrates the standard barbell back squat.",
+    "verdict": "ok"
   },
   {
     "id": "low_bar_squat",
@@ -20,56 +20,56 @@
     "title": "How to Perform a Low Bar Back Squat",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Squat University?s focused low-bar back squat tutorial is an exact match.",
+    "verdict": "ok"
   },
   {
     "id": "front_squat",
     "videoId": "6PLvU0rjw18",
-    "start": null,
-    "end": null,
+    "start": 196,
+    "end": 281,
     "channel": "Zack Henderson",
     "title": "How To Front Squat",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "timeSource": "chapters",
+    "chapter": "Front Squat Form",
+    "note": "Trimmed Zack Henderson?s tutorial to its exact ?Front Squat Form? chapter.",
+    "verdict": "ok"
   },
   {
     "id": "box_squat",
-    "videoId": "hy0nD5YwExI",
+    "videoId": "rMEPHwNhQfo",
     "start": null,
     "end": null,
-    "channel": "Marissa Arnone",
-    "title": "Barbell Box Squat Tutorial",
+    "channel": "The Active Life",
+    "title": "Box Squat Movement Demo",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "The Active Life professional coaching channel demonstrates the exact box squat.",
+    "verdict": "ok"
   },
   {
     "id": "pause_squat",
-    "videoId": "0ELH2NcFLZA",
+    "videoId": "nknf16JJTZo",
     "start": null,
     "end": null,
-    "channel": "W10 Personal Training Gym",
-    "title": "How to do pause squats and why you should do them...",
+    "channel": "Barbell Logic",
+    "title": "The Paused Squat: Gym Shorts (How To)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Barbell Logic?s focused tutorial demonstrates the paused squat and explains the pause.",
+    "verdict": "ok"
   },
   {
     "id": "safety_bar_squat",
-    "videoId": "WZi_C9ne320",
-    "start": null,
-    "end": null,
-    "channel": "Alexander Eriksson",
-    "title": "Safety Squat Bar Squats - Squat Exercise Tutorial - AE Power App",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "videoId": "b2jmZyptN64",
+    "start": 72.799004,
+    "end": 137.03999,
+    "channel": "Rogue Fitness",
+    "title": "How to Use a Safety Squat Bar with Steve Slater",
+    "timeSource": "chapters",
+    "chapter": "Execution of the squat",
+    "note": "Rogue Fitness tutorial; trimmed to the exact ?Execution of the squat? chapter.",
+    "verdict": "ok"
   },
   {
     "id": "zercher_squat",
@@ -80,7 +80,7 @@
     "title": "TUTORIAL: The Zercher Squat",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: reputable source and focused exercise demo.",
+    "note": "Erin Stern?s focused Zercher squat tutorial is an exact match.",
     "verdict": "ok"
   },
   {
@@ -92,32 +92,32 @@
     "title": "How to Properly Perform Smith Machine Squats With Good Form (Exercise Demonstration)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: reputable source and focused exercise demo.",
+    "note": "Gerardi Performance?s focused Smith machine squat demonstration is an exact match.",
     "verdict": "ok"
   },
   {
     "id": "hack_squat",
-    "videoId": "hglQExHCM9Q",
+    "videoId": "0tn5K9NlCfo",
     "start": null,
     "end": null,
-    "channel": "Vivian Ngo",
-    "title": "Hack Squat Machine (Exercise Tutorial + Form Tips) | Team Evolve",
+    "channel": "Bodybuilding.com",
+    "title": "Hack Squat | Exercise Guide",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Bodybuilding.com focused exercise guide demonstrates the hack squat throughout.",
+    "verdict": "ok"
   },
   {
     "id": "belt_squat",
-    "videoId": "9fEloOw3hTo",
-    "start": null,
-    "end": null,
-    "channel": "Benjamin Inglis",
-    "title": "How to BELT SQUAT in 15 seconds",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "videoId": "YgYwEo5WN5o",
+    "start": 20.48,
+    "end": 50.238998,
+    "channel": "Live Lean TV Daily Exercises",
+    "title": "How To: Belt Squat (Rogue Monster Rhino Belt Squat)",
+    "timeSource": "chapters",
+    "chapter": "Proper squat form",
+    "note": "Live Lean TV tutorial; trimmed from ?Proper squat form? through the end of ?Executing the rep.?",
+    "verdict": "ok"
   },
   {
     "id": "pendulum_squat",
@@ -128,8 +128,8 @@
     "title": "How to use the pendulum squat machine",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Julian Execution?s concise tutorial demonstrates use of the pendulum squat machine.",
+    "verdict": "ok"
   },
   {
     "id": "goblet_squat",
@@ -140,7 +140,7 @@
     "title": "Goblet Squat [How To]",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: reputable source and focused exercise demo.",
+    "note": "Le Sweat?s focused goblet squat tutorial is an exact match.",
     "verdict": "ok"
   },
   {
@@ -152,8 +152,8 @@
     "title": "Kettlebell Goblet Squat | Kettlebell Exercise",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept the current focused kettlebell goblet squat demo; no stronger exact match was identified.",
+    "verdict": "ok"
   },
   {
     "id": "sumo_goblet_squat",
@@ -164,8 +164,8 @@
     "title": "Dumbbell Sumo Goblet Squat",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept the current focused dumbbell sumo goblet squat demo; no stronger exact match was identified.",
+    "verdict": "ok"
   },
   {
     "id": "heels_elevated_goblet_squat",
@@ -176,8 +176,8 @@
     "title": "How To: Dumbbell Goblet Squat (Heels Elevated)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Fitness Lab?s focused tutorial demonstrates the exact heels-elevated goblet squat variant.",
+    "verdict": "ok"
   },
   {
     "id": "db_squat",
@@ -188,7 +188,7 @@
     "title": "How to Dumbbell Squat | Mike Hildebrandt",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: reputable source and focused exercise demo.",
+    "note": "Bodybuilding.com?s focused dumbbell squat guide is an exact match.",
     "verdict": "ok"
   },
   {
@@ -197,23 +197,23 @@
     "start": null,
     "end": null,
     "channel": "Bupa Health",
-    "title": "How to do a bodyweight squat | Bupa Health",
+    "title": "How to do a body weight squat | Bupa Health",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: reputable source and focused exercise demo.",
+    "note": "Bupa Health?s focused bodyweight squat guide is an exact match.",
     "verdict": "ok"
   },
   {
     "id": "cossack_squat",
-    "videoId": "C5YrOdyJjks",
+    "videoId": "iPZNB5GsOnM",
     "start": null,
     "end": null,
-    "channel": "Foundation Fitness",
-    "title": "How to do a Cossack Squat (bodyweight)",
+    "channel": "The Active Life",
+    "title": "Cossack Squat Movement Demo",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "The Active Life professional coaching channel demonstrates the exact Cossack squat.",
+    "verdict": "ok"
   },
   {
     "id": "split_squat",
@@ -224,8 +224,8 @@
     "title": "How to do a SPLIT SQUAT",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Atomic Athlete?s focused split squat tutorial is an exact match.",
+    "verdict": "ok"
   },
   {
     "id": "bulgarian_split_squat",
@@ -236,19 +236,19 @@
     "title": "How To Do A Bulgarian Split Squat | My Favorite Leg Move",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept this focused Bulgarian split squat tutorial; no stronger exact match was identified.",
+    "verdict": "ok"
   },
   {
     "id": "pistol_squat",
-    "videoId": "uR0mlXTmfiI",
+    "videoId": "bH3mRwnAN88",
     "start": null,
     "end": null,
-    "channel": "Summerfunfitness",
-    "title": "How to pistol squat",
+    "channel": "[P]rehab",
+    "title": "Perform Your First Pistol Squat Using These Progressions",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "[P]rehab?s focused tutorial demonstrates pistol squat progressions from a physical therapy source.",
+    "verdict": "ok"
   }
 ]

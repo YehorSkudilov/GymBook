@@ -442,7 +442,7 @@ public static partial class ExerciseLibrary
                 "It loads the biceps tendons hard; build up gradually.",
                 "Don't pike at the hips or arch the lower back.",
             ],
-            Video = new("pQNSaaq1ekI"),
+            Video = new("2SOWwPTr4es"),
         },
 
         // Pulldowns
@@ -463,7 +463,7 @@ public static partial class ExerciseLibrary
                 "Don't lean far back and turn it into a row.",
                 "Don't pull the bar behind your neck.",
             ],
-            Video = new("CAwf7n6Luuc"),
+            Video = new("CAwf7n6Luuc", 34.284, 91.633003),
         },
         new("close_grip_pulldown", "Close-Grip Lat Pulldown", Back, Cable, Compound)
         {
@@ -481,7 +481,7 @@ public static partial class ExerciseLibrary
                 "Lean back only slightly and keep your chest up.",
                 "Don't round forward at the top of each rep.",
             ],
-            Video = new("lYCgyaGpoDk"),
+            Video = new("8hzVLzu-RJk"),
         },
         new("reverse_grip_pulldown", "Underhand Lat Pulldown", Back, Cable, Compound)
         {
@@ -499,7 +499,7 @@ public static partial class ExerciseLibrary
                 "Keep your elbows in front of your body.",
                 "Don't curl the bar down with your arms; pull with your back.",
             ],
-            Video = new("5YC67yVpBGE"),
+            Video = new("D-aYXhHBDI8"),
         },
         new("single_arm_pulldown", "Single-Arm Lat Pulldown", Back, Cable, Compound)
         {
@@ -535,7 +535,7 @@ public static partial class ExerciseLibrary
                 "With independent arms, try one side at a time to fix imbalances.",
                 "Don't let the weight stack slam between reps.",
             ],
-            Video = new("3q1Zsi3vkjo"),
+            Video = new("WcTbf3RI3Q8"),
         },
         new("band_pulldown", "Band Lat Pulldown", Back, Band, Compound)
         {
@@ -589,7 +589,7 @@ public static partial class ExerciseLibrary
                 "Pause at the bottom and squeeze your lats.",
                 "Don't shrug your shoulders up as the arms rise.",
             ],
-            Video = new("Oz_C4Mu_ajc"),
+            Video = new("j5K2-IxLbXE"),
         },
         new("cable_lat_prayer", "Cable Lat Prayer", Back, Cable, Isolation)
         {
@@ -623,7 +623,7 @@ public static partial class ExerciseLibrary
                 "Push with your elbows rather than pulling with your hands.",
                 "Don't arch your lower back off the seat at the top.",
             ],
-            Video = new("naFwkhf1igc"),
+            Video = new("fSGG6hWstYs"),
         },
 
         // Barbell rows
@@ -665,7 +665,7 @@ public static partial class ExerciseLibrary
                 "Don't let your torso rise to finish the pull.",
                 "Needs good hamstring flexibility to keep the back flat.",
             ],
-            Video = new("0PSfteHhUtg"),
+            Video = new("0PSfteHhUtg", 19.200001, 57.066002),
         },
         new("yates_row", "Yates Row", Back, Barbell, Compound)
         {
@@ -723,7 +723,7 @@ public static partial class ExerciseLibrary
                 "Keep your chest up; don't round over the bar.",
                 "Don't jerk the weight up with your legs.",
             ],
-            Video = new("Nm3M-4fmprk"),
+            Video = new("yPis7nlbqdY"),
         },
         new("meadows_row", "Meadows Row", Back, Barbell, Compound)
         {
@@ -742,7 +742,7 @@ public static partial class ExerciseLibrary
                 "Use 10 kg or smaller plates for more range.",
                 "Don't twist your torso to lift the weight.",
             ],
-            Video = new("uexTkvxwMGM"),
+            Video = new("G-jU1aPVhnY", 20),
         },
 
         // Dumbbell and kettlebell rows
@@ -800,7 +800,7 @@ public static partial class ExerciseLibrary
                 "Some body English is fine; jerking with your lower back isn't.",
                 "Save it for the last set of a back session.",
             ],
-            Video = new("3rB5euZ9lu0"),
+            Video = new("3rB5euZ9lu0", 15.12, 52.439999),
         },
         new("incline_db_row", "Incline Dumbbell Row", Back, Dumbbell, Compound)
         {
@@ -836,7 +836,7 @@ public static partial class ExerciseLibrary
                 "Keep your hips and shoulders square to the floor.",
                 "Don't let your lower back round as you lower.",
             ],
-            Video = new("TO6UHf5Tsbs"),
+            Video = new("l5qelXL5nfs"),
         },
         new("gorilla_row", "Kettlebell Gorilla Row", Back, Kettlebell, Compound)
         {
@@ -855,7 +855,7 @@ public static partial class ExerciseLibrary
                 "Keep your hips still; don't rotate as you row.",
                 "Brace hard; your trunk is working the whole time.",
             ],
-            Video = new("7pXpoHBCBxU"),
+            Video = new("ZuhSSlKBAcI"),
         },
 
         // Cable and machine rows
@@ -875,7 +875,7 @@ public static partial class ExerciseLibrary
                 "Keep your torso nearly upright; a small lean is fine.",
                 "Don't rock back and forth to move the weight.",
             ],
-            Video = new("8QuMq1GMMng"),
+            Video = new("xQNrFHEMhI4"),
         },
         new("wide_grip_cable_row", "Wide-Grip Cable Row", Back, Cable, Compound)
         {
@@ -893,7 +893,7 @@ public static partial class ExerciseLibrary
                 "Squeeze your shoulder blades together at the end of each rep.",
                 "Don't shrug the bar up toward your neck.",
             ],
-            Video = new("p48Cf7htySA"),
+            Video = new("ohI-kn5lKfw"),
         },
         new("single_arm_cable_row", "Single-Arm Cable Row", Back, Cable, Compound)
         {
@@ -911,7 +911,7 @@ public static partial class ExerciseLibrary
                 "Keep your hips and torso square to the cable.",
                 "Don't twist to get the last few centimetres.",
             ],
-            Video = new("9TWiV80cUYs"),
+            Video = new("1jN6qeXdvWA"),
         },
         new("chest_supported_row", "Chest-Supported Machine Row", Back, Machine, Compound)
         {
@@ -967,7 +967,7 @@ public static partial class ExerciseLibrary
                 "Lower the bar or raise your feet to make it harder.",
                 "Keep your hips up; don't let them sag.",
             ],
-            Video = new("k3IaBFQuMtM"),
+            Video = new("KOaCM1HMwU0"),
         },
         new("ring_row", "Ring Row", Back, Other, Compound)
         {
@@ -985,7 +985,7 @@ public static partial class ExerciseLibrary
                 "The more horizontal your body, the harder it is.",
                 "Don't let your hips drop or your shoulders shrug.",
             ],
-            Video = new("dk6Q-nUx03g"),
+            Video = new("B90sF7dbP04"),
         },
         new("trx_row", "TRX Row", Back, Other, Compound)
         {
@@ -1003,7 +1003,7 @@ public static partial class ExerciseLibrary
                 "Walk your feet further forward to make it harder.",
                 "Keep your glutes squeezed so your body stays rigid.",
             ],
-            Video = new("cOpr2l-Ehso"),
+            Video = new("yCuSGoe1gjY"),
         },
         new("band_row", "Band Row", Back, Band, Compound)
         {
@@ -1021,7 +1021,7 @@ public static partial class ExerciseLibrary
                 "Pause for a second at the end of each rep.",
                 "Don't let the band snap your arms forward.",
             ],
-            Video = new("LSkyinhmA8k"),
+            Video = new("LSkyinhmA8k", 33.119999),
         },
 
         // Shrugs
@@ -1060,7 +1060,7 @@ public static partial class ExerciseLibrary
                 "Keep your head still and your chin neutral.",
                 "Don't bounce the reps.",
             ],
-            Video = new("KbxvWGtRXnI"),
+            Video = new("8WHzTb4de5U", 10),
         },
         new("trap_bar_shrug", "Trap Bar Shrug", Traps, Barbell, Isolation)
         {
@@ -1097,7 +1097,7 @@ public static partial class ExerciseLibrary
                 "A Smith machine makes the setup easier.",
                 "Don't lean forward to make room for the bar.",
             ],
-            Video = new("wu9qe0h2Qi0"),
+            Video = new("OoUQRw91D94"),
         },
         new("smith_machine_shrug", "Smith Machine Shrug", Traps, Machine, Isolation)
         {
@@ -1115,7 +1115,7 @@ public static partial class ExerciseLibrary
                 "Stand so the bar travels close to your thighs.",
                 "Don't bend your elbows to help.",
             ],
-            Video = new("Z4fFmIB95IA"),
+            Video = new("LI3b05LUdpA", 0, 55.52),
         },
         new("cable_shrug", "Cable Shrug", Traps, Cable, Isolation)
         {
@@ -1133,7 +1133,7 @@ public static partial class ExerciseLibrary
                 "Stand tall and keep the cable close to your body.",
                 "Don't lean back to move the weight.",
             ],
-            Video = new("JxaV9n9l2Y8"),
+            Video = new("Wab3-dsZohU"),
         },
         new("incline_db_shrug", "Incline Dumbbell Shrug", Traps, Dumbbell, Isolation)
         {

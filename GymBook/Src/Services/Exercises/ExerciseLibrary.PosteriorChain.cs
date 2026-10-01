@@ -53,7 +53,7 @@ public static partial class ExerciseLibrary
                 "Get your hips as close to the bar as your mobility allows.",
                 "Don't let your knees cave in or your hips shoot up first.",
             ],
-            Video = new("HBmLwb9IcaI"),
+            Video = new("t3Ig1Y5COFU"),
         },
         new("trap_bar_deadlift", "Trap Bar Deadlift", Glutes, Barbell, Compound)
         {
@@ -136,7 +136,7 @@ public static partial class ExerciseLibrary
                 "If you can't reach the floor with a flat back, lift from blocks.",
                 "Don't round your lower back to get the bar down.",
             ],
-            Video = new("m8m4eaag87k"),
+            Video = new("CN_7cz3P-1U"),
         },
         new("snatch_grip_deadlift", "Snatch-Grip Deadlift", LowerBack, Barbell, Compound)
         {
@@ -157,7 +157,7 @@ public static partial class ExerciseLibrary
                 "Keep your chest up and your upper back tight.",
                 "Don't let your shoulders roll forward under the wider grip.",
             ],
-            Video = new("r5eT5DUfzww"),
+            Video = new("BWPuQ4bFMh8"),
         },
         new("paused_deadlift", "Paused Deadlift", LowerBack, Barbell, Compound)
         {
@@ -257,7 +257,7 @@ public static partial class ExerciseLibrary
                 "Reach your arms forward or hold a wall if balance limits you.",
                 "Don't let your hip open out to the side as you hinge.",
             ],
-            Video = new("Zfr6wizR8rs"),
+            Video = new("Zfr6wizR8rs", 366, 448),
         },
         new("single_leg_db_rdl", "Single-Leg Dumbbell RDL", Hamstrings, Dumbbell, Compound)
         {
@@ -277,7 +277,7 @@ public static partial class ExerciseLibrary
                 "Move slowly, especially on the way down.",
                 "Don't round your back to reach the floor.",
             ],
-            Video = new("FQfMko8XXPg"),
+            Video = new("_DhDkij1vxY", 25.299999, 48.900002),
         },
         new("b_stance_rdl", "B-Stance Dumbbell RDL", Hamstrings, Dumbbell, Compound)
         {
@@ -489,7 +489,7 @@ public static partial class ExerciseLibrary
                 "Use a band or your hands on the pad for help at first.",
                 "Don't arch your lower back as you come up.",
             ],
-            Video = new("blX1If7ScxY"),
+            Video = new("SBGYSfoqyfU"),
         },
         new("razor_curl", "Razor Curl", Hamstrings, Bodyweight, Compound)
         {
@@ -530,7 +530,7 @@ public static partial class ExerciseLibrary
                 "Use a pad or towel under the bar.",
                 "Don't overextend your lower back to get the hips higher.",
             ],
-            Video = new("-GEVlyzVbcg"),
+            Video = new("aweBS7K71l8"),
         },
         new("db_hip_thrust", "Dumbbell Hip Thrust", Glutes, Dumbbell, Compound)
         {
@@ -667,7 +667,7 @@ public static partial class ExerciseLibrary
                 "Keep both hips at the same height.",
                 "Don't let the pelvis rotate toward the free leg.",
             ],
-            Video = new("_K_di6h2-Wg"),
+            Video = new("_K_di6h2-Wg", 94),
         },
         new("barbell_glute_bridge", "Barbell Glute Bridge", Glutes, Barbell, Isolation)
         {
@@ -723,7 +723,7 @@ public static partial class ExerciseLibrary
                 "Add a dumbbell on your hips once bodyweight is easy.",
                 "Don't arch your lower back to get your hips higher.",
             ],
-            Video = new("NNOUE6uAV0E"),
+            Video = new("MQ62r2V7Lw8"),
         },
 
         // Kickbacks

@@ -45,7 +45,7 @@ public static partial class ExerciseLibrary
                 "Keep the weight pinned to your chest; holding it overhead makes it far harder.",
                 "Don't swing the weight or yank with your neck to get up.",
             ],
-            Video = new("_nzyLUvtgvs"),
+            Video = new("_nzyLUvtgvs", 17, 65),
         },
         new("decline_crunch", "Decline Crunch", Abs, Bodyweight, Isolation)
         {
@@ -62,7 +62,7 @@ public static partial class ExerciseLibrary
                 "Keep it a curl; sitting all the way up turns it into a sit-up driven by the hip flexors.",
                 "Don't use a steeper decline than you can control.",
             ],
-            Video = new("FRzQXeN1hro"),
+            Video = new("FRzQXeN1hro", 15.339, 24.879999),
         },
         new("reverse_crunch", "Reverse Crunch", Abs, Bodyweight, Isolation)
         {
@@ -79,7 +79,7 @@ public static partial class ExerciseLibrary
                 "The movement is the pelvis rolling up, not the legs swinging toward your face.",
                 "Don't use momentum or push hard through your hands.",
             ],
-            Video = new("eX9vjAsdWvY"),
+            Video = new("yH-oSzE5_g0", 45),
         },
         new("toe_touch_crunch", "Toe Touch Crunch", Abs, Bodyweight, Isolation)
         {
@@ -96,7 +96,7 @@ public static partial class ExerciseLibrary
                 "Keep your legs vertical; letting them drift toward you makes it easier.",
                 "Don't jerk your head forward to reach further.",
             ],
-            Video = new("NR4k8hJfs-8"),
+            Video = new("NR4k8hJfs-8", 0, 35.82),
         },
         new("stability_ball_crunch", "Stability Ball Crunch", Abs, Other, Isolation)
         {
@@ -131,7 +131,7 @@ public static partial class ExerciseLibrary
                 "Keep your hands fixed by your head rather than pulling with your arms.",
                 "Don't go so heavy that you're just bowing at the hips.",
             ],
-            Video = new("0KEP6A1deBE"),
+            Video = new("0KEP6A1deBE", 39.360001, 86.759003),
         },
         new("machine_crunch", "Machine Crunch", Abs, Machine, Isolation)
         {
@@ -168,7 +168,7 @@ public static partial class ExerciseLibrary
                 "Don't throw your arms or pull on your neck to get up.",
                 "Anchoring your feet makes it easier but shifts more work to the hip flexors.",
             ],
-            Video = new("fTxaDVXhMnw"),
+            Video = new("pCX65Mtc_Kk", 27.299999),
         },
         new("decline_sit_up", "Decline Sit-Up", Abs, Bodyweight, Compound)
         {
@@ -204,7 +204,7 @@ public static partial class ExerciseLibrary
                 "Start light; a plate held further from your body is much harder.",
                 "Don't swing the plate forward to get yourself up.",
             ],
-            Video = new("ccT_Ipjirwk"),
+            Video = new("pTZL-Hirhwg"),
         },
         new("v_up", "V-Up", Abs, Bodyweight, Compound)
         {
@@ -240,7 +240,7 @@ public static partial class ExerciseLibrary
                 "Keep your chest lifted rather than collapsing forward.",
                 "Don't rock or use momentum; move smoothly.",
             ],
-            Video = new("L4gyNuA8_UM"),
+            Video = new("nheTMVLN2Hw"),
         },
 
         // Leg raises
@@ -277,7 +277,7 @@ public static partial class ExerciseLibrary
                 "Lift your legs higher if your lower back starts to arch.",
                 "Keep the kicks small and controlled.",
             ],
-            Video = new("6D23AyECRGQ"),
+            Video = new("ZEjloSZwXqI"),
         },
         new("hanging_knee_raise", "Hanging Knee Raise", Abs, Bodyweight, Isolation)
         {
@@ -333,7 +333,7 @@ public static partial class ExerciseLibrary
                 "Don't swing your legs up; lift and lower under control.",
                 "Straighten your legs to make it harder.",
             ],
-            Video = new("0AQ4j5vu2Cw"),
+            Video = new("7KDDZtaUaxw"),
         },
         new("toes_to_bar", "Toes-to-Bar", Abs, Bodyweight, Compound)
         {
@@ -353,7 +353,7 @@ public static partial class ExerciseLibrary
                 "Strict reps build strength; kipping ones are a CrossFit skill, not a substitute.",
                 "Don't let your legs crash down into a swing.",
             ],
-            Video = new("v6dgseykbLI"),
+            Video = new("kjYuPnmMjfo", 158, 307),
         },
         new("dragon_flag", "Dragon Flag", Abs, Bodyweight, Compound)
         {
@@ -373,7 +373,7 @@ public static partial class ExerciseLibrary
                 "Master slow negatives before trying full reps.",
                 "Don't put weight on your neck; you balance on your upper back.",
             ],
-            Video = new("c9Z69irCZX0"),
+            Video = new("pvz7k5gO-DE"),
         },
 
         // Planks and anti-extension
@@ -433,7 +433,7 @@ public static partial class ExerciseLibrary
                 "Short and very hard: if you can hold it for a minute you aren't squeezing enough.",
                 "Breathe in short, braced breaths instead of holding your breath.",
             ],
-            Video = new("DGJccwYZWFA"),
+            Video = new("4hQmAsF9iL4"),
         },
         new("long_lever_plank", "Long-Lever Plank", Abs, Bodyweight, Isolation)
         {
@@ -491,7 +491,7 @@ public static partial class ExerciseLibrary
                 "Keep your body facing forward; don't rotate.",
                 "Move slowly and stay tall through your shoulder.",
             ],
-            Video = new("hbP5M7qcLJ4"),
+            Video = new("ynrKPaorg-Q"),
         },
         new("plank_shoulder_tap", "Plank Shoulder Tap", Abs, Bodyweight, Compound)
         {
@@ -528,7 +528,7 @@ public static partial class ExerciseLibrary
                 "Only go back as far as you can keep your lower back from sagging.",
                 "Keep your hips in line; don't pike up to bring yourself forward.",
             ],
-            Video = new("HmyWstLop08"),
+            Video = new("rVxIwirRwXE"),
         },
         new("ab_wheel", "Ab Wheel Rollout", Abs, Bodyweight, Compound)
         {
@@ -548,7 +548,7 @@ public static partial class ExerciseLibrary
                 "Lead the return with your hips, not by sitting back first.",
                 "Roll toward a wall to limit the range while you build strength.",
             ],
-            Video = new("NbudTqiwguk"),
+            Video = new("Q5MT5omGNJI"),
         },
         new("standing_ab_wheel_rollout", "Standing Ab Wheel Rollout", Abs, Bodyweight, Compound)
         {
@@ -567,7 +567,7 @@ public static partial class ExerciseLibrary
                 "Master full kneeling rollouts before trying this.",
                 "Don't let your hips sag at full extension; it strains the lower back.",
             ],
-            Video = new("2zVNyi5Uk44"),
+            Video = new("2zVNyi5Uk44", 150.56, 193.599),
         },
         new("barbell_rollout", "Barbell Rollout", Abs, Barbell, Compound)
         {
@@ -643,7 +643,7 @@ public static partial class ExerciseLibrary
                 "The further you press out, the harder it gets.",
                 "Do both sides for equal reps.",
             ],
-            Video = new("Te5VAYXy0wQ"),
+            Video = new("f3R99GoYvCs"),
         },
         new("band_pallof_press", "Band Pallof Press", Abs, Band, Compound)
         {
@@ -660,7 +660,7 @@ public static partial class ExerciseLibrary
                 "Don't let your torso twist toward the anchor.",
                 "Step further from the anchor to make it harder.",
             ],
-            Video = new("LA6Uc5yIV1c", 20, 95),
+            Video = new("eObpl4f-wgI"),
         },
         new("cable_woodchop_high_to_low", "High-to-Low Cable Woodchop", Abs, Cable, Compound)
         {
@@ -697,7 +697,7 @@ public static partial class ExerciseLibrary
                 "Let your hips and back foot turn with you so your lower back doesn't twist alone.",
                 "Keep your arms nearly straight.",
             ],
-            Video = new("rHfjG2Oflz0"),
+            Video = new("-_c9SNzxnao"),
         },
         new("landmine_rotation", "Landmine Rotation", Abs, Barbell, Compound)
         {
@@ -735,7 +735,7 @@ public static partial class ExerciseLibrary
                 "Keep your chest up and back long; don't slump.",
                 "Keep your feet down until you can control the movement.",
             ],
-            Video = new("jjyR6Z1U4dA"),
+            Video = new("s0kT80JLCfA"),
         },
         new("windshield_wiper", "Lying Windshield Wiper", Abs, Bodyweight, Isolation)
         {
@@ -793,7 +793,7 @@ public static partial class ExerciseLibrary
                 "Imagine a string pulling the top of your head up.",
                 "Don't shrug the loaded shoulder or let your hips shift sideways.",
             ],
-            Video = new("DbyqfH7CbJ8"),
+            Video = new("lHuqn4aZcVI"),
         },
 
         // Stability
@@ -909,7 +909,7 @@ public static partial class ExerciseLibrary
                 "Build up from the tuck L-sit or one-leg-extended versions.",
                 "Don't let your hips sink back behind your hands.",
             ],
-            Video = new("eywCpp0p7lg"),
+            Video = new("iTX2lgpH7sw"),
         },
 
         // Obliques
@@ -967,7 +967,7 @@ public static partial class ExerciseLibrary
                 "Keep your body facing forward; don't twist to get up.",
                 "Hold a plate on your chest to add load once it's easy.",
             ],
-            Video = new("Y3eUVJ2hOyI"),
+            Video = new("qWMlVycsl4Y"),
         },
         new("oblique_crunch", "Oblique Crunch", Abs, Bodyweight, Isolation)
         {
