@@ -4,11 +4,11 @@
     "videoId": "iZTxa8NJH2g",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Jeremy Ethier",
+    "title": "The PERFECT Squat (5 Steps)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -16,11 +16,11 @@
     "videoId": "Po9CDtfcLJI",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Squat University",
+    "title": "How to Perform a Low Bar Back Squat",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -28,11 +28,11 @@
     "videoId": "6PLvU0rjw18",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Zack Henderson",
+    "title": "How To Front Squat",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -40,11 +40,11 @@
     "videoId": "hy0nD5YwExI",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Marissa Arnone",
+    "title": "Barbell Box Squat Tutorial",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -52,11 +52,11 @@
     "videoId": "0ELH2NcFLZA",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "W10 Personal Training Gym",
+    "title": "How to do pause squats and why you should do them...",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -64,11 +64,11 @@
     "videoId": "WZi_C9ne320",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Alexander Eriksson",
+    "title": "Safety Squat Bar Squats - Squat Exercise Tutorial - AE Power App",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -76,35 +76,35 @@
     "videoId": "YducYiBtGag",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Erin Stern",
+    "title": "TUTORIAL: The Zercher Squat",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
-    "verdict": "review"
+    "note": "Kept current: reputable source and focused exercise demo.",
+    "verdict": "ok"
   },
   {
     "id": "smith_squat",
     "videoId": "3PpzYOubZ5A",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Gerardi Performance",
+    "title": "How to Properly Perform Smith Machine Squats With Good Form (Exercise Demonstration)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
-    "verdict": "review"
+    "note": "Kept current: reputable source and focused exercise demo.",
+    "verdict": "ok"
   },
   {
     "id": "hack_squat",
     "videoId": "hglQExHCM9Q",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Vivian Ngo",
+    "title": "Hack Squat Machine (Exercise Tutorial + Form Tips) | Team Evolve",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -112,11 +112,11 @@
     "videoId": "9fEloOw3hTo",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Benjamin Inglis",
+    "title": "How to BELT SQUAT in 15 seconds",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -124,11 +124,11 @@
     "videoId": "RE9k04SVWOo",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Julian Execution",
+    "title": "How to use the pendulum squat machine",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -136,23 +136,23 @@
     "videoId": "7-80HiXX1K8",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Le Sweat",
+    "title": "Goblet Squat [How To]",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
-    "verdict": "review"
+    "note": "Kept current: reputable source and focused exercise demo.",
+    "verdict": "ok"
   },
   {
     "id": "kb_goblet_squat",
     "videoId": "dBnNCOtuGNQ",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Chandler Marchman",
+    "title": "Kettlebell Goblet Squat | Kettlebell Exercise",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -160,11 +160,11 @@
     "videoId": "vM5x2_NIsy8",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "BestFit Training",
+    "title": "Dumbbell Sumo Goblet Squat",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -172,11 +172,11 @@
     "videoId": "lmWPn5Q-TSE",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Fitness Lab",
+    "title": "How To: Dumbbell Goblet Squat (Heels Elevated)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -184,35 +184,35 @@
     "videoId": "v_c67Omje48",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Bodybuilding.com",
+    "title": "How to Dumbbell Squat | Mike Hildebrandt",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
-    "verdict": "review"
+    "note": "Kept current: reputable source and focused exercise demo.",
+    "verdict": "ok"
   },
   {
     "id": "bw_squat",
     "videoId": "m0GcZ24pK6k",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Bupa Health",
+    "title": "How to do a bodyweight squat | Bupa Health",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
-    "verdict": "review"
+    "note": "Kept current: reputable source and focused exercise demo.",
+    "verdict": "ok"
   },
   {
     "id": "cossack_squat",
     "videoId": "C5YrOdyJjks",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Foundation Fitness",
+    "title": "How to do a Cossack Squat (bodyweight)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -220,11 +220,11 @@
     "videoId": "hXpGSa5HYqY",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Atomic Athlete",
+    "title": "How to do a SPLIT SQUAT",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -232,11 +232,11 @@
     "videoId": "IVSrQD9BqSQ",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Kate Nolte",
+    "title": "How To Do A Bulgarian Split Squat | My Favorite Leg Move",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   },
   {
@@ -244,11 +244,11 @@
     "videoId": "uR0mlXTmfiI",
     "start": null,
     "end": null,
-    "channel": "Unavailable",
-    "title": "Unavailable",
+    "channel": "Summerfunfitness",
+    "title": "How to pistol squat",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Info lookup failed; requires review.",
+    "note": "Current exact-movement video retained pending independent source review.",
     "verdict": "review"
   }
 ]

@@ -56,6 +56,7 @@ public class DayItem
 public record ExerciseThumb(string? Image, string Initial, Color Color, Color Soft)
 {
     public bool HasImage => Image != null;
+    public bool HasFallback => !HasImage;
 
     public static ExerciseThumb For(Exercise ex) => new(
         ExerciseLibrary.Thumbnail(ex.Id),
@@ -74,7 +75,7 @@ public class PlanDayItem
     /// <summary>The workout in progress right now: it opens that workout instead of the day.</summary>
     public bool IsRunning { get; init; }
     public bool IsRest { get; init; }
-    public required List<string> Thumbnails { get; init; }
+    public required List<ExerciseThumb> Thumbnails { get; init; }
     public required string More { get; init; }
     public ICommand? OpenCommand { get; init; }
 

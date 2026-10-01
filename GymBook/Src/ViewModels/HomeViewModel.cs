@@ -254,7 +254,11 @@ public partial class HomeViewModel(
                 : new AsyncRelayCommand(() => GoTo($"{Routes.PlanDay}?id={plan.Id}&day={day}&week={week}"));
             if (w == null)
                 return new PlanDayItem { Name = "Rest", Number = "–", IsRest = true, IsDone = progress.IsRestDone(day, week), Thumbnails = [], More = "", OpenCommand = open };
-            var photos = w.Exercises.Select(e => ExerciseLibrary.Thumbnail(e.ExerciseId)).OfType<string>().ToList();
+            var thumbs = w.Exercises
+                .Select(e => ExerciseLibrary.Find(e.ExerciseId))
+                .OfType<Exercise>()
+                .Select(ExerciseThumb.For)
+                .ToList();
             return new PlanDayItem
             {
                 Name = w.Name,
@@ -262,7 +266,7 @@ public partial class HomeViewModel(
                 IsDone = progress.SessionFor(w, week) != null,
                 IsNext = w == next && !isRunning && running == null,
                 IsRunning = isRunning,
-                Thumbnails = photos.Take(3).ToList(),
+                Thumbnails = thumbs.Take(3).ToList(),
                 More = w.Exercises.Count > 3 ? $"+{w.Exercises.Count - 3}" : "",
                 OpenCommand = open,
             };

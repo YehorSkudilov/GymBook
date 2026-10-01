@@ -14,13 +14,13 @@
   {
     "id": "lat_pulldown",
     "videoId": "CAwf7n6Luuc",
-    "start": null,
-    "end": null,
+    "start": 34.284,
+    "end": 91.633,
     "channel": "ScottHermanFitness",
     "title": "How To: Lat Pulldown | 3 GOLDEN RULES",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
+    "timeSource": "chapter",
+    "chapter": "Elbow positioning rules",
+    "note": "Scott Herman chapter at 0:34.284 to 1:31.633 demonstrates lat pulldown technique",
     "verdict": "review"
   },
   {

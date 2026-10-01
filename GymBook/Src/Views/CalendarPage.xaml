@@ -135,7 +135,7 @@
                                                     <DataTemplate x:DataType="x:String">
                                                         <Border WidthRequest="34" HeightRequest="34" StrokeShape="RoundRectangle 9" StrokeThickness="0"
                                                                 BackgroundColor="{StaticResource Surface3}">
-                                                            <Image Source="{Binding ., Converter={StaticResource Thumb}}" Aspect="AspectFill" />
+                                                            <Image Source="{Binding ., Converter={StaticResource Thumb}}" Aspect="AspectFill" Margin="-1" />
                                                         </Border>
                                                     </DataTemplate>
                                                 </BindableLayout.ItemTemplate>

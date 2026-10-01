@@ -68,7 +68,7 @@
                             <Grid>
                                 <Label Text="{Binding Thumb.Initial}" TextColor="{Binding Thumb.Color}" FontFamily="OpenSansSemibold" FontSize="14"
                                        HorizontalOptions="Center" VerticalOptions="Center" />
-                                <Image Source="{Binding Thumb.Image, Converter={StaticResource Thumb}}" IsVisible="{Binding Thumb.HasImage}" Aspect="AspectFill" />
+                                <Image Source="{Binding Thumb.Image, Converter={StaticResource Thumb}}" IsVisible="{Binding Thumb.HasImage}" Aspect="AspectFill" Margin="-1" />
                             </Grid>
                         </Border>
                     </DataTemplate>

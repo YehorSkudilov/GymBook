@@ -5,22 +5,50 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:ExerciseItem">
-    <Grid Padding="0,6" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" BackgroundColor="Transparent">
+    <Grid
+        Padding="0,6"
+        BackgroundColor="Transparent"
+        ColumnDefinitions="Auto,*,Auto"
+        ColumnSpacing="12">
         <Grid.GestureRecognizers>
             <TapGestureRecognizer Command="{Binding TapCommand}" />
         </Grid.GestureRecognizers>
-        <Border WidthRequest="46" HeightRequest="46" StrokeShape="RoundRectangle 14" StrokeThickness="0" BackgroundColor="{Binding MuscleSoft}">
+        <Border
+            BackgroundColor="{Binding MuscleSoft}"
+            HeightRequest="46"
+            StrokeShape="RoundRectangle 14"
+            StrokeThickness="0"
+            WidthRequest="46">
             <Grid>
-                <!-- The initials show while the picture loads, and stay when there is none or the device is offline. -->
-                <Label Text="{Binding Initial}" TextColor="{Binding MuscleColor}" FontFamily="OpenSansSemibold" FontSize="15"
-                       HorizontalOptions="Center" VerticalOptions="Center" />
-                <Image Source="{Binding Thumbnail, Converter={StaticResource Thumb}}" IsVisible="{Binding HasThumbnail}" Aspect="AspectFill" />
+                <!--  The initials show while the picture loads, and stay when there is none or the device is offline.  -->
+                <Label
+                    FontFamily="OpenSansSemibold"
+                    FontSize="15"
+                    HorizontalOptions="Center"
+                    Text="{Binding Initial}"
+                    TextColor="{Binding MuscleColor}"
+                    VerticalOptions="Center" />
+                <Image
+                    Margin="-1"
+                    Aspect="AspectFill"
+                    IsVisible="{Binding HasThumbnail}"
+                    Source="{Binding Thumbnail, Converter={StaticResource Thumb}}" />
             </Grid>
         </Border>
         <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-            <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="15" LineBreakMode="TailTruncation" />
-            <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="12" />
+            <Label
+                FontFamily="OpenSansSemibold"
+                FontSize="15"
+                LineBreakMode="TailTruncation"
+                Text="{Binding Name}" />
+            <Label
+                FontSize="12"
+                Style="{StaticResource Caption}"
+                Text="{Binding Subtitle}" />
         </VerticalStackLayout>
-        <ContentView Grid.Column="2" x:Name="Accessory" VerticalOptions="Center" />
+        <ContentView
+            x:Name="Accessory"
+            Grid.Column="2"
+            VerticalOptions="Center" />
     </Grid>
 </ContentView>
