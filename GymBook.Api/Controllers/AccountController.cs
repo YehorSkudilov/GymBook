@@ -30,6 +30,22 @@ public class AccountController(
         return await ToResponseAsync(user);
     }
 
+    /// <summary>
+    /// A separate session for another of the user's devices, e.g. the phone app signing in its Wear OS app. It's a new
+    /// refresh token family: sharing the caller's own refresh token instead would look like token theft at the first
+    /// refresh, which signs both devices out.
+    /// </summary>
+    [HttpPost("device-session")]
+    [EnableRateLimiting(RateLimits.Auth)]
+    public async Task<ActionResult<AuthResponse>> CreateDeviceSession(CancellationToken ct)
+    {
+        var user = await users.FindByIdAsync(currentUser.UserId!);
+        if (user == null)
+            return Unauthorized();
+        log.LogInformation("Issued a device session for {User}", user.Id);
+        return await tokens.IssueAsync(user, ct: ct);
+    }
+
     /// <summary>Emails a code for <see cref="VerifyEmail"/>. Nothing to do when the email is already verified.</summary>
     [HttpPost("verify-email/send")]
     [EnableRateLimiting(RateLimits.Auth)]

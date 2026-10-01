@@ -83,6 +83,8 @@ public partial class MainPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        // Opened from the workout notification before the tabs were up (a cold start): show the workout now.
+        _ = WorkoutLaunch.TryOpenAsync();
         _visible = true;
         _current?.Page.Load();
         UpdateActiveBar();

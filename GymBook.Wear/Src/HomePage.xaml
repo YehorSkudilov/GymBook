@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    The watch's home: the workout running (on the phone or the watch), the plan's workouts to start, sign-in and sync.
+    One centred column for round screens; it scrolls (with the crown on watches that have one).
+-->
+<ContentPage
+    x:Class="GymBook.Wear.HomePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:GymBook.Wear"
+    x:DataType="local:HomeViewModel">
+
+    <ContentPage.Resources>
+        <Style x:Key="Secondary" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+            <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="42" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView VerticalScrollBarVisibility="Never">
+        <VerticalStackLayout Padding="24,22,24,34" Spacing="8">
+            <Label Text="Gym Book" FontFamily="OpenSansSemibold" FontSize="16" TextColor="{StaticResource Accent}" />
+            <Label Text="{Binding SyncStatus}" Style="{StaticResource Small}" FontSize="11" IsVisible="{Binding IsSignedIn}" />
+
+            <!-- A workout running on the phone -->
+            <VerticalStackLayout IsVisible="{Binding HasPhoneWorkout}" Spacing="4">
+                <Label Text="On your phone" Style="{StaticResource Small}" />
+                <Button Text="{Binding PhoneWorkoutName}" Command="{Binding OpenPhoneWorkoutCommand}" />
+            </VerticalStackLayout>
+
+            <!-- The watch's own workout -->
+            <VerticalStackLayout IsVisible="{Binding HasWatchWorkout}" Spacing="4">
+                <Label Text="In progress" Style="{StaticResource Small}" />
+                <Button Text="{Binding WatchWorkoutName}" Command="{Binding ResumeWatchWorkoutCommand}" />
+            </VerticalStackLayout>
+
+            <!-- The plan's workouts to start, the next one first -->
+            <VerticalStackLayout IsVisible="{Binding CanStart}" Spacing="6">
+                <Label Text="{Binding PlanName}" Style="{StaticResource Small}" />
+                <Button Text="{Binding NextWorkout.Name, StringFormat='Start {0}'}" Command="{Binding NextWorkout.StartCommand}" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding OtherWorkouts}" Spacing="6">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="local:PlanWorkoutItem">
+                            <Button Text="{Binding Name}" Command="{Binding StartCommand}" Style="{StaticResource Secondary}" />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+
+            <Label Text="No active plan. Pick or make one in Gym Book on your phone." Style="{StaticResource Small}" IsVisible="{Binding HasNoPlan}" />
+
+            <!-- A workout without a plan: exercises are added as it goes -->
+            <Button Text="Quick workout" Command="{Binding QuickWorkoutCommand}" Style="{StaticResource Secondary}" IsVisible="{Binding CanQuickStart}" />
+
+            <!-- Signed out: the phone mode still works; starting from the watch needs the account -->
+            <VerticalStackLayout IsVisible="{Binding IsSignedIn, Converter={StaticResource Not}}" Spacing="6">
+                <Label Text="Sign in to use your plan and sync your workouts. Workouts on your phone show here either way." Style="{StaticResource Small}" />
+                <Button Text="Sign in with phone" Command="{Binding SignInWithPhoneCommand}" />
+                <Button Text="Use email" Command="{Binding SignInWithEmailCommand}" Style="{StaticResource Secondary}" />
+            </VerticalStackLayout>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Accent}" HeightRequest="20" />
+            <Label Text="{Binding Message}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" />
+
+            <!-- Account -->
+            <VerticalStackLayout IsVisible="{Binding IsSignedIn}" Spacing="6" Margin="0,10,0,0">
+                <Button Text="Sync now" Command="{Binding SyncNowCommand}" Style="{StaticResource Secondary}" />
+                <Label Text="{Binding Account}" Style="{StaticResource Small}" FontSize="11" LineBreakMode="MiddleTruncation" />
+                <Button Text="Sign out" Command="{Binding SignOutCommand}" Style="{StaticResource Secondary}" TextColor="{StaticResource Danger}" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

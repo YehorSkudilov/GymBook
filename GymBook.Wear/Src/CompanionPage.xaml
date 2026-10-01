@@ -4,11 +4,11 @@
     cut off by the round edge, and one big button. Exactly one of the four states shows at a time.
 -->
 <ContentPage
-    x:Class="GymBook.Wear.MainPage"
+    x:Class="GymBook.Wear.CompanionPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:GymBook.Wear"
-    x:DataType="local:WatchViewModel">
+    x:DataType="local:CompanionViewModel">
 
     <ScrollView VerticalScrollBarVisibility="Never">
         <Grid Padding="26,22,26,26" MinimumHeightRequest="220">
@@ -23,12 +23,12 @@
             <VerticalStackLayout IsVisible="{Binding IsLifting}" Spacing="4" VerticalOptions="Center">
                 <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
                     <Label Text="{Binding Elapsed}" Style="{StaticResource Small}" />
-                    <Label Text="{Binding HeartRate}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" />
+                    <Label Text="{Binding HeartRate}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" IsVisible="{Binding IsInteractive}" />
                 </HorizontalStackLayout>
                 <Label Text="{Binding ExerciseName}" FontFamily="OpenSansSemibold" FontSize="15" MaxLines="2" LineBreakMode="TailTruncation" />
                 <Label Text="{Binding SetLabel}" Style="{StaticResource Small}" />
                 <Label Text="{Binding Target}" FontFamily="OpenSansSemibold" FontSize="22" Margin="0,2,0,6" />
-                <Button Text="{Binding DoneText}" Command="{Binding CompleteCommand}" IsEnabled="{Binding CanComplete}" />
+                <Button Text="{Binding DoneText}" Command="{Binding CompleteCommand}" IsEnabled="{Binding CanComplete}" IsVisible="{Binding IsInteractive}" />
                 <Label Text="{Binding Message}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" />
                 <Label Text="{Binding Next}" Style="{StaticResource Small}" />
                 <Label Text="{Binding Progress}" Style="{StaticResource Small}" FontSize="11" />
@@ -40,12 +40,13 @@
                     <Label Text="Rest" Style="{StaticResource Small}" />
                     <Label Text="{Binding HeartRate}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" />
                 </HorizontalStackLayout>
-                <Label Text="{Binding RestText}" FontFamily="OpenSansSemibold" FontSize="40" />
-                <ProgressBar Progress="{Binding RestProgress}" ProgressColor="{StaticResource Accent}" Margin="10,0,10,6" />
+                <Label Text="{Binding RestText}" FontFamily="OpenSansSemibold" FontSize="40" IsVisible="{Binding IsInteractive}" />
+                <Label Text="{Binding RestUntil}" FontFamily="OpenSansSemibold" FontSize="22" IsVisible="{Binding IsAmbient}" />
+                <ProgressBar Progress="{Binding RestProgress}" ProgressColor="{StaticResource Accent}" Margin="10,0,10,6" IsVisible="{Binding IsInteractive}" />
                 <Label Text="{Binding ExerciseName, StringFormat='Up next: {0}'}" Style="{StaticResource Small}" MaxLines="2" LineBreakMode="TailTruncation" />
                 <Label Text="{Binding SetLabel}" Style="{StaticResource Small}" />
                 <Label Text="{Binding Message}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" />
-                <Button Text="Skip rest" Command="{Binding SkipRestCommand}" BackgroundColor="{StaticResource Surface}" Margin="0,6,0,0" />
+                <Button Text="Skip rest" Command="{Binding SkipRestCommand}" BackgroundColor="{StaticResource Surface}" Margin="0,6,0,0" IsVisible="{Binding IsInteractive}" />
             </VerticalStackLayout>
 
             <!-- Every set done -->

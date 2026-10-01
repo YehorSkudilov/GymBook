@@ -44,6 +44,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<WatchLink>();
 #if ANDROID
         builder.Services.AddSingleton<WatchSync>();
+        builder.Services.AddSingleton<IWorkoutNotifier, WorkoutNotifier>();
+#else
+        builder.Services.AddSingleton<IWorkoutNotifier, NoWorkoutNotifier>();
 #endif
 
         builder.Services.AddTransient<MainPage>();
@@ -115,6 +118,8 @@ public static class MauiProgram
 #if ANDROID
         // Keeps the Wear OS app's copy of the workout current (see Platforms/Android/WatchSync.cs).
         app.Services.GetRequiredService<WatchSync>().Start();
+        // Made now so it follows the data from the start (a workout finished elsewhere clears it).
+        app.Services.GetRequiredService<IWorkoutNotifier>();
 #endif
         return app;
     }

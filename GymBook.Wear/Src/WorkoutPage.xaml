@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    A workout started on the watch. One centred column for round screens; scroll down (or turn the crown) for the
+    exercise arrows, adding an exercise and Finish. In ambient mode only the text shows, dimmed.
+-->
+<ContentPage
+    x:Class="GymBook.Wear.WorkoutPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:GymBook.Wear"
+    x:DataType="local:WorkoutViewModel">
+
+    <ContentPage.Resources>
+        <!-- The small round − and + buttons beside the weight and reps. -->
+        <Style x:Key="Step" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="WidthRequest" Value="40" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="CornerRadius" Value="20" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
+        <Style x:Key="Secondary" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+            <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="42" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView VerticalScrollBarVisibility="Never">
+        <VerticalStackLayout Padding="24,22,24,30" Spacing="6">
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
+                <Label Text="{Binding Elapsed}" Style="{StaticResource Small}" />
+                <Label Text="{Binding HeartRate}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" IsVisible="{Binding IsInteractive}" />
+            </HorizontalStackLayout>
+
+            <!-- A quick workout before its first exercise -->
+            <VerticalStackLayout IsVisible="{Binding IsEmpty}" Spacing="8">
+                <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="15" />
+                <Label Text="Add an exercise to get going." Style="{StaticResource Small}" />
+            </VerticalStackLayout>
+
+            <!-- The set to do: weight and reps adjust before ticking it -->
+            <VerticalStackLayout IsVisible="{Binding IsLifting}" Spacing="6">
+                <Label Text="{Binding ExerciseName}" FontFamily="OpenSansSemibold" FontSize="15" MaxLines="2" LineBreakMode="TailTruncation" />
+                <Label Text="{Binding SetLabel}" Style="{StaticResource Small}" />
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" IsVisible="{Binding HasWeight}">
+                    <Button Text="−" Style="{StaticResource Step}" Command="{Binding ChangeWeightCommand}" CommandParameter="-1" IsVisible="{Binding IsInteractive}" />
+                    <Label Grid.Column="1" Text="{Binding Weight}" FontFamily="OpenSansSemibold" FontSize="18" VerticalOptions="Center" />
+                    <Button Grid.Column="2" Text="+" Style="{StaticResource Step}" Command="{Binding ChangeWeightCommand}" CommandParameter="1" IsVisible="{Binding IsInteractive}" />
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6">
+                    <Button Text="−" Style="{StaticResource Step}" Command="{Binding ChangeRepsCommand}" CommandParameter="-1" IsVisible="{Binding IsInteractive}" />
+                    <Label Grid.Column="1" Text="{Binding Reps}" FontFamily="OpenSansSemibold" FontSize="18" VerticalOptions="Center" />
+                    <Button Grid.Column="2" Text="+" Style="{StaticResource Step}" Command="{Binding ChangeRepsCommand}" CommandParameter="1" IsVisible="{Binding IsInteractive}" />
+                </Grid>
+                <Button Text="Done" Command="{Binding CompleteCommand}" IsEnabled="{Binding CanComplete}" IsVisible="{Binding IsInteractive}" Margin="0,4,0,0" />
+                <Label Text="{Binding Progress}" Style="{StaticResource Small}" FontSize="11" />
+            </VerticalStackLayout>
+
+            <!-- Resting after a set (in ambient mode, the time it ends: a countdown would be stale between redraws) -->
+            <VerticalStackLayout IsVisible="{Binding IsResting}" Spacing="4">
+                <Label Text="Rest" Style="{StaticResource Small}" />
+                <Label Text="{Binding RestText}" FontFamily="OpenSansSemibold" FontSize="40" IsVisible="{Binding IsInteractive}" />
+                <Label Text="{Binding RestUntil}" FontFamily="OpenSansSemibold" FontSize="22" IsVisible="{Binding IsAmbient}" />
+                <ProgressBar Progress="{Binding RestProgress}" ProgressColor="{StaticResource Accent}" Margin="10,0,10,6" IsVisible="{Binding IsInteractive}" />
+                <Label Text="{Binding ExerciseName, StringFormat='Up next: {0}'}" Style="{StaticResource Small}" MaxLines="2" LineBreakMode="TailTruncation" />
+                <Label Text="{Binding SetLabel}" Style="{StaticResource Small}" />
+                <Button Text="Skip rest" Command="{Binding SkipRestCommand}" Style="{StaticResource Secondary}" IsVisible="{Binding IsInteractive}" Margin="0,6,0,0" />
+            </VerticalStackLayout>
+
+            <!-- Every set done -->
+            <VerticalStackLayout IsVisible="{Binding IsAllDone}" Spacing="6">
+                <Label Text="✓" FontSize="34" TextColor="{StaticResource Success}" />
+                <Label Text="All sets done" FontFamily="OpenSansSemibold" FontSize="16" />
+                <Label Text="{Binding Progress}" Style="{StaticResource Small}" />
+            </VerticalStackLayout>
+
+            <!-- Moving between exercises, adding one, and finishing -->
+            <VerticalStackLayout IsVisible="{Binding IsInteractive}" Spacing="6" Margin="0,10,0,0">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6" IsVisible="{Binding HasExercises}">
+                    <Button Text="‹" Style="{StaticResource Step}" Command="{Binding PreviousExerciseCommand}" IsEnabled="{Binding CanGoBack}" />
+                    <Label Grid.Column="1" Text="{Binding ExercisePosition, StringFormat='Exercise {0}'}" Style="{StaticResource Small}" VerticalOptions="Center" />
+                    <Button Grid.Column="2" Text="›" Style="{StaticResource Step}" Command="{Binding NextExerciseCommand}" IsEnabled="{Binding CanGoNext}" />
+                </Grid>
+                <Button Text="Add exercise" Command="{Binding AddExerciseCommand}" Style="{StaticResource Secondary}" />
+                <Button Text="Finish workout" Command="{Binding FinishCommand}" Style="{StaticResource Secondary}" TextColor="{StaticResource Success}" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -77,6 +77,13 @@ public class ApiClient(HttpClient http, AuthSession session)
     public Task<AccountResponse> ConfirmEmailChangeAsync(string newEmail, string code, CancellationToken ct = default) =>
         SendAuthorizedAsync<ConfirmEmailChangeRequest, AccountResponse>("api/account/email/confirm", new() { NewEmail = newEmail, Code = code }, ct);
 
+    /// <summary>A separate session for another of the user's devices (the Wear OS app's "Sign in with phone").</summary>
+    public async Task<AuthResponse> CreateDeviceSessionAsync(CancellationToken ct = default)
+    {
+        using var response = await SendWithTokenAsync(() => new HttpRequestMessage(HttpMethod.Post, "api/account/device-session"), ct);
+        return await ReadAsync<AuthResponse>(response);
+    }
+
     public Task<AuthResponse> LoginAsync(string email, string password, CancellationToken ct = default) =>
         SendAsync<LoginRequest, AuthResponse>("api/auth/login", new() { Email = email, Password = password }, null, ct);
 

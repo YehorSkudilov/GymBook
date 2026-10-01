@@ -104,9 +104,20 @@ public partial class ExercisePickerViewModel(DataStore store) : ExerciseListView
 
     [ObservableProperty] string addText = "Add";
     [ObservableProperty] bool canAdd;
+    [ObservableProperty] string title = "Add exercises";
 
-    public void Reset()
+    /// <summary>Picking one exercise (e.g. a replacement): a tap picks it straight away, without the Add button.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsMultiple))]
+    bool isSingle;
+
+    public bool IsMultiple => !IsSingle;
+
+    /// <summary>Ready for the next pick: several exercises to add, or with <paramref name="single"/> one, under <paramref name="title"/>.</summary>
+    public void Reset(bool single = false, string title = "Add exercises")
     {
+        IsSingle = single;
+        Title = title;
         _selected.Clear();
         SearchText = "";
         UpdateAdd();
@@ -117,6 +128,11 @@ public partial class ExercisePickerViewModel(DataStore store) : ExerciseListView
 
     protected override void OnTap(ExerciseItem item)
     {
+        if (IsSingle)
+        {
+            Completed?.Invoke([item.Exercise]);
+            return;
+        }
         if (!_selected.Remove(item.Exercise))
             _selected.Add(item.Exercise);
         item.IsSelected = _selected.Contains(item.Exercise);

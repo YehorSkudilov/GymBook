@@ -13,8 +13,10 @@ public partial class WorkoutViewModel(
     Units units,
     DialogService dialogs,
     ExercisePickerService picker,
-    WatchLink watch) : BaseViewModel
+    WatchLink watch,
+    IWorkoutNotifier notifier) : BaseViewModel
 {
+    static bool _askedNotifications;
     IDispatcherTimer? _timer;
     WorkoutSession? _session;
     DateTime _restEndsAt;
@@ -102,6 +104,18 @@ public partial class WorkoutViewModel(
 
     public override async Task OnAppearingAsync()
     {
+        // For the workout notification with the rest timer (Android 13+ asks); once per run of the app.
+        if (!_askedNotifications)
+        {
+            _askedNotifications = true;
+            try
+            {
+                await Permissions.RequestAsync<Permissions.PostNotifications>();
+            }
+            catch (Exception)
+            {
+            }
+        }
         var active = workouts.Active;
         if (active == null)
         {
@@ -166,6 +180,7 @@ public partial class WorkoutViewModel(
     {
         if (_session != null)
             Elapsed = Units.Clock(DateTime.Now - _session.StartedAt);
+        UpdateNotification();
         if (!IsResting)
             return;
         var left = _restEndsAt - DateTime.Now;
@@ -173,6 +188,8 @@ public partial class WorkoutViewModel(
         {
             IsResting = false;
             RestFinished?.Invoke();
+            notifier.RestOver(NextSetText());
+            UpdateNotification();
             try
             {
                 HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
@@ -186,6 +203,27 @@ public partial class WorkoutViewModel(
         }
         RestText = Units.Rest((int)Math.Ceiling(left.TotalSeconds));
         RestProgress = _restTotal <= 0 ? 0 : left.TotalSeconds / _restTotal;
+    }
+
+    /// <summary>The workout notification (Android): where it's at, and the rest timer while resting. Redrawn only on change.</summary>
+    void UpdateNotification()
+    {
+        if (_session == null || workouts.Active != _session)
+            return;
+        notifier.Show(new WorkoutStatus(Name, _session.StartedAt, NextSetText(), ProgressText,
+            IsResting ? _restEndsAt : null, _restTotal));
+    }
+
+    /// <summary>"Bench Press · set 2 of 4": the exercise on screen and its next set to do.</summary>
+    string NextSetText()
+    {
+        if (CurrentExercise is not { } exercise)
+            return IsEmpty ? "No exercises yet" : "Workout in progress";
+        var working = exercise.Model.Sets.Where(s => !s.IsWarmup).ToList();
+        var next = working.FindIndex(s => !s.IsCompleted);
+        if (exercise.Model.Sets.FirstOrDefault(s => !s.IsCompleted) is { IsWarmup: true })
+            return $"{exercise.Name} · warm-up";
+        return next < 0 ? $"{exercise.Name} · done" : $"{exercise.Name} · set {next + 1} of {working.Count}";
     }
 
     WorkoutExerciseViewModel AddExerciseVm(SessionExercise se)
@@ -230,6 +268,38 @@ public partial class WorkoutViewModel(
         workouts.Save();
         UpdateProgress();
         IsEmpty = Exercises.Count == 0;
+    }
+
+    /// <summary>
+    /// Swaps an exercise for another from the catalogue, with the sets, rest and warm-ups an added one gets. Sets already
+    /// done stay in the workout as done (they happened); the new exercise then comes right after what's left of it.
+    /// </summary>
+    internal async Task Replace(WorkoutExerciseViewModel old)
+    {
+        if (_session == null || await picker.PickOneAsync($"Replace {old.Name}") is not { } ex)
+            return;
+        var index = Exercises.IndexOf(old);
+        if (index < 0)
+            return;
+        var se = workouts.CreateAdHoc(ex, _session);
+        var replacement = new WorkoutExerciseViewModel(this, ex, se, _session.Id);
+        if (old.Model.Sets.Any(s => s.IsCompleted))
+        {
+            old.Model.Sets.RemoveAll(s => !s.IsCompleted);
+            _session.Exercises.Insert(index + 1, se);
+            // Rebuilt from its model, now only the done sets.
+            Exercises[index] = new WorkoutExerciseViewModel(this, old.Exercise, old.Model, _session.Id);
+            Exercises.Insert(index + 1, replacement);
+            CurrentIndex = index + 1;
+        }
+        else
+        {
+            _session.Exercises[index] = se;
+            Exercises[index] = replacement;
+            CurrentIndex = index;
+        }
+        OnCurrentIndexChanged(CurrentIndex);
+        OnStructureChanged();
     }
 
     internal void Remove(WorkoutExerciseViewModel vm)
@@ -823,8 +893,8 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     async Task Menu()
     {
         string[] options = CanSkipExercise
-            ? [SkipExerciseText, "Exercise details", "Change rest time"]
-            : ["Exercise details", "Change rest time"];
+            ? [SkipExerciseText, "Replace exercise", "Exercise details", "Change rest time"]
+            : ["Replace exercise", "Exercise details", "Change rest time"];
         var choice = await _parent.Dialogs.ActionSheet(Name, "Remove exercise", options);
         if (choice == SkipExerciseText)
         {
@@ -836,6 +906,9 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             case "Remove exercise":
                 if (await _parent.Dialogs.Confirm("Remove exercise?", $"Remove {Name} and its sets from this workout?", "Remove"))
                     _parent.Remove(this);
+                break;
+            case "Replace exercise":
+                await _parent.Replace(this);
                 break;
             case "Exercise details":
                 await Help();

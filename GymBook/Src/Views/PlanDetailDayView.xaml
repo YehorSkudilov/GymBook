@@ -174,9 +174,10 @@
                                                     </VerticalStackLayout>
                                                 </Border>
                                             </Grid>
-                                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
-                                                <Button Text="Exercise info" Style="{StaticResource SmallButton}" Command="{Binding OpenCommand}" IsEnabled="{Binding HasInfo}" />
-                                                <Button Grid.Column="1" Text="Remove" Style="{StaticResource SmallButton}" TextColor="{StaticResource Danger}"
+                                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                                <Button Text="Info" Style="{StaticResource SmallButton}" Command="{Binding OpenCommand}" IsEnabled="{Binding HasInfo}" />
+                                                <Button Grid.Column="1" Text="Replace" Style="{StaticResource SmallButton}" Command="{Binding ReplaceCommand}" />
+                                                <Button Grid.Column="2" Text="Remove" Style="{StaticResource SmallButton}" TextColor="{StaticResource Danger}"
                                                         Command="{Binding RemoveCommand}" />
                                             </Grid>
                                         </VerticalStackLayout>

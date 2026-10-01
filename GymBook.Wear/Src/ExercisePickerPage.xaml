@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="GymBook.Wear.ExercisePickerPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:GymBook.Wear"
+    x:DataType="local:ExercisePickerViewModel">
+
+    <ContentPage.Resources>
+        <DataTemplate x:Key="Row" x:DataType="local:PickerItem">
+            <Border BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 18" StrokeThickness="0" Padding="12,8">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding Command}" />
+                </Border.GestureRecognizers>
+                <VerticalStackLayout Spacing="1">
+                    <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="13" MaxLines="2" LineBreakMode="TailTruncation" />
+                    <Label Text="{Binding Detail}" Style="{StaticResource Small}" FontSize="10" />
+                </VerticalStackLayout>
+            </Border>
+        </DataTemplate>
+    </ContentPage.Resources>
+
+    <ScrollView VerticalScrollBarVisibility="Never">
+        <VerticalStackLayout Padding="22,22,22,34" Spacing="6">
+            <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource Accent}" />
+            <Entry Text="{Binding Query}" Placeholder="Search" TextColor="{StaticResource TextPrimary}"
+                   PlaceholderColor="{StaticResource TextSecondary}" HorizontalTextAlignment="Center" FontSize="13" />
+
+            <Button Text="‹ Muscle groups" Command="{Binding BackToGroupsCommand}" IsVisible="{Binding InGroup}"
+                    BackgroundColor="Transparent" TextColor="{StaticResource Accent}" FontSize="12" HeightRequest="34" />
+            <Label Text="{Binding ListTitle}" Style="{StaticResource Small}" />
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Exercises}" BindableLayout.ItemTemplate="{StaticResource Row}" Spacing="6" />
+
+            <VerticalStackLayout IsVisible="{Binding ShowGroups}" Spacing="6" Margin="0,6,0,0">
+                <Label Text="Muscle groups" Style="{StaticResource Small}" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Groups}" Spacing="6">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="local:PickerItem">
+                            <Button Text="{Binding Name}" Command="{Binding Command}" BackgroundColor="{StaticResource Surface}"
+                                    TextColor="{StaticResource TextPrimary}" FontSize="13" HeightRequest="40" />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

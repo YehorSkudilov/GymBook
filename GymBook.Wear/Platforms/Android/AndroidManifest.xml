@@ -4,11 +4,17 @@
 	<uses-feature android:name="android.hardware.type.watch" />
 
 	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true">
-		<!-- Not standalone: it needs the phone app, which owns the workout. -->
-		<meta-data android:name="com.google.android.wearable.standalone" android:value="false" />
+		<!-- Standalone: signed in, it starts, stores and syncs workouts by itself (offline too). With the phone app
+		     nearby it also shows the phone's workout. -->
+		<meta-data android:name="com.google.android.wearable.standalone" android:value="true" />
 	</application>
 
+	<!-- Syncing with the account, over Wi-Fi, LTE or the phone's connection. -->
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<!-- The Ongoing Activity during a workout. -->
+	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 	<uses-permission android:name="android.permission.VIBRATE" />
 	<!-- The heart rate sensor: BODY_SENSORS up to Wear OS 5, READ_HEART_RATE from Wear OS 6 (API 36). -->
 	<uses-permission android:name="android.permission.BODY_SENSORS" android:maxSdkVersion="35" />

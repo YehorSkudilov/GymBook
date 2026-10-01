@@ -40,6 +40,16 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<!-- The link to the phone app (Src/PhoneLink.cs). -->
 		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="120.0.1.2" />
+		<!-- Ambient mode: the workout stays on screen, dimmed, when the watch would otherwise go to its watch face. -->
+		<PackageReference Include="Xamarin.AndroidX.Wear" Version="1.4.0.2" />
+		<!-- The Ongoing Activity: Gym Book's icon on the watch face during a workout, tap to go back to it. -->
+		<PackageReference Include="Xamarin.AndroidX.Wear.Ongoing" Version="1.1.0.3" />
+		<!-- The Tile (Platforms/Android/WorkoutTileService.cs): its layout, and the futures a TileService answers with. -->
+		<PackageReference Include="Xamarin.AndroidX.Wear.Tiles" Version="1.6.2" />
+		<PackageReference Include="Xamarin.AndroidX.Wear.ProtoLayout" Version="1.4.2" />
+		<PackageReference Include="Xamarin.AndroidX.Wear.ProtoLayout.Expression" Version="1.4.2" />
+		<PackageReference Include="Xamarin.AndroidX.Concurrent.Futures" Version="1.3.0.4" />
+		<PackageReference Include="Xamarin.Google.Guava.ListenableFuture" Version="1.0.0.32" />
 	</ItemGroup>
 
 	<!-- Play services brings newer AndroidX libraries than MAUI asks for, but not their -ktx/companion packages, so both
@@ -54,6 +64,52 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\GymBook.Shared\GymBook.Shared.csproj" />
+		<!-- The phone app's on-device database: workouts started on the watch are stored there first, offline. -->
+		<ProjectReference Include="..\GymBook.LocalData\GymBook.LocalData.csproj" />
+	</ItemGroup>
+
+	<!-- The phone app's own data, workout and sync code, compiled in as is (none of it is phone UI), so the watch stores,
+	     progresses and syncs workouts exactly like the phone. Edit these in GymBook/, they're only linked here. -->
+	<ItemGroup>
+		<Compile Include="..\GymBook\Src\Services\DataStore.cs" Link="Shared\DataStore.cs" />
+		<Compile Include="..\GymBook\Src\Services\Units.cs" Link="Shared\Units.cs" />
+		<Compile Include="..\GymBook\Src\Services\ExerciseLibrary.cs" Link="Shared\ExerciseLibrary.cs" />
+		<Compile Include="..\GymBook\Src\Models\ExerciseDetails.cs" Link="Shared\ExerciseDetails.cs" />
+		<Compile Include="..\GymBook\Src\Services\ProgressionEngine.cs" Link="Shared\ProgressionEngine.cs" />
+		<Compile Include="..\GymBook\Src\Services\WorkoutService.cs" Link="Shared\WorkoutService.cs" />
+		<Compile Include="..\GymBook\Src\Services\WarmupSettings.cs" Link="Shared\WarmupSettings.cs" />
+		<Compile Include="..\GymBook\Src\Services\TrainingGoals.cs" Link="Shared\TrainingGoals.cs" />
+		<Compile Include="..\GymBook\Src\Services\PlanCycle.cs" Link="Shared\PlanCycle.cs" />
+		<Compile Include="..\GymBook\Src\Services\PlanGenerator.cs" Link="Shared\PlanGenerator.cs" />
+		<Compile Include="..\GymBook\Src\Services\PlanProgress.cs" Link="Shared\PlanProgress.cs" />
+		<Compile Include="..\GymBook\Src\Services\PlanRest.cs" Link="Shared\PlanRest.cs" />
+		<Compile Include="..\GymBook\Src\Services\PlanSchedule.cs" Link="Shared\PlanSchedule.cs" />
+		<Compile Include="..\GymBook\Src\Services\PlanTraining.cs" Link="Shared\PlanTraining.cs" />
+		<Compile Include="..\GymBook\Src\Services\StatsService.cs" Link="Shared\StatsService.cs" />
+		<Compile Include="..\GymBook\Src\Services\RecoveryService.cs" Link="Shared\RecoveryService.cs" />
+		<Compile Include="..\GymBook\Src\Services\Sync\ApiClient.cs" Link="Shared\Sync\ApiClient.cs" />
+		<Compile Include="..\GymBook\Src\Services\Sync\ApiConfig.cs" Link="Shared\Sync\ApiConfig.cs" />
+		<Compile Include="..\GymBook\Src\Services\Sync\AuthSession.cs" Link="Shared\Sync\AuthSession.cs" />
+		<Compile Include="..\GymBook\Src\Services\Sync\SyncService.cs" Link="Shared\Sync\SyncService.cs" />
+		<!-- The exercise catalogue ExerciseLibrary reads (names, the curated list's extra exercises). -->
+		<EmbeddedResource Include="..\GymBook\Src\Services\ExerciseCatalog.json" LogicalName="ExerciseCatalog.json" Link="Shared\ExerciseCatalog.json" />
+	</ItemGroup>
+
+	<!-- The API, the same one the phone app uses (ApiConfig.cs reads it from [AssemblyMetadata]): -p:ApiBaseUrl=https://...,
+	     an API_BASE_URL environment variable, or API_BASE_URL in GymBook/.env. CI passes the API_BASE_URL variable. -->
+	<PropertyGroup>
+		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == ''">$(API_BASE_URL)</ApiBaseUrl>
+		<_EnvFile>$(MSBuildProjectDirectory)\..\GymBook\.env</_EnvFile>
+		<_EnvFileContent Condition="Exists('$(_EnvFile)')">$([System.IO.File]::ReadAllText('$(_EnvFile)'))</_EnvFileContent>
+		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == '' and '$(_EnvFileContent)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvFileContent)', '(?m)^API_BASE_URL=(.*?)\r?$').Groups[1].Value)</ApiBaseUrl>
+	</PropertyGroup>
+
+	<Target Name="ValidateApiBaseUrl" BeforeTargets="BeforeBuild;CoreCompile">
+		<Error Condition="'$(ApiBaseUrl)' == ''" Text="ApiBaseUrl is not set. Set it via -p:ApiBaseUrl=https://..., an API_BASE_URL environment variable, or GymBook/.env." />
+	</Target>
+
+	<ItemGroup>
+		<AssemblyMetadata Include="ApiBaseUrl" Value="$(ApiBaseUrl)" />
 	</ItemGroup>
 
 </Project>

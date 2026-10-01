@@ -1,27 +1,72 @@
+using GymBook.Services;
+using GymBook.Services.Sync;
+
 namespace GymBook.Wear;
+
+/// <summary>A page that runs things while on screen (the clock, the heart rate sensor), paused while the app isn't.</summary>
+public interface ILivePage
+{
+    Task ResumeAsync();
+    void Pause();
+}
 
 public partial class App : Application
 {
     readonly IServiceProvider _services;
-    readonly WatchViewModel _vm;
+    readonly PhoneLink _phone;
+    readonly SyncService _sync;
 
-    public App(IServiceProvider services, WatchViewModel vm)
+    public App(IServiceProvider services, PhoneLink phone, SyncService sync, DataStore store)
     {
         InitializeComponent();
         UserAppTheme = AppTheme.Dark;
         _services = services;
-        _vm = vm;
+        _phone = phone;
+        _sync = sync;
+        // The Tile shows the workout in progress or the next one: redraw it when either changes. The Ongoing Activity
+        // (the icon on the watch face) follows the workouts in progress, the watch's own and the phone's.
+        store.Changed += (_, _) =>
+        {
+            WorkoutTileService.RequestUpdate();
+            WatchOngoing.Refresh(phone.Workout);
+        };
+        phone.WorkoutChanged += WatchOngoing.Refresh;
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        // Made here rather than taken in the constructor: the page's XAML needs App.xaml's resources, which only exist
-        // once InitializeComponent above has run.
-        var window = new Window(_services.GetRequiredService<MainPage>());
-        // Leaving the app (or the screen turning off) doesn't make the page disappear, so follow the window too:
-        // nothing runs while the app isn't on screen, and coming back picks up whatever changed on the phone.
-        window.Stopped += (_, _) => _vm.Stop();
-        window.Resumed += async (_, _) => await _vm.StartAsync();
+        // Pages are made here rather than taken in the constructor: their XAML needs App.xaml's resources, which only
+        // exist once InitializeComponent above has run. Back (swipe right, or the button) pops a page off the home.
+        var navigation = new NavigationPage(_services.GetRequiredService<HomePage>());
+        var window = new Window(navigation);
+        // Leaving the app (or the screen turning off) doesn't make the page disappear, so follow the window: nothing
+        // runs while the app isn't on screen, and coming back picks up whatever changed on the phone or the account.
+        window.Stopped += (_, _) =>
+        {
+            _phone.Stop();
+            (navigation.CurrentPage as ILivePage)?.Pause();
+        };
+        window.Resumed += async (_, _) =>
+        {
+            await StartPhoneLinkAsync();
+            _sync.Schedule(TimeSpan.Zero);
+            if (navigation.CurrentPage is ILivePage page)
+                await page.ResumeAsync();
+        };
+        _ = StartPhoneLinkAsync();
         return window;
+    }
+
+    // Following the phone's workout. Without a phone (or Google Play services) the watch still works on its own.
+    async Task StartPhoneLinkAsync()
+    {
+        try
+        {
+            await _phone.StartAsync();
+        }
+        catch (Exception e)
+        {
+            System.Diagnostics.Debug.WriteLine($"GymBook.Wear: phone link failed: {e}");
+        }
     }
 }

@@ -10,16 +10,25 @@ namespace GymBook.Wear;
 
 /// <summary>
 /// The watch's side of the Wearable Data Layer: the phone's workout (the <see cref="WearPaths.Workout"/> data item, read
-/// when the app opens and followed while it's open), and ticks sent back as messages. See the phone's WatchSync.cs.
+/// when the app opens and followed while it's open), ticks sent back as messages, and "Sign in with phone". See the
+/// phone's WatchSync.cs.
 /// </summary>
-public class PhoneLink : Java.Lang.Object, DataClient.IOnDataChangedListener
+public class PhoneLink : Java.Lang.Object, DataClient.IOnDataChangedListener, MessageClient.IOnMessageReceivedListener
 {
+    static readonly JsonTypeInfo<WearSession> SessionJson = (JsonTypeInfo<WearSession>)GymBookJson.Options.GetTypeInfo(typeof(WearSession));
+    static readonly TimeSpan SessionTimeout = TimeSpan.FromSeconds(20);
+
+    TaskCompletionSource<WearSession>? _sessionReply;
+
     static readonly JsonTypeInfo<WearWorkout> WorkoutJson = (JsonTypeInfo<WearWorkout>)GymBookJson.Options.GetTypeInfo(typeof(WearWorkout));
     static readonly JsonTypeInfo<WearCompleteSet> CompleteSetJson = (JsonTypeInfo<WearCompleteSet>)GymBookJson.Options.GetTypeInfo(typeof(WearCompleteSet));
 
     static Android.Content.Context Context => Android.App.Application.Context;
 
     bool _listening;
+
+    /// <summary>The workout the phone last sent; <see cref="WearWorkout.None"/> until one arrives.</summary>
+    public WearWorkout Workout { get; private set; } = WearWorkout.None;
 
     /// <summary>The phone sent a new workout (or that there's none). Raised on the main thread.</summary>
     public event Action<WearWorkout>? WorkoutChanged;
@@ -82,13 +91,60 @@ public class PhoneLink : Java.Lang.Object, DataClient.IOnDataChangedListener
             return;
         }
         if (workout != null)
-            MainThread.BeginInvokeOnMainThread(() => WorkoutChanged?.Invoke(workout));
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                Workout = workout;
+                WorkoutChanged?.Invoke(workout);
+            });
     }
 
     /// <summary>Asks the phone to tick a set. False when no phone could be reached.</summary>
-    public async Task<bool> CompleteSetAsync(WearCompleteSet request)
+    public Task<bool> CompleteSetAsync(WearCompleteSet request) =>
+        SendToPhonesAsync(WearPaths.CompleteSet, JsonSerializer.SerializeToUtf8Bytes(request, CompleteSetJson));
+
+    /// <summary>
+    /// Asks the phone app for a session of the watch's own ("Sign in with phone"). The answer says why not when the
+    /// phone isn't reachable or isn't signed in.
+    /// </summary>
+    public async Task<WearSession> RequestSessionAsync()
     {
-        var data = JsonSerializer.SerializeToUtf8Bytes(request, CompleteSetJson);
+        var messages = WearableClass.GetMessageClient(Context);
+        var reply = _sessionReply = new TaskCompletionSource<WearSession>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await messages.AddListener(this).AsAsync<Java.Lang.Object>();
+        try
+        {
+            if (!await SendToPhonesAsync(WearPaths.RequestSession, []))
+                return new(null, "Your phone isn't connected. Check Bluetooth, or sign in with email.");
+            var done = await Task.WhenAny(reply.Task, Task.Delay(SessionTimeout));
+            return done == reply.Task
+                ? reply.Task.Result
+                : new(null, "Your phone didn't answer. Is Gym Book installed on it?");
+        }
+        finally
+        {
+            _sessionReply = null;
+            messages.RemoveListener(this);
+        }
+    }
+
+    public void OnMessageReceived(IMessageEvent message)
+    {
+        if (message.Path != WearPaths.Session || message.GetData() is not { } data)
+            return;
+        try
+        {
+            if (JsonSerializer.Deserialize(data, SessionJson) is { } session)
+                _sessionReply?.TrySetResult(session);
+        }
+        catch (JsonException)
+        {
+            _sessionReply?.TrySetResult(new(null, "Update Gym Book on your phone and try again."));
+        }
+    }
+
+    /// <summary>Sends a message to every connected phone (in practice the one it's paired with). False when there's none.</summary>
+    static async Task<bool> SendToPhonesAsync(string path, byte[] data)
+    {
         var nodes = await WearableClass.GetNodeClient(Context).GetConnectedNodes().AsAsync<JavaList>();
         var messages = WearableClass.GetMessageClient(Context);
         var sent = false;
@@ -96,7 +152,7 @@ public class PhoneLink : Java.Lang.Object, DataClient.IOnDataChangedListener
         {
             if (node?.Id == null)
                 continue;
-            await messages.SendMessage(node.Id, WearPaths.CompleteSet, data).AsAsync<Java.Lang.Object>();
+            await messages.SendMessage(node.Id, path, data).AsAsync<Java.Lang.Object>();
             sent = true;
         }
         return sent;

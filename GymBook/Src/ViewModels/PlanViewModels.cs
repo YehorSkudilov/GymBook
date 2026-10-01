@@ -120,6 +120,8 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
 
     public required IAsyncRelayCommand OpenCommand { get; init; }
     public required IRelayCommand RemoveCommand { get; init; }
+    /// <summary>Swaps it for another exercise from the catalogue, in the same place.</summary>
+    public required IAsyncRelayCommand ReplaceCommand { get; init; }
     /// <summary>Moves the exercise to the position it was dragged to (see <see cref="Controls.ReorderItem"/>).</summary>
     public required IRelayCommand<int> MoveCommand { get; init; }
 
@@ -528,6 +530,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
                     IsExpanded = _expanded.Contains(x.pe),
                     OpenCommand = new AsyncRelayCommand(() => x.ex == null ? Task.CompletedTask : GoTo($"{Routes.Exercise}?id={x.ex.Id}")),
                     RemoveCommand = new RelayCommand(() => RemoveExercise(day!, item!)),
+                    ReplaceCommand = new AsyncRelayCommand(() => ReplaceExercise(day!, item!)),
                     MoveCommand = new RelayCommand<int>(to => MoveExercise(day!, item!, to)),
                 };
                 item.PropertyChanged += (_, e) =>
@@ -658,6 +661,25 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
     void RemoveExercise(PlanWorkout workout, PlanDayExercise item)
     {
         workout.Exercises.Remove(item.Model);
+        Edited();
+    }
+
+    /// <summary>
+    /// Swaps an exercise for another in the same place, set up for the plan's goal like an added one (reps and rest
+    /// suit the new movement), keeping how many sets it had.
+    /// </summary>
+    async Task ReplaceExercise(PlanWorkout workout, PlanDayExercise item)
+    {
+        if (_draft is not { } plan || await picker.PickOneAsync($"Replace {item.Name}") is not { } ex)
+            return;
+        var index = workout.Exercises.IndexOf(item.Model);
+        if (index < 0)
+            return;
+        var pe = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, ex, store.Profile);
+        pe.RestSeconds = PlanRest.DefaultFor(plan, store.Profile, ex);
+        pe.TargetRir = PlanTraining.RirFor(plan, store.Profile, ex);
+        pe.Sets = item.Model.Sets;
+        workout.Exercises[index] = pe;
         Edited();
     }
 

@@ -456,7 +456,8 @@ jobs:
             "/p:AndroidSigningKeyPass=${{ secrets.ANDROID_KEYALIAS_PASS }}" `
             "/p:AndroidSigningStorePass=${{ secrets.ANDROID_KEYSTORE_PASS }}" `
             "/p:ApplicationDisplayVersion=${{ needs.version.outputs.new_version }}" `
-            "/p:ApplicationVersion=$versionCode"
+            "/p:ApplicationVersion=$versionCode" `
+            "/p:ApiBaseUrl=${{ vars.API_BASE_URL }}"
 
       # =========================
       # FIND AAB

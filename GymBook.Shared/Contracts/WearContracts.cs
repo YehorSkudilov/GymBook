@@ -14,7 +14,22 @@ public static class WearPaths
 
     /// <summary>Message to the phone: a <see cref="WearCompleteSet"/>.</summary>
     public const string CompleteSet = "/gymbook/complete-set";
+
+    /// <summary>Message to the watch, no payload: a workout just started on the phone, open the watch app to follow it.</summary>
+    public const string OpenApp = "/gymbook/open-app";
+
+    /// <summary>Message to the phone, no payload: sign the watch in to the phone's account ("Sign in with phone").</summary>
+    public const string RequestSession = "/gymbook/request-session";
+
+    /// <summary>Message to the watch, the phone's answer to <see cref="RequestSession"/>: a <see cref="WearSession"/>.</summary>
+    public const string Session = "/gymbook/session";
 }
+
+/// <summary>
+/// A session of the watch's own (a separate refresh token family from the phone's, from api/account/device-session),
+/// or why there isn't one, e.g. the phone app isn't signed in.
+/// </summary>
+public record WearSession(AuthResponse? Auth, string? Error);
 
 /// <summary>The workout in progress on the phone, or <see cref="IsActive"/> false when there's none.</summary>
 public record WearWorkout(

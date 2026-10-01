@@ -10,7 +10,7 @@ namespace GymBook.Wear;
 /// after it, and the heart rate. Everything is worked out from the workout the phone last sent, so the watch and the
 /// phone always agree; a tick shows straight away and is confirmed when the phone sends the workout back.
 /// </summary>
-public partial class WatchViewModel : ObservableObject
+public partial class CompanionViewModel : ObservableObject
 {
     // How long a tick may wait for the phone before the watch gives up on it.
     static readonly TimeSpan PendingTimeout = TimeSpan.FromSeconds(6);
@@ -25,12 +25,10 @@ public partial class WatchViewModel : ObservableObject
     DateTimeOffset? _restSkippedFor;
     DateTimeOffset? _restAlertedFor;
 
-    public WatchViewModel(PhoneLink phone, HeartRateMonitor heart)
+    public CompanionViewModel(PhoneLink phone, HeartRateMonitor heart)
     {
         _phone = phone;
         _heart = heart;
-        _phone.WorkoutChanged += OnWorkoutChanged;
-        _heart.Changed += bpm => HeartRate = $"♥ {bpm}";
     }
 
     // What's on screen: exactly one of these is true.
@@ -39,7 +37,7 @@ public partial class WatchViewModel : ObservableObject
     [ObservableProperty] bool isResting;
     [ObservableProperty] bool isFinished;
 
-    [ObservableProperty] string status = "Connecting to your phone…";
+    [ObservableProperty] string status = "The workout on your phone has ended.";
     [ObservableProperty] string workoutName = "";
     [ObservableProperty] string elapsed = "";
     [ObservableProperty] string heartRate = "";
@@ -51,27 +49,41 @@ public partial class WatchViewModel : ObservableObject
     [ObservableProperty] string doneText = "Done";
     [ObservableProperty] bool canComplete;
     [ObservableProperty] string restText = "";
+    [ObservableProperty] string restUntil = "";
+
+    /// <summary>Ambient mode (see <see cref="Ambient"/>): buttons hidden, times that hold for a minute.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsInteractive))]
+    bool isAmbient;
+
+    public bool IsInteractive => !IsAmbient;
     [ObservableProperty] double restProgress;
     [ObservableProperty] string message = "";
 
+    /// <summary>The phone's workout ended (finished or discarded there): the page goes back to the watch's home.</summary>
+    public event Action? Ended;
+
+    /// <summary>While the page is on screen: the clock, the heart rate, and the workout the phone last sent.</summary>
     public async Task StartAsync()
     {
+        // Followed only while on screen: these services outlive the page.
+        _phone.WorkoutChanged -= OnWorkoutChanged;
+        _phone.WorkoutChanged += OnWorkoutChanged;
+        _heart.Changed -= OnHeartRate;
+        _heart.Changed += OnHeartRate;
+        Ambient.Changed -= OnAmbientChanged;
+        Ambient.Changed += OnAmbientChanged;
+        Ambient.Tick -= Refresh;
+        Ambient.Tick += Refresh;
+        IsAmbient = Ambient.IsActive;
+        _workout = _phone.Workout;
         _timer ??= Application.Current!.Dispatcher.CreateTimer();
         _timer.Interval = TimeSpan.FromSeconds(1);
         _timer.Tick -= OnTick;
         _timer.Tick += OnTick;
-        _timer.Start();
-        try
-        {
-            await _phone.StartAsync();
-            if (!_workout.IsActive)
-                Status = "No workout in progress. Start one in Gym Book on your phone.";
-        }
-        catch (Exception e)
-        {
-            System.Diagnostics.Debug.WriteLine($"GymBook.Wear: phone link failed: {e}");
-            Status = "Couldn't reach Gym Book on your phone. Is it installed?";
-        }
+        if (!IsAmbient)
+            _timer.Start();
+        Refresh();
         try
         {
             if (!await _heart.StartAsync())
@@ -88,11 +100,13 @@ public partial class WatchViewModel : ObservableObject
     public void Stop()
     {
         _timer?.Stop();
+        _phone.WorkoutChanged -= OnWorkoutChanged;
+        _heart.Changed -= OnHeartRate;
+        Ambient.Changed -= OnAmbientChanged;
+        Ambient.Tick -= Refresh;
         try
         {
-            _phone.Stop();
             _heart.Stop();
-            DeviceDisplay.Current.KeepScreenOn = false;
         }
         catch (Exception e)
         {
@@ -102,6 +116,19 @@ public partial class WatchViewModel : ObservableObject
 
     void OnTick(object? sender, EventArgs e) => Refresh();
 
+    void OnHeartRate(int bpm) => HeartRate = $"♥ {bpm}";
+
+    // Ambient: the per-second clock stops (the system redraws about once a minute instead), back to normal after.
+    void OnAmbientChanged(bool ambient)
+    {
+        IsAmbient = ambient;
+        if (ambient)
+            _timer?.Stop();
+        else
+            _timer?.Start();
+        Refresh();
+    }
+
     void OnWorkoutChanged(WearWorkout workout)
     {
         _workout = workout;
@@ -109,8 +136,6 @@ public partial class WatchViewModel : ObservableObject
         if (_pending is { } p && (p.Session != workout.SessionId || SetAt(p.Exercise, p.Set)?.IsCompleted != false))
             _pending = null;
         Message = "";
-        if (!workout.IsActive)
-            Status = "No workout in progress. Start one in Gym Book on your phone.";
         Refresh();
     }
 
@@ -166,15 +191,17 @@ public partial class WatchViewModel : ObservableObject
         }
 
         var active = _workout.IsActive;
-        DeviceDisplay.Current.KeepScreenOn = active;
         if (!active)
         {
             Show(waiting: true);
+            Ended?.Invoke();
             return;
         }
 
         WorkoutName = _workout.Name;
-        Elapsed = Clock(DateTimeOffset.Now - _workout.StartedAt);
+        var elapsed = DateTimeOffset.Now - _workout.StartedAt;
+        // Seconds would be wrong for most of the minute between ambient redraws.
+        Elapsed = IsAmbient ? $"{(int)elapsed.TotalMinutes} min" : Clock(elapsed);
         var working = _workout.Exercises.SelectMany((e, i) => e.Sets.Select((s, j) => (s, i, j))).Where(x => !x.s.IsWarmup).ToList();
         Progress = $"{working.Count(x => IsDone(x.i, x.j))}/{working.Count} sets";
 
@@ -191,6 +218,7 @@ public partial class WatchViewModel : ObservableObject
             if (left > TimeSpan.Zero)
             {
                 RestText = Clock(left);
+                RestUntil = $"until {last.At.AddSeconds(last.RestSeconds).ToLocalTime():HH:mm}";
                 RestProgress = last.RestSeconds <= 0 ? 0 : left.TotalSeconds / last.RestSeconds;
                 ShowSet(current);
                 Show(resting: true);
