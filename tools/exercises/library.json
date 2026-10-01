@@ -1512,7 +1512,11 @@
   "category": "Strength",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "CAwf7n6Luuc",
+   "34.284",
+   "91.633003"
+  ]
  },
  {
   "file": "ExerciseLibrary.Back.cs",
@@ -1713,7 +1717,11 @@
   "category": "Strength",
   "level": "Intermediate",
   "hold": false,
-  "video": null
+  "video": [
+   "0PSfteHhUtg",
+   "19.200001",
+   "57.066002"
+  ]
  },
  {
   "file": "ExerciseLibrary.Back.cs",
@@ -1853,7 +1861,11 @@
   "category": "Strength",
   "level": "Advanced",
   "hold": false,
-  "video": null
+  "video": [
+   "3rB5euZ9lu0",
+   "15.12",
+   "52.439999"
+  ]
  },
  {
   "file": "ExerciseLibrary.Back.cs",
@@ -2092,7 +2104,11 @@
   "category": "Strength",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "LSkyinhmA8k",
+   "33.119999",
+   null
+  ]
  },
  {
   "file": "ExerciseLibrary.Back.cs",
@@ -2183,7 +2199,11 @@
   "category": "Strength",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "LI3b05LUdpA",
+   "0",
+   "55.52"
+  ]
  },
  {
   "file": "ExerciseLibrary.Back.cs",
@@ -2276,7 +2296,11 @@
   "category": "Cardio",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "NAsObfFJXvE",
+   "61.119999",
+   "101.68"
+  ]
  },
  {
   "file": "ExerciseLibrary.Cardio.cs",
@@ -3551,7 +3575,11 @@
   "category": "Strength",
   "level": "Intermediate",
   "hold": false,
-  "video": null
+  "video": [
+   "FFyGwcLnDYc",
+   "34.398998",
+   "54.132999"
+  ]
  },
  {
   "file": "ExerciseLibrary.Chest.cs",
@@ -3921,7 +3949,11 @@
   "category": "Strength",
   "level": "Intermediate",
   "hold": false,
-  "video": null
+  "video": [
+   "ZCYPSaEjsWc",
+   "22.379999",
+   "66.599998"
+  ]
  },
  {
   "file": "ExerciseLibrary.Chest.cs",
@@ -3959,7 +3991,11 @@
   "category": "Strength",
   "level": "Intermediate",
   "hold": false,
-  "video": null
+  "video": [
+   "8sa2qDm8a6k",
+   "47.080002",
+   "83.839996"
+  ]
  },
  {
   "file": "ExerciseLibrary.Chest.cs",
@@ -4038,7 +4074,11 @@
   "category": "Strength",
   "level": "Intermediate",
   "hold": false,
-  "video": null
+  "video": [
+   "yN6Q1UI_xkE",
+   "161.28",
+   "286.76001"
+  ]
  },
  {
   "file": "ExerciseLibrary.Chest.cs",
@@ -4114,7 +4154,11 @@
   "category": "Strength",
   "level": "Intermediate",
   "hold": false,
-  "video": null
+  "video": [
+   "tcHaHIQStsk",
+   "427.5",
+   "583.67999"
+  ]
  },
  {
   "file": "ExerciseLibrary.Chest.cs",
@@ -4235,7 +4279,11 @@
   "category": "Strength",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "FRzQXeN1hro",
+   "15.339",
+   "24.879999"
+  ]
  },
  {
   "file": "ExerciseLibrary.Core.cs",
@@ -4265,7 +4313,11 @@
   "category": "Strength",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "NR4k8hJfs-8",
+   "0",
+   "35.82"
+  ]
  },
  {
   "file": "ExerciseLibrary.Core.cs",
@@ -4295,7 +4347,11 @@
   "category": "Strength",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "0KEP6A1deBE",
+   "39.360001",
+   "86.759003"
+  ]
  },
  {
   "file": "ExerciseLibrary.Core.cs",
@@ -4325,7 +4381,11 @@
   "category": "Strength",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "pCX65Mtc_Kk",
+   "27.299999",
+   null
+  ]
  },
  {
   "file": "ExerciseLibrary.Core.cs",
@@ -4707,7 +4767,11 @@
   "category": "Strength",
   "level": "Advanced",
   "hold": false,
-  "video": null
+  "video": [
+   "2zVNyi5Uk44",
+   "150.56",
+   "193.599"
+  ]
  },
  {
   "file": "ExerciseLibrary.Core.cs",
@@ -5270,7 +5334,11 @@
   "category": "Strength",
   "level": "Intermediate",
   "hold": false,
-  "video": null
+  "video": [
+   "b2jmZyptN64",
+   "72.799004",
+   "137.03999"
+  ]
  },
  {
   "file": "ExerciseLibrary.Legs.cs",
@@ -5344,7 +5412,11 @@
   "category": "Strength",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "YgYwEo5WN5o",
+   "20.48",
+   "50.238998"
+  ]
  },
  {
   "file": "ExerciseLibrary.Legs.cs",
@@ -5812,7 +5884,11 @@
   "category": "Strength",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "cVYnf2CFO9M",
+   "30.99",
+   null
+  ]
  },
  {
   "file": "ExerciseLibrary.Legs.cs",
@@ -8771,7 +8847,11 @@
   "category": "Strength",
   "level": "Beginner",
   "hold": false,
-  "video": null
+  "video": [
+   "aM657RnN9XE",
+   "6.4640002",
+   "24.24"
+  ]
  },
  {
   "file": "ExerciseLibrary.Neck.cs",
@@ -10208,7 +10288,11 @@
   "category": "Pilates",
   "level": "Intermediate",
   "hold": false,
-  "video": null
+  "video": [
+   "OirVxTic1B4",
+   "5.5380001",
+   "50.759998"
+  ]
  },
  {
   "file": "ExerciseLibrary.Pilates.cs",
@@ -10344,7 +10428,11 @@
   "category": "Pilates",
   "level": "Intermediate",
   "hold": false,
-  "video": null
+  "video": [
+   "VzMG_pzUEmA",
+   "17.629999",
+   "65"
+  ]
  },
  {
   "file": "ExerciseLibrary.Pilates.cs",
@@ -10357,7 +10445,11 @@
   "category": "Pilates",
   "level": "Advanced",
   "hold": false,
-  "video": null
+  "video": [
+   "6j_r7O7FgRs",
+   "24.959999",
+   "104.36"
+  ]
  },
  {
   "file": "ExerciseLibrary.Pilates.cs",
@@ -10797,7 +10889,11 @@
   "category": "Strength",
   "level": "Intermediate",
   "hold": false,
-  "video": null
+  "video": [
+   "_DhDkij1vxY",
+   "25.299999",
+   "48.900002"
+  ]
  },
  {
   "file": "ExerciseLibrary.PosteriorChain.cs",
@@ -11674,8 +11770,8 @@
   "hold": false,
   "video": [
    "YLPQsdRDmB0",
-   null,
-   null
+   "30.66",
+   "73.799"
   ]
  },
  {
@@ -11778,7 +11874,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "pN3N9dOhJWM",
+   "-bnJGikRGsM",
    null,
    null
   ]
@@ -11799,7 +11895,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "uzxh4btbZPM",
+   "_5kDxC0flg0",
    null,
    null
   ]
@@ -11821,8 +11917,8 @@
   "hold": false,
   "video": [
    "7WgzHOQGgYw",
-   null,
-   null
+   "33.042",
+   "84.989998"
   ]
  },
  {
@@ -11900,7 +11996,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "dsWxXDJxYi8",
+   "MRieBuzWWG8",
    null,
    null
   ]
@@ -11940,8 +12036,8 @@
   "level": "Advanced",
   "hold": false,
   "video": [
-   "IzXKJjpkvAY",
-   null,
+   "EYwWCgM198U",
+   "23.1",
    null
   ]
  },
@@ -12023,8 +12119,8 @@
   "hold": false,
   "video": [
    "l0H-L2glg68",
-   null,
-   null
+   "31.039",
+   "48.799999"
   ]
  },
  {
@@ -12106,9 +12202,9 @@
   "level": "Advanced",
   "hold": false,
   "video": [
-   "zxdfWgksUZY",
-   null,
-   null
+   "Php-RclQ1yU",
+   "0",
+   "65.518997"
   ]
  },
  {
@@ -12127,7 +12223,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "zkL7jB15DaM",
+   "SpDPcj0W3Yw",
    null,
    null
   ]
@@ -12148,7 +12244,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "3jFC0AYXOnE",
+   "nJmtGVutszE",
    null,
    null
   ]
@@ -12233,7 +12329,7 @@
   "hold": false,
   "video": [
    "0yd9443Y-fg",
-   null,
+   "49",
    null
   ]
  },
@@ -12253,7 +12349,7 @@
   "level": "Advanced",
   "hold": false,
   "video": [
-   "xhFFaPLJ8eg",
+   "oQIaWLrB318",
    null,
    null
   ]
@@ -12275,7 +12371,7 @@
   "hold": false,
   "video": [
    "E2z5zK5V-MM",
-   "12",
+   null,
    null
   ]
  },
@@ -12295,7 +12391,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "n6lRtVV7LYY",
+   "uUeV3LwisDI",
    null,
    null
   ]
@@ -12316,7 +12412,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "CCZK0ouzd4A",
+   "efHjodEVf9w",
    null,
    null
   ]
@@ -12358,7 +12454,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "bVdEnvwvlgk",
+   "2Qv8pEnprpU",
    null,
    null
   ]
@@ -12379,7 +12475,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "Hqxjk5Z35SM",
+   "yklSQG1_Ovc",
    null,
    null
   ]
@@ -12400,7 +12496,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "VrHNJXoSyXw",
+   "Om7vLD6x8W0",
    null,
    null
   ]
@@ -12442,7 +12538,7 @@
   "level": "Advanced",
   "hold": false,
   "video": [
-   "VwNkc1QYUGA",
+   "bNCXgyosXlc",
    null,
    null
   ]
@@ -12462,7 +12558,7 @@
   "level": "Beginner",
   "hold": false,
   "video": [
-   "PO343opm22o",
+   "yHxcTn1UeAc",
    null,
    null
   ]
@@ -12483,7 +12579,7 @@
   "level": "Beginner",
   "hold": false,
   "video": [
-   "8UHn_KNfvr4",
+   "sxtfgmzhXvE",
    null,
    null
   ]
@@ -12504,7 +12600,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "5uFoUDmP2LA",
+   "d94xX-AQZ0A",
    null,
    null
   ]
@@ -12525,7 +12621,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "xQb9Tc3iQpI",
+   "xZyGP55NkAo",
    null,
    null
   ]
@@ -12546,7 +12642,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "C7r6jI7Ch48",
+   "AR6E01ABoHk",
    null,
    null
   ]
@@ -12567,7 +12663,7 @@
   "level": "Intermediate",
   "hold": false,
   "video": [
-   "sgd8n917Zv0",
+   "0bWRPC49-KI",
    null,
    null
   ]

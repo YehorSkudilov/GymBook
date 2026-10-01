@@ -19,7 +19,7 @@ for (const f of readdirSync(dir).filter(f => f.startsWith("ExerciseLibrary.") &&
     const cat = /Category = (?:ExerciseCategory\.)?(\w+)/.exec(body)?.[1] ?? "Strength";
     const lvl = /Level = (\w+)/.exec(body)?.[1] ?? "Beginner";
     const hold = /Hold = true/.test(body);
-    const video = /Video = new\("([^"]+)"(?:, (\w+))?(?:, (\w+))?\)/.exec(body);
+    const video = /Video = new\("([^"]+)"(?:, ([\d.]+|null))?(?:, ([\d.]+))?\)/.exec(body);
     if (!M.has(p)) problems.push(`${f} ${id}: bad primary ${p}`);
     if (!E.has(e)) problems.push(`${f} ${id}: bad equipment ${e}`);
     if (!K.has(k)) problems.push(`${f} ${id}: bad mechanic ${k}`);

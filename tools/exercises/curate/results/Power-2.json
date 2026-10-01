@@ -60,6 +60,18 @@
     "verdict": "ok"
   },
   {
+    "id": "db_snatch",
+    "videoId": "0yd9443Y-fg",
+    "start": 49,
+    "end": null,
+    "channel": "Well+Good",
+    "title": "How to do a Dumbbell Snatch | The Right Way | Well+Good",
+    "timeSource": "chapter",
+    "chapter": "The Right Way",
+    "note": "Well+Good, last chapter The Right Way starts at 49s (skips intro and wrong-way demo)",
+    "verdict": "ok"
+  },
+  {
     "id": "clean",
     "videoId": "oQIaWLrB318",
     "start": null,
@@ -180,16 +192,16 @@
     "verdict": "fixed"
   },
   {
-    "id": "db_snatch",
-    "videoId": "0yd9443Y-fg",
-    "start": 49,
+    "id": "kb_swing",
+    "videoId": "yHxcTn1UeAc",
+    "start": null,
     "end": null,
-    "channel": "Well+Good",
-    "title": "How to do a Dumbbell Snatch | The Right Way | Well+Good",
-    "timeSource": "chapter",
-    "chapter": "The Right Way",
-    "note": "Well+Good, last chapter The Right Way starts at 49s (skips intro and wrong-way demo)",
-    "verdict": "ok"
+    "channel": "StrongFirst",
+    "title": "Kettlebell Swing Basics",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced Erin Stern pick (non-integer chapter times, less authoritative) with StrongFirst 3:10 two-handed hardstyle swing basics by Senior SFGs",
+    "verdict": "fixed"
   },
   {
     "id": "kb_single_arm_swing",
@@ -213,6 +225,42 @@
     "timeSource": "whole",
     "chapter": "",
     "note": "Replaced hashtag Short from unknown channel with Onnit 13s American swing tutorial",
+    "verdict": "fixed"
+  },
+  {
+    "id": "kb_clean",
+    "videoId": "xZyGP55NkAo",
+    "start": null,
+    "end": null,
+    "channel": "PureGym",
+    "title": "How To Do Kettlebell Cleans",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced Zack Henderson Short (bogus 1-26s timecodes) with PureGym 10s kettlebell clean demo",
+    "verdict": "fixed"
+  },
+  {
+    "id": "kb_snatch",
+    "videoId": "AR6E01ABoHk",
+    "start": null,
+    "end": null,
+    "channel": "StrongFirst",
+    "title": "Proper Path of the Kettlebell Snatch | StrongFirst",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced Greg Brookes with StrongFirst 1:38 kettlebell snatch technique video",
+    "verdict": "fixed"
+  },
+  {
+    "id": "kb_turkish_get_up",
+    "videoId": "0bWRPC49-KI",
+    "start": null,
+    "end": null,
+    "channel": "StrongFirst",
+    "title": "Turkish Get-Up Basics",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced Equinox 28s clip with StrongFirst 2:47 Turkish get-up basics by Senior SFG",
     "verdict": "fixed"
   }
 ]

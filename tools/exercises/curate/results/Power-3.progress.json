@@ -130,5 +130,29 @@
     "chapter": "",
     "note": "Live Lean TV focused 57s tire flip demo, embeds",
     "verdict": "ok"
+  },
+  {
+    "id": "sled_drag",
+    "videoId": "k7JsvdG9sSo",
+    "start": null,
+    "end": null,
+    "channel": "Testosterone Nation",
+    "title": "Backward Sled Drag",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced unknown channel (fractional chapter times) with T Nation focused 22s backward sled drag demo, embeds",
+    "verdict": "fixed"
+  },
+  {
+    "id": "sled_pull",
+    "videoId": "D7PdhZXG4iI",
+    "start": null,
+    "end": null,
+    "channel": "TrainFTW",
+    "title": "Hand-Over-Hand Sled Pull",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Firefighter strength coaching org, focused 19s hand-over-hand sled pull demo, embeds; no more reputable alternative found",
+    "verdict": "ok"
   }
 ]

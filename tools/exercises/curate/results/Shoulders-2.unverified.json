@@ -12,30 +12,6 @@
     "verdict": null
   },
   {
-    "id": "muscle_snatch",
-    "videoId": "nJmtGVutszE",
-    "start": null,
-    "end": null,
-    "channel": "Catalyst Athletics",
-    "title": "Muscle Snatch | Olympic Weightlifting Exercise Library",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Replaced CrossFit with Catalyst Athletics 1:31 muscle snatch library demo",
-    "verdict": null
-  },
-  {
-    "id": "snatch_pull",
-    "videoId": "G1QygZ3Kd3w",
-    "start": null,
-    "end": null,
-    "channel": "Catalyst Athletics",
-    "title": "Snatch Pull | Olympic Weightlifting Exercise Library",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Catalyst Athletics 1:51 snatch pull library demo",
-    "verdict": null
-  },
-  {
     "id": "lateral_raise",
     "videoId": "OuG1smZTsQQ",
     "start": null,
@@ -117,6 +93,78 @@
     "timeSource": "whole",
     "chapter": null,
     "note": "kept current (Men's Health 47s demo)",
+    "verdict": null
+  },
+  {
+    "id": "reverse_fly",
+    "videoId": "SgyUoY0IZ7A",
+    "start": 696,
+    "end": 718,
+    "channel": "Jeff Nippard",
+    "title": "The Best And Worst Shoulder Exercises",
+    "timeSource": "chapter",
+    "chapter": "Bent Over Reverse Dumbbell Flye",
+    "note": "Jeff Nippard chapter; replaces daniellagimodierept (2012)",
+    "verdict": null
+  },
+  {
+    "id": "cable_reverse_fly",
+    "videoId": "SgyUoY0IZ7A",
+    "start": 718,
+    "end": null,
+    "channel": "Jeff Nippard",
+    "title": "The Best And Worst Shoulder Exercises",
+    "timeSource": "chapter",
+    "chapter": "Reverse Cable Crossover",
+    "note": "Jeff Nippard last chapter (no end; may run into outro). Alternative: PureGym er15V96hG5U 15s. Replaces Labrada Nutrition",
+    "verdict": null
+  },
+  {
+    "id": "rear_delt_machine",
+    "videoId": "5YK4bgzXDp0",
+    "start": null,
+    "end": null,
+    "channel": "Renaissance Periodization",
+    "title": "Machine Reverse Flye",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "RP 13s demo; replaces FIT.nl",
+    "verdict": null
+  },
+  {
+    "id": "cable_upright_row",
+    "videoId": "qr3ziolhjvQ",
+    "start": null,
+    "end": null,
+    "channel": "Renaissance Periodization",
+    "title": "Cable Upright Row",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "RP 10s demo; replaces PureGym",
+    "verdict": null
+  },
+  {
+    "id": "db_upright_row",
+    "videoId": "Ub6QruNKfbY",
+    "start": null,
+    "end": null,
+    "channel": "Renaissance Periodization",
+    "title": "Dumbbell Upright Row",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "RP 12s demo; replaces Buff Dudes 1:44",
+    "verdict": null
+  },
+  {
+    "id": "face_pull",
+    "videoId": "SgyUoY0IZ7A",
+    "start": 661,
+    "end": 696,
+    "channel": "Jeff Nippard",
+    "title": "The Best And Worst Shoulder Exercises",
+    "timeSource": "chapter",
+    "chapter": "Rope Facepull",
+    "note": "Jeff Nippard chapter; alternative PureGym 0Po47vvj9g4 15s. Replaces Steev",
     "verdict": null
   }
 ]

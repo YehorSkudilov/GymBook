@@ -82,5 +82,29 @@
     "chapter": "",
     "note": "4x Mr. Olympia Jay Cutler, focused 59s seated dumbbell shoulder press demo",
     "verdict": "ok"
+  },
+  {
+    "id": "standing_db_press",
+    "videoId": "qLZU6Fl2sI4",
+    "start": null,
+    "end": null,
+    "channel": "KevTheTrainer",
+    "title": "STANDING DUMBBELL SHOULDER PRESS TUTORIAL // Build your shoulders using a pair of dumbbells!",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: trainer-led focused 1:06 standing dumbbell press tutorial; no clearly more reputable standing-specific demo found",
+    "verdict": "ok"
+  },
+  {
+    "id": "single_arm_db_press",
+    "videoId": "sMhkmr27L58",
+    "start": null,
+    "end": null,
+    "channel": "Matteo Marra",
+    "title": "Dumbbell Single Arm Shoulder Press",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: focused 14s single-arm dumbbell press demo; search found no reputable single-arm alternative (throttled while inspecting Shorts)",
+    "verdict": "ok"
   }
 ]

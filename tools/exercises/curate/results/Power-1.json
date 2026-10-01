@@ -8,7 +8,7 @@
     "title": "How To Box Jump Properly | Exercise Tutorial",
     "timeSource": "chapter",
     "chapter": "Box jump technique",
-    "note": "Peak Strength chapter at 0:30.66 to 1:13.799",
+    "note": "Verified: Peak Strength (Garage Strength, Dane Miller) chapter \"Box jump technique\" 30.66s to next chapter 73.799s, embeds",
     "verdict": "ok"
   },
   {
@@ -20,7 +20,7 @@
     "title": "Seated Box Jump",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: OPEX Fitness 16s seated box jump demo",
+    "note": "Verified: OPEX Fitness 16s seated box jump demo, embeds",
     "verdict": "ok"
   },
   {
@@ -32,7 +32,7 @@
     "title": "How to do a Depth Jump",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: NASM 21s depth jump tutorial",
+    "note": "Verified: NASM 21s depth jump demo, embeds",
     "verdict": "ok"
   },
   {
@@ -44,7 +44,7 @@
     "title": "Countermovement Vertical Jump",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 30s countermovement vertical jump demo",
+    "note": "Verified: Dean Somerset (kinesiologist) 30s countermovement jump with arm swing, embeds",
     "verdict": "ok"
   },
   {
@@ -56,7 +56,7 @@
     "title": "Broad Jump Pro Tip  #shorts",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: physio and performance channel 1:08 broad jump tutorial",
+    "note": "Verified: physio/performance clinic (Dr. Carlos) 68s broad jump technique Short, embeds",
     "verdict": "ok"
   },
   {
@@ -68,32 +68,32 @@
     "title": "How to do a Tuck Jump | Proper Form & Technique | NASM",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Replaced 4:59 unchaptered current with focused NASM 27s tutorial",
-    "verdict": "ok"
+    "note": "Verified: replaced 4:59 unchaptered current with focused NASM 27s tuck jump tutorial, embeds",
+    "verdict": "fixed"
   },
   {
     "id": "split_jump",
-    "videoId": "uzxh4btbZPM",
+    "videoId": "_5kDxC0flg0",
     "start": null,
     "end": null,
-    "channel": "Femme Fitness",
-    "title": "Split Jump",
+    "channel": "National Academy of Sports Medicine (NASM)",
+    "title": "How to do a Lunge Jump  | Proper Form & Technique | NASM",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 27s split jump demo",
-    "verdict": "ok"
+    "note": "Replaced Femme Fitness (no evident expertise) with NASM 15s lunge jump (split jump, switching legs in air) tutorial, embeds",
+    "verdict": "fixed"
   },
   {
     "id": "single_leg_hop",
     "videoId": "7WgzHOQGgYw",
-    "start": null,
-    "end": null,
+    "start": 33.042,
+    "end": 84.989998,
     "channel": "Elevate Yourself",
     "title": "Single Leg Hops | Exercise Tutorial",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Kept current: focused 2:28 single leg hops tutorial",
-    "verdict": "ok"
+    "timeSource": "chapter",
+    "chapter": "Single leg hops tutorial",
+    "note": "Verified Elevate Yourself (jump-training coach); trimmed to chapter Single leg hops tutorial 33.042s to next chapter 84.989998s, skipping intro and program pitch",
+    "verdict": "fixed"
   },
   {
     "id": "lateral_bound",
@@ -104,7 +104,7 @@
     "title": "Lateral Bound",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 8s lateral bound demo",
+    "note": "Verified: strength and conditioning facility 8s lateral bound demo, embeds",
     "verdict": "ok"
   },
   {
@@ -116,7 +116,7 @@
     "title": "How to Perform: Skater Jumps",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 1:33 skater jump tutorial",
+    "note": "Verified: GoTherex (Dr. Matt, clinician) 1:33 skater jump tutorial, embeds",
     "verdict": "ok"
   },
   {
@@ -128,7 +128,7 @@
     "title": "How To Do Pogo Hops | Exercise Demonstration Video and Guide",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 32s pogo hop tutorial",
+    "note": "Verified: Live Lean TV 32s pogo hop demo, embeds",
     "verdict": "ok"
   },
   {
@@ -140,8 +140,8 @@
     "title": "Hurdle Hop (Continuous)",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Replaced 4:43 unchaptered current with Tennessee Tech 4s hurdle hop demo",
-    "verdict": "ok"
+    "note": "Verified: replaced 4:43 unchaptered current with Tennessee Tech Athletic Performance (university S&C) 4s continuous hurdle hop demo, embeds",
+    "verdict": "fixed"
   },
   {
     "id": "plyo_push_up",
@@ -152,20 +152,20 @@
     "title": "How to do a Plyometric Push-Up | Proper Form & Technique | NASM",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: NASM 10s plyometric push-up demo",
+    "note": "Verified: NASM 10s plyometric push-up demo, embeds",
     "verdict": "ok"
   },
   {
     "id": "clap_push_up",
     "videoId": "EYwWCgM198U",
-    "start": 30.179,
-    "end": 35.939,
+    "start": 23.1,
+    "end": null,
     "channel": "Bodybuilding.com",
     "title": "How to Do Clapping Push Ups | Mike Vazquez",
     "timeSource": "chapter",
-    "chapter": "Push upwards as powerfully as possible through your hands to propel yourself upwards off the ground and into the air.",
-    "note": "Replaced unavailable current with Bodybuilding.com; chapter at 0:30.179 to 0:35.939 demonstrates the clap push-up",
-    "verdict": "ok"
+    "chapter": "Descend into the bottom position of the push-up...",
+    "note": "Replaced unavailable current with Bodybuilding.com 62s clap push-up tutorial; old 6s window (30.18-35.94) cut mid-rep, now starts at first chapter 23.1s and runs to the end through all three step chapters",
+    "verdict": "fixed"
   },
   {
     "id": "med_ball_chest_pass",
@@ -176,7 +176,7 @@
     "title": "Standing Medicine Ball Chest Pass - Viking Strength Systems",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 43s standing med-ball chest pass demo",
+    "note": "Verified: Viking Strength Systems (S&C coaching) 43s standing chest pass with cues, embeds",
     "verdict": "ok"
   },
   {
@@ -188,7 +188,7 @@
     "title": "How To Med Ball Slam",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 10s med-ball slam tutorial",
+    "note": "Verified: Third Space London (elite PT) 10s med-ball slam demo, embeds",
     "verdict": "ok"
   },
   {
@@ -200,19 +200,19 @@
     "title": "Facing The Wall Medicine Ball Rotational Scoop Toss",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 8s rotational scoop toss demo",
+    "note": "Verified: Simone Sports Performance (baseball S&C) 8s wall-facing rotational scoop toss demo, embeds",
     "verdict": "ok"
   },
   {
     "id": "med_ball_side_throw",
     "videoId": "l0H-L2glg68",
     "start": 31.039,
-    "end": 48.799,
+    "end": 48.799999,
     "channel": "Activ8",
     "title": "Medicine-Ball Side Throw",
     "timeSource": "chapter",
     "chapter": "Executing the wall throw",
-    "note": "Activ8 chapter at 0:31.039 to 0:48.799 demonstrates the medicine-ball side throw",
+    "note": "Verified Activ8 (Coach Todd) chapter Executing the wall throw 31.039s to next chapter 48.799999s (end corrected to exact chapter second), embeds",
     "verdict": "ok"
   },
   {
@@ -224,7 +224,7 @@
     "title": "Backward Med Ball Throw",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 40s backward medicine-ball throw demo",
+    "note": "Verified: Elite Performance Institute (Dr. Brian Damhoff) 40s backward overhead med-ball throw, embeds",
     "verdict": "ok"
   },
   {
@@ -236,7 +236,7 @@
     "title": "Snatch | Olympic Weightlifting Exercise Library",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: Catalyst Athletics 1:48 snatch tutorial",
+    "note": "Verified: Catalyst Athletics 1:48 snatch exercise-library video, all chapters about the snatch, embeds",
     "verdict": "ok"
   },
   {
@@ -248,19 +248,19 @@
     "title": "How To Power Snatch Properly",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 3:01 Peak Strength power snatch tutorial",
+    "note": "Verified: Peak Strength (Garage Strength, DJ Shuttleworth) 3:01 focused power snatch tutorial; chapters are its common-fault sections, so whole video, embeds",
     "verdict": "ok"
   },
   {
     "id": "hang_snatch",
-    "videoId": "zxdfWgksUZY",
-    "start": null,
-    "end": null,
-    "channel": "Rogue Fitness",
-    "title": "Movement Demo - The Hang Snatch",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Kept current: Rogue Fitness 41s hang snatch demonstration",
-    "verdict": "ok"
+    "videoId": "Php-RclQ1yU",
+    "start": 0,
+    "end": 65.518997,
+    "channel": "Catalyst Athletics",
+    "title": "Hang Snatch | Olympic Weightlifting Exercise Library",
+    "timeSource": "chapter",
+    "chapter": "Hang snatch technique",
+    "note": "Replaced 2012 Rogue demo with Catalyst Athletics exercise-library video; chapter Hang snatch technique 0s to next chapter 65.518997s (later chapters cover below-knee variations), embeds",
+    "verdict": "fixed"
   }
 ]

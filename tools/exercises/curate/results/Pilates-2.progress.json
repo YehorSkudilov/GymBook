@@ -144,6 +144,30 @@
   "verdict": "fixed"
  },
  {
+  "id": "pilates_pelvic_curl",
+  "videoId": "fOOypTBlke8",
+  "start": null,
+  "end": null,
+  "channel": "Harvard Health Publishing",
+  "title": "Core Exercises: Pelvic Curl",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Fixed: Harvard Health Publishing focused 47s pelvic curl demo (ACE-certified instructor) instead of tiny studio channel",
+  "verdict": "fixed"
+ },
+ {
+  "id": "pilates_chest_lift",
+  "videoId": "DPcjqmCGKKI",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Encyclopedia",
+  "title": "Chest Lift Abdominal Curl ⎮The Pilates Crunch",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Fixed: Pilates Encyclopedia focused 1:44 chest lift tutorial",
+  "verdict": "fixed"
+ },
+ {
   "id": "pilates_toe_taps",
   "videoId": "KAs2Cgp85LU",
   "start": null,
@@ -153,6 +177,18 @@
   "timeSource": "whole",
   "chapter": "",
   "note": "Kept current: NCPT-created Pilates Encyclopedia focused 1:14 tutorial",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_clam",
+  "videoId": "udZmLr8Fly4",
+  "start": null,
+  "end": null,
+  "channel": "LivAligned Pilates",
+  "title": "How to: ✨Pilates Clam✨ #pilates #pilatesworkout #matpilates #shorts #howto",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: exact focused 12s Pilates clam Short",
   "verdict": "ok"
  },
  {

@@ -250,5 +250,41 @@
   "chapter": "",
   "note": "Replaced 15s unknown-channel Short with Pilates Anytime 2:10 tutorial (bridge with leg kick)",
   "verdict": "fixed"
+ },
+ {
+  "id": "pilates_jackknife",
+  "videoId": "SXYp9AJ1uWM",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: Jack Knife | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Replaced small-channel Short with Pilates Anytime 2:10 tutorial solely on jack knife",
+  "verdict": "fixed"
+ },
+ {
+  "id": "pilates_side_kick_front_back",
+  "videoId": "nG9JfDHJJlY",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: Side Kick | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Replaced 2012 Howcast with Pilates Anytime 3:17 side kick (front/back double kick) tutorial; all chapters on this exercise",
+  "verdict": "fixed"
+ },
+ {
+  "id": "pilates_spine_twist",
+  "videoId": "PPFkp7Aa3Rg",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: Spine Twist | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Replaced 2012 Howcast with Pilates Anytime 2:17 tutorial solely on spine twist",
+  "verdict": "fixed"
  }
 ]

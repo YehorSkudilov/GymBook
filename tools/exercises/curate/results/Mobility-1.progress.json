@@ -24,29 +24,6 @@
     "verdict": "fixed"
   },
   {
-    "id": "behind_neck_press",
-    "videoId": "uD9kYAi7lHs",
-    "start": 11.759,
-    "end": null,
-    "channel": "Mind Pump TV",
-    "title": "How To Behind The Neck Press Properly! (ADVANCED LIFTERS ONLY!)",
-    "timeSource": "chapter",
-    "chapter": "Setup and Execution",
-    "note": "Replaced Alex Leonidas short with Mind Pump TV 4:01 tutorial whose chapters are all on this press; start skips intro chapter",
-    "verdict": "fixed"
-  },
-  {
-    "id": "lateral_raise",
-    "videoId": "OuG1smZTsQQ",
-    "start": null,
-    "end": null,
-    "channel": "Renaissance Periodization",
-    "title": "Lateral Raise",
-    "timeSource": "whole",
-    "chapter": null,
-    "note": "11s RP demo; replaces DeltaBolic short"
-  },
-  {
     "id": "mob_ankle_cars",
     "videoId": "vIDJiMShg4o",
     "start": null,
@@ -152,6 +129,30 @@
     "timeSource": "whole",
     "chapter": "",
     "note": "Kept current: performance coaching channel, exact 44s bodyweight deep squat pry; reputable alternatives found are kettlebell goblet variants",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_worlds_greatest_stretch",
+    "videoId": "-CiWQ2IvY34",
+    "start": null,
+    "end": null,
+    "channel": "Squat University",
+    "title": "The World's Greatest Stretch (Mobility Exercise) by Squat University",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: Squat University 42s tutorial; both chapters are parts of this drill",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_walking_lunge_reach",
+    "videoId": "ZREHb_-VRhA",
+    "start": null,
+    "end": null,
+    "channel": "Functional AF",
+    "title": "Walking lunge overhead reach",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: exact 17s walking lunge overhead reach demo; no listed reputable source found for this drill",
     "verdict": "ok"
   }
 ]

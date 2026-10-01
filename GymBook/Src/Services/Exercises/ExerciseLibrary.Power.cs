@@ -32,7 +32,7 @@ public static partial class ExerciseLibrary
                 "Don't let your knees cave in on take-off or landing.",
                 "Keep reps low and rest fully so every jump is maximal.",
             ],
-            Video = new("YLPQsdRDmB0"),
+            Video = new("YLPQsdRDmB0", 30.66, 73.799),
         },
         new("seated_box_jump", "Seated Box Jump", Quads, Bodyweight, Compound)
         {
@@ -139,7 +139,7 @@ public static partial class ExerciseLibrary
                 "Keep ground contact short and landings quiet.",
                 "Don't continue once landings get heavy or your knees start caving in.",
             ],
-            Video = new("pN3N9dOhJWM"),
+            Video = new("-bnJGikRGsM"),
         },
         new("split_jump", "Split Jump", Quads, Bodyweight, Compound)
         {
@@ -160,7 +160,7 @@ public static partial class ExerciseLibrary
                 "Land with control before the next jump; don't let your back knee slam the floor.",
                 "Don't let your front knee collapse inward on landing.",
             ],
-            Video = new("uzxh4btbZPM"),
+            Video = new("_5kDxC0flg0"),
         },
         new("single_leg_hop", "Single-Leg Hop", Quads, Bodyweight, Compound)
         {
@@ -181,7 +181,7 @@ public static partial class ExerciseLibrary
                 "Keep your knee tracking over your toes and your pelvis level.",
                 "Don't let your knee drift inward when you land.",
             ],
-            Video = new("7WgzHOQGgYw"),
+            Video = new("7WgzHOQGgYw", 33.042, 84.989998),
         },
         new("lateral_bound", "Lateral Bound", Glutes, Bodyweight, Compound)
         {
@@ -263,7 +263,7 @@ public static partial class ExerciseLibrary
                 "Stay tall and land in the same spot each time.",
                 "Don't stop and reset between hurdles; it should be one continuous rhythm.",
             ],
-            Video = new("dsWxXDJxYi8"),
+            Video = new("MRieBuzWWG8"),
         },
 
         // Upper-body plyometrics
@@ -307,7 +307,7 @@ public static partial class ExerciseLibrary
                 "Keep your core braced so your body moves as one piece.",
                 "Don't land on straight arms or let your face drop toward the floor.",
             ],
-            Video = new("IzXKJjpkvAY"),
+            Video = new("EYwWCgM198U", 23.1),
         },
 
         // Medicine-ball throws
@@ -391,7 +391,7 @@ public static partial class ExerciseLibrary
                 "Let your hips lead your shoulders.",
                 "Don't throw with only your arms.",
             ],
-            Video = new("l0H-L2glg68"),
+            Video = new("l0H-L2glg68", 31.039, 48.799999),
         },
         new("med_ball_overhead_backward_throw", "Medicine Ball Overhead Backward Throw", Glutes, Other, Compound)
         {
@@ -481,7 +481,7 @@ public static partial class ExerciseLibrary
                 "Use it to drill a patient, vertical second pull.",
                 "Don't bend your arms before the hips finish.",
             ],
-            Video = new("zxdfWgksUZY"),
+            Video = new("Php-RclQ1yU", 0, 65.518997),
         },
         new("hang_power_snatch", "Hang Power Snatch", Glutes, Barbell, Compound)
         {
@@ -503,7 +503,7 @@ public static partial class ExerciseLibrary
                 "Land with flat feet and knees out.",
                 "Don't let the bar loop out in front of you.",
             ],
-            Video = new("zkL7jB15DaM"),
+            Video = new("SpDPcj0W3Yw"),
         },
         new("muscle_snatch", "Muscle Snatch", Shoulders, Barbell, Compound)
         {
@@ -524,7 +524,7 @@ public static partial class ExerciseLibrary
                 "Use lighter loads than your power snatch.",
                 "Don't re-bend your knees; that turns it into a power snatch.",
             ],
-            Video = new("3jFC0AYXOnE"),
+            Video = new("nJmtGVutszE"),
         },
         new("snatch_pull", "Snatch Pull", Glutes, Barbell, Compound)
         {
@@ -610,7 +610,7 @@ public static partial class ExerciseLibrary
                 "Keep your back flat as you pick it up.",
                 "Don't swing it out in a wide arc or press it out at the top.",
             ],
-            Video = new("0yd9443Y-fg"),
+            Video = new("0yd9443Y-fg", 49),
         },
 
         // Clean family
@@ -635,7 +635,7 @@ public static partial class ExerciseLibrary
                 "Don't reverse-curl the bar or catch it on your hands.",
                 "Learn it with a coach before going heavy.",
             ],
-            Video = new("xhFFaPLJ8eg"),
+            Video = new("oQIaWLrB318"),
         },
         new("power_clean", "Power Clean", Glutes, Barbell, Compound)
         {
@@ -657,7 +657,7 @@ public static partial class ExerciseLibrary
                 "Land with flat feet and elbows high.",
                 "Don't lean back excessively at the top of the pull.",
             ],
-            Video = new("E2z5zK5V-MM", 12),
+            Video = new("E2z5zK5V-MM"),
         },
         new("hang_clean", "Hang Clean", Glutes, Barbell, Compound)
         {
@@ -679,7 +679,7 @@ public static partial class ExerciseLibrary
                 "Ride the catch down and bounce out of the bottom.",
                 "Don't pull with bent arms before your hips extend.",
             ],
-            Video = new("n6lRtVV7LYY"),
+            Video = new("uUeV3LwisDI"),
         },
         new("hang_power_clean", "Hang Power Clean", Glutes, Barbell, Compound)
         {
@@ -701,7 +701,7 @@ public static partial class ExerciseLibrary
                 "Catch with flat feet, not on your toes.",
                 "Don't swing the bar out with your hips.",
             ],
-            Video = new("CCZK0ouzd4A"),
+            Video = new("efHjodEVf9w"),
         },
         new("clean_pull", "Clean Pull", Glutes, Barbell, Compound)
         {
@@ -743,7 +743,7 @@ public static partial class ExerciseLibrary
                 "Keep the bar close to your body.",
                 "Don't turn it into a slow upright row.",
             ],
-            Video = new("bVdEnvwvlgk"),
+            Video = new("2Qv8pEnprpU"),
         },
 
         // Jerks and push press
@@ -766,7 +766,7 @@ public static partial class ExerciseLibrary
                 "Move your head back to let the bar travel straight up.",
                 "Don't re-bend your knees to get under the bar; that's a push jerk.",
             ],
-            Video = new("Hqxjk5Z35SM"),
+            Video = new("yklSQG1_Ovc"),
         },
         new("push_jerk", "Push Jerk", Shoulders, Barbell, Compound)
         {
@@ -788,7 +788,7 @@ public static partial class ExerciseLibrary
                 "Keep the dip short and vertical.",
                 "Don't press the bar out slowly; drop under it.",
             ],
-            Video = new("VrHNJXoSyXw"),
+            Video = new("Om7vLD6x8W0"),
         },
         new("split_jerk", "Split Jerk", Shoulders, Barbell, Compound)
         {
@@ -832,7 +832,7 @@ public static partial class ExerciseLibrary
                 "Keep the jerk dip vertical even when tired from the clean.",
                 "Don't rush the jerk from a poor rack position.",
             ],
-            Video = new("VwNkc1QYUGA"),
+            Video = new("bNCXgyosXlc"),
         },
 
         // Kettlebell
@@ -855,7 +855,7 @@ public static partial class ExerciseLibrary
                 "Don't lift it with your arms or lean back at the top.",
                 "Keep your back flat; hike the bell high between your thighs, not down at your knees.",
             ],
-            Video = new("PO343opm22o"),
+            Video = new("yHxcTn1UeAc"),
         },
         new("kb_single_arm_swing", "Single-Arm Kettlebell Swing", Glutes, Kettlebell, Compound)
         {
@@ -874,7 +874,7 @@ public static partial class ExerciseLibrary
                 "Pack the working shoulder down, away from your ear.",
                 "Don't let your back round as the bell goes between your legs.",
             ],
-            Video = new("8UHn_KNfvr4"),
+            Video = new("sxtfgmzhXvE"),
         },
         new("kb_american_swing", "American Kettlebell Swing", Glutes, Kettlebell, Compound)
         {
@@ -894,7 +894,7 @@ public static partial class ExerciseLibrary
                 "Keep your ribs down at the top.",
                 "Don't let the bell tip past overhead behind you.",
             ],
-            Video = new("5uFoUDmP2LA"),
+            Video = new("d94xX-AQZ0A"),
         },
         new("kb_clean", "Kettlebell Clean", Glutes, Kettlebell, Compound)
         {
@@ -914,7 +914,7 @@ public static partial class ExerciseLibrary
                 "Insert your hand around the bell instead of flipping it over.",
                 "Don't let the bell bang onto your forearm.",
             ],
-            Video = new("xQb9Tc3iQpI"),
+            Video = new("xZyGP55NkAo"),
         },
         new("kb_snatch", "Kettlebell Snatch", Glutes, Kettlebell, Compound)
         {
@@ -934,7 +934,7 @@ public static partial class ExerciseLibrary
                 "Learn swings and cleans before snatches.",
                 "Don't swing the bell in a wide arc.",
             ],
-            Video = new("C7r6jI7Ch48"),
+            Video = new("AR6E01ABoHk"),
         },
         new("kb_turkish_get_up", "Turkish Get-Up", Shoulders, Kettlebell, Compound)
         {
@@ -956,7 +956,7 @@ public static partial class ExerciseLibrary
                 "Practise the first steps unloaded or with a shoe balanced on your fist.",
                 "Don't let your wrist bend back or your shoulder shrug up.",
             ],
-            Video = new("sgd8n917Zv0"),
+            Video = new("0bWRPC49-KI"),
         },
         new("kb_windmill", "Kettlebell Windmill", Abs, Kettlebell, Compound)
         {
