@@ -1,27 +1,27 @@
 [
   {
     "id": "treadmill_run",
-    "videoId": "UIyZUHq2UdU",
-    "start": null,
-    "end": null,
-    "channel": "TylerPath",
-    "title": "How to run on a treadmill (improve your gait)",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "videoId": "Ub0hsbjFCoY",
+    "start": 8,
+    "end": 20,
+    "channel": "The Run Experience",
+    "title": "Running On The Treadmill with Ultra Runner Chris Mocko [Pro Moves]",
+    "timeSource": "chapter",
+    "chapter": "Running On the Treadmill",
+    "note": "The Run Experience chapter at 0:08?0:20 demonstrates treadmill running.",
+    "verdict": "ok"
   },
   {
     "id": "incline_treadmill_walk",
-    "videoId": "HwXYMPGjlUg",
-    "start": null,
-    "end": null,
-    "channel": "Shubham Gupta",
-    "title": "How to Walk Correctly on an Incline Treadmill 🔥 | Quick Gym Tip #cardiotips #cardio #treadmill #gym",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "videoId": "NAsObfFJXvE",
+    "start": 61.119999,
+    "end": 101.68,
+    "channel": "Live Lean TV Daily Exercises",
+    "title": "How To: Incline Treadmill Walk (12-3-30 Workout)",
+    "timeSource": "chapter",
+    "chapter": "Proper walking technique",
+    "note": "Live Lean TV chapter at 1:01.119999?1:41.68 demonstrates incline treadmill walking.",
+    "verdict": "ok"
   },
   {
     "id": "curved_treadmill_run",
@@ -32,8 +32,8 @@
     "title": "Curved Treadmill Tutorial",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused, exact-movement demo; no stronger exact source was identified.",
+    "verdict": "ok"
   },
   {
     "id": "rowing_machine",
@@ -56,8 +56,8 @@
     "title": "How To Properly Use The Upright Bike",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused, exact-movement demo; no stronger exact source was identified.",
+    "verdict": "ok"
   },
   {
     "id": "recumbent_bike",
@@ -80,8 +80,8 @@
     "title": "Zero Healthcare™ Fitness Tips At Home | How To Use A Spin Bike Correctly",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused, exact-movement demo; no stronger exact source was identified.",
+    "verdict": "ok"
   },
   {
     "id": "air_bike",
@@ -140,8 +140,8 @@
     "title": "How To Versa Climber",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused, exact-movement demo; no stronger exact source was identified.",
+    "verdict": "ok"
   },
   {
     "id": "arm_ergometer",
@@ -152,20 +152,20 @@
     "title": "How to Use the Arm Ergometer",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused, exact-movement demo; no stronger exact source was identified.",
+    "verdict": "ok"
   },
   {
     "id": "easy_run",
-    "videoId": "M9U9pk6yOIU",
+    "videoId": "k2L97eKS5qk",
     "start": null,
     "end": null,
-    "channel": "Personal Trainer",
-    "title": "How to Run Properly for Beginners",
+    "channel": "Nuffield Health",
+    "title": "How To Jog | Nuffield Health",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Replaced generic channel with Nuffield Health 33s jogging demo.",
+    "verdict": "ok"
   },
   {
     "id": "sprints",
@@ -176,20 +176,20 @@
     "title": "Sprint mechanics explained in 23 seconds",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused, exact-movement demo; no stronger exact source was identified.",
+    "verdict": "ok"
   },
   {
     "id": "hill_sprints",
     "videoId": "VzHQUh5jzsI",
-    "start": null,
-    "end": null,
+    "start": 27,
+    "end": 67,
     "channel": "TaylorMade Coaching & Events",
     "title": "⛰️ Hill Sprints Tutorial",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "timeSource": "chapter",
+    "chapter": "How to Perform Hill Sprints",
+    "note": "TaylorMade Coaching chapter at 0:27?1:07 demonstrates hill sprint technique.",
+    "verdict": "ok"
   },
   {
     "id": "shuttle_runs",
@@ -200,8 +200,8 @@
     "title": "Demo: Shuttle Run",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused, exact-movement demo; no stronger exact source was identified.",
+    "verdict": "ok"
   },
   {
     "id": "stair_sprints",
@@ -224,8 +224,8 @@
     "title": "How to do Brisk Walk - Warm Up Exercise",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused, exact-movement demo; no stronger exact source was identified.",
+    "verdict": "ok"
   },
   {
     "id": "rucking",
@@ -248,43 +248,43 @@
     "title": "How to Swim Perfect Freestyle in 60 Seconds",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Kept current focused, exact-movement demo; no stronger exact source was identified.",
+    "verdict": "ok"
   },
   {
     "id": "outdoor_cycling",
     "videoId": "4ssLDk1eX9w",
-    "start": null,
-    "end": null,
+    "start": 14,
+    "end": 58,
     "channel": "Global Cycling Network",
     "title": "4 Basic Skills For Beginner Cyclists",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "timeSource": "chapter",
+    "chapter": "Setting Off",
+    "note": "GCN chapter at 0:14?0:58 demonstrates starting a road ride.",
+    "verdict": "ok"
   },
   {
     "id": "jump_rope",
-    "videoId": "WA1xNoWA7yA",
+    "videoId": "XSY9AE72inM",
     "start": null,
     "end": null,
-    "channel": "PHOENIX NATION",
-    "title": "How To Jump Rope For Beginners 1️⃣ Basic Bounce #jumprope #skipping #jumpropetutorial #skippingrope",
+    "channel": "Lauren Jumps",
+    "title": "Jump Rope Basics - Basic Bounce Tutorial #shorts",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "note": "Replaced unclear source with a focused basic-bounce demo from jump-rope coach Lauren Jumps.",
+    "verdict": "ok"
   },
   {
     "id": "boxer_skip",
     "videoId": "fV73Ce3RiiQ",
-    "start": null,
-    "end": null,
+    "start": 36,
+    "end": 179,
     "channel": "Rush Athletics TV",
     "title": "Learn The PERFECT Boxer Skip Technique // Beginner Jump Rope Tutorial by Rush Athletics",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Current exact-movement video retained pending independent source review.",
-    "verdict": "review"
+    "timeSource": "chapter",
+    "chapter": "Skip Tutorial",
+    "note": "Rush Athletics chapter at 0:36?2:59 demonstrates the boxer skip.",
+    "verdict": "ok"
   }
 ]
