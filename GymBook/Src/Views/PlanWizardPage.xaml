@@ -99,6 +99,51 @@
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
 
+                <!-- Signature programs: the best fits for the answers, ranked, or all of them -->
+                <VerticalStackLayout IsVisible="{Binding IsPrograms}" Spacing="12" Margin="0,6,0,0">
+                    <HorizontalStackLayout BindableLayout.ItemsSource="{Binding ProgramTabs}" Spacing="10">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ChipItem">
+                                <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="16,10">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontFamily="OpenSansSemibold" FontSize="14" />
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Programs}" Spacing="10">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ProgramItem">
+                                <Border BackgroundColor="{Binding Background}" Stroke="{Binding StrokeColor}" StrokeThickness="2"
+                                        StrokeShape="RoundRectangle 16" Padding="16,14">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <VerticalStackLayout Spacing="4">
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                            <Label Text="{Binding Rank}" IsVisible="{Binding HasRank}" FontFamily="OpenSansSemibold" FontSize="16"
+                                                   TextColor="{StaticResource Accent}" VerticalOptions="Center" />
+                                            <Label Grid.Column="1" Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" VerticalOptions="Center" />
+                                        </Grid>
+                                        <Label Text="{Binding Author}" FontSize="13" TextColor="{StaticResource Accent}" />
+                                        <Label Text="{Binding Tags}" Style="{StaticResource Caption}" FontSize="12" />
+                                        <Label Text="{Binding Why}" Style="{StaticResource Caption}" FontSize="12" />
+                                        <!-- The details, on the picked program -->
+                                        <VerticalStackLayout IsVisible="{Binding IsSelected}" Spacing="8" Margin="0,6,0,0">
+                                            <Label Text="{Binding Summary}" FontSize="13" LineHeight="1.3" />
+                                            <Label Text="{Binding AboutAuthor}" Style="{StaticResource Caption}" FontSize="12" LineHeight="1.3" />
+                                        </VerticalStackLayout>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                    <Label Text="Based on publicly known programs. Gym Book isn't affiliated with or endorsed by the people named."
+                           Style="{StaticResource Caption}" FontSize="12" />
+                </VerticalStackLayout>
+
                 <!-- While the AI thinks of questions or builds the plan -->
                 <VerticalStackLayout IsVisible="{Binding IsGenerating}" Spacing="14" Margin="0,40,0,0" HorizontalOptions="Center">
                     <ActivityIndicator IsRunning="{Binding IsGenerating}" Color="{StaticResource Accent}" WidthRequest="44" HeightRequest="44" />
@@ -168,6 +213,14 @@
                         <VerticalStackLayout Spacing="4">
                             <Label Text="{Binding PlanName}" FontFamily="OpenSansSemibold" FontSize="20" TextColor="White" />
                             <Label Text="{Binding PlanDescription}" FontSize="13" TextColor="#DDE6FF" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <!-- Who a signature program is from -->
+                    <Border Style="{StaticResource Card}" Padding="16,14" IsVisible="{Binding HasProgramAuthor}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="INSPIRED BY" Style="{StaticResource Overline}" />
+                            <Label Text="{Binding ProgramAuthor}" FontFamily="OpenSansSemibold" FontSize="16" />
+                            <Label Text="{Binding ProgramBio}" Style="{StaticResource Caption}" FontSize="13" LineHeight="1.3" />
                         </VerticalStackLayout>
                     </Border>
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding PlanWorkouts}" Spacing="10">

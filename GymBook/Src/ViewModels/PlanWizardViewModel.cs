@@ -16,7 +16,7 @@ namespace GymBook.ViewModels;
 public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, AiPlanService ai)
     : BaseViewModel, IQueryAttributable
 {
-    enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, Neck, BuildWith, Questions, Result }
+    enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, Neck, BuildWith, Programs, Questions, Result }
 
     List<Step> _steps = [];
     int _index;
@@ -36,8 +36,12 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     int _minutes;
     EquipmentAccess _equipment;
     bool _neck;
-    // The last choice: build the plan with AI (follow-up questions, then generation) or with the built-in generator.
+    // The last choice: build the plan with AI (follow-up questions, then generation) or from a signature program.
     bool _useAi = true;
+    // The signature program picked, and the answers it was recommended for (the top pick is chosen again when they change).
+    string? _programId;
+    string? _programsFor;
+    bool _allPrograms;
 
     // The AI's follow-up questions, for the answers they were asked about (asked again when those change).
     string? _questionsFor;
@@ -50,6 +54,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     [ObservableProperty] bool isWelcome;
     [ObservableProperty] bool isAbout;
     [ObservableProperty] bool isOptions;
+    [ObservableProperty] bool isPrograms;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowQuestions))]
     bool isQuestions;
@@ -90,6 +95,15 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     public ObservableCollection<OptionItem> Options { get; } = [];
     public ObservableCollection<ChipItem> UnitChips { get; } = [];
     public ObservableCollection<AiQuestionItem> Questions { get; } = [];
+    public ObservableCollection<ProgramItem> Programs { get; } = [];
+    public ObservableCollection<ChipItem> ProgramTabs { get; } = [];
+
+    /// <summary>On a plan built from a signature program: who it's from.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasProgramAuthor))]
+    string programAuthor = "";
+    [ObservableProperty] string programBio = "";
+    public bool HasProgramAuthor => ProgramAuthor.Length > 0;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) =>
         _regenerateId = query.TryGetValue("regenerate", out var id) ? id?.ToString() : null;
@@ -97,7 +111,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     public void Start(bool onboarding)
     {
         IsOnboarding = onboarding;
-        // Ready by the last steps, so a used-up quota skips straight to the standard plan.
+        // Ready by the last steps, so a used-up quota skips straight to the signature programs.
         _ = ai.RefreshQuotaAsync();
         var p = store.Profile;
         (_goal, _experience, _days, _minutes, _equipment, _neck) = (p.Goal, p.Experience, p.DaysPerWeek, p.SessionMinutes, p.EquipmentAccess, p.TrainNeck);
@@ -110,8 +124,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         }
         UserName = p.Name;
         _steps = onboarding
-            ? [Step.Welcome, Step.About, Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Questions, Step.Result]
-            : [Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Questions, Step.Result];
+            ? [Step.Welcome, Step.About, Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Programs, Step.Questions, Step.Result]
+            : [Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Programs, Step.Questions, Step.Result];
 
         UnitChips.Clear();
         foreach (var u in Enum.GetValues<WeightUnit>())
@@ -139,10 +153,14 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             BodyWeight = units.Format(kg);
     }
 
-    /// <summary>The AI steps only exist when AI can be used; the questions only when it was chosen, and had some for these answers.</summary>
+    /// <summary>
+    /// The AI steps only exist when AI can be used; the questions only when it was chosen, and had some for these answers.
+    /// The signature programs are offered whenever the AI isn't building the plan.
+    /// </summary>
     bool Skipped(Step step) => step switch
     {
         Step.BuildWith => !AiUsable,
+        Step.Programs => AiUsable && _useAi,
         Step.Questions => !AiUsable || !_useAi || _questionsFor == AnswersKey() && Questions.Count == 0,
         _ => false,
     };
@@ -162,7 +180,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         IsAbout = step == Step.About;
         IsQuestions = step == Step.Questions;
         IsResult = step == Step.Result;
-        IsOptions = !IsWelcome && !IsAbout && !IsQuestions && !IsResult;
+        IsPrograms = step == Step.Programs;
+        IsOptions = !IsWelcome && !IsAbout && !IsQuestions && !IsResult && !IsPrograms;
         NextText = step switch
         {
             Step.Welcome => "Get started",
@@ -231,10 +250,15 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
                 break;
             case Step.BuildWith:
                 Title = "How should we build your plan?";
-                Subtitle = "AI tailors the plan to you after a few more questions. The standard plan is ready instantly.";
-                AddOptions([true, false], useAi => useAi ? "Build with AI" : "Standard plan", useAi => useAi
+                Subtitle = "AI tailors the plan to you after a few more questions. Signature Programs are proven routines, ready instantly.";
+                AddOptions([true, false], useAi => useAi ? "Build with AI" : "Signature Programs", useAi => useAi
                     ? (ai.Quota is { } q ? $"A few more questions, then a plan made for you. {AiPlanService.Describe(q)}" : "A few more questions, then a plan made for you")
-                    : "Built from your answers straight away, without AI", _useAi);
+                    : "Programs from legendary lifters and coaches, ranked for your answers", _useAi);
+                break;
+            case Step.Programs:
+                Title = "Signature Programs";
+                Subtitle = "Proven programs from famous lifters, coaches and communities. Recommended ranks them for your answers; tap one for the details.";
+                ShowPrograms();
                 break;
             case Step.Questions:
                 Title = "A few more questions";
@@ -267,6 +291,43 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             case bool neck when _steps[_index] == Step.Neck: _neck = neck; break;
             case bool useAi: _useAi = useAi; break;
         }
+    }
+
+    void ShowPrograms()
+    {
+        var ranked = SignaturePrograms.Rank(Answers());
+        if (_programsFor != AnswersKey() || SignaturePrograms.Find(_programId) == null)
+        {
+            // New answers: start on the best fit, in the recommended list.
+            _programId = ranked[0].Program.Id;
+            _programsFor = AnswersKey();
+            _allPrograms = false;
+        }
+        ProgramTabs.Clear();
+        foreach (var all in new[] { false, true })
+            ProgramTabs.Add(new ChipItem(all ? "All" : "Recommended", all, SelectProgramTab) { IsSelected = all == _allPrograms });
+
+        Programs.Clear();
+        var shown = _allPrograms
+            ? ranked.OrderBy(m => m.Program.Name).Select(m => (Match: m, Rank: 0))
+            : ranked.Take(RecommendedCount).Select((m, i) => (Match: m, Rank: i + 1));
+        foreach (var (match, rank) in shown)
+            Programs.Add(new ProgramItem(match, rank, SelectProgram) { IsSelected = match.Program.Id == _programId });
+    }
+
+    const int RecommendedCount = 5;
+
+    void SelectProgramTab(ChipItem chip)
+    {
+        _allPrograms = (bool)chip.Value!;
+        ShowPrograms();
+    }
+
+    void SelectProgram(ProgramItem item)
+    {
+        foreach (var p in Programs)
+            p.IsSelected = p == item;
+        _programId = item.Program.Id;
     }
 
     UserProfile Answers()
@@ -369,7 +430,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     }
 
     /// <summary>
-    /// The plan for the answers: made by AI when signed in, otherwise (or if that fails) by the built-in generator.
+    /// The plan for the answers: made by AI when chosen (or by the built-in generator if that fails), otherwise from the
+    /// signature program picked.
     /// </summary>
     async Task BuildPlanAsync()
     {
@@ -377,6 +439,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         var answers = Answers();
 
         WorkoutPlan plan;
+        SignatureProgram? program = null;
         if (AiUsable && _useAi)
         {
             IsGenerating = true;
@@ -392,7 +455,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             {
                 plan = PlanGenerator.Generate(answers);
                 var reason = e is Services.Sync.ApiException or Services.Sync.SessionExpiredException ? e.Message : "Couldn't reach the plan generator.";
-                PlanNote = $"{reason} Here's a standard plan instead.";
+                PlanNote = $"{reason} Here's a plan built without AI instead.";
             }
             if (run != _buildRun)
                 return;
@@ -400,11 +463,14 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         }
         else
         {
-            plan = PlanGenerator.Generate(answers);
-            PlanNote = !ai.IsAvailable ? "Sign in to have AI build a plan around your answers."
-                : AiUsable ? "The standard plan, built without AI. Go back to build one with AI instead."
-                : ai.Quota is { } q ? $"{AiPlanService.Describe(q)}. Here's a standard plan instead." : "Here's a standard plan.";
+            program = SignaturePrograms.Find(_programId) ?? SignaturePrograms.Rank(answers)[0].Program;
+            plan = SignaturePrograms.Build(program, answers);
+            PlanNote = !ai.IsAvailable ? "Sign in to have AI build a plan around your answers instead."
+                : AiUsable ? ""
+                : ai.Quota is { } q ? $"{AiPlanService.Describe(q)}." : "";
         }
+        ProgramAuthor = program?.Author ?? "";
+        ProgramBio = program?.Bio ?? "";
 
         Title = "Your plan is ready";
         Subtitle = "You can edit every workout later, or ask the AI to change it. Weights and reps adapt automatically as you log.";
@@ -550,6 +616,31 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         else
             await MainPage.ShowTab(AppTab.Plans);
     }
+}
+
+/// <summary>A signature program in the wizard's list: who it's from, why it fits, and (when picked) the details.</summary>
+public partial class ProgramItem(ProgramMatch match, int rank, Action<ProgramItem> onSelect) : ObservableObject
+{
+    public SignatureProgram Program => match.Program;
+    public string Name => Program.Name;
+    public string Author => $"by {Program.Author}";
+    public string Tags => Program.Tags;
+    public string Why => string.Join(" · ", match.Reasons);
+    public string Summary => Program.Summary;
+    public string AboutAuthor => $"About {Program.Author}: {Program.Bio}";
+    /// <summary>"#1" and on in the recommended list; empty in All.</summary>
+    public string Rank => rank > 0 ? $"#{rank}" : "";
+    public bool HasRank => rank > 0;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Background), nameof(StrokeColor))]
+    bool isSelected;
+
+    public Color Background => IsSelected ? Color.FromArgb("#1A2A4F") : Color.FromArgb("#151821");
+    public Color StrokeColor => IsSelected ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#151821");
+
+    [RelayCommand]
+    void Select() => onSelect(this);
 }
 
 /// <summary>One of the AI's follow-up questions, with its options as chips.</summary>

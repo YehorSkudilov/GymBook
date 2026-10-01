@@ -94,9 +94,14 @@ public static class PlanGenerator
     /// Neck work on top of the day's exercises, so it's never squeezed out by the session length: one exercise on
     /// upper-body and full-body days, and two on every day for combat and power sports.
     /// </summary>
-    static void AddNeck(PlanWorkout workout, string[][] template, UserProfile profile, ref int day)
+    static void AddNeck(PlanWorkout workout, string[][] template, UserProfile profile, ref int day) =>
+        AddNeck(workout, template == Lower || template == Legs ? 0 : 1, profile, ref day);
+
+    /// <summary>Adds <paramref name="count"/> neck exercises (two for combat and power sports), rotating direction day to day.</summary>
+    public static void AddNeck(PlanWorkout workout, int count, UserProfile profile, ref int day)
     {
-        var count = profile.Goal == Goal.Power ? 2 : template == Lower || template == Legs ? 0 : 1;
+        if (profile.Goal == Goal.Power)
+            count = 2;
         for (var i = 0; i < count; i++)
         {
             var slot = NeckSlots[day++ % NeckSlots.Length];
