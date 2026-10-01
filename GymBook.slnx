@@ -1,8 +1,12 @@
 <Solution>
   <Project Path="../AppSkeleton/AppSkeleton/AppSkeleton.csproj" />
-  <Project Path="GymBook.Admin/GymBook.Admin.csproj" />
+  <Project Path="GymBook.Admin/GymBook.Admin.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
   <Project Path="GymBook.Api/GymBook.Api.csproj" />
   <Project Path="GymBook.LocalData/GymBook.LocalData.csproj" />
   <Project Path="GymBook.Shared/GymBook.Shared.csproj" />
-  <Project Path="GymBook/GymBook.csproj" />
+  <Project Path="GymBook/GymBook.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
 </Solution>
