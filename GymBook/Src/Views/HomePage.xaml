@@ -132,8 +132,15 @@
                     <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
                         <Label Text="{Binding NextWorkoutMeta}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
                         <!-- Skips this workout for its week; Up next moves on. Not while a workout is running. -->
-                        <Button Grid.Column="1" Text="Skip" Style="{StaticResource SmallButton}" VerticalOptions="Center"
-                                IsVisible="{Binding IsWorkoutRunning, Converter={StaticResource Not}}" Command="{Binding SkipNextCommand}" />
+                        <!-- A quiet partner to Start: same height and shape, see-through so the glow shows, with a skip icon. -->
+                        <Button Grid.Column="1" Text="Skip" HeightRequest="44" Padding="14,0" CornerRadius="14" FontSize="14"
+                                BackgroundColor="#14FFFFFF" BorderColor="#2EFFFFFF" BorderWidth="1" TextColor="{StaticResource TextSecondary}"
+                                ContentLayout="Left,4" VerticalOptions="Center"
+                                IsVisible="{Binding IsWorkoutRunning, Converter={StaticResource Not}}" Command="{Binding SkipNextCommand}">
+                            <Button.ImageSource>
+                                <FontImageSource FontFamily="OutlinedIcons" Glyph="skip_next" Color="{StaticResource TextSecondary}" Size="18" />
+                            </Button.ImageSource>
+                        </Button>
                         <!-- The fresher you are, the more it invites a tap: grey and still when tired, vivid with a pulsing glow when ready. -->
                         <Grid Grid.Column="2">
                             <controls:ReadinessGlowView Shape="Button" Readiness="{Binding NextGlow}" Tint="{Binding StartColor}" IsRunning="{Binding IsShowing}"

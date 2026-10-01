@@ -39,9 +39,7 @@ public partial class ExerciseFilterPage : SheetPage
                 Switch("My exercises", () => f.CustomOnly, v => f.CustomOnly = v),
                 Switch("Count secondary muscles", () => f.IncludeSecondary, v => f.IncludeSecondary = v),
             ]),
-            Group("Order", new (string, ExerciseSort)[] { ("Best match", ExerciseSort.BestMatch), ("A–Z", ExerciseSort.Name),
-                ("Most done", ExerciseSort.MostDone), ("Recently done", ExerciseSort.RecentlyDone) }
-                .Select(s => new FilterOption(s.Item1, () => f.Sort == s.Item2, () => f.Sort = s.Item2))),
+            Group("Order", ExerciseFilter.Sorts.Select(s => new FilterOption(s.Title, () => f.Sort == s.Sort, () => f.Sort = s.Sort))),
         ];
         BindingContext = this;
         list.PropertyChanged += OnListChanged;

@@ -2,7 +2,7 @@
 
 ## LATEST (2026-10-01, later session): read this section first; it supersedes the "State" section below
 
-### 1. Adding missing exercises (writing done; pictures still missing for 50)
+### 1. Adding missing exercises (done: 883 exercises, all with a video and a picture)
 - The brief the writers followed is `tools/exercises/ADD_BRIEF.md`. It builds on `BRIEF.md` (entries) and
   `CURATE_BRIEF.md` (videos). Every new entry gets a full Summary, Steps and Tips, plus a video checked with `yt.mjs info` + `check`.
 - `tools/exercises/check.mjs`: the hardcoded `C:/GitHub/...` path is now relative (the repo moved to D:).
@@ -47,9 +47,10 @@
   - Weaker video sources, worth a look: yoga_fire_log (apyogaindia), yoga_reverse_prayer (Yog With Himanshu),
     yoga_three_legged_dog ("Yoga tutorial"), stretch_wall_straddle (World Wide Athletics), band_calf_press (Storm Performance),
     mob_hip_gates (Dave Robinson). These were the clearest correct demos found.
-- **Pictures: 833 of 883.** Missing: the 42 new entries above, plus 8 that hit OpenAI rate limits. `thumbs.mjs` needs
-  `OPENAI_API_KEY` (no key is stored in the repo). Each key allows about 5 images a minute, so use `--concurrency 1` or 2 per key.
-  - Run `node thumbs.mjs` with no `--only`. It skips existing files, makes the rest, then rewrites `ExerciseThumbnailAssets.cs`.
+- **Pictures: done, 883 of 883.** `ExerciseThumbnailAssets.cs` indexes all of them. The 50 new ones were checked on a contact sheet.
+  Five were regenerated with `--hint` because they showed the wrong pose: yoga_revolved_side_angle, stretch_foam_roller_chest,
+  cable_wrist_curl, bodyweight_biceps_curl, and pilates_reformer_short_box_tree (the known bad one, now seated on the box).
+  `thumbs.mjs` needs `OPENAI_API_KEY` (no key is stored in the repo). Each key allows about 5 images a minute, so use `--concurrency 1`.
   - Open and check every new picture. Known bad one: `pilates_reformer_short_box_tree.webp` shows a standing stretch, but the
     exercise is seated on the box. Regenerate it with `--only pilates_reformer_short_box_tree --force --hint "seated on the short box, one leg raised and held, hands walking up the leg"`.
 - Then update the counts in this file and in `tools/exercises/HANDOFF.md`.
@@ -121,6 +122,14 @@ chapter times to whole seconds, others kept them exact; both work (`ExerciseVide
 rounds).
 
 ## For the owner to build and test (don't do this yourself)
+
+- (2026-10-01, late) Exercise filters: the chip row under the search bar no longer repeats the sheet's muscle and kind
+  options. It now shows only the filters that are on, as "X ✕" chips that remove them, and hides when none are. The
+  badge counts every active filter. The same applies in the picker.
+- (2026-10-01, late) Windows: the card glow (active plan, Next workout) is drawn with Win2D's own radial gradient
+  (`ReadinessGlowView.FillGlowWin2D`), because MAUI's `RadialGradientPaint` didn't show there. It should now look like Android.
+- (2026-10-01, late) The Workout tab's Skip button now matches Start's height and shape, with a see-through background,
+  an outline and a skip icon.
 
 - Phone + Wear build.
 - Sign-in: fresh install online and offline; existing install without an account (offline → "Continue offline for

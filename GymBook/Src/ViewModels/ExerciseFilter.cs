@@ -8,8 +8,8 @@ public enum ExerciseSort { BestMatch, Name, MostDone, RecentlyDone }
 
 /// <summary>
 /// What the exercise list is narrowed to: muscles, kinds of training, equipment, level, movement type, what fits the
-/// user's equipment, what they've done before, and the order. The quick chips above the list and the filter sheet both
-/// change this one set; within a group options are "any of", across groups "all of".
+/// user's equipment, what they've done before, and the order. They're chosen in the filter sheet; the chips above the
+/// list show the ones that are on, each removable. Within a group options are "any of", across groups "all of".
 /// </summary>
 public partial class ExerciseFilter : ObservableObject
 {
@@ -24,6 +24,10 @@ public partial class ExerciseFilter : ObservableObject
         ("Cardio", [ExerciseCategory.Cardio]),
         ("Power", [ExerciseCategory.Plyometric, ExerciseCategory.Olympic]),
     ];
+
+    /// <summary>The orders offered, with their names.</summary>
+    public static readonly (string Title, ExerciseSort Sort)[] Sorts =
+        [("Best match", ExerciseSort.BestMatch), ("A–Z", ExerciseSort.Name), ("Most done", ExerciseSort.MostDone), ("Recently done", ExerciseSort.RecentlyDone)];
 
     public HashSet<MuscleGroup> Muscles { get; } = [];
     public HashSet<ExerciseCategory> Categories { get; } = [];
@@ -57,12 +61,35 @@ public partial class ExerciseFilter : ObservableObject
     partial void OnCustomOnlyChanged(bool value) => Notify();
     partial void OnSortChanged(ExerciseSort value) => Notify();
 
-    /// <summary>How many filters are on beyond the quick chips (muscle and kind), for the badge on the filter button.</summary>
-    public int ActiveCount => Equipment.Count + Levels.Count + Mechanics.Count
-        + (IncludeSecondary ? 1 : 0) + (FitsMyEquipment ? 1 : 0) + (DoneBefore ? 1 : 0) + (CustomOnly ? 1 : 0)
-        + (Sort != ExerciseSort.BestMatch ? 1 : 0);
+    /// <summary>How many filters are on, for the badge on the filter button.</summary>
+    public int ActiveCount => Active().Count();
 
-    public bool IsEmpty => Muscles.Count == 0 && Categories.Count == 0 && ActiveCount == 0;
+    public bool IsEmpty => ActiveCount == 0;
+
+    /// <summary>Every filter that's on, in the sheet's order, with how to turn it off: the chips above the list.</summary>
+    public IEnumerable<(string Title, Action Remove)> Active()
+    {
+        foreach (var m in Enum.GetValues<MuscleGroup>().Where(Muscles.Contains))
+            yield return (m.Display(), () => Muscles.Remove(m));
+        foreach (var kind in Kinds.Where(k => k.Categories.All(Categories.Contains)))
+            yield return (kind.Title, () => Categories.ExceptWith(kind.Categories));
+        foreach (var e in Enum.GetValues<Models.Equipment>().Where(Equipment.Contains))
+            yield return (e.Display(), () => Equipment.Remove(e));
+        foreach (var l in Enum.GetValues<ExerciseLevel>().Where(Levels.Contains))
+            yield return (l.ToString(), () => Levels.Remove(l));
+        foreach (var m in Enum.GetValues<Mechanic>().Where(Mechanics.Contains))
+            yield return (m.ToString(), () => Mechanics.Remove(m));
+        if (FitsMyEquipment)
+            yield return ("Fits my equipment", () => FitsMyEquipment = false);
+        if (DoneBefore)
+            yield return ("Done before", () => DoneBefore = false);
+        if (CustomOnly)
+            yield return ("My exercises", () => CustomOnly = false);
+        if (IncludeSecondary)
+            yield return ("Secondary muscles", () => IncludeSecondary = false);
+        if (Sort != ExerciseSort.BestMatch)
+            yield return ($"Order: {Sorts.First(s => s.Sort == Sort).Title}", () => Sort = ExerciseSort.BestMatch);
+    }
 
     public void Clear()
     {

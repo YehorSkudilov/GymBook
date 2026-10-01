@@ -8,8 +8,8 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>
-/// The exercise list shared by the library tab and the picker: ranked search (<see cref="ExerciseSearch"/>), quick
-/// muscle and kind chips, and the full filters (<see cref="ExerciseFilter"/>) behind the filter button.
+/// The exercise list shared by the library tab and the picker: ranked search (<see cref="ExerciseSearch"/>), and the
+/// filters (<see cref="ExerciseFilter"/>) chosen behind the filter button and shown as removable chips above the list.
 /// </summary>
 public abstract partial class ExerciseListViewModel : BaseViewModel
 {
@@ -18,17 +18,14 @@ public abstract partial class ExerciseListViewModel : BaseViewModel
     protected ExerciseListViewModel(DataStore store)
     {
         Store = store;
-        Chips.Add(new ChipItem("All", null, SelectChip) { IsSelected = true });
-        foreach (var m in Enum.GetValues<MuscleGroup>())
-            Chips.Add(new ChipItem(m.Display(), m, SelectChip));
-        foreach (var kind in ExerciseFilter.Kinds)
-            Chips.Add(new ChipItem(kind.Title, kind.Categories, SelectChip));
         Filters.Changed += (_, _) => Filter();
     }
 
     public ExerciseFilter Filters { get; } = new();
 
+    /// <summary>The filters that are on, each a chip that turns it off; hidden when none are.</summary>
     public ObservableCollection<ChipItem> Chips { get; } = [];
+    [ObservableProperty] bool hasChips;
 
     [ObservableProperty] string searchText = "";
     [ObservableProperty] List<ExerciseItem> items = [];
@@ -41,26 +38,10 @@ public abstract partial class ExerciseListViewModel : BaseViewModel
 
     partial void OnSearchTextChanged(string value) => Filter();
 
-    // A chip toggles its muscle or kind in the filter, so several can be on; "All" clears them.
-    void SelectChip(ChipItem chip)
+    // A chip turns its filter off (the switches and the order notify the list themselves).
+    void RemoveChip(ChipItem chip)
     {
-        switch (chip.Value)
-        {
-            case MuscleGroup m:
-                if (!Filters.Muscles.Remove(m))
-                    Filters.Muscles.Add(m);
-                break;
-            case ExerciseCategory[] kinds:
-                if (kinds.All(Filters.Categories.Contains))
-                    Filters.Categories.ExceptWith(kinds);
-                else
-                    Filters.Categories.UnionWith(kinds);
-                break;
-            default:
-                Filters.Muscles.Clear();
-                Filters.Categories.Clear();
-                break;
-        }
+        ((Action)chip.Value!)();
         Filters.Notify();
     }
 
@@ -72,13 +53,10 @@ public abstract partial class ExerciseListViewModel : BaseViewModel
 
     protected void Filter()
     {
-        foreach (var c in Chips)
-            c.IsSelected = c.Value switch
-            {
-                MuscleGroup m => Filters.Muscles.Contains(m),
-                ExerciseCategory[] kinds => kinds.All(Filters.Categories.Contains),
-                _ => Filters.Muscles.Count == 0 && Filters.Categories.Count == 0,
-            };
+        Chips.Clear();
+        foreach (var (title, remove) in Filters.Active())
+            Chips.Add(new ChipItem($"{title}  ✕", remove, RemoveChip) { IsSelected = true });
+        HasChips = Chips.Count > 0;
 
         var query = SearchText.Trim();
         var list = Source;

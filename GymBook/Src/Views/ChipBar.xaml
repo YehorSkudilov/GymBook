@@ -5,8 +5,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:controls="clr-namespace:GymBook.Controls"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
-    x:DataType="vm:ExerciseListViewModel">
-    <!-- Horizontal muscle-group filter used by the library and the picker. -->
+    x:DataType="vm:ExerciseListViewModel"
+    IsVisible="{Binding HasChips}">
+    <!-- The filters that are on, as chips that remove them (library and picker); hidden when none are. -->
     <ScrollView x:Name="Scroller" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
         <HorizontalStackLayout BindableLayout.ItemsSource="{Binding Chips}" Spacing="8" Padding="20,0">
             <BindableLayout.ItemTemplate>
