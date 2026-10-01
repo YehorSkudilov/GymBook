@@ -43,24 +43,30 @@
     exercise is seated on the box. Regenerate it with `--only pilates_reformer_short_box_tree --force --hint "seated on the short box, one leg raised and held, hands walking up the leg"`.
 - Then update the counts in this file and in `tools/exercises/HANDOFF.md`.
 
-### 2. NEW REQUEST from the owner: replace the "standard" built-in plans (not started)
-Owner's words, paraphrased: the predefined/standard plans (`Services/PlanGenerator.cs`, the "Standard plan" option on the
-wizard's BuildWith step, `ViewModels/PlanWizardViewModel.cs`) are bad. The AI-generated quiz plans are fine. Wanted:
-- Predefined plans based on programs from famous bodybuilders, coaches and fitness influencers, each showing who it's from
-  (name plus a short bio).
-- Recommend the best fits ranked 1…N for the user's quiz answers (goal, experience, days/week, session length,
-  equipment). Two tabs: **Recommended** (ranked) and **All**.
-- Rename "Standard plan" to something more interesting. Proposed: "Signature Programs".
-
-Notes for whoever implements it:
-- Models are in `GymBook.Shared/Models/Entities.cs` and `Enums.cs`. Prescriptions come from
-  `Services/TrainingGoals.cs`. Plans are listed in `Views/PlansPage.xaml` and `ViewModels/PlanViewModels.cs`.
-- Use publicly known program structures (Arnold's Golden Six, Reg Park 5×5, StrongLifts 5×5, Starting Strength-style LP,
-  Wendler 5/3/1 BBB, PHUL, Layne Norton's PHAT, Reddit PPL, GZCLP, Mike Mentzer's Heavy Duty, Dorian Yates' Blood & Guts,
-  Arnold split…). Don't copy paid programs verbatim (e.g. Jeff Nippard's or RP's paid books). Write "Inspired by" or "based on",
-  and add a "not affiliated with or endorsed by" line.
-- Exercise ids must exist in the library. Keep `PlanGenerator.Generate` as the offline fallback for the AI path.
-- The owner builds and tests; don't build.
+### 2. Signature Programs replace the "standard plan" (done, not compiled)
+The owner's request: built-in plans based on famous lifters' and coaches' programs, each showing who it's from, ranked for
+the quiz answers on a **Recommended** tab plus an **All** tab, and "Standard plan" renamed. What was built:
+- `Services/SignaturePrograms.cs`: 22 programs (Golden Six, Arnold Split, Reg Park 5x5, StrongLifts-style 5x5,
+  Rippetoe novice LP, Wendler 5/3/1 BBB, PHUL, PHAT, Reddit PPL, GZCLP, Heavy Duty, Blood & Guts, Texas Method,
+  Bill Starr 5x5, Westside for Skinny Bastards, a Tyson-inspired bodyweight circuit, r/bodyweightfitness RR,
+  Simple & Sinister, Dan John's 10,000 swings, a Bret Contreras-style glute program, Steve Reeves, McGuff's Big Five).
+  Each one has an author, a bio, a summary, its goal, levels, days, minutes and equipment. Each exercise slot lists
+  stand-ins in order (barbell, then dumbbell, then band or bodyweight); `Build` picks the first one the user's equipment allows.
+  - `Rank(answers)` scores goal (40 primary / 25 secondary), experience, days, equipment coverage and session length,
+    and gives reasons like "Built for strength · 3 days, as you asked".
+  - Programs set their own sets and reps. Effort and rest come from `TrainingGoals.Prescription` for the program's goal
+    unless a slot overrides them (Heavy Duty and Yates use RIR 0). Neck exercises keep the app's neck prescription.
+    They're dropped when the user turned neck work off, and added (via the now-public `PlanGenerator.AddNeck`) when they want it.
+  - A/B programs with 3 days (StrongLifts, Rippetoe, Reeves) are stored as A, B, A, since a plan "week" is one pass
+    through its workouts. Their summaries say the original alternates.
+  - Plan descriptions end with "Inspired by X's program. Not affiliated with or endorsed by X."
+  - Every exercise id was checked against `tools/exercises/library.json` (143 ids, none missing).
+- Wizard (`PlanWizardViewModel`, `PlanWizardPage.xaml`): BuildWith now offers "Build with AI" / "Signature Programs".
+  A new `Programs` step (skipped only when the AI builds the plan, so users who aren't signed in or are out of quota always see it)
+  shows Recommended (top 5, ranked #1–#5) and All (A–Z) as chip tabs. Tapping a card selects it and shows its summary and the author's bio.
+  The result shows an "Inspired by" card with the bio. `PlanGenerator.Generate` is now only the fallback when the AI call fails.
+- **For the owner to test:** the wizard with and without sign-in; both tabs; picking from All; a home-dumbbell and a
+  bodyweight profile (stand-ins); neck on and off; Regenerate a saved plan via programs; the scores feel right.
 
 Read this first, then `tools/exercises/HANDOFF.md` for the exercise library's structure and tools. **The owner builds
 and tests the app themselves: don't build, run tests or launch the app unless asked.** Implement by reading the code

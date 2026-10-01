@@ -639,7 +639,7 @@ public static class SignaturePrograms
         if (program.Levels.Contains(answers.Experience))
         {
             score += 25;
-            reasons.Add(program.Levels.Length == 3 ? "Suits every level" : $"Made for {answers.Experience.Display().ToLowerInvariant()}s");
+            reasons.Add(program.Levels.Length == 3 ? "Suits every level" : $"Made for {answers.Experience.Display().ToLowerInvariant()} lifters");
         }
         else if (program.Levels.Min() > answers.Experience)
         {
