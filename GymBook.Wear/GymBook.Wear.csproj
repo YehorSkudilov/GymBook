@@ -22,6 +22,11 @@
 
 		<!-- Wear OS 3, the oldest version on watches still in use. -->
 		<SupportedOSPlatformVersion>30.0</SupportedOSPlatformVersion>
+
+		<!-- .NET builds only 64-bit by default, but Samsung's Galaxy Watches (4 to 8) run 32-bit ARM apps
+		     (armeabi-v7a) despite their 64-bit chips: without android-arm, Play marks them unsupported.
+		     arm64 for other watches, x64 for the emulator. -->
+		<RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
 	</PropertyGroup>
 
 	<ItemGroup>
