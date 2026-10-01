@@ -7,10 +7,7 @@
     Title="Gym Book Admin"
     Shell.FlyoutBehavior="Disabled">
 
-    <TabBar>
-        <ShellContent Title="Dashboard" Route="dashboard" ContentTemplate="{DataTemplate views:DashboardPage}" />
-        <ShellContent Title="Users" Route="users" ContentTemplate="{DataTemplate views:UsersPage}" />
-        <ShellContent Title="AI usage" Route="ai" ContentTemplate="{DataTemplate views:AiUsagePage}" />
-    </TabBar>
+    <!-- The tabs are a CNavBar + CView inside MainPage; Shell only pushes a user's page on top. -->
+    <ShellContent Route="main" ContentTemplate="{DataTemplate views:MainPage}" />
 
 </Shell>

@@ -6,6 +6,9 @@
   <Project Path="GymBook.Api/GymBook.Api.csproj" />
   <Project Path="GymBook.LocalData/GymBook.LocalData.csproj" />
   <Project Path="GymBook.Shared/GymBook.Shared.csproj" />
+  <Project Path="GymBook.Wear/GymBook.Wear.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
   <Project Path="GymBook/GymBook.csproj">
     <Deploy Solution="Debug|*" />
   </Project>

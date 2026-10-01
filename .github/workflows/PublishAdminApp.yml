@@ -6,7 +6,8 @@ permissions:
   contents: read
 
 env:
-  PROJECT_PATH: GymBook.Admin/GymBook.Admin.csproj
+  # Checked out into its own folder next to AppSkeleton (referenced as ..\..\AppSkeleton), as in PublishApp.yml.
+  PROJECT_PATH: GymBook/GymBook.Admin/GymBook.Admin.csproj
 
 on:
   workflow_dispatch:
@@ -41,9 +42,17 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # Unlike the GymBook app, no AppSkeleton checkout: the admin app doesn't use it.
       - name: Checkout GymBook
         uses: actions/checkout@v6
+        with:
+          path: GymBook
+
+      - name: Checkout AppSkeleton
+        uses: actions/checkout@v6
+        with:
+          repository: YehorSkudilov/AppSkeleton
+          token: ${{ secrets.REPO_TOKEN }}
+          path: AppSkeleton
 
       # =========================
       # .NET + MAUI
@@ -153,6 +162,15 @@ jobs:
     steps:
       - name: Checkout GymBook
         uses: actions/checkout@v6
+        with:
+          path: GymBook
+
+      - name: Checkout AppSkeleton
+        uses: actions/checkout@v6
+        with:
+          repository: YehorSkudilov/AppSkeleton
+          token: ${{ secrets.REPO_TOKEN }}
+          path: AppSkeleton
 
       # =========================
       # .NET + MAUI

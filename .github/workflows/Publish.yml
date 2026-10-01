@@ -59,6 +59,11 @@ on:
         type: boolean
         default: true
 
+      publish_wear:
+        description: "Wear OS (Google Play, Wear OS track)"
+        type: boolean
+        default: true
+
       section_admin:
         description: "═══════════  Admin App  ═══════════"
         type: choice
@@ -94,7 +99,7 @@ jobs:
     secrets: inherit
 
   # ==================================================
-  # VERSION BUMP + BUILD ANDROID/WINDOWS/IOS/MACOS + RELEASE
+  # VERSION BUMP + BUILD ANDROID/WEAR OS/WINDOWS/IOS/MACOS + RELEASE
   # ==================================================
   publish-app:
     uses: ./.github/workflows/PublishApp.yml
@@ -105,6 +110,7 @@ jobs:
       publish_windows: ${{ inputs.publish_windows }}
       publish_ios: ${{ inputs.publish_ios }}
       publish_macos: ${{ inputs.publish_macos }}
+      publish_wear: ${{ inputs.publish_wear }}
     secrets: inherit
 
   # ==================================================

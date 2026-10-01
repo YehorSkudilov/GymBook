@@ -70,4 +70,6 @@ public static class GymBookJson
 [JsonSerializable(typeof(SetRoleRequest))]
 [JsonSerializable(typeof(SetDisabledRequest))]
 [JsonSerializable(typeof(SetEmailVerifiedRequest))]
+[JsonSerializable(typeof(WearWorkout))]
+[JsonSerializable(typeof(WearCompleteSet))]
 internal partial class SharedJsonContext : JsonSerializerContext;

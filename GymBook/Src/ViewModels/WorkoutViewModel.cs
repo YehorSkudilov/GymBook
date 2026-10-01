@@ -12,7 +12,8 @@ public partial class WorkoutViewModel(
     ProgressionEngine engine,
     Units units,
     DialogService dialogs,
-    ExercisePickerService picker) : BaseViewModel
+    ExercisePickerService picker,
+    WatchLink watch) : BaseViewModel
 {
     IDispatcherTimer? _timer;
     WorkoutSession? _session;
@@ -131,13 +132,32 @@ public partial class WorkoutViewModel(
         _timer.Tick -= OnTick;
         _timer.Tick += OnTick;
         _timer.Start();
+        // Ticks from the Wear OS app go through this page while it's open, so they work like a tap here.
+        watch.LiveCompleteSet = CompleteFromWatch;
     }
 
     public override void OnDisappearing()
     {
         _timer?.Stop();
+        if (watch.LiveCompleteSet == (Func<SetEntry, bool>)CompleteFromWatch)
+            watch.LiveCompleteSet = null;
         if (workouts.Active != null)
             workouts.Save();
+    }
+
+    /// <summary>The Wear OS app ticked <paramref name="set"/>: the same as tapping its tick here, then showing its exercise.</summary>
+    bool CompleteFromWatch(SetEntry set)
+    {
+        for (var i = 0; i < Exercises.Count; i++)
+        {
+            if (Exercises[i].Sets.FirstOrDefault(r => r.Model == set) is not { } row)
+                continue;
+            CurrentIndex = i;
+            if (!row.IsCompleted)
+                row.ToggleCommand.Execute(null);
+            return row.IsCompleted;
+        }
+        return false;
     }
 
     void OnTick(object? sender, EventArgs e) => Tick();

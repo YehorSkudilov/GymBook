@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:TabView
+    x:Class="GymBook.Admin.Views.AccountPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Admin.Views"
+    xmlns:vm="clr-namespace:GymBook.Admin.ViewModels"
+    x:DataType="vm:AccountViewModel">
+
+    <VerticalStackLayout Spacing="14">
+        <Label Text="Account" Style="{StaticResource Title}" />
+
+        <!-- Who: the GymBook app's Profile card -->
+        <Border Style="{StaticResource Card}">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                <Border Style="{StaticResource Avatar}" WidthRequest="56" HeightRequest="56" StrokeShape="RoundRectangle 28">
+                    <Label Text="{Binding Initial}" Style="{StaticResource AvatarText}" FontSize="22" />
+                </Border>
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                    <Label Text="{Binding Email}" Style="{StaticResource H3}" LineBreakMode="TailTruncation" />
+                    <Label Text="{Binding Role}" Style="{StaticResource Caption}" TextColor="{StaticResource Accent}" />
+                </VerticalStackLayout>
+            </Grid>
+        </Border>
+
+        <Label Text="Your role" Style="{StaticResource SectionLabel}" />
+        <Border Style="{StaticResource Card}">
+            <Label Text="{Binding RoleDetail}" Style="{StaticResource Caption}" FontSize="14" />
+        </Border>
+
+        <Label Text="This app" Style="{StaticResource SectionLabel}" />
+        <Border Style="{StaticResource Card}" Padding="0,6">
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Details}" BindableLayout.ItemTemplate="{StaticResource InfoRow}" />
+        </Border>
+
+        <Border Style="{StaticResource Card}" Padding="0" Margin="0,6,0,0">
+            <Grid ColumnDefinitions="Auto,*" Padding="16,14" ColumnSpacing="12" BackgroundColor="Transparent">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SignOutCommand}" />
+                </Grid.GestureRecognizers>
+                <Image Source="{StaticResource IconLogout}" WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="Sign out" TextColor="{StaticResource Danger}" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+            </Grid>
+        </Border>
+    </VerticalStackLayout>
+</views:TabView>

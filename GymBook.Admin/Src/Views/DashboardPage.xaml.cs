@@ -2,7 +2,7 @@ using GymBook.Admin.ViewModels;
 
 namespace GymBook.Admin.Views;
 
-public partial class DashboardPage : BasePage
+public partial class DashboardPage : TabView
 {
     public DashboardPage(DashboardViewModel vm)
     {

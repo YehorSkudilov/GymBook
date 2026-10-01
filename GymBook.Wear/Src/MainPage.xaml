@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    The whole watch app. Laid out for small round screens: one centred column, generous side padding so nothing is
+    cut off by the round edge, and one big button. Exactly one of the four states shows at a time.
+-->
+<ContentPage
+    x:Class="GymBook.Wear.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:GymBook.Wear"
+    x:DataType="local:WatchViewModel">
+
+    <ScrollView VerticalScrollBarVisibility="Never">
+        <Grid Padding="26,22,26,26" MinimumHeightRequest="220">
+
+            <!-- No workout on the phone -->
+            <VerticalStackLayout IsVisible="{Binding IsWaiting}" Spacing="10" VerticalOptions="Center">
+                <Label Text="Gym Book" FontFamily="OpenSansSemibold" FontSize="16" TextColor="{StaticResource Accent}" />
+                <Label Text="{Binding Status}" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+            </VerticalStackLayout>
+
+            <!-- The set to do -->
+            <VerticalStackLayout IsVisible="{Binding IsLifting}" Spacing="4" VerticalOptions="Center">
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
+                    <Label Text="{Binding Elapsed}" Style="{StaticResource Small}" />
+                    <Label Text="{Binding HeartRate}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" />
+                </HorizontalStackLayout>
+                <Label Text="{Binding ExerciseName}" FontFamily="OpenSansSemibold" FontSize="15" MaxLines="2" LineBreakMode="TailTruncation" />
+                <Label Text="{Binding SetLabel}" Style="{StaticResource Small}" />
+                <Label Text="{Binding Target}" FontFamily="OpenSansSemibold" FontSize="22" Margin="0,2,0,6" />
+                <Button Text="{Binding DoneText}" Command="{Binding CompleteCommand}" IsEnabled="{Binding CanComplete}" />
+                <Label Text="{Binding Message}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" />
+                <Label Text="{Binding Next}" Style="{StaticResource Small}" />
+                <Label Text="{Binding Progress}" Style="{StaticResource Small}" FontSize="11" />
+            </VerticalStackLayout>
+
+            <!-- Resting after a set -->
+            <VerticalStackLayout IsVisible="{Binding IsResting}" Spacing="4" VerticalOptions="Center">
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
+                    <Label Text="Rest" Style="{StaticResource Small}" />
+                    <Label Text="{Binding HeartRate}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" />
+                </HorizontalStackLayout>
+                <Label Text="{Binding RestText}" FontFamily="OpenSansSemibold" FontSize="40" />
+                <ProgressBar Progress="{Binding RestProgress}" ProgressColor="{StaticResource Accent}" Margin="10,0,10,6" />
+                <Label Text="{Binding ExerciseName, StringFormat='Up next: {0}'}" Style="{StaticResource Small}" MaxLines="2" LineBreakMode="TailTruncation" />
+                <Label Text="{Binding SetLabel}" Style="{StaticResource Small}" />
+                <Label Text="{Binding Message}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" />
+                <Button Text="Skip rest" Command="{Binding SkipRestCommand}" BackgroundColor="{StaticResource Surface}" Margin="0,6,0,0" />
+            </VerticalStackLayout>
+
+            <!-- Every set done -->
+            <VerticalStackLayout IsVisible="{Binding IsFinished}" Spacing="8" VerticalOptions="Center">
+                <Label Text="✓" FontSize="34" TextColor="{StaticResource Success}" />
+                <Label Text="All sets done" FontFamily="OpenSansSemibold" FontSize="16" />
+                <Label Text="{Binding Elapsed}" Style="{StaticResource Small}" />
+                <Label Text="Finish the workout on your phone." Style="{StaticResource Small}" />
+            </VerticalStackLayout>
+        </Grid>
+    </ScrollView>
+</ContentPage>

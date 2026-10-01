@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<!-- The admin app: Gym Book's users, stats and AI usage, for Admin/SuperAdmin accounts. Run it from Visual Studio;
-	     it isn't published to any store. It talks to the same API as the GymBook app, through /api/admin. -->
+	<!-- The admin app: Gym Book's users, stats and AI usage, for Admin/SuperAdmin accounts. Built by
+	     PublishAdminApp.yml but never sent to a store. It talks to the same API as the GymBook app, through /api/admin. -->
 	<PropertyGroup>
 		<TargetFrameworks>net10.0-android</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
@@ -47,6 +47,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\GymBook.Shared\GymBook.Shared.csproj" />
+		<!-- The GymBook app's own controls (swipe tabs, glass nav bar, icon font, selectable labels), so both apps look alike. -->
+		<ProjectReference Include="..\..\AppSkeleton\AppSkeleton\AppSkeleton.csproj" />
 	</ItemGroup>
 
 	<!-- The API, the same one the GymBook app uses: -p:ApiBaseUrl=https://..., an API_BASE_URL environment variable,
@@ -61,6 +63,7 @@
 
 	<Target Name="ValidateApiBaseUrl" BeforeTargets="BeforeBuild;CoreCompile">
 		<Error Condition="'$(ApiBaseUrl)' == ''" Text="ApiBaseUrl is not set. Set it via -p:ApiBaseUrl=https://..., an API_BASE_URL environment variable, or GymBook.Admin/.env / GymBook/.env." />
+		<Error Condition="'$(ApiBaseUrl)' != '' and !$(ApiBaseUrl.StartsWith('https://'))" Text="ApiBaseUrl '$(ApiBaseUrl)' must be a full https:// address, e.g. https://api.example.com/ (read from $(_EnvFile) unless passed in)." />
 	</Target>
 
 	<ItemGroup>

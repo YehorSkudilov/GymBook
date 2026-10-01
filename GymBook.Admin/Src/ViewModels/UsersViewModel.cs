@@ -1,40 +1,67 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GymBook.Admin.Services;
 
 namespace GymBook.Admin.ViewModels;
 
 /// <summary>Every account, newest first, searchable by email or name and filterable (the API returns up to 300).</summary>
-public partial class UsersViewModel(AdminApi api) : BaseViewModel
+public partial class UsersViewModel : BaseViewModel
 {
-    public static readonly IReadOnlyList<string> Filters = ["All", "Admins", "Disabled", "Unverified"];
+    const int ListLimit = 300;
 
+    readonly Services.AdminApi _api;
     CancellationTokenSource? _search;
     int _loads;
 
+    public UsersViewModel(Services.AdminApi api)
+    {
+        _api = api;
+        var select = new RelayCommand<ChipItem>(chip => SelectFilter(chip?.Value));
+        // What the API's filter parameter takes; see AdminUsersController.List.
+        Chips =
+        [
+            new("All", null, select),
+            new("New", "new", select),
+            new("Active", "active", select),
+            new("Inactive", "inactive", select),
+            new("Unverified", "unverified", select),
+            new("Google", "google", select),
+            new("Admins", "admins", select),
+            new("Disabled", "disabled", select),
+            new("Locked out", "locked", select),
+        ];
+        Chips[0].IsSelected = true;
+    }
+
+    public IReadOnlyList<ChipItem> Chips { get; }
+
+    string? Filter => Chips.FirstOrDefault(c => c.IsSelected)?.Value;
+
     [ObservableProperty] string query = "";
-    [ObservableProperty] string filter = "All";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Summary))]
     IReadOnlyList<UserItem> users = [];
 
-    public IReadOnlyList<string> FilterOptions => Filters;
-
     public string Summary => Users.Count switch
     {
-        0 => IsBusy ? "" : "No users match.",
+        0 => IsBusy ? "Loading…" : "No users match.",
         1 => "1 user",
-        300 => "Showing the newest 300; search to narrow it down.",
+        ListLimit => $"The newest {ListLimit}. Search to narrow it down.",
         var n => $"{n} users",
     };
 
     public override Task OnAppearingAsync() => Refresh();
 
+    /// <summary>Shows only <paramref name="filter"/> (an API filter name, or null for everyone), e.g. from a dashboard tile.</summary>
+    public void SelectFilter(string? filter)
+    {
+        foreach (var chip in Chips)
+            chip.IsSelected = chip.Value == filter;
+        _ = Refresh();
+    }
+
     // Searches as you type, once you pause.
     partial void OnQueryChanged(string value) => _ = SearchSoonAsync();
-
-    partial void OnFilterChanged(string value) => _ = Refresh();
 
     async Task SearchSoonAsync()
     {
@@ -55,8 +82,7 @@ public partial class UsersViewModel(AdminApi api) : BaseViewModel
     Task Refresh() => RunAsync(async () =>
     {
         var load = ++_loads;
-        var filter = Filter == "All" ? null : Filter.ToLowerInvariant();
-        var rows = await api.GetUsersAsync(Query, filter);
+        var rows = await _api.GetUsersAsync(Query, Filter);
         // A newer search started while this one was out: let it win.
         if (load != _loads)
             return;
@@ -64,5 +90,5 @@ public partial class UsersViewModel(AdminApi api) : BaseViewModel
     });
 
     [RelayCommand]
-    Task OpenUser(string? id) => id == null ? Task.CompletedTask : Shell.Current.GoToAsync($"{AppShell.UserRoute}?id={Uri.EscapeDataString(id)}");
+    Task OpenUser(string? id) => UserNavigation.OpenAsync(id);
 }

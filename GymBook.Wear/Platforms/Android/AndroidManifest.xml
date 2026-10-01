@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+	<!-- A watch app: Google Play only offers it to Wear OS devices. -->
+	<uses-feature android:name="android.hardware.type.watch" />
+
+	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true">
+		<!-- Not standalone: it needs the phone app, which owns the workout. -->
+		<meta-data android:name="com.google.android.wearable.standalone" android:value="false" />
+	</application>
+
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
+	<uses-permission android:name="android.permission.VIBRATE" />
+	<!-- The heart rate sensor: BODY_SENSORS up to Wear OS 5, READ_HEART_RATE from Wear OS 6 (API 36). -->
+	<uses-permission android:name="android.permission.BODY_SENSORS" android:maxSdkVersion="35" />
+	<uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+</manifest>

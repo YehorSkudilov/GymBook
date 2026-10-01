@@ -107,6 +107,15 @@
 	<!-- Google sign-in on Android (Platforms/Android/GoogleSignInService.cs). -->
 	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'android'">
 		<PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.6.0.1" />
+		<!-- The Wear OS app's link to the phone (Platforms/Android/WatchSync.cs). -->
+		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="120.0.1.2" />
+		<!-- Play services brings newer AndroidX libraries than MAUI asks for, but not their -ktx/companion packages, so
+		     both versions of some classes end up in the app ("Type ... is defined multiple times"). Lift them to match. -->
+		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.0" />
+		<PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData" Version="2.11.0.1" />
+		<PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" Version="2.11.0.1" />
+		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" Version="2.11.0.1" />
+		<PackageReference Include="Xamarin.AndroidX.Collection.Ktx" Version="1.6.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>

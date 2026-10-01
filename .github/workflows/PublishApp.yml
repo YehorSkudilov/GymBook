@@ -6,6 +6,8 @@ permissions:
 env:
   # The build job checks GymBook out into its own folder next to AppSkeleton (referenced as ..\..\AppSkeleton).
   PROJECT_PATH: GymBook/GymBook/GymBook.csproj
+  # The Wear OS app (GymBook.Wear): the same package as the phone app, with its own build and Play track.
+  WEAR_PROJECT_PATH: GymBook/GymBook.Wear/GymBook.Wear.csproj
   VERSION_BUMP_PROJECT_PATH: GymBook/GymBook.csproj
   PACKAGE_NAME: com.yehorskudilov.gymbook
 
@@ -54,6 +56,11 @@ on:
         type: boolean
         default: true
 
+      publish_wear:
+        description: "Wear OS (Google Play, Wear OS track)"
+        type: boolean
+        default: true
+
   # Lets Publish.yml call this as a reusable workflow instead of keeping its own copy
   # of the version-bump/build/release jobs - see that file's publish-app job. Inputs
   # are re-declared as plain strings since workflow_call doesn't support the `choice`
@@ -93,6 +100,11 @@ on:
         type: boolean
         default: true
 
+      publish_wear:
+        description: "Wear OS (Google Play, Wear OS track)"
+        type: boolean
+        default: true
+
 jobs:
 
   # ==================================================
@@ -110,7 +122,7 @@ jobs:
 
     steps:
       - name: Check a platform is selected
-        if: ${{ !inputs.publish_android && !inputs.publish_windows && !inputs.publish_ios && !inputs.publish_macos }}
+        if: ${{ !inputs.publish_android && !inputs.publish_windows && !inputs.publish_ios && !inputs.publish_macos && !inputs.publish_wear }}
         run: |
           echo "Select at least one platform to publish"
           exit 1
@@ -351,6 +363,136 @@ jobs:
           packageName: ${{ env.PACKAGE_NAME }}
           releaseFiles: ${{ steps.find_aab.outputs.file }}
           track: ${{ inputs.release_channel }}
+          status: completed
+
+  # ==================================================
+  # BUILD WEAR OS
+  # ==================================================
+
+  # The watch app goes into the same Play listing as the phone app, on its dedicated Wear OS track. Wear OS has to be
+  # added to the listing once by hand first (Play Console -> Test and release -> Advanced settings -> Form factors).
+  build-wear:
+    needs: version
+    if: ${{ inputs.publish_wear }}
+    runs-on: windows-latest
+
+    steps:
+      # The version job pushed a bump commit, so check out the branch tip rather than the triggering SHA. The watch
+      # app doesn't use AppSkeleton, so no second checkout.
+      - name: Checkout GymBook
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref }}
+          path: GymBook
+
+      # =========================
+      # .NET + MAUI
+      # =========================
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # The runner's Visual Studio usually has MAUI already. Any `dotnet workload install` also reinstalls every
+      # workload Visual Studio registered (iOS, Mac Catalyst, wasm...), so only install when it's really missing.
+      - name: Install MAUI Android workload
+        shell: pwsh
+        run: |
+          dotnet workload list
+          if (dotnet workload list | Select-String -Pattern '^\s*maui-android\s' -Quiet) {
+            Write-Host "maui-android already installed"
+          } else {
+            dotnet workload install maui-android --skip-manifest-update
+          }
+
+      # =========================
+      # KEYSTORE
+      # =========================
+
+      # The phone app's upload key: Play signs both with the same app signing key, which the Wearable Data Layer
+      # between them requires.
+      - name: Restore keystore
+        id: keystore
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")) {
+            throw "ANDROID_KEYSTORE_BASE64 secret is not set"
+          }
+
+          $keystore = Join-Path $env:RUNNER_TEMP "gymbook.keystore"
+          [IO.File]::WriteAllBytes($keystore, [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}"))
+
+          echo "path=$keystore" >> $env:GITHUB_OUTPUT
+
+      # =========================
+      # BUILD + SIGNING
+      # =========================
+
+      # The phone's version name, and its version code plus 100,000,000: every build in the listing needs its own
+      # version code, and this keeps the watch's in step with the phone's (1.0.33 -> 1000033 phone, 101000033 watch).
+      - name: Publish Wear OS AAB
+        shell: pwsh
+        run: |
+          $versionCode = [int]"${{ needs.version.outputs.version_code }}" + 100000000
+
+          dotnet publish "${{ env.WEAR_PROJECT_PATH }}" `
+            -c Release `
+            -f net10.0-android `
+            /p:AndroidPackageFormat=aab `
+            /p:AndroidKeyStore=true `
+            "/p:AndroidSigningKeyStore=${{ steps.keystore.outputs.path }}" `
+            "/p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEYALIAS_NAME }}" `
+            "/p:AndroidSigningKeyPass=${{ secrets.ANDROID_KEYALIAS_PASS }}" `
+            "/p:AndroidSigningStorePass=${{ secrets.ANDROID_KEYSTORE_PASS }}" `
+            "/p:ApplicationDisplayVersion=${{ needs.version.outputs.new_version }}" `
+            "/p:ApplicationVersion=$versionCode"
+
+      # =========================
+      # FIND AAB
+      # =========================
+
+      - name: Find AAB
+        id: find_aab
+        shell: pwsh
+        run: |
+          $file = Get-ChildItem -Recurse -Filter "*-Signed.aab" |
+            Where-Object { $_.FullName -like "*GymBook.Wear*" -and $_.FullName -like "*Release*" } |
+            Select-Object -First 1
+
+          if ($null -eq $file) {
+            Write-Host "No signed Wear OS AAB found"
+            Get-ChildItem -Recurse -Filter *.aab
+            throw "AAB not found"
+          }
+
+          $posix = $file.FullName -replace "\\", "/"
+
+          Write-Host "AAB: $posix"
+          echo "file=$posix" >> $env:GITHUB_OUTPUT
+
+      # =========================
+      # UPLOAD ARTIFACT
+      # =========================
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wear-aab
+          path: ${{ steps.find_aab.outputs.file }}
+
+      # =============================
+      # GOOGLE PLAY UPLOAD
+      # =============================
+
+      # Dedicated form factor tracks are named "<form factor>:<track>", e.g. wear:internal.
+      - name: Upload AAB to Google Play (Wear OS track)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          packageName: ${{ env.PACKAGE_NAME }}
+          releaseFiles: ${{ steps.find_aab.outputs.file }}
+          track: wear:${{ inputs.release_channel }}
           status: completed
 
   # ==================================================

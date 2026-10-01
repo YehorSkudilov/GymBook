@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- The Wear OS app: a companion to the phone app during a workout. MAUI doesn't support Wear OS officially, but a
+	     watch is an Android device, so this is an Android-only MAUI app with a UI made for small round screens. It has
+	     the phone app's package name and must be signed with the same key: the Wearable Data Layer requires both. -->
+	<PropertyGroup>
+		<TargetFramework>net10.0-android</TargetFramework>
+		<OutputType>Exe</OutputType>
+		<RootNamespace>GymBook.Wear</RootNamespace>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<NoWarn>$(NoWarn);MVVMTK0045</NoWarn>
+		<MauiXamlInflator>SourceGen</MauiXamlInflator>
+
+		<ApplicationTitle>Gym Book</ApplicationTitle>
+		<ApplicationId>com.yehorskudilov.gymbook</ApplicationId>
+		<ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
+		<ApplicationVersion>1</ApplicationVersion>
+		<Version>$(ApplicationDisplayVersion)</Version>
+
+		<!-- Wear OS 3, the oldest version on watches still in use. -->
+		<SupportedOSPlatformVersion>30.0</SupportedOSPlatformVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="0.45" Color="#0B0D12" />
+		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#000000" BaseSize="200,200" />
+		<MauiFont Include="Resources\Fonts\*" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.90" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<!-- The link to the phone app (Src/PhoneLink.cs). -->
+		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="120.0.1.2" />
+	</ItemGroup>
+
+	<!-- Play services brings newer AndroidX libraries than MAUI asks for, but not their -ktx/companion packages, so both
+	     versions of some classes end up in the app ("Type ... is defined multiple times"). Lift the companions to match. -->
+	<ItemGroup>
+		<PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" Version="1.9.0" />
+		<PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData" Version="2.11.0.1" />
+		<PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" Version="2.11.0.1" />
+		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" Version="2.11.0.1" />
+		<PackageReference Include="Xamarin.AndroidX.Collection.Ktx" Version="1.6.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\GymBook.Shared\GymBook.Shared.csproj" />
+	</ItemGroup>
+
+</Project>

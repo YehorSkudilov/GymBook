@@ -53,7 +53,7 @@ public class BarChart : GraphicsView, IDrawable
             {
                 // A sliver, so empty days still read as days.
                 canvas.FillColor = EmptyColor;
-                canvas.FillRoundedRectangle(x, rect.Bottom - 3, width, 3, 1.5);
+                canvas.FillRoundedRectangle(x, rect.Bottom - 3, width, 3, 1.5f);
                 continue;
             }
             var height = rect.Height * values[i] / max;

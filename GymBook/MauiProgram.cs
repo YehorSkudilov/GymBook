@@ -41,6 +41,10 @@ public static class MauiProgram
 #endif
         builder.Services.AddSingleton<AccountService>();
         builder.Services.AddSingleton<AiPlanService>();
+        builder.Services.AddSingleton<WatchLink>();
+#if ANDROID
+        builder.Services.AddSingleton<WatchSync>();
+#endif
 
         builder.Services.AddTransient<MainPage>();
         AddPage<HomePage, HomeViewModel>(builder.Services);
@@ -107,7 +111,12 @@ public static class MauiProgram
         builder.Logging.AddDebug();
 #endif
 
-        return builder.Build();
+        var app = builder.Build();
+#if ANDROID
+        // Keeps the Wear OS app's copy of the workout current (see Platforms/Android/WatchSync.cs).
+        app.Services.GetRequiredService<WatchSync>().Start();
+#endif
+        return app;
     }
 
     static void OnButtonPressed(object? sender, EventArgs e)

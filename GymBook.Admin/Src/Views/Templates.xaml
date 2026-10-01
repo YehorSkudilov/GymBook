@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!-- Item templates shared by the pages. -->
+<!-- Styles and item templates shared by the pages, in the GymBook app's look (see its Profile page). -->
 <ResourceDictionary
     x:Class="GymBook.Admin.Views.Templates"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:GymBook.Admin.ViewModels"
-    xmlns:controls="clr-namespace:GymBook.Admin.Controls">
+    xmlns:controls="clr-namespace:GymBook.Admin.Controls"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton">
 
     <controls:InverseBoolConverter x:Key="Not" />
 
@@ -20,63 +21,118 @@
         <Setter Property="FontFamily" Value="OpenSansSemibold" />
     </Style>
 
+    <DataTemplate x:Key="BadgeTemplate" x:DataType="vm:Badge">
+        <Border Style="{StaticResource Badge}" BackgroundColor="{Binding Background}" VerticalOptions="Center">
+            <Label Text="{Binding Text}" TextColor="{Binding Color}" Style="{StaticResource BadgeText}" />
+        </Border>
+    </DataTemplate>
+
+    <!-- A user as a card: initial, name, email and activity, tags, and a chevron to open them. -->
     <DataTemplate x:Key="UserRow" x:DataType="vm:UserItem">
-        <Border Style="{StaticResource InnerCard}" Margin="0,0,0,8">
+        <Border Style="{StaticResource Card}" Padding="14,12" Margin="0,0,0,8">
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding OpenCommand}" CommandParameter="{Binding Id}" />
             </Border.GestureRecognizers>
-            <VerticalStackLayout Spacing="4">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                <Border Style="{StaticResource Avatar}">
+                    <Label Text="{Binding Initial}" Style="{StaticResource AvatarText}" />
+                </Border>
+                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
                     <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="16" LineBreakMode="TailTruncation" />
-                    <HorizontalStackLayout Grid.Column="1" Spacing="4" BindableLayout.ItemsSource="{Binding Badges}">
+                    <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" />
+                    <Label Text="{Binding Activity}" Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource TextTertiary}" />
+                    <FlexLayout Wrap="Wrap" Margin="0,4,0,0" IsVisible="{Binding HasBadges}"
+                                BindableLayout.ItemsSource="{Binding Badges}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="vm:Badge">
-                                <Border Style="{StaticResource Badge}" BackgroundColor="{Binding Background}" VerticalOptions="Center">
+                                <Border Style="{StaticResource Badge}" BackgroundColor="{Binding Background}" Margin="0,0,4,4">
                                     <Label Text="{Binding Text}" TextColor="{Binding Color}" Style="{StaticResource BadgeText}" />
                                 </Border>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
-                    </HorizontalStackLayout>
-                </Grid>
-                <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" />
-                <Label Text="{Binding Activity}" Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource TextTertiary}" />
-            </VerticalStackLayout>
+                    </FlexLayout>
+                </VerticalStackLayout>
+                <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+            </Grid>
         </Border>
     </DataTemplate>
 
+    <!-- A ranked user inside a card: initial, email, and the count it's ranked by. -->
     <DataTemplate x:Key="RankedRow" x:DataType="vm:RankedUser">
-        <Grid ColumnDefinitions="*,Auto" Padding="0,8" ColumnSpacing="8">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" Padding="16,10" ColumnSpacing="12" BackgroundColor="Transparent">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding OpenCommand}" CommandParameter="{Binding Id}" />
             </Grid.GestureRecognizers>
-            <Label Text="{Binding Email}" LineBreakMode="TailTruncation" />
-            <Label Grid.Column="1" Text="{Binding Value}" Style="{StaticResource Caption}" />
+            <Border Style="{StaticResource Avatar}" WidthRequest="32" HeightRequest="32" StrokeShape="RoundRectangle 16">
+                <Label Text="{Binding Initial}" Style="{StaticResource AvatarText}" FontSize="13" />
+            </Border>
+            <Label Grid.Column="1" Text="{Binding Email}" LineBreakMode="TailTruncation" VerticalOptions="Center" />
+            <Label Grid.Column="2" Text="{Binding Value}" Style="{StaticResource Caption}" VerticalOptions="Center" />
+            <Image Grid.Column="3" Style="{StaticResource Chevron}" />
         </Grid>
     </DataTemplate>
 
+    <!-- A number tile. Tappable ones open what they count and show a chevron. -->
     <DataTemplate x:Key="StatTile" x:DataType="vm:StatTile">
-        <Border Style="{StaticResource Card}" WidthRequest="170" Margin="0,0,10,10" Padding="14">
-            <VerticalStackLayout Spacing="2">
-                <Label Text="{Binding Label}" Style="{StaticResource Overline}" />
-                <Label Text="{Binding Value}" Style="{StaticResource StatValue}" />
-                <Label Text="{Binding Note}" Style="{StaticResource Caption}" FontSize="12" />
-            </VerticalStackLayout>
+        <Border Style="{StaticResource Card}" WidthRequest="172" Margin="0,0,10,10" Padding="14">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding Command}" />
+            </Border.GestureRecognizers>
+            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                <Label Text="{Binding Label}" Style="{StaticResource Overline}" LineBreakMode="TailTruncation" />
+                <Image Grid.Column="1" Style="{StaticResource Chevron}" WidthRequest="14" HeightRequest="14" IsVisible="{Binding IsTappable}" />
+                <Label Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Value}" Style="{StaticResource StatValue}" />
+                <Label Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Note}" Style="{StaticResource Caption}" FontSize="12" />
+            </Grid>
         </Border>
+    </DataTemplate>
+
+    <!-- A label and its value on one line, inside a card. The value can be selected and copied. -->
+    <DataTemplate x:Key="InfoRow" x:DataType="vm:InfoRow">
+        <Grid ColumnDefinitions="140,*" Padding="16,9" ColumnSpacing="10">
+            <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="14" />
+            <skeleton:CLabel Grid.Column="1" Text="{Binding Value}" FontSize="14" />
+        </Grid>
     </DataTemplate>
 
     <!-- A label over its value, for longer values like a plan or a workout. -->
     <DataTemplate x:Key="StackedRow" x:DataType="vm:InfoRow">
-        <VerticalStackLayout Padding="0,6" Spacing="2">
+        <VerticalStackLayout Padding="16,9" Spacing="2">
             <Label Text="{Binding Label}" FontFamily="OpenSansSemibold" />
             <Label Text="{Binding Value}" Style="{StaticResource Caption}" />
         </VerticalStackLayout>
     </DataTemplate>
 
-    <DataTemplate x:Key="InfoRow" x:DataType="vm:InfoRow">
-        <Grid ColumnDefinitions="150,*" Padding="0,4" ColumnSpacing="10">
-            <Label Text="{Binding Label}" Style="{StaticResource Caption}" />
-            <Label Grid.Column="1" Text="{Binding Value}" />
+    <!-- An action row: an icon on a soft tile, what it is and what it does, and a chevron. -->
+    <DataTemplate x:Key="ActionRow" x:DataType="vm:ActionItem">
+        <Grid ColumnDefinitions="Auto,*,Auto" Padding="16,12" ColumnSpacing="12" BackgroundColor="Transparent">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding Command}" />
+            </Grid.GestureRecognizers>
+            <Border WidthRequest="36" HeightRequest="36" StrokeShape="RoundRectangle 11" StrokeThickness="0"
+                    BackgroundColor="{Binding Background}" VerticalOptions="Center">
+                <Image WidthRequest="20" HeightRequest="20" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Image.Source>
+                        <FontImageSource FontFamily="OutlinedIcons" Glyph="{Binding Glyph}" Color="{Binding Color}" Size="32" />
+                    </Image.Source>
+                </Image>
+            </Border>
+            <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                <Label Text="{Binding Title}" TextColor="{Binding TitleColor}" FontFamily="OpenSansSemibold" FontSize="15" />
+                <Label Text="{Binding Detail}" Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+            <Image Grid.Column="2" Style="{StaticResource Chevron}" />
         </Grid>
+    </DataTemplate>
+
+    <!-- A filter chip, as in the GymBook app's exercise library. -->
+    <DataTemplate x:Key="Chip" x:DataType="vm:ChipItem">
+        <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,7" Margin="0,0,8,8">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding SelectCommand}" CommandParameter="{Binding .}" />
+            </Border.GestureRecognizers>
+            <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+        </Border>
     </DataTemplate>
 
 </ResourceDictionary>

@@ -17,8 +17,8 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasData), nameof(Title), nameof(Email), nameof(Badges), nameof(AccountRows), nameof(ProfileRows),
         nameof(HasProfile), nameof(StatTiles), nameof(WorkoutsByWeek), nameof(WeeksRange), nameof(Plans), nameof(HasPlans),
-        nameof(Workouts), nameof(HasWorkouts), nameof(AiRows), nameof(IsSelf), nameof(CanAct), nameof(CanManage), nameof(ActionsNote),
-        nameof(DisableText), nameof(VerifyText), nameof(CanResetPassword))]
+        nameof(Workouts), nameof(HasWorkouts), nameof(AiRows), nameof(IsSelf), nameof(CanAct), nameof(ActionsNote), nameof(HasActionsNote),
+        nameof(Actions), nameof(Initial), nameof(Summary), nameof(HasBadges))]
     UserDetail? detail;
 
     public bool HasData => Detail != null;
@@ -26,7 +26,40 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
 
     public string Title => Row == null ? "" : string.IsNullOrWhiteSpace(Row.Name) ? Row.Email : Row.Name;
     public string Email => Row?.Email ?? "";
+    public string Initial => Row == null ? "" : Initials.Of(Row.Name, Row.Email);
+    public string Summary => Row == null ? "" : $"Joined {Format.Date(Row.CreatedAt)} · active {Format.Ago(Row.LastActiveAt)}";
     public IReadOnlyList<Badge> Badges => Row == null ? [] : Badge.For(Row);
+    public bool HasBadges => Badges.Count > 0;
+
+    /// <summary>What this admin may do to this account, as Profile-style rows. Empty when nothing is allowed (see <see cref="ActionsNote"/>).</summary>
+    public IReadOnlyList<ActionItem> Actions
+    {
+        get
+        {
+            if (Row is not { } user || !CanAct)
+                return [];
+            var disabled = user.Status == "Disabled";
+            var actions = new List<ActionItem>
+            {
+                disabled
+                    ? new("lock_open", Palette.Success, Palette.SuccessSoft, "Enable account", "Lets them sign in again", ToggleDisabledCommand)
+                    : new("block", Palette.Danger, Palette.DangerSoft, "Disable account", "Signs them out and keeps them out", ToggleDisabledCommand),
+                new("devices", Palette.Accent, Palette.AccentSoft, "Sign out everywhere", $"Ends all {Format.Number(Detail!.ActiveSessions)} sessions", SignOutEverywhereCommand),
+                user.EmailVerified
+                    ? new("unpublished", Palette.Warning, Palette.WarningSoft, "Mark email unverified", "They'll have to enter a code again", ToggleVerifiedCommand)
+                    : new("verified", Palette.Accent, Palette.AccentSoft, "Mark email verified", "Skips the emailed code", ToggleVerifiedCommand),
+                new("auto_awesome", Palette.Accent2, Palette.Accent2Soft, "Reset AI quota", "Gives back the AI plans and chats used", ResetAiQuotaCommand),
+            };
+            if (Detail.HasPassword)
+                actions.Add(new("key", Palette.Accent, Palette.AccentSoft, "Send password reset", "Emails a code to choose a new password", SendPasswordResetCommand));
+            if (session.IsSuperAdmin)
+            {
+                actions.Add(new("admin_panel_settings", Palette.Warning, Palette.WarningSoft, "Change role", user.Role ?? "Regular user", ChangeRoleCommand));
+                actions.Add(new("delete", Palette.Danger, Palette.DangerSoft, "Delete account", "Removes it and all its data for good", DeleteCommand));
+            }
+            return actions;
+        }
+    }
 
     public IReadOnlyList<InfoRow> AccountRows => Detail is not { } d ? [] :
     [
@@ -98,20 +131,60 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
     /// <summary>The everyday actions: not on your own account, and on another admin only as a SuperAdmin.</summary>
     public bool CanAct => Row != null && !IsSelf && (Row.Role == null || session.IsSuperAdmin);
 
-    /// <summary>Roles and deleting: SuperAdmins only.</summary>
-    public bool CanManage => CanAct && session.IsSuperAdmin;
-
     public string ActionsNote =>
         Row == null ? "" :
         IsSelf ? "This is your account. Admins can't act on their own account." :
         !CanAct ? "Only a SuperAdmin can change another admin's account." :
         "";
 
-    public string DisableText => Row?.Status == "Disabled" ? "Enable account" : "Disable account";
+    public bool HasActionsNote => ActionsNote.Length > 0;
 
-    public string VerifyText => Row?.EmailVerified == true ? "Mark email unverified" : "Mark email verified";
+    [RelayCommand]
+    async Task CopyEmail()
+    {
+        await Clipboard.Default.SetTextAsync(Email);
+        await Toast("Email copied");
+    }
 
-    public bool CanResetPassword => CanAct && Detail?.HasPassword == true;
+    [RelayCommand]
+    async Task CopyId()
+    {
+        if (Row == null)
+            return;
+        await Clipboard.Default.SetTextAsync(Row.Id);
+        await Toast("User ID copied");
+    }
+
+    /// <summary>Opens the mail app on a new message to the user.</summary>
+    [RelayCommand]
+    async Task WriteEmail()
+    {
+        if (Email.Length == 0)
+            return;
+        try
+        {
+            await Launcher.Default.OpenAsync($"mailto:{Email}");
+        }
+        catch (Exception)
+        {
+            await AlertAsync("No mail app", $"Couldn't open a mail app. The address is {Email}.");
+        }
+    }
+
+    /// <summary>A short confirmation that disappears by itself.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasToast))]
+    string toastText = "";
+
+    public bool HasToast => ToastText.Length > 0;
+
+    async Task Toast(string text)
+    {
+        ToastText = text;
+        await Task.Delay(1600);
+        if (ToastText == text)
+            ToastText = "";
+    }
 
     static string Duration(WorkoutRow w) =>
         w.EndedAt is { } end && end > w.StartedAt ? $"{(int)(end - w.StartedAt).TotalMinutes} min · " : "";

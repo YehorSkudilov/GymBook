@@ -28,10 +28,17 @@ public class AdminUsersController(
 {
     const int ListLimit = 300;
 
-    /// <summary>Newest first. <paramref name="q"/> matches the email or profile name; <paramref name="filter"/> is admins, disabled or unverified.</summary>
+    /// <summary>
+    /// Newest first. <paramref name="q"/> matches the email or profile name; <paramref name="filter"/> is admins, disabled,
+    /// locked (out after wrong passwords), unverified, google (signs in with Google), new (joined in the last 7 days),
+    /// active (used the app in the last 7 days, as the dashboard counts it) or inactive (not in the last 30 days).
+    /// </summary>
     [HttpGet]
     public async Task<List<UserRow>> List([FromQuery] string? q, [FromQuery] string? filter, CancellationToken ct)
     {
+        var now = time.GetUtcNow();
+        var weekAgo = now.AddDays(-7);
+        var monthAgo = now.AddDays(-30);
         IQueryable<AppUser> query = db.Users;
         if (!string.IsNullOrWhiteSpace(q))
         {
@@ -43,10 +50,15 @@ public class AdminUsersController(
         {
             "admins" => query.Where(u => u.AdminRole != null),
             "disabled" => query.Where(u => u.LockoutEnd >= AdminQueries.DisabledThreshold),
+            "locked" => query.Where(u => u.LockoutEnd > now && u.LockoutEnd < AdminQueries.DisabledThreshold),
             "unverified" => query.Where(u => !u.EmailConfirmed),
+            "google" => query.Where(u => db.UserLogins.Any(l => l.UserId == u.Id && l.LoginProvider == GoogleTokenVerifier.Provider)),
+            "new" => query.Where(u => u.CreatedAt > weekAgo),
+            "active" => query.Where(u => db.RefreshTokens.Any(t => t.UserId == u.Id && t.CreatedAt > weekAgo)),
+            "inactive" => query.Where(u => !db.RefreshTokens.Any(t => t.UserId == u.Id && t.CreatedAt > monthAgo)),
             _ => query,
         };
-        return await AdminQueries.RowsAsync(db, query, time.GetUtcNow(), ListLimit, ct);
+        return await AdminQueries.RowsAsync(db, query, now, ListLimit, ct);
     }
 
     [HttpGet("{id}")]

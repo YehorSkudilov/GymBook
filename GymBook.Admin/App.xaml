@@ -8,8 +8,57 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Icons.xaml" />
                 <views:Templates />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Shared styles that use the colours and icons above (so they can't live in Templates.xaml, which loads on its own). -->
+
+            <!-- A section's name above its card, like ACCOUNT on the GymBook app's Profile. -->
+            <Style x:Key="SectionLabel" TargetType="Label" BasedOn="{StaticResource Overline}">
+                <Setter Property="Margin" Value="4,6,0,0" />
+            </Style>
+
+            <!-- A thin line between rows inside a card. -->
+            <Style x:Key="Divider" TargetType="BoxView">
+                <Setter Property="HeightRequest" Value="1" />
+                <Setter Property="Margin" Value="16,0" />
+                <Setter Property="Color" Value="{StaticResource Surface2}" />
+            </Style>
+
+            <Style x:Key="Chevron" TargetType="Image">
+                <Setter Property="Source" Value="{StaticResource IconChevronRight}" />
+                <Setter Property="WidthRequest" Value="16" />
+                <Setter Property="HeightRequest" Value="16" />
+                <Setter Property="VerticalOptions" Value="Center" />
+            </Style>
+
+            <!-- A round button with an icon, e.g. refresh next to a tab's title. -->
+            <Style x:Key="IconButton" TargetType="ImageButton">
+                <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+                <Setter Property="CornerRadius" Value="20" />
+                <Setter Property="WidthRequest" Value="40" />
+                <Setter Property="HeightRequest" Value="40" />
+                <Setter Property="Padding" Value="10" />
+                <Setter Property="VerticalOptions" Value="Center" />
+            </Style>
+
+            <!-- The round initial of a user, on the app's accent gradient. -->
+            <Style x:Key="Avatar" TargetType="Border">
+                <Setter Property="WidthRequest" Value="42" />
+                <Setter Property="HeightRequest" Value="42" />
+                <Setter Property="StrokeShape" Value="RoundRectangle 21" />
+                <Setter Property="StrokeThickness" Value="0" />
+                <Setter Property="Background" Value="{StaticResource AccentGradient}" />
+                <Setter Property="VerticalOptions" Value="Center" />
+            </Style>
+            <Style x:Key="AvatarText" TargetType="Label">
+                <Setter Property="TextColor" Value="White" />
+                <Setter Property="FontFamily" Value="OpenSansSemibold" />
+                <Setter Property="FontSize" Value="17" />
+                <Setter Property="HorizontalOptions" Value="Center" />
+                <Setter Property="VerticalOptions" Value="Center" />
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

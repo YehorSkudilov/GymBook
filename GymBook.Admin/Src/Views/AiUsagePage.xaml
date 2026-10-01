@@ -1,53 +1,58 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<views:BasePage
+<views:TabView
     x:Class="GymBook.Admin.Views.AiUsagePage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Admin.Views"
     xmlns:vm="clr-namespace:GymBook.Admin.ViewModels"
     xmlns:controls="clr-namespace:GymBook.Admin.Controls"
-    x:DataType="vm:AiUsageViewModel"
-    Title="AI usage">
+    x:DataType="vm:AiUsageViewModel">
 
-    <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Refresh" Command="{Binding RefreshCommand}" />
-    </ContentPage.ToolbarItems>
-
-    <RefreshView Command="{Binding RefreshCommand}" IsRefreshing="{Binding IsBusy}">
-        <ScrollView>
-            <VerticalStackLayout Padding="12,8,12,28" Spacing="16">
-                <Border Style="{StaticResource InputBox}" WidthRequest="140" HorizontalOptions="Start">
-                    <Picker ItemsSource="{Binding RangeOptions}" SelectedItem="{Binding Range}" TextColor="{StaticResource TextPrimary}" BackgroundColor="Transparent" />
-                </Border>
-                <Label Text="{Binding Error}" TextColor="{StaticResource Danger}" IsVisible="{Binding HasError}" />
-
-                <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding Tiles}" BindableLayout.ItemTemplate="{StaticResource StatTile}" />
-
-                <Border Style="{StaticResource Card}" IsVisible="{Binding HasData}">
-                    <VerticalStackLayout Spacing="8">
-                        <Label Text="Per day" Style="{StaticResource H3}" />
-                        <controls:BarChart Values="{Binding PlansByDay}" StackedValues="{Binding ChatsByDay}" HeightRequest="140" />
-                        <HorizontalStackLayout Spacing="14">
-                            <HorizontalStackLayout Spacing="5">
-                                <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="3" Color="{StaticResource Accent}" VerticalOptions="Center" />
-                                <Label Text="AI plans" Style="{StaticResource Caption}" FontSize="12" />
-                            </HorizontalStackLayout>
-                            <HorizontalStackLayout Spacing="5">
-                                <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="3" Color="{StaticResource Accent2}" VerticalOptions="Center" />
-                                <Label Text="Chat messages" Style="{StaticResource Caption}" FontSize="12" />
-                            </HorizontalStackLayout>
-                            <Label Text="{Binding DaysRange}" Style="{StaticResource Caption}" FontSize="12" />
-                        </HorizontalStackLayout>
-                    </VerticalStackLayout>
-                </Border>
-
-                <Border Style="{StaticResource Card}" IsVisible="{Binding HasData}">
-                    <VerticalStackLayout>
-                        <Label Text="Top users" Style="{StaticResource H3}" Margin="0,0,0,4" />
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding TopUsers}" BindableLayout.ItemTemplate="{StaticResource RankedRow}" />
-                    </VerticalStackLayout>
-                </Border>
+    <VerticalStackLayout Spacing="14">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <VerticalStackLayout>
+                <Label Text="AI usage" Style="{StaticResource Title}" />
+                <Label Text="AI plans and plan chat messages, each a paid OpenAI call." Style="{StaticResource Caption}" />
             </VerticalStackLayout>
-        </ScrollView>
-    </RefreshView>
-</views:BasePage>
+            <ImageButton Grid.Column="1" Style="{StaticResource IconButton}" Source="{StaticResource IconRefresh}" Command="{Binding RefreshCommand}" />
+        </Grid>
+
+        <FlexLayout Wrap="Wrap" Margin="0,0,0,-8" BindableLayout.ItemsSource="{Binding Ranges}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
+
+        <Label Text="{Binding Error}" TextColor="{StaticResource Danger}" IsVisible="{Binding HasError}" />
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Accent}" HeightRequest="24" />
+
+        <VerticalStackLayout Spacing="14" IsVisible="{Binding HasData}">
+            <FlexLayout Wrap="Wrap" Margin="0,0,-10,-10" BindableLayout.ItemsSource="{Binding Tiles}" BindableLayout.ItemTemplate="{StaticResource StatTile}" />
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Per day" Style="{StaticResource H3}" />
+                    <controls:BarChart Values="{Binding PlansByDay}" StackedValues="{Binding ChatsByDay}" HeightRequest="140" />
+                    <FlexLayout Wrap="Wrap" AlignItems="Center">
+                        <HorizontalStackLayout Spacing="5" Margin="0,0,14,0">
+                            <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="3" Color="{StaticResource Accent}" VerticalOptions="Center" />
+                            <Label Text="AI plans" Style="{StaticResource Caption}" FontSize="12" />
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="5" Margin="0,0,14,0">
+                            <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="3" Color="{StaticResource Accent2}" VerticalOptions="Center" />
+                            <Label Text="Chat messages" Style="{StaticResource Caption}" FontSize="12" />
+                        </HorizontalStackLayout>
+                        <Label Text="{Binding DaysRange}" Style="{StaticResource Caption}" FontSize="12" />
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Quotas per user" Style="{StaticResource SectionLabel}" />
+            <FlexLayout Wrap="Wrap" Margin="0,0,-10,-10" BindableLayout.ItemsSource="{Binding QuotaTiles}" BindableLayout.ItemTemplate="{StaticResource StatTile}" />
+
+            <Label Text="Top users" Style="{StaticResource SectionLabel}" />
+            <Border Style="{StaticResource Card}" Padding="0,6">
+                <VerticalStackLayout>
+                    <Label Text="Nobody used AI in this period." Style="{StaticResource Caption}" Padding="16,8" IsVisible="{Binding HasTopUsers, Converter={StaticResource Not}}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding TopUsers}" BindableLayout.ItemTemplate="{StaticResource RankedRow}" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </VerticalStackLayout>
+</views:TabView>
