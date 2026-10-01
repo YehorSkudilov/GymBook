@@ -3,7 +3,7 @@
 // clip loops; it's then cropped to a square around the movement, made silent and saved as
 // GymBook/Resources/Raw/exercise-animations/<id>.mp4 (the exercise page plays it offline instead of the YouTube video).
 //   GEMINI_API_KEY=... node veo.mjs --max-clips 27 [--only id,id] [--force] [--model veo-3.1-lite-generate-preview]
-//       [--concurrency 3] [--size 288] [--sharp-from dir]
+//       [--concurrency 3] [--size 288] [--keep-glow] [--recrop] [--sharp-from dir]
 // --max-clips is a hard limit on clips generated (Google charges per generated second: Lite is $0.05/s, so an 8 s clip
 // is $0.40; refused clips aren't charged). Attempts stop at twice that. The raw 1280×720 clip is kept in
 // veo-raw/<id>.mp4 so it can be re-cropped without paying again (--recrop). Needs sharp and ffmpeg; in a cloud
@@ -89,15 +89,37 @@ async function crop(id) {
     const side = Math.min(720, Math.round(Math.max(maxX - minX, maxY - minY) * 2 * 1.12));
     const cx = (minX + maxX), cy = (minY + maxY);
     const x = Math.round(Math.min(1280 - side, Math.max(0, cx - side / 2))), y = Math.round(Math.min(720 - side, Math.max(0, cy - side / 2)));
-    execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-i", `${raw}/${id}.mp4`, "-vf", `crop=${side}:${side}:${x}:${y},scale=${size}:${size}:flags=lanczos`,
-      "-an", "-c:v", "libx264", "-profile:v", "main", "-pix_fmt", "yuv420p", "-crf", "22", "-preset", "slow", "-movflags", "+faststart", `${out}/${id}.mp4`]);
+    const n = +size;
+    let pixels = execFileSync("ffmpeg", ["-loglevel", "error", "-i", `${raw}/${id}.mp4`, "-vf", `crop=${side}:${side}:${x}:${y},scale=${n}:${n}:flags=lanczos`,
+      "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], { maxBuffer: 1 << 30 });
+    if (grey)
+      pixels = unglow(pixels);
+    execFileSync("ffmpeg", ["-loglevel", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", `${n}x${n}`, "-r", "24", "-i", "-",
+      "-c:v", "libx264", "-profile:v", "main", "-pix_fmt", "yuv420p", "-crf", "22", "-preset", "slow", "-movflags", "+faststart", `${out}/${id}.mp4`],
+      { input: pixels, maxBuffer: 1 << 30 });
   } finally {
     rmSync(frames, { recursive: true, force: true });
   }
 }
 
+// Veo doesn't keep the thumbnails' blue muscle glow steady: it spreads to other muscles and back during the rep. So
+// the animation is all grey: every blue pixel of the figure becomes the body's light grey at its brightness, while the
+// dark navy background (dark, so below the brightness cut) stays as it is. --keep-glow leaves the colours alone.
+const grey = !args.includes("--keep-glow");
+function unglow(pixels) {
+  for (let i = 0; i < pixels.length; i += 3) {
+    const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    if (b === max && max > 60 && max - min > 0.18 * max) {
+      const v = max * 0.84;
+      pixels[i] = v * 0.96; pixels[i + 1] = v * 0.975; pixels[i + 2] = v;
+    }
+  }
+  return pixels;
+}
+
 const api = "https://generativelanguage.googleapis.com/v1beta";
-let clips = 0, attempts = 0, refused = 0;
+let clips = 0, attempts = 0, refused = 0, limited = 0;
 const maxAttempts = maxClips * 2;
 
 // One clip: the thumbnail centred on its own background as a 16:9 first and last frame; retried while Google refuses
@@ -116,13 +138,17 @@ async function make(x) {
     });
     let op = await res.json();
     if (!res.ok) {
-      if (res.status === 429 && !/billing|plan/i.test(op.error?.message ?? "")) {
+      // Veo's per-minute limit on a new paid account answers with the same "exceeded your current quota" as a
+      // missing billing setup: wait and retry, and only give up when it keeps saying so for ~10 minutes.
+      if (res.status === 429 && ++limited < 10) {
         attempts--;
-        await new Promise(r => setTimeout(r, 30000));
+        console.log(`  ${x.id}: rate limited, waiting a minute`);
+        await new Promise(r => setTimeout(r, 60000));
         continue;
       }
       throw new Error(op.error?.message ?? `HTTP ${res.status}`);
     }
+    limited = 0;
     while (!op.done) {
       await new Promise(r => setTimeout(r, 8000));
       op = await (await fetch(`${api}/${op.name}`, { headers: { "x-goog-api-key": key } })).json();
@@ -156,7 +182,7 @@ if (recrop) {
         await make(x);
       } catch (e) {
         console.log(`FAILED ${x.id}: ${e.message}`);
-        if (/billing|plan|quota|key/i.test(e.message))
+        if (/quota|billing|key/i.test(e.message))
           next = todo.length;
       }
     }
