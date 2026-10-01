@@ -64,13 +64,18 @@ jobs:
           dotnet-version: 10.0.x
 
       # The runner's Visual Studio usually has MAUI already. Any `dotnet workload install` also reinstalls every
-      # workload Visual Studio registered (iOS, Mac Catalyst, wasm...), so only install when it's really missing.
+      # workload Visual Studio registered (iOS, Mac Catalyst, wasm...), several minutes, so only install when it's
+      # really missing. Visual Studio registers MAUI for Android as "android" next to a "maui-*" workload (which
+      # brings the shared MAUI SDK), never as "maui-android", so either counts.
       - name: Install MAUI Android workload
         shell: pwsh
         run: |
-          dotnet workload list
-          if (dotnet workload list | Select-String -Pattern '^\s*maui-android\s' -Quiet) {
-            Write-Host "maui-android already installed"
+          $workloads = dotnet workload list | Out-String
+          Write-Host $workloads
+          $hasMauiAndroid = $workloads -match '(?m)^\s*maui-android\s'
+          $hasAndroidAndMaui = ($workloads -match '(?m)^\s*android\s') -and ($workloads -match '(?m)^\s*maui(-\w+)?\s')
+          if ($hasMauiAndroid -or $hasAndroidAndMaui) {
+            Write-Host "MAUI for Android already installed"
           } else {
             dotnet workload install maui-android --skip-manifest-update
           }
