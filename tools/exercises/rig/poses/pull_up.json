@@ -1,0 +1,9 @@
+{
+  "muscles": ["Back", "Biceps"],
+  "anchor": "near.hand", "at": [360, 150],
+  "props": { "pullupBar": { "x": 360, "y": 150, "floor": 900 } },
+  "keyframes": [
+    { "pose": { "torso": 180, "head": 180, "upperArm": 178, "forearm": 180, "thigh": 6, "shin": -35, "foot": 40 } },
+    { "pose": { "torso": 188, "head": 182, "upperArm": 25, "forearm": 172, "thigh": 14, "shin": -40, "foot": 40 }, "units": 1.4 }
+  ]
+}

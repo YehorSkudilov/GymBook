@@ -30,8 +30,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- Wear OS shows the icon in a tighter circle than phone launchers, so the book sits smaller than on the phone (0.45). -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="0.32" Color="#0B0D12" />
+		<!-- Wear OS masks the icon to a circle two thirds of its canvas: at 0.5 the book fills that circle, its corners
+		     just inside it (0.32 left it small in a wide black ring). -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="0.5" Color="#0B0D12" />
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#000000" BaseSize="200,200" />
 		<MauiFont Include="Resources\Fonts\*" />
 	</ItemGroup>
