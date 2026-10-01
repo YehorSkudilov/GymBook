@@ -96,16 +96,18 @@
 	</ItemGroup>
 
 	<!-- The API, the same one the phone app uses (ApiConfig.cs reads it from [AssemblyMetadata]): -p:ApiBaseUrl=https://...,
-	     an API_BASE_URL environment variable, or API_BASE_URL in GymBook/.env. CI passes the API_BASE_URL variable. -->
+	     an API_BASE_URL environment variable, API_BASE_URL in GymBook.Wear/.env (see .env.example), or else in
+	     GymBook/.env. CI passes the same API_BASE_URL variable as for the phone app. -->
 	<PropertyGroup>
 		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == ''">$(API_BASE_URL)</ApiBaseUrl>
-		<_EnvFile>$(MSBuildProjectDirectory)\..\GymBook\.env</_EnvFile>
+		<_EnvFile>$(MSBuildProjectDirectory)\.env</_EnvFile>
+		<_EnvFile Condition="!Exists('$(_EnvFile)')">$(MSBuildProjectDirectory)\..\GymBook\.env</_EnvFile>
 		<_EnvFileContent Condition="Exists('$(_EnvFile)')">$([System.IO.File]::ReadAllText('$(_EnvFile)'))</_EnvFileContent>
 		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == '' and '$(_EnvFileContent)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvFileContent)', '(?m)^API_BASE_URL=(.*?)\r?$').Groups[1].Value)</ApiBaseUrl>
 	</PropertyGroup>
 
 	<Target Name="ValidateApiBaseUrl" BeforeTargets="BeforeBuild;CoreCompile">
-		<Error Condition="'$(ApiBaseUrl)' == ''" Text="ApiBaseUrl is not set. Set it via -p:ApiBaseUrl=https://..., an API_BASE_URL environment variable, or GymBook/.env." />
+		<Error Condition="'$(ApiBaseUrl)' == ''" Text="ApiBaseUrl is not set. Set it via -p:ApiBaseUrl=https://..., an API_BASE_URL environment variable, or GymBook.Wear/.env / GymBook/.env." />
 	</Target>
 
 	<ItemGroup>
