@@ -1035,7 +1035,7 @@ public static partial class ExerciseLibrary
                 "Grip as hard as you can.",
                 "Don't lift the weights from the floor with a rounded back.",
             ],
-            Video = new("NH7Xv-7NQNQ"),
+            Video = new("NH7Xv-7NQNQ", 20, 43),
         },
         new("suitcase_carry", "Suitcase Carry", Abs, Dumbbell, Compound)
         {
@@ -1093,7 +1093,7 @@ public static partial class ExerciseLibrary
                 "With one bell, don't lean away from it.",
                 "Don't let your elbows flare out and the bells slide off your chest.",
             ],
-            Video = new("1uXLqgDzkXg"),
+            Video = new("CJ-F_Xg9fJY"),
         },
         new("sandbag_carry", "Sandbag Bear Hug Carry", Abs, Other, Compound)
         {
@@ -1112,7 +1112,7 @@ public static partial class ExerciseLibrary
                 "Breathe in short breaths behind the brace.",
                 "Don't lean back excessively to carry it.",
             ],
-            Video = new("eMJ4g9eQ5vs"),
+            Video = new("sAOjLtEdxWs", 34, 130),
         },
         new("keg_carry", "Keg Carry", Abs, Other, Compound)
         {
@@ -1153,7 +1153,7 @@ public static partial class ExerciseLibrary
                 "Use low handles for a lower, more quad-heavy position.",
                 "Don't take long strides or stand up tall.",
             ],
-            Video = new("_EZcK45OucE"),
+            Video = new("9XRRXaUpnLk"),
         },
         new("sled_drag", "Backward Sled Drag", Quads, Other, Compound)
         {
@@ -1172,7 +1172,7 @@ public static partial class ExerciseLibrary
                 "Check the path behind you is clear.",
                 "Don't pull with your arms; they're just hooks.",
             ],
-            Video = new("hbCeJFBFyYk"),
+            Video = new("k7JsvdG9sSo"),
         },
         new("sled_pull", "Hand-Over-Hand Sled Pull", Back, Other, Compound)
         {
@@ -1214,7 +1214,7 @@ public static partial class ExerciseLibrary
                 "Keep your back braced; a slight round is common with sandbags but don't lose your brace.",
                 "Don't curl the bag up with your arms.",
             ],
-            Video = new("nTbRZwp7OF4"),
+            Video = new("bKupJRL22HM"),
         },
         new("tire_flip", "Tire Flip", Glutes, Other, Compound)
         {
@@ -1255,7 +1255,7 @@ public static partial class ExerciseLibrary
                 "Breathe behind the brace.",
                 "Don't take long strides, and set it down if it starts swinging badly.",
             ],
-            Video = new("zRsFkNPxaMM"),
+            Video = new("zRsFkNPxaMM", 6, 254),
         },
         new("atlas_stone", "Atlas Stone Load", Glutes, Other, Compound)
         {
@@ -1275,7 +1275,7 @@ public static partial class ExerciseLibrary
                 "Squeeze the stone hard with your arms throughout.",
                 "Start light; a rounded back is part of the lift, so build tolerance gradually.",
             ],
-            Video = new("JqDm3nZiglk"),
+            Video = new("ItFKJ5b0IX8"),
         },
         new("log_press", "Log Press", Shoulders, Other, Compound)
         {
@@ -1295,7 +1295,7 @@ public static partial class ExerciseLibrary
                 "Brace hard against the log's thickness on your chest.",
                 "Don't lean back excessively at lockout.",
             ],
-            Video = new("aYV7DlPnszc"),
+            Video = new("MjKCPd9eJhM", 27),
         },
 
         // Combat-sport power

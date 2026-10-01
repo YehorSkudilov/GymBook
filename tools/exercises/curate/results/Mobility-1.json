@@ -144,6 +144,18 @@
     "verdict": "ok"
   },
   {
+    "id": "mob_spiderman_lunge_rotation",
+    "videoId": "7-MnWTHAnfw",
+    "start": null,
+    "end": null,
+    "channel": "Catalyst Athletics",
+    "title": "Spiderman Lunge Rotating Reach",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Catalyst Athletics (listed source) focused 56s spiderman lunge with rotating reach, replaces unlisted exercise library",
+    "verdict": "fixed"
+  },
+  {
     "id": "mob_walking_lunge_reach",
     "videoId": "ZREHb_-VRhA",
     "start": null,
@@ -154,5 +166,101 @@
     "chapter": "",
     "note": "Kept current: exact 17s walking lunge overhead reach demo; no listed reputable source found for this drill",
     "verdict": "ok"
+  },
+  {
+    "id": "mob_inchworm",
+    "videoId": "a38ewEsSqGY",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "Inchworm",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "E3 Rehab (listed rehab source) 27s inchworm demo, replaces fitness-app channel",
+    "verdict": "fixed"
+  },
+  {
+    "id": "mob_cat_cow",
+    "videoId": "vuyUwtHl694",
+    "start": null,
+    "end": null,
+    "channel": "California Department of Public Health",
+    "title": "Cat Cow",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: state public health department, focused 1:17 cat-cow demo",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_open_book",
+    "videoId": "Tqv_2oe64vk",
+    "start": null,
+    "end": null,
+    "channel": "Ohio State Wexner Medical Center",
+    "title": "Open book exercises | Ohio State Medical Center",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: medical center 48s open-book tutorial; all chapters are steps of this exercise",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_quadruped_tspine_rotation",
+    "videoId": "QWwiOHexU8I",
+    "start": null,
+    "end": null,
+    "channel": "The Active Life",
+    "title": "Quadruped Thoracic Rotation Movement Demo",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: physical-therapist-run channel, exact 23s hand-behind-head quadruped rotation demo",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_thread_the_needle",
+    "videoId": "SkQhKf74nZk",
+    "start": 0,
+    "end": 63.3,
+    "channel": "Hinge Health",
+    "title": "How to Do a Thread the Needle Stretch: A Guide from Physical Therapists",
+    "timeSource": "chapter",
+    "chapter": "Thread the needle tutorial",
+    "note": "Kept current: Hinge Health; chapter 0s to next chapter More exercises at 63.3s",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_prone_scorpion",
+    "videoId": "Ta1wtgZCsVE",
+    "start": null,
+    "end": null,
+    "channel": "Coury & Buehler Physical Therapy",
+    "title": "Prone Scorpion Exercise",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: physical therapy clinic, focused 48s prone scorpion demo",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_foam_roller_thoracic_extension",
+    "videoId": "81kPLsMt6wY",
+    "start": null,
+    "end": null,
+    "channel": "The Barbell Physio",
+    "title": "Foam Roller Thoracic Spine Extensions",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: physiotherapist channel, focused 50s foam roller thoracic extension tutorial",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_ankle_dorsiflexion_rock",
+    "videoId": "KmiPXKmoUbs",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "Standing Knee to Wall",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "E3 Rehab (listed rehab source) 14s split-stance knee-to-wall ankle rock, replaces osteopath channel",
+    "verdict": "fixed"
   }
 ]

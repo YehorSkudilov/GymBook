@@ -31,7 +31,7 @@ public static partial class ExerciseLibrary
                 "Keep your forearms vertical and wrists stacked over your elbows.",
                 "Don't press the bar forward around your face; move your head out of the way instead.",
             ],
-            Video = new("a81SaIpjGlA"),
+            Video = new("_RlRDWO2jfg", 206.48, 272.63901),
         },
         new("seated_barbell_press", "Seated Barbell Overhead Press", Shoulders, Barbell, Compound)
         {
@@ -51,7 +51,7 @@ public static partial class ExerciseLibrary
                 "Keep your glutes and upper back on the bench; don't arch into an incline press.",
                 "Use a back pad set to vertical or just short of it.",
             ],
-            Video = new("QvCKYfsaNQ0"),
+            Video = new("YNK3eQVevIs"),
         },
         new("behind_neck_press", "Behind-the-Neck Press", Shoulders, Barbell, Compound)
         {
@@ -71,7 +71,7 @@ public static partial class ExerciseLibrary
                 "Use light weight and a partial range to start; stop if you feel any pinching at the front of the shoulder.",
                 "Don't drop the bar onto your neck or push your chin to your chest to make room.",
             ],
-            Video = new("RKZT-tQdEAM"),
+            Video = new("uD9kYAi7lHs", 11.759),
         },
         new("z_press", "Z Press", Shoulders, Barbell, Compound)
         {
@@ -90,7 +90,7 @@ public static partial class ExerciseLibrary
                 "Keep your torso vertical; if you fall backward, the weight is too heavy or your hamstrings are too tight.",
                 "Start much lighter than your standing press.",
             ],
-            Video = new("8CR-WckW3LY"),
+            Video = new("0fHdnBH9Gdo"),
         },
         new("landmine_press", "Landmine Press", Shoulders, Barbell, Compound)
         {
@@ -109,7 +109,7 @@ public static partial class ExerciseLibrary
                 "Try it half-kneeling (same-side knee down as the pressing arm) for more core demand.",
                 "Don't twist or lean away to finish the rep.",
             ],
-            Video = new("YVMXMFGM2qw"),
+            Video = new("6cSTRPhpubs"),
         },
         new("bradford_press", "Bradford Press", Shoulders, Barbell, Compound)
         {
@@ -129,7 +129,7 @@ public static partial class ExerciseLibrary
                 "Use a much lighter weight than your overhead press and move slowly.",
                 "Skip it if holding the bar behind your neck is uncomfortable.",
             ],
-            Video = new("sUOs8v6IzEg"),
+            Video = new("7aCSp9GtQDw"),
         },
 
         // Dumbbell, kettlebell and machine presses
@@ -185,7 +185,7 @@ public static partial class ExerciseLibrary
                 "Stay level: your hips and shoulders shouldn't tilt as you press.",
                 "Start with your weaker side and match its reps on the other.",
             ],
-            Video = new("sMhkmr27L58"),
+            Video = new("yFgmgtnWP_0"),
         },
         new("arnold_press", "Arnold Press", Shoulders, Dumbbell, Compound)
         {
@@ -243,7 +243,7 @@ public static partial class ExerciseLibrary
                 "Go much lighter than a normal kettlebell press.",
                 "If the bell tips, reset rather than chasing it.",
             ],
-            Video = new("Oaf1MXtUQJ8"),
+            Video = new("k5PcL_WIx94"),
         },
         new("machine_shoulder_press", "Machine Shoulder Press", Shoulders, Machine, Compound)
         {
@@ -279,7 +279,7 @@ public static partial class ExerciseLibrary
                 "Position the bench so the bar clears your nose and chin without you leaning back.",
                 "Always re-rack by rotating the hooks onto the safety pins.",
             ],
-            Video = new("kkNYgqvrAEc"),
+            Video = new("OLqZDUUD2b0"),
         },
         new("band_shoulder_press", "Band Shoulder Press", Shoulders, Band, Compound)
         {
@@ -316,7 +316,7 @@ public static partial class ExerciseLibrary
                 "Raise both arms together or alternate; either way keep your torso still.",
                 "Don't swing the weight up with your hips or lean back.",
             ],
-            Video = new("h9xfpTrAvkE"),
+            Video = new("zkP0MsTcIVU"),
         },
         new("cable_front_raise", "Cable Front Raise", Shoulders, Cable, Isolation)
         {
@@ -351,7 +351,7 @@ public static partial class ExerciseLibrary
                 "Keep your shoulders down away from your ears.",
                 "Don't lean back or bounce the bar off your thighs.",
             ],
-            Video = new("LJcX054ijjk"),
+            Video = new("_ikCPws1mbE"),
         },
         new("plate_front_raise", "Plate Front Raise", Shoulders, Other, Isolation)
         {

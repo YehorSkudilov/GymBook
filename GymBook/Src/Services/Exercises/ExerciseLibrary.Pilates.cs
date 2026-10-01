@@ -31,7 +31,7 @@ public static partial class ExerciseLibrary
                 "Lower the legs only as far as you can keep your lower back steady on the mat.",
                 "Don't strain your neck; rest your head down if it fatigues before your abs do.",
             ],
-            Video = new("tYJJyYUrK4c"),
+            Video = new("tYJJyYUrK4c", 43, 77),
         },
         new("pilates_roll_up", "Roll-Up", Abs, Bodyweight, Compound)
         {
@@ -71,7 +71,7 @@ public static partial class ExerciseLibrary
                 "Press the backs of the arms into the mat to control the roll-down.",
                 "Skip this if you have neck or disc problems.",
             ],
-            Video = new("w4-R2GIYgZU"),
+            Video = new("Y5YdoRMCCKM", 28, 135),
         },
         new("pilates_single_leg_circles", "Single-Leg Circles", Abs, Bodyweight, Isolation)
         {
@@ -109,7 +109,7 @@ public static partial class ExerciseLibrary
                 "Keep the same ball shape the whole time; don't open up or kick the legs to get back up.",
                 "Never roll onto your neck or head.",
             ],
-            Video = new("cxo9eIMAtmg"),
+            Video = new("elkcXFPyaW8"),
         },
         new("pilates_single_leg_stretch", "Single-Leg Stretch", Abs, Bodyweight, Compound)
         {
@@ -186,7 +186,7 @@ public static partial class ExerciseLibrary
                 "Lower slowly and lift a little faster, keeping the abdominals scooped.",
                 "Don't pull on your head or let your lower back arch.",
             ],
-            Video = new("1iOOAXPSUP8"),
+            Video = new("woAkp7x9vB8"),
         },
         new("pilates_criss_cross", "Criss-Cross", Abs, Bodyweight, Compound)
         {
@@ -205,7 +205,7 @@ public static partial class ExerciseLibrary
                 "Rotate from the ribs; the elbows stay wide and the head stays in your hands.",
                 "Keep the pelvis level and still; don't rock side to side.",
             ],
-            Video = new("fQiCxMwfjX0"),
+            Video = new("fQiCxMwfjX0", 26, 54),
         },
         new("pilates_spine_stretch_forward", "Spine Stretch Forward", Abs, Bodyweight, Compound)
         {
@@ -224,7 +224,7 @@ public static partial class ExerciseLibrary
                 "Keep your sit bones heavy; the stretch comes from lifting up and over, not collapsing.",
                 "Sit on a folded towel or bend the knees if your hamstrings round your lower back.",
             ],
-            Video = new("ELz7lUw7RJ8"),
+            Video = new("XZGuNaEV-nM"),
         },
         new("pilates_open_leg_rocker", "Open-Leg Rocker", Abs, Bodyweight, Compound)
         {
@@ -282,7 +282,7 @@ public static partial class ExerciseLibrary
                 "Rotate first, then flex; keep the hips square and the opposite sit bone anchored.",
                 "Breathe out fully as you saw, as if wringing the air out of the lungs.",
             ],
-            Video = new("GriErIwTcH0"),
+            Video = new("Sb0SG1cXgEY"),
         },
         new("pilates_swan_dive", "Swan Dive", LowerBack, Bodyweight, Compound)
         {
@@ -302,7 +302,7 @@ public static partial class ExerciseLibrary
                 "Keep the abdominals engaged and lengthen the spine so the arch is long, not pinched in the lower back.",
                 "Build up with Swan Prep first; skip this if extension hurts your back.",
             ],
-            Video = new("H46PeYhAuA4"),
+            Video = new("mjZZ22GLcDc"),
         },
         new("pilates_single_leg_kick", "Single-Leg Kick", Hamstrings, Bodyweight, Isolation)
         {
@@ -321,7 +321,7 @@ public static partial class ExerciseLibrary
                 "Keep the chest lifted away from the hands and don't sink into the shoulders.",
                 "Keep the knees together and the hips down on the mat.",
             ],
-            Video = new("KL1UxEsxeBs"),
+            Video = new("X79gMUknrVs"),
         },
         new("pilates_double_leg_kick", "Double-Leg Kick", LowerBack, Bodyweight, Compound)
         {
@@ -341,7 +341,7 @@ public static partial class ExerciseLibrary
                 "Keep the legs on the mat as you lift the chest; the lift comes from the upper back.",
                 "Draw the shoulder blades down as the arms reach back.",
             ],
-            Video = new("1mAXi7STCCE"),
+            Video = new("eQgIt5Ikb1g"),
         },
         new("pilates_neck_pull", "Neck Pull", Abs, Bodyweight, Compound)
         {
@@ -360,7 +360,7 @@ public static partial class ExerciseLibrary
                 "Don't pull on your neck; the hands only support the head.",
                 "Bend the knees or anchor the feet under a strap until you can roll up without jerking.",
             ],
-            Video = new("cOsv9xx6F04"),
+            Video = new("wVaSdDSxKwY"),
         },
         new("pilates_scissors", "Pilates Scissors", Abs, Bodyweight, Compound)
         {
@@ -381,7 +381,7 @@ public static partial class ExerciseLibrary
                 "Keep the hips lifted and the pelvis level as the legs change.",
                 "Avoid inversions with neck problems, glaucoma or uncontrolled blood pressure.",
             ],
-            Video = new("j-EfFdBsTB4"),
+            Video = new("CO9_19vfCf4"),
         },
         new("pilates_bicycle", "Pilates Bicycle", Abs, Bodyweight, Compound)
         {
@@ -401,7 +401,7 @@ public static partial class ExerciseLibrary
                 "Make the movement as large as you can without the pelvis dropping.",
                 "Weight stays on the shoulders and elbows, never the neck.",
             ],
-            Video = new("ZpEoT5A2tYM"),
+            Video = new("zKzRqV3cjgQ"),
         },
         new("pilates_shoulder_bridge", "Shoulder Bridge", Glutes, Bodyweight, Compound)
         {
@@ -422,7 +422,7 @@ public static partial class ExerciseLibrary
                 "Press through the heel of the standing foot to keep the glutes working.",
                 "Master Pelvic Curl first.",
             ],
-            Video = new("0TgOTMvFlaA"),
+            Video = new("QFv_Fex3Mko"),
         },
         new("pilates_spine_twist", "Spine Twist", Abs, Bodyweight, Isolation)
         {
@@ -442,7 +442,7 @@ public static partial class ExerciseLibrary
                 "Keep the arms in line with the shoulders and the head turning with the chest.",
                 "Sit on a towel or cross the legs if you can't sit upright with straight legs.",
             ],
-            Video = new("XbQzj8rjBbw"),
+            Video = new("PPFkp7Aa3Rg"),
         },
         new("pilates_jackknife", "Pilates Jackknife", Abs, Bodyweight, Compound)
         {
@@ -463,7 +463,7 @@ public static partial class ExerciseLibrary
                 "Reach the legs up, not back over your face.",
                 "Not for anyone with neck or disc problems.",
             ],
-            Video = new("C-_EvwPEKlk"),
+            Video = new("SXYp9AJ1uWM"),
         },
 
         // Side Kick Series
@@ -484,7 +484,7 @@ public static partial class ExerciseLibrary
                 "Keep the waist lifted off the mat and the hips stacked; only the leg moves.",
                 "Don't arch the lower back as the leg goes behind; stop where the pelvis stays still.",
             ],
-            Video = new("v1w7IqFTNuo"),
+            Video = new("nG9JfDHJJlY"),
         },
         new("pilates_side_kick_up_down", "Side Kick Up and Down", Glutes, Bodyweight, Isolation)
         {
@@ -503,7 +503,7 @@ public static partial class ExerciseLibrary
                 "Keep the hips stacked and the bottom waist lifted; don't roll back.",
                 "Lower slowly; the lowering is where the work is.",
             ],
-            Video = new("-oGKyuMv17o"),
+            Video = new("8DRDo8PVsLU"),
         },
         new("pilates_side_kick_circles", "Side Kick Small Circles", Glutes, Bodyweight, Isolation)
         {
@@ -665,7 +665,7 @@ public static partial class ExerciseLibrary
                 "Lift from the underside of the waist and push the floor away with the supporting hand.",
                 "Don't let the top shoulder roll forward; stay in one plane.",
             ],
-            Video = new("gA_SNLboeUM"),
+            Video = new("zprsJDjeONM"),
         },
         new("pilates_boomerang", "Boomerang", Abs, Bodyweight, Compound)
         {
@@ -686,7 +686,7 @@ public static partial class ExerciseLibrary
                 "Keep each phase smooth and controlled, like a single movement.",
                 "Learn Roll-Over and Teaser well before attempting this.",
             ],
-            Video = new("wvwEOvaJ36o"),
+            Video = new("SRonJI25raE", 0, 108),
         },
         new("pilates_seal", "Seal", Abs, Bodyweight, Compound)
         {
@@ -725,7 +725,7 @@ public static partial class ExerciseLibrary
                 "Reach the lifted leg long and up; don't let the hips sink.",
                 "Avoid with any neck problem.",
             ],
-            Video = new("fd4-yRzx_lo"),
+            Video = new("jy4GQNfbmfQ"),
         },
         new("pilates_push_up", "Pilates Push-Up", Chest, Bodyweight, Compound)
         {
@@ -745,7 +745,7 @@ public static partial class ExerciseLibrary
                 "Keep the body in one straight line in the plank; don't sag or pike.",
                 "Bend the knees as you roll down if your hamstrings are tight.",
             ],
-            Video = new("NnCZLgDaTCw"),
+            Video = new("4wS_wf12Ezk"),
         },
 
         // Contemporary mat
@@ -766,7 +766,7 @@ public static partial class ExerciseLibrary
                 "Lead with the pelvis and peel up bone by bone, not as a flat block.",
                 "Don't arch the lower back or push the ribs up at the top.",
             ],
-            Video = new("icDIC4zCoxM"),
+            Video = new("fOOypTBlke8"),
         },
         new("pilates_chest_lift", "Chest Lift", Abs, Bodyweight, Isolation)
         {
@@ -784,7 +784,7 @@ public static partial class ExerciseLibrary
                 "Draw the navel down toward the spine as you lift; the belly should hollow, not bulge.",
                 "Keep a small space between chin and chest and don't pull on the head.",
             ],
-            Video = new("KnHmVt99URs"),
+            Video = new("DPcjqmCGKKI"),
         },
         new("pilates_toe_taps", "Pilates Toe Taps", Abs, Bodyweight, Isolation)
         {
@@ -858,7 +858,7 @@ public static partial class ExerciseLibrary
                 "Reach the leg long from the hip and keep the torso still.",
                 "Lead with the inner heel rather than the toes.",
             ],
-            Video = new("78SD730nBNA"),
+            Video = new("_BR4ZodkJ2M"),
         },
         new("pilates_swan_prep", "Swan Prep", LowerBack, Bodyweight, Compound)
         {
@@ -938,7 +938,7 @@ public static partial class ExerciseLibrary
                 "Keep the straps taut and the shoulders down.",
                 "Lower the legs only as far as the lower back stays steady.",
             ],
-            Video = new("Kui4CeKpRaM"),
+            Video = new("vx4DdBWY6kQ", 166, 302),
         },
         new("pilates_reformer_frog", "Reformer Frog", Quads, Other, Compound)
         {
@@ -957,7 +957,7 @@ public static partial class ExerciseLibrary
                 "Keep the knees no wider than you can control and the tailbone down.",
                 "Keep the legs at a height where your back doesn't arch.",
             ],
-            Video = new("YaBUMGUPhDM"),
+            Video = new("B1PoTakYxgY", 45, 82),
         },
         new("pilates_reformer_leg_circles", "Reformer Leg Circles", Quads, Other, Isolation)
         {
@@ -997,7 +997,7 @@ public static partial class ExerciseLibrary
                 "Articulate slowly on the way down; that's where the spinal mobility work is.",
                 "Skip with neck or disc problems.",
             ],
-            Video = new("Y5bNqsHQADw"),
+            Video = new("AOUX2a-in0I"),
         },
         new("pilates_reformer_long_stretch", "Reformer Long Stretch", Abs, Other, Compound)
         {

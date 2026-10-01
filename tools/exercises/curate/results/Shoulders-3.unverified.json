@@ -84,6 +84,18 @@
     "verdict": null
   },
   {
+    "id": "ytw_raise",
+    "videoId": "3wgOMSF9LG8",
+    "start": null,
+    "end": null,
+    "channel": "Edge Performance Systems",
+    "title": "Incline YTW",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Kept current (12s): no reputable-channel incline Y-T-W found.",
+    "verdict": null
+  },
+  {
     "id": "prone_iyt",
     "videoId": "aFtzZl4ySMo",
     "start": null,
@@ -105,6 +117,90 @@
     "timeSource": "whole",
     "chapter": null,
     "note": "Kept current: British Elbow & Shoulder Society, 48s; chapters all about this exercise.",
+    "verdict": null
+  },
+  {
+    "id": "pike_push_up",
+    "videoId": "XckEEwa1BPI",
+    "start": null,
+    "end": null,
+    "channel": "National Academy of Sports Medicine (NASM)",
+    "title": "How to do a Pike Push-Up",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Kept current: NASM, 17s.",
+    "verdict": null
+  },
+  {
+    "id": "elevated_pike_push_up",
+    "videoId": "8URA3YSur2M",
+    "start": null,
+    "end": null,
+    "channel": "Tom Peto Training",
+    "title": "PIKE PUSH UP FEET ELEVATED | Technique Demo",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Kept current (calisthenics coach, 26s technique demo); FitnessFAQs videos cover deficit/floor pikes without a feet-elevated chapter.",
+    "verdict": null
+  },
+  {
+    "id": "handstand_push_up",
+    "videoId": "lkPPVyExFpU",
+    "start": null,
+    "end": null,
+    "channel": "CrossFit",
+    "title": "The Chest-to-Wall Handstand Push-Up",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Kept current: official CrossFit, 40s, wall handstand push-up (chest to wall).",
+    "verdict": null
+  },
+  {
+    "id": "wall_walk",
+    "videoId": "VpuoE246W1Y",
+    "start": null,
+    "end": null,
+    "channel": "Bodybuilding.com",
+    "title": "How To Do Wall Walks | Exercise Guide",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Kept current: Bodybuilding.com, 62s; single chapter at 4.91s (non-integer), so no Start.",
+    "verdict": null
+  },
+  {
+    "id": "wall_handstand_hold",
+    "videoId": "H2KSIMwNOfA",
+    "start": null,
+    "end": null,
+    "channel": "Tom Merrick",
+    "title": "The Wall Handstand | Do It Right! (ft UlrikOnHands)",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Tom Merrick, 3:03 focused tutorial on the wall handstand; chapters Intro/Common Mistakes/Conclusion all about it. Replaces Calixpert (7k views).",
+    "verdict": null
+  },
+  {
+    "id": "planche_lean",
+    "videoId": "oVpte1edulI",
+    "start": null,
+    "end": null,
+    "channel": "Daniel Hristov",
+    "title": "HOW TO DO PLANCHE LEAN",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Kept current (14s Short, 3.6M views): no reputable-channel planche lean demo found (FitnessFAQs videos either lack a lean chapter or are 2011-era).",
+    "verdict": null
+  },
+  {
+    "id": "tuck_planche",
+    "videoId": "UZ-1jwG7aQ4",
+    "start": 17,
+    "end": 92,
+    "channel": "Calisthenicmovement",
+    "title": "How To Planche - Beginner Tutorial",
+    "timeSource": "chapter",
+    "chapter": "Tuck Planche",
+    "note": "Calisthenicmovement; chapter 'Tuck Planche' 0:17-1:32 (next chapter 'Exercises' at 92s).",
     "verdict": null
   }
 ]

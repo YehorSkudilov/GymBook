@@ -3,73 +3,73 @@
     "id": "overhead_press",
     "videoId": "_RlRDWO2jfg",
     "start": 206.48,
-    "end": 272.639,
+    "end": 272.63901,
     "channel": "Jeff Nippard",
     "title": "Build Bigger Shoulders With Perfect Training Technique (The Overhead Press)",
     "timeSource": "chapter",
     "chapter": "Execution of the press",
-    "note": "Jeff Nippard chapter at 3:26.48 to 4:32.639 demonstrates the barbell overhead press",
+    "note": "Jeff Nippard barbell OHP; chapter Execution of the press 206.48 to next chapter 272.63901",
     "verdict": "ok"
   },
   {
     "id": "seated_barbell_press",
-    "videoId": "QvCKYfsaNQ0",
+    "videoId": "YNK3eQVevIs",
     "start": null,
     "end": null,
-    "channel": "Pure Motion Fitness",
-    "title": "Seated Barbell Overhead Press: Perfect Form & Technique",
+    "channel": "Buff Dudes Workouts",
+    "title": "How-To Perform Seated Barbell Shoulder Press | Shoulders Exercise Tutorial",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 2:43 seated barbell press tutorial",
-    "verdict": "ok"
+    "note": "Replaced low-reach Pure Motion Fitness pick with Buff Dudes focused 1:51 seated barbell press tutorial",
+    "verdict": "fixed"
   },
   {
     "id": "behind_neck_press",
-    "videoId": "RKZT-tQdEAM",
-    "start": null,
+    "videoId": "uD9kYAi7lHs",
+    "start": 11.759,
     "end": null,
-    "channel": "Alex Leonidas",
-    "title": "Behind The Neck Press Form Tips",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Kept current: coach-led 47s behind-the-neck press tutorial",
-    "verdict": "ok"
+    "channel": "Mind Pump TV",
+    "title": "How To Behind The Neck Press Properly! (ADVANCED LIFTERS ONLY!)",
+    "timeSource": "chapter",
+    "chapter": "Setup and Execution",
+    "note": "Replaced Alex Leonidas short with Mind Pump TV 4:01 tutorial whose chapters are all on this press; start skips intro chapter",
+    "verdict": "fixed"
   },
   {
     "id": "z_press",
-    "videoId": "8CR-WckW3LY",
+    "videoId": "0fHdnBH9Gdo",
     "start": null,
     "end": null,
-    "channel": "TrainFTW",
-    "title": "Barbell Z Press",
+    "channel": "Buff Dudes Workouts",
+    "title": "How To Perform The Z Press | Experts Only Shoulders Exercise",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: TrainFTW 33s barbell Z press demo",
-    "verdict": "ok"
+    "note": "Replaced TrainFTW clip with Buff Dudes 2:34 Z press tutorial; all chapters are about the Z press",
+    "verdict": "fixed"
   },
   {
     "id": "landmine_press",
-    "videoId": "YVMXMFGM2qw",
+    "videoId": "6cSTRPhpubs",
     "start": null,
     "end": null,
-    "channel": "KevTheTrainer",
-    "title": "LANDMINE SHOULDER PRESS TUTORIAL ???? / Use a landmine attachment + barbell to build front delts!",
+    "channel": "[P]rehab",
+    "title": "Standing Landmine Shoulder Press - Developing Overhead Control",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 1:13 landmine shoulder press tutorial",
-    "verdict": "ok"
+    "note": "Replaced low-reach KevTheTrainer pick with [P]rehab 22s standing landmine press demo",
+    "verdict": "fixed"
   },
   {
     "id": "bradford_press",
-    "videoId": "sUOs8v6IzEg",
+    "videoId": "7aCSp9GtQDw",
     "start": null,
     "end": null,
-    "channel": "TrainFTW",
-    "title": "Bradford Press",
+    "channel": "Buff Dudes Workouts",
+    "title": "How to perform the BRADFORD PRESS - Shoulder Exercise Tutorial",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: TrainFTW 39s Bradford press demo",
-    "verdict": "ok"
+    "note": "Replaced TrainFTW clip with Buff Dudes focused 1:48 Bradford press tutorial",
+    "verdict": "fixed"
   },
   {
     "id": "db_shoulder_press",
@@ -80,7 +80,7 @@
     "title": "SEATED DUMBBELL SHOULDER PRESS",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: Jay Cutler 59s seated dumbbell press demo",
+    "note": "4x Mr. Olympia Jay Cutler, focused 59s seated dumbbell shoulder press demo",
     "verdict": "ok"
   },
   {
@@ -89,23 +89,23 @@
     "start": null,
     "end": null,
     "channel": "KevTheTrainer",
-    "title": "STANDING DUMBBELL SHOULDER PRESS TUTORIAL ???? // Build your shoulders using a pair of dumbbells!",
+    "title": "STANDING DUMBBELL SHOULDER PRESS TUTORIAL // Build your shoulders using a pair of dumbbells!",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 1:06 standing dumbbell press tutorial",
+    "note": "Kept current: trainer-led focused 1:06 standing dumbbell press tutorial; no clearly more reputable standing-specific demo found",
     "verdict": "ok"
   },
   {
     "id": "single_arm_db_press",
-    "videoId": "sMhkmr27L58",
+    "videoId": "yFgmgtnWP_0",
     "start": null,
     "end": null,
-    "channel": "Matteo Marra",
-    "title": "Dumbbell Single Arm Shoulder Press",
+    "channel": "BEFORM Performance Physical Therapy",
+    "title": "Single Arm Dumbbell Overhead Press - Single arm strict press",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 14s single-arm dumbbell press demo",
-    "verdict": "ok"
+    "note": "Replaced low-reach Matteo Marra clip with physical therapy clinic 12s single-arm dumbbell strict press demo",
+    "verdict": "fixed"
   },
   {
     "id": "arnold_press",
@@ -116,7 +116,7 @@
     "title": "The PERFECT Arnold Press",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 16s Arnold press tutorial",
+    "note": "Physical therapist Andrew Kwong, focused 16s Arnold press tutorial",
     "verdict": "ok"
   },
   {
@@ -128,20 +128,20 @@
     "title": "How to do a Kettlebell Overhead Press",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: NASM 11s kettlebell press tutorial",
+    "note": "NASM 11s kettlebell overhead press tutorial",
     "verdict": "ok"
   },
   {
     "id": "kb_bottoms_up_press",
-    "videoId": "Oaf1MXtUQJ8",
+    "videoId": "k5PcL_WIx94",
     "start": null,
     "end": null,
-    "channel": "Meatless Meals",
-    "title": "Kettlebell Bottoms Up Press",
+    "channel": "Onnit Academy",
+    "title": "Kettlebell Bottom's Up Press",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 56s kettlebell bottoms-up press demo",
-    "verdict": "ok"
+    "note": "Replaced Meatless Meals clip with Onnit Academy 19s bottoms-up press demo",
+    "verdict": "fixed"
   },
   {
     "id": "machine_shoulder_press",
@@ -152,7 +152,7 @@
     "title": "How to Perform the Machine Shoulder Press",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 16s machine shoulder press tutorial",
+    "note": "Physical therapist Andrew Kwong, focused 16s machine shoulder press tutorial",
     "verdict": "ok"
   },
   {
@@ -164,8 +164,8 @@
     "title": "Smith Machine Seated Shoulder Press",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Replaced current with RP 12s Smith machine seated shoulder press demo",
-    "verdict": "ok"
+    "note": "Replaced current (NiDiVi) with RP 12s Smith machine seated shoulder press demo",
+    "verdict": "fixed"
   },
   {
     "id": "band_shoulder_press",
@@ -176,20 +176,20 @@
     "title": "The ONLY WAY to do The Banded Shoulder Press",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: Mind Pump TV 1:47 banded shoulder press tutorial",
+    "note": "Mind Pump TV focused 1:47 banded shoulder press tutorial",
     "verdict": "ok"
   },
   {
     "id": "db_front_raise",
-    "videoId": "h9xfpTrAvkE",
+    "videoId": "zkP0MsTcIVU",
     "start": null,
     "end": null,
-    "channel": "Kraken Exercise Library",
-    "title": "Dumbbell Front Raise",
+    "channel": "PureGym",
+    "title": "How To Do A Dumbbell Front Raise",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 20s dumbbell front raise demo",
-    "verdict": "ok"
+    "note": "Replaced Kraken Exercise Library clip with PureGym 15s dumbbell front raise tutorial",
+    "verdict": "fixed"
   },
   {
     "id": "cable_front_raise",
@@ -200,19 +200,19 @@
     "title": "How To Do A Cable Front Raise",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: PureGym 15s cable front raise tutorial",
+    "note": "PureGym 15s cable front raise tutorial",
     "verdict": "ok"
   },
   {
     "id": "barbell_front_raise",
-    "videoId": "LJcX054ijjk",
+    "videoId": "_ikCPws1mbE",
     "start": null,
     "end": null,
-    "channel": "STRONG ATHLETE",
+    "channel": "Renaissance Periodization",
     "title": "Barbell Front Raise",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 21s barbell front raise demo",
-    "verdict": "ok"
+    "note": "Replaced STRONG ATHLETE clip with RP 12s barbell front raise demo",
+    "verdict": "fixed"
   }
 ]

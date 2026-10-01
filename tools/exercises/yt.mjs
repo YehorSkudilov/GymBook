@@ -62,7 +62,18 @@ async function search(q) {
   return out.slice(0, 15);
 }
 
+// The internal API ("player" for details, "next" for chapters) is throttled far less than the watch page, so try it
+// first and fall back to the page.
+async function api(endpoint, id) {
+  const body = JSON.stringify({ videoId: id, context: { client: { clientName: "WEB", clientVersion: "2.20240101.00.00", hl: "en", gl: "US" } } });
+  return (await get(`https://www.youtube.com/youtubei/v1/${endpoint}?prettyPrint=false`, { method: "POST", headers: { "Content-Type": "application/json" }, body })).json();
+}
+
 async function page(id) {
+  try {
+    const [player, data] = await Promise.all([api("player", id), api("next", id)]);
+    if (player?.videoDetails) return { player, data };
+  } catch { }
   const html = await (await get(`https://www.youtube.com/watch?v=${id}&hl=en`)).text();
   return { html, player: initialJson(html, "var ytInitialPlayerResponse"), data: initialJson(html, "var ytInitialData") };
 }

@@ -31,7 +31,7 @@ public static partial class ExerciseLibrary
                 "Don't let your ribs flare or your torso twist to fake extra range.",
                 "Stay inside a pain-free range; the circle grows over weeks.",
             ],
-            Video = new("ghXn2-ZYfU4"),
+            Video = new("kI0XzmjYuZU"),
         },
         new("mob_hip_cars", "Hip CARs", Glutes, Bodyweight, Isolation)
         {
@@ -51,7 +51,7 @@ public static partial class ExerciseLibrary
                 "Only the hip should move; keep your pelvis and spine still.",
                 "Don't swing the leg or use momentum through the hard part of the circle.",
             ],
-            Video = new("PO1of6rKX3Q"),
+            Video = new("hRMrq6G81p8", 27),
         },
         new("mob_ankle_cars", "Ankle CARs", Calves, Bodyweight, Isolation)
         {
@@ -91,7 +91,7 @@ public static partial class ExerciseLibrary
                 "Progress by taking your hands off the floor.",
                 "Don't force the knees down; let the range build over time.",
             ],
-            Video = new("qq_Z7sAmVrA"),
+            Video = new("Lx07WIkllbA"),
         },
         new("mob_hip_airplane", "Hip Airplane", Glutes, Bodyweight, Compound)
         {
@@ -169,7 +169,7 @@ public static partial class ExerciseLibrary
                 "Keep the glute squeezed so the stretch stays in the hip, not the lower back.",
                 "Don't arch your lower back to get further forward.",
             ],
-            Video = new("5nDGCpip0Yk"),
+            Video = new("_HrlhENbT0w"),
         },
         new("mob_leg_swing_front", "Front-to-Back Leg Swing", Hamstrings, Bodyweight, Isolation)
         {
@@ -188,7 +188,7 @@ public static partial class ExerciseLibrary
                 "Stand tall; don't round your back to kick higher.",
                 "Keep the swing controlled rather than flinging the leg.",
             ],
-            Video = new("E68-pMl1Im8"),
+            Video = new("KAxtr0DwaQA"),
         },
         new("mob_leg_swing_side", "Side-to-Side Leg Swing", Quads, Bodyweight, Isolation)
         {
@@ -207,7 +207,7 @@ public static partial class ExerciseLibrary
                 "Keep your torso upright and your hips square to the wall.",
                 "Don't twist your pelvis to make the swing bigger.",
             ],
-            Video = new("6aw8CAH_65Y"),
+            Video = new("6yKgqrpiBYs"),
         },
         new("mob_deep_squat_pry", "Deep Squat Prying", Quads, Bodyweight, Compound)
         {
@@ -266,7 +266,7 @@ public static partial class ExerciseLibrary
                 "Keep the back leg long and active.",
                 "Don't let your hips pike up as you step through.",
             ],
-            Video = new("qCDFp8cPrqw"),
+            Video = new("7-MnWTHAnfw"),
         },
         new("mob_walking_lunge_reach", "Walking Lunge with Overhead Reach", Abs, Bodyweight, Compound)
         {
@@ -304,7 +304,7 @@ public static partial class ExerciseLibrary
                 "Keep your hips level and core braced in the plank.",
                 "Take small steps with your feet to feel the hamstring stretch.",
             ],
-            Video = new("ZY2ji_Ho0dA"),
+            Video = new("a38ewEsSqGY"),
         },
 
         // Spine
@@ -382,7 +382,7 @@ public static partial class ExerciseLibrary
                 "Keep your hips over your knees.",
                 "Don't put weight on your neck; the shoulder takes the load.",
             ],
-            Video = new("SkQhKf74nZk"),
+            Video = new("SkQhKf74nZk", 0, 63.3),
         },
         new("mob_prone_scorpion", "Prone Scorpion", Abs, Bodyweight, Compound)
         {
@@ -440,7 +440,7 @@ public static partial class ExerciseLibrary
                 "The heel must stay planted; that's the whole point.",
                 "Don't let the arch collapse or the knee fall inward.",
             ],
-            Video = new("ElrpduJn92Y"),
+            Video = new("KmiPXKmoUbs"),
         },
         new("mob_banded_ankle_distraction", "Banded Ankle Distraction", Calves, Band, Isolation)
         {

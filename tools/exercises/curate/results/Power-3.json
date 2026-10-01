@@ -20,7 +20,7 @@
     "title": "HOW TO PERFORM THE DOUBLE KETTLEBELL FRONT SQUAT",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: physical therapy and performance channel 52s front squat tutorial",
+    "note": "Physical therapy clinic, focused 52s double KB front squat tutorial, embeds",
     "verdict": "ok"
   },
   {
@@ -32,7 +32,7 @@
     "title": "Kettlebell Halo Tutorial",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 55s kettlebell halo tutorial",
+    "note": "Kettlebell coach channel, focused 55s halo tutorial (all chapters are the halo), embeds; Men's Health alt mixes squat/lunge variations",
     "verdict": "ok"
   },
   {
@@ -56,7 +56,7 @@
     "title": "How To Perform The Suitcase Carry",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 57s suitcase carry tutorial",
+    "note": "Chiropractor/strength clinician channel, focused 57s suitcase carry tutorial, embeds",
     "verdict": "ok"
   },
   {
@@ -68,32 +68,32 @@
     "title": "Kettlebell Overhead Carry",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: [P]rehab 23s overhead carry demonstration",
+    "note": "[P]rehab 23s kettlebell overhead carry demo, embeds",
     "verdict": "ok"
   },
   {
     "id": "front_rack_carry",
-    "videoId": "1uXLqgDzkXg",
+    "videoId": "CJ-F_Xg9fJY",
     "start": null,
     "end": null,
-    "channel": "Outside the Box",
-    "title": "Front Rack Carry",
+    "channel": "Prototype Training Systems",
+    "title": "How to perform the Kettlebell Front Rack Carry",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 39s front rack carry demonstration",
-    "verdict": "ok"
+    "note": "Replaced low-view unknown channel with strength coaching channel focused 82s KB front rack carry how-to, embeds",
+    "verdict": "fixed"
   },
   {
     "id": "sandbag_carry",
-    "videoId": "eMJ4g9eQ5vs",
-    "start": null,
-    "end": null,
-    "channel": "PRsAllDay",
-    "title": "Sandbag Bear Hug Carry",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Kept current: focused 1:28 sandbag carry demonstration",
-    "verdict": "ok"
+    "videoId": "sAOjLtEdxWs",
+    "start": 34,
+    "end": 130,
+    "channel": "Brian Alsruhe",
+    "title": "SANDBAG EXERCISE DIRECTORY 3: Sandbag CARRY, Single Shoulder Sandbag LUNGES, SQUATS & CARRIES",
+    "timeSource": "chapter",
+    "chapter": "How to Perform a Sandbag Carry (Bearhug Position)",
+    "note": "Replaced unknown channel with strongman coach Brian Alsruhe; chapter 0:34 to next chapter 2:10",
+    "verdict": "fixed"
   },
   {
     "id": "keg_carry",
@@ -104,32 +104,32 @@
     "title": "How To Carry a Keg For Strongman",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: strongman coach Kalle Beck 1:32 keg carry tutorial",
+    "note": "Strongman coach Kalle Beck, focused 92s keg carry tutorial, embeds",
     "verdict": "ok"
   },
   {
     "id": "sled_push",
-    "videoId": "_EZcK45OucE",
-    "start": 13.12,
-    "end": 37.040001,
-    "channel": "More Than Muscle | Training and Nutrition",
-    "title": "How to master the sled push! #workouttutorial #sledpush",
-    "timeSource": "chapter",
-    "chapter": "Straight arm technique",
-    "note": "Chapter at 0:13.12 to 0:37.040001 demonstrates sled pushing technique",
-    "verdict": "ok"
+    "videoId": "9XRRXaUpnLk",
+    "start": null,
+    "end": null,
+    "channel": "Mind Pump TV",
+    "title": "How To Do The Sled Push The RIGHT Way! (AVOID MISTAKES!)",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced unknown-channel Short (fractional chapter times) with Mind Pump focused 2:21 sled push tutorial, embeds",
+    "verdict": "fixed"
   },
   {
     "id": "sled_drag",
-    "videoId": "hbCeJFBFyYk",
-    "start": 14.46,
-    "end": 28.799999,
-    "channel": "Keren Zumba",
-    "title": "Backward Sled Drag Tutorial",
-    "timeSource": "chapter",
-    "chapter": "Executing the exercise",
-    "note": "Chapter at 0:14.46 to 0:28.799999 demonstrates the backward sled drag",
-    "verdict": "ok"
+    "videoId": "k7JsvdG9sSo",
+    "start": null,
+    "end": null,
+    "channel": "Testosterone Nation",
+    "title": "Backward Sled Drag",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced unknown channel (fractional chapter times) with T Nation focused 22s backward sled drag demo, embeds",
+    "verdict": "fixed"
   },
   {
     "id": "sled_pull",
@@ -140,20 +140,20 @@
     "title": "Hand-Over-Hand Sled Pull",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 19s hand-over-hand sled pull demo",
+    "note": "Firefighter strength coaching org, focused 19s hand-over-hand sled pull demo, embeds; no more reputable alternative found",
     "verdict": "ok"
   },
   {
     "id": "sandbag_clean",
-    "videoId": "nTbRZwp7OF4",
+    "videoId": "bKupJRL22HM",
     "start": null,
     "end": null,
-    "channel": "Monroe Miller",
-    "title": "How to do a Sandbag Clean",
+    "channel": "Misfit Athletics",
+    "title": "How to Perfect the Sandbag Clean",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 19s sandbag clean tutorial",
-    "verdict": "ok"
+    "note": "Replaced unknown-channel Short with Misfit Athletics (pro coaching team) focused 2:19 sandbag clean tutorial, embeds",
+    "verdict": "fixed"
   },
   {
     "id": "tire_flip",
@@ -164,7 +164,7 @@
     "title": "How To Do A TIRE FLIP | Exercise Demonstration Video and Guide",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 57s tire flip tutorial",
+    "note": "Live Lean TV focused 57s tire flip demo, embeds",
     "verdict": "ok"
   },
   {
@@ -176,43 +176,43 @@
     "title": "How To Do The Yoke Walk | Lift Like A Strongman feat. Rob Kearney and Kristen Graham",
     "timeSource": "chapter",
     "chapter": "KRISTEN GRAHAM",
-    "note": "Blackstone Labs chapter at 0:06 to 4:14 demonstrates the yoke walk",
+    "note": "Pro strongman Rob Kearney yoke walk tutorial; chapter 0:06 to next chapter NEXT EPISODE at 4:14 (skips title card and farmers walk teaser), embeds",
     "verdict": "ok"
   },
   {
     "id": "atlas_stone",
-    "videoId": "JqDm3nZiglk",
+    "videoId": "ItFKJ5b0IX8",
     "start": null,
     "end": null,
-    "channel": "Texoma Strength",
-    "title": "Atlas Stone Tutorial",
+    "channel": "Squat University",
+    "title": "Atlas Stones: How to Lift Safely with The World's Strongest Man",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 31s atlas stone tutorial",
-    "verdict": "ok"
+    "note": "Replaced unknown channel with Squat University focused 67s atlas stone tutorial, embeds",
+    "verdict": "fixed"
   },
   {
     "id": "log_press",
-    "videoId": "aYV7DlPnszc",
-    "start": null,
+    "videoId": "MjKCPd9eJhM",
+    "start": 27,
     "end": null,
-    "channel": "Little Gym",
-    "title": "Strongman 101 - Log Press",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Kept current: focused 17s log press demo",
-    "verdict": "ok"
+    "channel": "Rogue Fitness",
+    "title": "How To Lift a Strongman Log with Steve Slater",
+    "timeSource": "chapter",
+    "chapter": "Foot Placement",
+    "note": "Replaced unknown-channel Short with Rogue/Steve Slater 3:42 log tutorial (all chapters are the log clean and press); start skips Intro chapter, embeds",
+    "verdict": "fixed"
   },
   {
     "id": "landmine_rotational_punch",
     "videoId": "-mtU3hc1OVE",
-    "start": 0,
+    "start": null,
     "end": null,
     "channel": "Littauer Strength Training",
     "title": "Landmine Rotational Punch",
-    "timeSource": "chapter",
-    "chapter": "Landmine punch technique",
-    "note": "Kept current: chapter at 0:00 demonstrates landmine punch technique",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Strength coach channel, focused 36s landmine rotational punch demo (single chapter, so start 0 dropped), embeds; no more reputable alternative found",
     "verdict": "ok"
   },
   {
@@ -224,7 +224,7 @@
     "title": "Resistance band punch",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 15s band-resisted punch demo",
+    "note": "Fitness coaching channel, focused 15s band punch demo, embeds; no reputable-source alternative found (Howcast option is a 2013 kickboxing shadowbox lesson)",
     "verdict": "ok"
   },
   {
@@ -236,7 +236,7 @@
     "title": "How to properly use sledgehammer in hitting the tire during workouts  #sledgehammer #workouts",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 28s sledgehammer tire strike demo",
+    "note": "Kept current (verified movement), focused 28s sledgehammer tire strike demo, embeds; searches found no reputable-source tutorial",
     "verdict": "ok"
   }
 ]
