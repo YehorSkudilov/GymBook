@@ -1,8 +1,23 @@
 namespace GymBook.Models;
 
+/// <summary>The kind of training an exercise is: decides how it's prescribed (explosive, held, easy-paced) and how it's grouped.</summary>
+public enum ExerciseCategory { Strength, Plyometric, Olympic, Pilates, Yoga, Mobility, Stretch, Cardio }
+
+public enum ExerciseLevel { Beginner, Intermediate, Advanced }
+
+/// <summary>A demonstration on YouTube. <see cref="Start"/> and <see cref="End"/> (seconds) trim a longer video to the demonstration itself.</summary>
+public record ExerciseVideo(string YouTubeId, int? Start = null, int? End = null)
+{
+    public string WatchUrl => $"https://www.youtube.com/watch?v={YouTubeId}" + (Start is { } s ? $"&t={s}s" : "");
+
+    /// <summary>The embedded player, playing just the demonstration.</summary>
+    public string EmbedUrl => $"https://www.youtube.com/embed/{YouTubeId}?rel=0&playsinline=1&modestbranding=1"
+        + (Start is { } s ? $"&start={s}" : "") + (End is { } e ? $"&end={e}" : "");
+}
+
 /// <summary>
-/// Catalogue extras for a built-in exercise (from free-exercise-db). Kept off <see cref="Exercise"/> so the
-/// synced entity and both databases stay unchanged; custom exercises have none.
+/// The library's extras for a built-in exercise. Kept off <see cref="Exercise"/> so the synced entity and both
+/// databases stay unchanged; custom exercises have none.
 /// </summary>
-/// <param name="Images">Start and end position photos, as URLs; loaded on demand and cached by the platform.</param>
-public record ExerciseDetails(string? Level, string? Force, string? Category, IReadOnlyList<string> Steps, IReadOnlyList<string> Images);
+/// <param name="Hold">Held still rather than moved: each rep is a second of holding (a hold of a few seconds for the neck).</param>
+public record ExerciseDetails(ExerciseCategory Category, ExerciseLevel Level, bool Hold, IReadOnlyList<string> Steps, IReadOnlyList<string> Tips, ExerciseVideo? Video);

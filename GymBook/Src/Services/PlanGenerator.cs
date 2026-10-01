@@ -27,14 +27,14 @@ public static class PlanGenerator
     static readonly string[] Abs = ["cable_crunch", "hanging_leg_raise", "ab_wheel", "leg_raise", "crunch"];
     static readonly string[] Traps = ["barbell_shrug", "db_shrug"];
     // Neck: one direction per day, rotating through flexion, extension and side work.
-    static readonly string[] NeckFlexion = ["Lying_Face_Up_Plate_Neck_Resistance", "neck_machine", "band_neck_flexion", "Isometric_Neck_Exercise_-_Front_And_Back"];
-    static readonly string[] NeckExtension = ["Lying_Face_Down_Plate_Neck_Resistance", "Seated_Head_Harness_Neck_Resistance", "band_neck_extension", "Isometric_Neck_Exercise_-_Front_And_Back"];
-    static readonly string[] NeckSide = ["plate_lateral_neck_flexion", "neck_machine", "Isometric_Neck_Exercise_-_Sides"];
+    static readonly string[] NeckFlexion = ["plate_neck_flexion", "neck_machine", "band_neck_flexion", "neck_isometric_front_back"];
+    static readonly string[] NeckExtension = ["plate_neck_extension", "harness_neck_extension", "band_neck_extension", "neck_isometric_front_back"];
+    static readonly string[] NeckSide = ["plate_lateral_neck_flexion", "neck_machine", "neck_isometric_sides"];
     static readonly string[][] NeckSlots = [NeckFlexion, NeckExtension, NeckSide];
     // Explosive work for combat and power sports, done first while fresh.
-    static readonly string[] ExplosiveLower = ["Front_Box_Jump", "Standing_Long_Jump", "kb_swing", "Knee_Tuck_Jump"];
-    static readonly string[] ExplosiveUpper = ["Medicine_Ball_Chest_Pass", "Plyo_Push-up", "Overhead_Slam"];
-    static readonly string[] PowerLift = ["Power_Clean", "Hang_Clean", "Push_Press", "kb_swing"];
+    static readonly string[] ExplosiveLower = ["box_jump", "broad_jump", "kb_swing", "tuck_jump"];
+    static readonly string[] ExplosiveUpper = ["med_ball_chest_pass", "plyo_push_up", "med_ball_slam"];
+    static readonly string[] PowerLift = ["power_clean", "hang_clean", "push_press", "kb_swing"];
 
     static readonly string[][] FullBody = [Squat, HorizontalPush, HorizontalPull, Hinge, VerticalPush, VerticalPull, SideDelt, Biceps, Triceps, Calves, Abs];
     static readonly string[][] Upper = [HorizontalPush, HorizontalPull, VerticalPush, VerticalPull, InclinePush, SideDelt, Biceps, Triceps, RearDelt];

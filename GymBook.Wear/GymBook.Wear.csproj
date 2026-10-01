@@ -76,7 +76,8 @@
 	<ItemGroup>
 		<Compile Include="..\GymBook\Src\Services\DataStore.cs" Link="Shared\DataStore.cs" />
 		<Compile Include="..\GymBook\Src\Services\Units.cs" Link="Shared\Units.cs" />
-		<Compile Include="..\GymBook\Src\Services\ExerciseLibrary.cs" Link="Shared\ExerciseLibrary.cs" />
+		<!-- The exercise library, all its files -->
+		<Compile Include="..\GymBook\Src\Services\Exercises\*.cs" Link="Shared\Exercises\%(Filename)%(Extension)" />
 		<Compile Include="..\GymBook\Src\Models\ExerciseDetails.cs" Link="Shared\ExerciseDetails.cs" />
 		<Compile Include="..\GymBook\Src\Services\ProgressionEngine.cs" Link="Shared\ProgressionEngine.cs" />
 		<Compile Include="..\GymBook\Src\Services\WorkoutService.cs" Link="Shared\WorkoutService.cs" />
@@ -96,8 +97,6 @@
 		<Compile Include="..\GymBook\Src\Services\Sync\AuthSession.cs" Link="Shared\Sync\AuthSession.cs" />
 		<Compile Include="..\GymBook\Src\Services\Sync\SyncService.cs" Link="Shared\Sync\SyncService.cs" />
 		<Compile Include="..\GymBook\Src\Services\Sync\LiveSync.cs" Link="Shared\Sync\LiveSync.cs" />
-		<!-- The exercise catalogue ExerciseLibrary reads (names, the curated list's extra exercises). -->
-		<EmbeddedResource Include="..\GymBook\Src\Services\ExerciseCatalog.json" LogicalName="ExerciseCatalog.json" Link="Shared\ExerciseCatalog.json" />
 	</ItemGroup>
 
 	<!-- The API, the same one the phone app uses (ApiConfig.cs reads it from [AssemblyMetadata]): -p:ApiBaseUrl=https://...,

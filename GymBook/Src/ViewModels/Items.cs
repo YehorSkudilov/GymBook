@@ -24,7 +24,7 @@ public class SessionItem
     /// <summary><paramref name="open"/>: what tapping it does; by default the finished-workout sheet.</summary>
     public static SessionItem Create(WorkoutSession s, DataStore store, StatsService stats, Units units, ICommand? open = null)
     {
-        var photos = s.Exercises.Select(e => ExerciseLibrary.Details(e.ExerciseId)?.Images.FirstOrDefault()).OfType<string>().ToList();
+        var photos = s.Exercises.Select(e => ExerciseLibrary.Thumbnail(e.ExerciseId)).OfType<string>().ToList();
         return new()
         {
             Id = s.Id,
@@ -52,13 +52,13 @@ public class DayItem
     public Color DayColor => Done || IsToday ? Colors.White : Color.FromArgb("#9AA3B5");
 }
 
-/// <summary>A small exercise tile: its photo when the catalogue has one, otherwise the muscle's initials.</summary>
+/// <summary>A small exercise tile: its video's thumbnail when it has one, otherwise the muscle's initials.</summary>
 public record ExerciseThumb(string? Image, string Initial, Color Color, Color Soft)
 {
     public bool HasImage => Image != null;
 
     public static ExerciseThumb For(Exercise ex) => new(
-        ExerciseLibrary.Details(ex.Id)?.Images.FirstOrDefault(),
+        ExerciseLibrary.Thumbnail(ex.Id),
         ex.PrimaryMuscle.Display()[..2],
         ex.PrimaryMuscle.Color(),
         ex.PrimaryMuscle.Color().WithAlpha(0.16f));
@@ -153,7 +153,7 @@ public partial class ExerciseItem(Exercise exercise, Action<ExerciseItem> onTap)
     public string Initial => Exercise.PrimaryMuscle.Display()[..2];
     public Color MuscleColor => Exercise.PrimaryMuscle.Color();
     public Color MuscleSoft => Exercise.PrimaryMuscle.Color().WithAlpha(0.16f);
-    public string? Thumbnail { get; } = ExerciseLibrary.Details(exercise.Id)?.Images.FirstOrDefault();
+    public string? Thumbnail { get; } = ExerciseLibrary.Thumbnail(exercise.Id);
     public bool HasThumbnail => Thumbnail != null;
 
     [ObservableProperty]

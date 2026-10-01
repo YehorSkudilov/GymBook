@@ -23,6 +23,8 @@ public partial class App : Application
             // The AI's plan reviews belong to the account that asked for them.
             if (!session.IsSignedIn)
                 _services.GetRequiredService<AiPlanService>().ClearReviews();
+            // Signed out or the session ended: an account is needed to go on.
+            _ = SignInGate.ShowIfNeededAsync(_services);
             _ = VerifyEmailPage.ShowIfNeededAsync(_services);
         });
     }
@@ -45,6 +47,7 @@ public partial class App : Application
             _sync.Schedule(TimeSpan.Zero);
             // Changes from other devices the moment they're made, while the app is open.
             _ = _services.GetRequiredService<LiveSync>().StartAsync();
+            _ = SignInGate.ShowIfNeededAsync(_services, resumed: true);
             _ = VerifyEmailPage.ShowIfNeededAsync(_services);
             // The weekly AI look at the active plan; does nothing most of the time.
             _ = _services.GetRequiredService<AiPlanService>().CheckActivePlanAsync();
@@ -55,6 +58,7 @@ public partial class App : Application
         {
             _sync.Schedule(TimeSpan.Zero);
             _ = _services.GetRequiredService<LiveSync>().StartAsync();
+            _ = SignInGate.ShowIfNeededAsync(_services, resumed: true);
             _ = VerifyEmailPage.ShowIfNeededAsync(_services);
             _ = _services.GetRequiredService<AiPlanService>().CheckActivePlanAsync();
         };
@@ -67,6 +71,9 @@ public partial class App : Application
         var window = Current?.Windows.FirstOrDefault();
         if (window != null)
             window.Page = new AppShell();
+        // A sign-in sheet over the old root may not have come along.
+        if (Current is App app)
+            _ = SignInGate.ShowIfNeededAsync(app._services);
     }
 
     /// <summary>
@@ -87,5 +94,8 @@ public partial class App : Application
         var window = Current?.Windows.FirstOrDefault();
         if (window != null)
             window.Page = Current!.Handler!.MauiContext!.Services.GetRequiredService<PlanWizardPage>().ForOnboarding();
+        // Signed out: the welcome screen waits behind the sign-in sheet.
+        if (Current is App app)
+            _ = SignInGate.ShowIfNeededAsync(app._services);
     }
 }

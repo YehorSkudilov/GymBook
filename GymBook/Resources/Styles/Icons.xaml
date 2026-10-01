@@ -14,6 +14,7 @@
     <FontImageSource x:Key="IconCheckMuted" FontFamily="OutlinedIcons" Glyph="check" Color="{StaticResource TextSecondary}" Size="32" />
     <FontImageSource x:Key="IconClose" FontFamily="OutlinedIcons" Glyph="close" Color="{StaticResource TextSecondary}" Size="32" />
     <FontImageSource x:Key="IconSearch" FontFamily="OutlinedIcons" Glyph="search" Color="{StaticResource TextSecondary}" Size="32" />
+    <FontImageSource x:Key="IconFilter" FontFamily="OutlinedIcons" Glyph="tune" Color="{StaticResource TextPrimary}" Size="32" />
     <FontImageSource x:Key="IconPlus" FontFamily="OutlinedIcons" Glyph="add" Color="{StaticResource Accent}" Size="32" />
     <FontImageSource x:Key="IconTimer" FontFamily="OutlinedIcons" Glyph="timer" Color="{StaticResource TextPrimary}" Size="32" />
     <FontImageSource x:Key="IconFlame" FontFamily="OutlinedIcons" Glyph="local_fire_department" Color="#FF7A45" Size="32" />

@@ -13,7 +13,7 @@ namespace GymBook.ViewModels;
 /// plan (opened with ?regenerate=id, it starts from that plan's answers and replaces the plan when saved). Signed-in
 /// users also get the AI's follow-up questions before the plan is built, and can chat with the AI to change it.
 /// </summary>
-public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, AiPlanService ai, IServiceProvider services)
+public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, AiPlanService ai)
     : BaseViewModel, IQueryAttributable
 {
     enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, Neck, BuildWith, Questions, Result }
@@ -436,9 +436,6 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         }).ToList();
         OnPropertyChanged(nameof(CanChat));
     }
-
-    [RelayCommand]
-    Task SignIn() => Views.AccountPage.ShowAsync(services);
 
     [RelayCommand]
     async Task Next()

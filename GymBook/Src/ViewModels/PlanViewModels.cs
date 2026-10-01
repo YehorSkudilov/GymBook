@@ -662,7 +662,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
     /// </summary>
     async Task ReplaceExercise(PlanWorkout workout, PlanDayExercise item)
     {
-        if (_draft is not { } plan || await picker.PickOneAsync($"Replace {item.Name}") is not { } ex)
+        if (_draft is not { } plan || await picker.PickOneAsync($"Replace {item.Name}", store.GetExercise(item.Model.ExerciseId)) is not { } ex)
             return;
         var index = workout.Exercises.IndexOf(item.Model);
         if (index < 0)

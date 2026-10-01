@@ -276,7 +276,7 @@ public partial class WorkoutViewModel(
     /// </summary>
     internal async Task Replace(WorkoutExerciseViewModel old)
     {
-        if (_session == null || await picker.PickOneAsync($"Replace {old.Name}") is not { } ex)
+        if (_session == null || await picker.PickOneAsync($"Replace {old.Name}", old.Exercise) is not { } ex)
             return;
         var index = Exercises.IndexOf(old);
         if (index < 0)

@@ -144,8 +144,9 @@ public partial class HomeViewModel(
         Greeting = string.IsNullOrWhiteSpace(profile.Name) ? part : $"{part}, {profile.Name}";
         DateText = DateTime.Today.ToString("dddd, d MMMM");
 
-        // Close any gap in the plan weeks (an empty week before one with progress) before showing them.
-        if (store.CompactPlanWeeks())
+        // Close any gap in the plan weeks (an empty week before one with progress) before showing them, and move any
+        // exercise ids from an earlier library to today's (both, so neither short-circuits the other).
+        if (store.CompactPlanWeeks() | store.MigrateExerciseIds())
             store.Save();
 
         var plan = store.ActivePlan;
@@ -253,7 +254,7 @@ public partial class HomeViewModel(
                 : new AsyncRelayCommand(() => GoTo($"{Routes.PlanDay}?id={plan.Id}&day={day}&week={week}"));
             if (w == null)
                 return new PlanDayItem { Name = "Rest", Number = "–", IsRest = true, IsDone = progress.IsRestDone(day, week), Thumbnails = [], More = "", OpenCommand = open };
-            var photos = w.Exercises.Select(e => ExerciseLibrary.Details(e.ExerciseId)?.Images.FirstOrDefault()).OfType<string>().ToList();
+            var photos = w.Exercises.Select(e => ExerciseLibrary.Thumbnail(e.ExerciseId)).OfType<string>().ToList();
             return new PlanDayItem
             {
                 Name = w.Name,

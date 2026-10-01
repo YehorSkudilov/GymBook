@@ -120,7 +120,7 @@
                                         <Grid>
                                             <Label Text="{Binding Initial}" TextColor="{Binding Color}" FontFamily="OpenSansSemibold" FontSize="13"
                                                    HorizontalOptions="Center" VerticalOptions="Center" />
-                                            <Image Source="{Binding Image}" IsVisible="{Binding HasImage}" Aspect="AspectFill" />
+                                            <Image Source="{Binding Image, Converter={StaticResource Thumb}}" IsVisible="{Binding HasImage}" Aspect="AspectFill" />
                                         </Grid>
                                     </Border>
                                 </DataTemplate>
@@ -201,7 +201,7 @@
                                                     <DataTemplate x:DataType="x:String">
                                                         <Border WidthRequest="34" HeightRequest="34" StrokeShape="RoundRectangle 9" StrokeThickness="0"
                                                                 BackgroundColor="{StaticResource Surface3}">
-                                                            <Image Source="{Binding .}" Aspect="AspectFill" />
+                                                            <Image Source="{Binding ., Converter={StaticResource Thumb}}" Aspect="AspectFill" />
                                                         </Border>
                                                     </DataTemplate>
                                                 </BindableLayout.ItemTemplate>

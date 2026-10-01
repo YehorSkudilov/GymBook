@@ -1,0 +1,660 @@
+3_4_Sit-Up | 3/4 Sit-Up | Abs | Bodyweight | Strength
+Ab_Crunch_Machine | Ab Crunch Machine | Abs | Machine | Strength
+Advanced_Kettlebell_Windmill | Advanced Kettlebell Windmill | Abs | Kettlebell | Strength
+Air_Bike | Air Bike | Abs | Bodyweight | Strength
+Alternate_Hammer_Curl | Alternate Hammer Curl | Biceps | Dumbbell | Strength
+Alternate_Heel_Touchers | Alternate Heel Touchers | Abs | Bodyweight | Strength
+Alternate_Incline_Dumbbell_Curl | Alternate Incline Dumbbell Curl | Biceps | Dumbbell | Strength
+Alternate_Leg_Diagonal_Bound | Alternate Leg Diagonal Bound | Quads | Bodyweight | Plyometrics
+Alternating_Cable_Shoulder_Press | Alternating Cable Shoulder Press | Shoulders | Cable | Strength
+Alternating_Deltoid_Raise | Alternating Deltoid Raise | Shoulders | Dumbbell | Strength
+Alternating_Floor_Press | Alternating Floor Press | Chest | Kettlebell | Strength
+Alternating_Hang_Clean | Alternating Hang Clean | Hamstrings | Kettlebell | Strength
+Alternating_Kettlebell_Press | Alternating Kettlebell Press | Shoulders | Kettlebell | Strength
+Alternating_Kettlebell_Row | Alternating Kettlebell Row | Back | Kettlebell | Strength
+Alternating_Renegade_Row | Alternating Renegade Row | Back | Kettlebell | Strength
+Anti-Gravity_Press | Anti-Gravity Press | Shoulders | Barbell | Strength
+Around_The_Worlds | Around The Worlds | Chest | Dumbbell | Strength
+Atlas_Stone_Trainer | Atlas Stone Trainer | LowerBack | Other | Strongman
+Atlas_Stones | Atlas Stones | LowerBack | Other | Strongman
+Axle_Deadlift | Axle Deadlift | LowerBack | Other | Strongman
+Back_Flyes_-_With_Bands | Back Flyes - With Bands | Shoulders | Band | Strength
+Backward_Drag | Backward Drag | Quads | Other | Strongman
+Backward_Medicine_Ball_Throw | Backward Medicine Ball Throw | Shoulders | Other | Plyometrics
+Balance_Board | Balance Board | Calves | Other | Strength
+Ball_Leg_Curl | Ball Leg Curl | Hamstrings | Other | Strength
+Band_Assisted_Pull-Up | Band Assisted Pull-Up | Back | Other | Strength
+Band_Good_Morning | Band Good Morning | Hamstrings | Band | Powerlifting
+Band_Good_Morning_Pull_Through | Band Good Morning (Pull Through) | Hamstrings | Band | Powerlifting
+Band_Hip_Adductions | Band Hip Adductions | Quads | Band | Strength
+Band_Pull_Apart | Band Pull Apart | Shoulders | Band | Strength
+Band_Skull_Crusher | Band Skull Crusher | Triceps | Band | Strength
+Barbell_Ab_Rollout | Barbell Ab Rollout | Abs | Barbell | Strength
+Barbell_Ab_Rollout_-_On_Knees | Barbell Ab Rollout - On Knees | Abs | Barbell | Strength
+Barbell_Curls_Lying_Against_An_Incline | Barbell Curls Lying Against An Incline | Biceps | Barbell | Strength
+Barbell_Glute_Bridge | Barbell Glute Bridge | Glutes | Barbell | Powerlifting
+Barbell_Guillotine_Bench_Press | Barbell Guillotine Bench Press | Chest | Barbell | Strength
+Barbell_Hack_Squat | Barbell Hack Squat | Quads | Barbell | Strength
+Barbell_Incline_Shoulder_Raise | Barbell Incline Shoulder Raise | Shoulders | Barbell | Strength
+Barbell_Lunge | Barbell Lunge | Quads | Barbell | Strength
+Barbell_Rear_Delt_Row | Barbell Rear Delt Row | Shoulders | Barbell | Strength
+Barbell_Rollout_from_Bench | Barbell Rollout from Bench | Abs | Barbell | Strength
+Barbell_Seated_Calf_Raise | Barbell Seated Calf Raise | Calves | Barbell | Strength
+Barbell_Shoulder_Press | Barbell Shoulder Press | Shoulders | Barbell | Strength
+Barbell_Shrug_Behind_The_Back | Barbell Shrug Behind The Back | Traps | Barbell | Strength
+Barbell_Side_Bend | Barbell Side Bend | Abs | Barbell | Strength
+Barbell_Side_Split_Squat | Barbell Side Split Squat | Quads | Barbell | Strength
+Barbell_Squat | Barbell Squat | Quads | Barbell | Strength
+Barbell_Squat_To_A_Bench | Barbell Squat To A Bench | Quads | Barbell | Strength
+Barbell_Step_Ups | Barbell Step Ups | Quads | Barbell | Strength
+Barbell_Walking_Lunge | Barbell Walking Lunge | Quads | Barbell | Strength
+Battling_Ropes | Battling Ropes | Shoulders | Other | Strength
+Bear_Crawl_Sled_Drags | Bear Crawl Sled Drags | Quads | Other | Strongman
+Bench_Jump | Bench Jump | Quads | Bodyweight | Plyometrics
+Bench_Press_-_Powerlifting | Bench Press - Powerlifting | Triceps | Barbell | Powerlifting
+Bench_Press_-_With_Bands | Bench Press - With Bands | Chest | Band | Strength
+Bench_Press_with_Chains | Bench Press with Chains | Triceps | Barbell | Powerlifting
+Bench_Sprint | Bench Sprint | Quads | Other | Plyometrics
+Bent-Arm_Barbell_Pullover | Bent-Arm Barbell Pullover | Back | Barbell | Strength
+Bent-Arm_Dumbbell_Pullover | Bent-Arm Dumbbell Pullover | Chest | Dumbbell | Strength
+Bent-Knee_Hip_Raise | Bent-Knee Hip Raise | Abs | Bodyweight | Strength
+Bent_Over_Dumbbell_Rear_Delt_Raise_With_Head_On_Bench | Bent Over Dumbbell Rear Delt Raise With Head On Bench | Shoulders | Dumbbell | Strength
+Bent_Over_Low-Pulley_Side_Lateral | Bent Over Low-Pulley Side Lateral | Shoulders | Cable | Strength
+Bent_Over_One-Arm_Long_Bar_Row | Bent Over One-Arm Long Bar Row | Back | Barbell | Strength
+Bent_Over_Two-Arm_Long_Bar_Row | Bent Over Two-Arm Long Bar Row | Back | Barbell | Strength
+Bent_Over_Two-Dumbbell_Row | Bent Over Two-Dumbbell Row | Back | Dumbbell | Strength
+Bent_Over_Two-Dumbbell_Row_With_Palms_In | Bent Over Two-Dumbbell Row With Palms In | Back | Dumbbell | Strength
+Bent_Press | Bent Press | Abs | Kettlebell | Strength
+Board_Press | Board Press | Triceps | Barbell | Powerlifting
+Body-Up | Body-Up | Triceps | Bodyweight | Strength
+Body_Tricep_Press | Body Tricep Press | Triceps | Bodyweight | Strength
+Bodyweight_Flyes | Bodyweight Flyes | Chest | EzBar | Strength
+Bodyweight_Mid_Row | Bodyweight Mid Row | Back | Other | Strength
+Bosu_Ball_Cable_Crunch_With_Side_Bends | Bosu Ball Cable Crunch With Side Bends | Abs | Cable | Strength
+Bottoms-Up_Clean_From_The_Hang_Position | Bottoms-Up Clean From The Hang Position | Forearms | Kettlebell | Strength
+Bottoms_Up | Bottoms Up | Abs | Bodyweight | Strength
+Box_Jump_Multiple_Response | Box Jump (Multiple Response) | Hamstrings | Other | Plyometrics
+Box_Skip | Box Skip | Hamstrings | Other | Plyometrics
+Box_Squat | Box Squat | Quads | Barbell | Powerlifting
+Box_Squat_with_Bands | Box Squat with Bands | Quads | Barbell | Powerlifting
+Box_Squat_with_Chains | Box Squat with Chains | Quads | Barbell | Strength
+Bradford_Rocky_Presses | Bradford/Rocky Presses | Shoulders | Barbell | Strength
+Butt-Ups | Butt-Ups | Abs | Bodyweight | Strength
+Cable_Chest_Press | Cable Chest Press | Chest | Cable | Strength
+Cable_Deadlifts | Cable Deadlifts | Quads | Cable | Strength
+Cable_Hammer_Curls_-_Rope_Attachment | Cable Hammer Curls - Rope Attachment | Biceps | Cable | Strength
+Cable_Hip_Adduction | Cable Hip Adduction | Quads | Cable | Strength
+Cable_Incline_Pushdown | Cable Incline Pushdown | Back | Cable | Strength
+Cable_Incline_Triceps_Extension | Cable Incline Triceps Extension | Triceps | Cable | Strength
+Cable_Internal_Rotation | Cable Internal Rotation | Shoulders | Cable | Strength
+Cable_Iron_Cross | Cable Iron Cross | Chest | Cable | Strength
+Cable_Judo_Flip | Cable Judo Flip | Abs | Cable | Strength
+Cable_Lying_Triceps_Extension | Cable Lying Triceps Extension | Triceps | Cable | Strength
+Cable_One_Arm_Tricep_Extension | Cable One Arm Tricep Extension | Triceps | Cable | Strength
+Cable_Preacher_Curl | Cable Preacher Curl | Biceps | Cable | Strength
+Cable_Rear_Delt_Fly | Cable Rear Delt Fly | Shoulders | Cable | Strength
+Cable_Reverse_Crunch | Cable Reverse Crunch | Abs | Cable | Strength
+Cable_Rope_Rear-Delt_Rows | Cable Rope Rear-Delt Rows | Shoulders | Cable | Strength
+Cable_Russian_Twists | Cable Russian Twists | Abs | Cable | Strength
+Cable_Seated_Crunch | Cable Seated Crunch | Abs | Cable | Strength
+Cable_Shoulder_Press | Cable Shoulder Press | Shoulders | Cable | Strength
+Cable_Shrugs | Cable Shrugs | Traps | Cable | Strength
+Cable_Wrist_Curl | Cable Wrist Curl | Forearms | Cable | Strength
+Calf-Machine_Shoulder_Shrug | Calf-Machine Shoulder Shrug | Traps | Machine | Strength
+Calf_Press | Calf Press | Calves | Machine | Strength
+Calf_Press_On_The_Leg_Press_Machine | Calf Press On The Leg Press Machine | Calves | Machine | Strength
+Calf_Raise_On_A_Dumbbell | Calf Raise On A Dumbbell | Calves | Dumbbell | Strength
+Calf_Raises_-_With_Bands | Calf Raises - With Bands | Calves | Band | Strength
+Car_Deadlift | Car Deadlift | Quads | Other | Strongman
+Car_Drivers | Car Drivers | Shoulders | Barbell | Strength
+Carioca_Quick_Step | Carioca Quick Step | Quads | Bodyweight | Plyometrics
+Catch_and_Overhead_Throw | Catch and Overhead Throw | Back | Other | Plyometrics
+Chain_Handle_Extension | Chain Handle Extension | Triceps | Other | Powerlifting
+Chain_Press | Chain Press | Chest | Other | Powerlifting
+Chair_Squat | Chair Squat | Quads | Machine | Strength
+Chest_Push_from_3_point_stance | Chest Push from 3 point stance | Chest | Other | Plyometrics
+Chest_Push_multiple_response | Chest Push (multiple response) | Chest | Other | Plyometrics
+Chest_Push_single_response | Chest Push (single response) | Chest | Other | Plyometrics
+Chest_Push_with_Run_Release | Chest Push with Run Release | Chest | Other | Plyometrics
+Circus_Bell | Circus Bell | Shoulders | Other | Strongman
+Clean | Clean | Hamstrings | Barbell | Olympic weightlifting
+Clean_Deadlift | Clean Deadlift | Hamstrings | Barbell | Olympic weightlifting
+Clean_Pull | Clean Pull | Quads | Barbell | Olympic weightlifting
+Clean_Shrug | Clean Shrug | Traps | Barbell | Olympic weightlifting
+Clean_and_Jerk | Clean and Jerk | Shoulders | Barbell | Olympic weightlifting
+Clean_and_Press | Clean and Press | Shoulders | Barbell | Strength
+Clean_from_Blocks | Clean from Blocks | Quads | Barbell | Olympic weightlifting
+Clock_Push-Up | Clock Push-Up | Chest | Bodyweight | Strength
+Close-Grip_Dumbbell_Press | Close-Grip Dumbbell Press | Triceps | Dumbbell | Strength
+Close-Grip_EZ-Bar_Curl_with_Band | Close-Grip EZ-Bar Curl with Band | Biceps | EzBar | Strength
+Close-Grip_EZ-Bar_Press | Close-Grip EZ-Bar Press | Triceps | EzBar | Strength
+Close-Grip_EZ_Bar_Curl | Close-Grip EZ Bar Curl | Biceps | Barbell | Strength
+Close-Grip_Front_Lat_Pulldown | Close-Grip Front Lat Pulldown | Back | Cable | Strength
+Close-Grip_Push-Up_off_of_a_Dumbbell | Close-Grip Push-Up off of a Dumbbell | Triceps | Bodyweight | Strength
+Close-Grip_Standing_Barbell_Curl | Close-Grip Standing Barbell Curl | Biceps | Barbell | Strength
+Cocoons | Cocoons | Abs | Bodyweight | Strength
+Conans_Wheel | Conan's Wheel | Quads | Other | Strongman
+Concentration_Curls | Concentration Curls | Biceps | Dumbbell | Strength
+Cross-Body_Crunch | Cross-Body Crunch | Abs | Bodyweight | Strength
+Cross_Body_Hammer_Curl | Cross Body Hammer Curl | Biceps | Dumbbell | Strength
+Cross_Over_-_With_Bands | Cross Over - With Bands | Chest | Band | Strength
+Crucifix | Crucifix | Shoulders | Other | Strongman
+Crunch_-_Hands_Overhead | Crunch - Hands Overhead | Abs | Bodyweight | Strength
+Crunch_-_Legs_On_Exercise_Ball | Crunch - Legs On Exercise Ball | Abs | Bodyweight | Strength
+Cuban_Press | Cuban Press | Shoulders | Dumbbell | Strength
+Dead_Bug | Dead Bug | Abs | Bodyweight | Strength
+Deadlift_with_Bands | Deadlift with Bands | LowerBack | Barbell | Powerlifting
+Deadlift_with_Chains | Deadlift with Chains | LowerBack | Barbell | Powerlifting
+Decline_Barbell_Bench_Press | Decline Barbell Bench Press | Chest | Barbell | Strength
+Decline_Close-Grip_Bench_To_Skull_Crusher | Decline Close-Grip Bench To Skull Crusher | Triceps | Barbell | Strength
+Decline_Crunch | Decline Crunch | Abs | Bodyweight | Strength
+Decline_Dumbbell_Bench_Press | Decline Dumbbell Bench Press | Chest | Dumbbell | Strength
+Decline_Dumbbell_Flyes | Decline Dumbbell Flyes | Chest | Dumbbell | Strength
+Decline_Dumbbell_Triceps_Extension | Decline Dumbbell Triceps Extension | Triceps | Dumbbell | Strength
+Decline_EZ_Bar_Triceps_Extension | Decline EZ Bar Triceps Extension | Triceps | Barbell | Strength
+Decline_Oblique_Crunch | Decline Oblique Crunch | Abs | Bodyweight | Strength
+Decline_Push-Up | Decline Push-Up | Chest | Bodyweight | Strength
+Decline_Reverse_Crunch | Decline Reverse Crunch | Abs | Bodyweight | Strength
+Decline_Smith_Press | Decline Smith Press | Chest | Machine | Strength
+Deficit_Deadlift | Deficit Deadlift | LowerBack | Barbell | Powerlifting
+Depth_Jump_Leap | Depth Jump Leap | Quads | Other | Plyometrics
+Dip_Machine | Dip Machine | Triceps | Machine | Strength
+Dips_-_Triceps_Version | Dips - Triceps Version | Triceps | Bodyweight | Strength
+Donkey_Calf_Raises | Donkey Calf Raises | Calves | Other | Strength
+Double_Kettlebell_Alternating_Hang_Clean | Double Kettlebell Alternating Hang Clean | Hamstrings | Kettlebell | Strength
+Double_Kettlebell_Jerk | Double Kettlebell Jerk | Shoulders | Kettlebell | Strength
+Double_Kettlebell_Push_Press | Double Kettlebell Push Press | Shoulders | Kettlebell | Strength
+Double_Kettlebell_Snatch | Double Kettlebell Snatch | Shoulders | Kettlebell | Strength
+Double_Kettlebell_Windmill | Double Kettlebell Windmill | Abs | Kettlebell | Strength
+Double_Leg_Butt_Kick | Double Leg Butt Kick | Quads | Bodyweight | Plyometrics
+Downward_Facing_Balance | Downward Facing Balance | Glutes | Other | Strength
+Drag_Curl | Drag Curl | Biceps | Barbell | Strength
+Drop_Push | Drop Push | Chest | Other | Plyometrics
+Dumbbell_Alternate_Bicep_Curl | Dumbbell Alternate Bicep Curl | Biceps | Dumbbell | Strength
+Dumbbell_Bench_Press_with_Neutral_Grip | Dumbbell Bench Press with Neutral Grip | Chest | Dumbbell | Strength
+Dumbbell_Clean | Dumbbell Clean | Hamstrings | Dumbbell | Strength
+Dumbbell_Floor_Press | Dumbbell Floor Press | Triceps | Dumbbell | Powerlifting
+Dumbbell_Incline_Row | Dumbbell Incline Row | Back | Dumbbell | Strength
+Dumbbell_Incline_Shoulder_Raise | Dumbbell Incline Shoulder Raise | Shoulders | Dumbbell | Strength
+Dumbbell_Lying_One-Arm_Rear_Lateral_Raise | Dumbbell Lying One-Arm Rear Lateral Raise | Shoulders | Dumbbell | Strength
+Dumbbell_Lying_Pronation | Dumbbell Lying Pronation | Forearms | Dumbbell | Strength
+Dumbbell_Lying_Rear_Lateral_Raise | Dumbbell Lying Rear Lateral Raise | Shoulders | Dumbbell | Strength
+Dumbbell_Lying_Supination | Dumbbell Lying Supination | Forearms | Dumbbell | Strength
+Dumbbell_One-Arm_Shoulder_Press | Dumbbell One-Arm Shoulder Press | Shoulders | Dumbbell | Strength
+Dumbbell_One-Arm_Triceps_Extension | Dumbbell One-Arm Triceps Extension | Triceps | Dumbbell | Strength
+Dumbbell_One-Arm_Upright_Row | Dumbbell One-Arm Upright Row | Shoulders | Dumbbell | Strength
+Dumbbell_Prone_Incline_Curl | Dumbbell Prone Incline Curl | Biceps | Dumbbell | Strength
+Dumbbell_Raise | Dumbbell Raise | Shoulders | Dumbbell | Strength
+Dumbbell_Rear_Lunge | Dumbbell Rear Lunge | Quads | Dumbbell | Strength
+Dumbbell_Scaption | Dumbbell Scaption | Shoulders | Dumbbell | Strength
+Dumbbell_Seated_Box_Jump | Dumbbell Seated Box Jump | Quads | Dumbbell | Plyometrics
+Dumbbell_Seated_One-Leg_Calf_Raise | Dumbbell Seated One-Leg Calf Raise | Calves | Dumbbell | Strength
+Dumbbell_Side_Bend | Dumbbell Side Bend | Abs | Dumbbell | Strength
+Dumbbell_Squat | Dumbbell Squat | Quads | Dumbbell | Strength
+Dumbbell_Squat_To_A_Bench | Dumbbell Squat To A Bench | Quads | Dumbbell | Strength
+Dumbbell_Tricep_Extension_-Pronated_Grip | Dumbbell Tricep Extension -Pronated Grip | Triceps | Dumbbell | Strength
+Elbow_to_Knee | Elbow to Knee | Abs | Bodyweight | Strength
+Elevated_Back_Lunge | Elevated Back Lunge | Quads | Barbell | Strength
+Elevated_Cable_Rows | Elevated Cable Rows | Back | Cable | Strength
+Exercise_Ball_Crunch | Exercise Ball Crunch | Abs | Other | Strength
+Exercise_Ball_Pull-In | Exercise Ball Pull-In | Abs | Other | Strength
+Extended_Range_One-Arm_Kettlebell_Floor_Press | Extended Range One-Arm Kettlebell Floor Press | Chest | Kettlebell | Strength
+External_Rotation | External Rotation | Shoulders | Dumbbell | Strength
+External_Rotation_with_Band | External Rotation with Band | Shoulders | Band | Strength
+External_Rotation_with_Cable | External Rotation with Cable | Shoulders | Cable | Strength
+Farmers_Walk | Farmer's Walk | Forearms | Other | Strongman
+Fast_Skipping | Fast Skipping | Quads | Bodyweight | Plyometrics
+Finger_Curls | Finger Curls | Forearms | Barbell | Strength
+Flat_Bench_Cable_Flyes | Flat Bench Cable Flyes | Chest | Cable | Strength
+Flat_Bench_Leg_Pull-In | Flat Bench Leg Pull-In | Abs | Bodyweight | Strength
+Flexor_Incline_Dumbbell_Curls | Flexor Incline Dumbbell Curls | Biceps | Dumbbell | Strength
+Floor_Glute-Ham_Raise | Floor Glute-Ham Raise | Hamstrings | Bodyweight | Strength
+Floor_Press | Floor Press | Triceps | Barbell | Powerlifting
+Floor_Press_with_Chains | Floor Press with Chains | Triceps | Barbell | Powerlifting
+Flutter_Kicks | Flutter Kicks | Glutes | Bodyweight | Strength
+Forward_Drag_with_Press | Forward Drag with Press | Chest | Other | Strongman
+Frankenstein_Squat | Frankenstein Squat | Quads | Barbell | Olympic weightlifting
+Freehand_Jump_Squat | Freehand Jump Squat | Quads | Bodyweight | Strength
+Frog_Sit-Ups | Frog Sit-Ups | Abs | Bodyweight | Strength
+Front_Barbell_Squat_To_A_Bench | Front Barbell Squat To A Bench | Quads | Barbell | Strength
+Front_Box_Jump | Front Box Jump | Hamstrings | Other | Plyometrics
+Front_Cable_Raise | Front Cable Raise | Shoulders | Cable | Strength
+Front_Cone_Hops_or_hurdle_hops | Front Cone Hops (or hurdle hops) | Quads | Other | Plyometrics
+Front_Dumbbell_Raise | Front Dumbbell Raise | Shoulders | Dumbbell | Strength
+Front_Incline_Dumbbell_Raise | Front Incline Dumbbell Raise | Shoulders | Dumbbell | Strength
+Front_Plate_Raise | Front Plate Raise | Shoulders | Other | Strength
+Front_Raise_And_Pullover | Front Raise And Pullover | Chest | Barbell | Strength
+Front_Squat_Clean_Grip | Front Squat (Clean Grip) | Quads | Barbell | Strength
+Front_Squats_With_Two_Kettlebells | Front Squats With Two Kettlebells | Quads | Kettlebell | Strength
+Front_Two-Dumbbell_Raise | Front Two-Dumbbell Raise | Shoulders | Dumbbell | Strength
+Full_Range-Of-Motion_Lat_Pulldown | Full Range-Of-Motion Lat Pulldown | Back | Cable | Strength
+Gironda_Sternum_Chins | Gironda Sternum Chins | Back | Other | Strength
+Glute_Ham_Raise | Glute Ham Raise | Hamstrings | Machine | Powerlifting
+Glute_Kickback | Glute Kickback | Glutes | Bodyweight | Strength
+Good_Morning_off_Pins | Good Morning off Pins | Hamstrings | Barbell | Powerlifting
+Gorilla_Chin_Crunch | Gorilla Chin/Crunch | Abs | Bodyweight | Strength
+Hammer_Grip_Incline_DB_Bench_Press | Hammer Grip Incline DB Bench Press | Chest | Dumbbell | Strength
+Handstand_Push-Ups | Handstand Push-Ups | Shoulders | Bodyweight | Strength
+Hang_Clean | Hang Clean | Quads | Barbell | Olympic weightlifting
+Hang_Clean_-_Below_the_Knees | Hang Clean - Below the Knees | Quads | Barbell | Olympic weightlifting
+Hang_Snatch | Hang Snatch | Hamstrings | Barbell | Olympic weightlifting
+Hang_Snatch_-_Below_Knees | Hang Snatch - Below Knees | Hamstrings | Barbell | Olympic weightlifting
+Hanging_Bar_Good_Morning | Hanging Bar Good Morning | Hamstrings | Barbell | Powerlifting
+Hanging_Pike | Hanging Pike | Abs | Bodyweight | Strength
+Heaving_Snatch_Balance | Heaving Snatch Balance | Quads | Barbell | Olympic weightlifting
+Heavy_Bag_Thrust | Heavy Bag Thrust | Chest | Other | Plyometrics
+High_Cable_Curls | High Cable Curls | Biceps | Cable | Strength
+Hip_Extension_with_Bands | Hip Extension with Bands | Glutes | Band | Strength
+Hip_Flexion_with_Band | Hip Flexion with Band | Quads | Band | Strength
+Hip_Lift_with_Band | Hip Lift with Band | Glutes | Band | Powerlifting
+Hurdle_Hops | Hurdle Hops | Hamstrings | Other | Plyometrics
+Hyperextensions_With_No_Hyperextension_Bench | Hyperextensions With No Hyperextension Bench | LowerBack | Bodyweight | Strength
+Incline_Barbell_Triceps_Extension | Incline Barbell Triceps Extension | Triceps | Barbell | Strength
+Incline_Bench_Pull | Incline Bench Pull | Back | Barbell | Strength
+Incline_Cable_Chest_Press | Incline Cable Chest Press | Chest | Cable | Strength
+Incline_Cable_Flye | Incline Cable Flye | Chest | Cable | Strength
+Incline_Dumbbell_Bench_With_Palms_Facing_In | Incline Dumbbell Bench With Palms Facing In | Chest | Dumbbell | Strength
+Incline_Dumbbell_Flyes | Incline Dumbbell Flyes | Chest | Dumbbell | Strength
+Incline_Dumbbell_Flyes_-_With_A_Twist | Incline Dumbbell Flyes - With A Twist | Chest | Dumbbell | Strength
+Incline_Hammer_Curls | Incline Hammer Curls | Biceps | Dumbbell | Strength
+Incline_Inner_Biceps_Curl | Incline Inner Biceps Curl | Biceps | Dumbbell | Strength
+Incline_Push-Up | Incline Push-Up | Chest | Bodyweight | Strength
+Incline_Push-Up_Close-Grip | Incline Push-Up Close-Grip | Triceps | Bodyweight | Strength
+Incline_Push-Up_Depth_Jump | Incline Push-Up Depth Jump | Chest | Other | Plyometrics
+Incline_Push-Up_Medium | Incline Push-Up Medium | Chest | Bodyweight | Strength
+Incline_Push-Up_Reverse_Grip | Incline Push-Up Reverse Grip | Chest | Bodyweight | Strength
+Incline_Push-Up_Wide | Incline Push-Up Wide | Chest | Bodyweight | Strength
+Internal_Rotation_with_Band | Internal Rotation with Band | Shoulders | Band | Strength
+Inverted_Row_with_Straps | Inverted Row with Straps | Back | Other | Strength
+Iron_Cross | Iron Cross | Shoulders | Dumbbell | Strength
+Isometric_Chest_Squeezes | Isometric Chest Squeezes | Chest | Bodyweight | Plyometrics
+Isometric_Neck_Exercise_-_Front_And_Back | Isometric Neck Exercise - Front And Back | Neck | Bodyweight | Strength
+Isometric_Neck_Exercise_-_Sides | Isometric Neck Exercise - Sides | Neck | Bodyweight | Strength
+Isometric_Wipers | Isometric Wipers | Chest | Bodyweight | Strength
+JM_Press | JM Press | Triceps | Barbell | Strength
+Jackknife_Sit-Up | Jackknife Sit-Up | Abs | Bodyweight | Strength
+Janda_Sit-Up | Janda Sit-Up | Abs | Bodyweight | Strength
+Jefferson_Squats | Jefferson Squats | Quads | Barbell | Strength
+Jerk_Balance | Jerk Balance | Shoulders | Barbell | Olympic weightlifting
+Jerk_Dip_Squat | Jerk Dip Squat | Quads | Barbell | Olympic weightlifting
+Keg_Load | Keg Load | LowerBack | Other | Strongman
+Kettlebell_Arnold_Press | Kettlebell Arnold Press | Shoulders | Kettlebell | Strength
+Kettlebell_Dead_Clean | Kettlebell Dead Clean | Hamstrings | Kettlebell | Strength
+Kettlebell_Figure_8 | Kettlebell Figure 8 | Abs | Kettlebell | Strength
+Kettlebell_Halo | Kettlebell Halo | Shoulders | Kettlebell | Strength
+Kettlebell_Halo_With_Overhead_Extension | Kettlebell Halo with Overhead Extension | Shoulders | Kettlebell | Strength
+Kettlebell_Hang_Clean | Kettlebell Hang Clean | Hamstrings | Kettlebell | Strength
+Kettlebell_One-Legged_Deadlift | Kettlebell One-Legged Deadlift | Hamstrings | Kettlebell | Strength
+Kettlebell_Overhead_Triceps_Extension | Kettlebell Overhead Triceps Extension | Triceps | Kettlebell | Strength
+Kettlebell_Pass_Between_The_Legs | Kettlebell Pass Between The Legs | Abs | Kettlebell | Strength
+Kettlebell_Pirate_Ships | Kettlebell Pirate Ships | Shoulders | Kettlebell | Strength
+Kettlebell_Pistol_Squat | Kettlebell Pistol Squat | Quads | Kettlebell | Strength
+Kettlebell_Seated_Press | Kettlebell Seated Press | Shoulders | Kettlebell | Strength
+Kettlebell_Seesaw_Press | Kettlebell Seesaw Press | Shoulders | Kettlebell | Strength
+Kettlebell_Sumo_High_Pull | Kettlebell Sumo High Pull | Traps | Kettlebell | Strength
+Kettlebell_Thruster | Kettlebell Thruster | Shoulders | Kettlebell | Strength
+Kettlebell_Turkish_Get-Up_Lunge_style | Kettlebell Turkish Get-Up (Lunge style) | Shoulders | Kettlebell | Strength
+Kettlebell_Turkish_Get-Up_Squat_style | Kettlebell Turkish Get-Up (Squat style) | Shoulders | Kettlebell | Strength
+Kettlebell_Windmill | Kettlebell Windmill | Abs | Kettlebell | Strength
+Kipping_Muscle_Up | Kipping Muscle Up | Back | Other | Strength
+Knee_Hip_Raise_On_Parallel_Bars | Knee/Hip Raise On Parallel Bars | Abs | Other | Strength
+Knee_Tuck_Jump | Knee Tuck Jump | Hamstrings | Bodyweight | Plyometrics
+Kneeling_Arm_Drill | Kneeling Arm Drill | Shoulders | Bodyweight | Plyometrics
+Kneeling_Cable_Crunch_With_Alternating_Oblique_Twists | Kneeling Cable Crunch With Alternating Oblique Twists | Abs | Cable | Strength
+Kneeling_Cable_Triceps_Extension | Kneeling Cable Triceps Extension | Triceps | Cable | Strength
+Kneeling_High_Pulley_Row | Kneeling High Pulley Row | Back | Cable | Strength
+Kneeling_Jump_Squat | Kneeling Jump Squat | Glutes | Barbell | Olympic weightlifting
+Kneeling_Single-Arm_High_Pulley_Row | Kneeling Single-Arm High Pulley Row | Back | Cable | Strength
+Kneeling_Squat | Kneeling Squat | Glutes | Barbell | Powerlifting
+Landmine_180s | Landmine 180's | Abs | Barbell | Strength
+Landmine_Linear_Jammer | Landmine Linear Jammer | Shoulders | Barbell | Strength
+Lateral_Bound | Lateral Bound | Quads | Bodyweight | Plyometrics
+Lateral_Box_Jump | Lateral Box Jump | Quads | Other | Plyometrics
+Lateral_Cone_Hops | Lateral Cone Hops | Quads | Other | Plyometrics
+Leg-Over_Floor_Press | Leg-Over Floor Press | Chest | Kettlebell | Strength
+Leg_Lift | Leg Lift | Glutes | Bodyweight | Strength
+Leg_Pull-In | Leg Pull-In | Abs | Bodyweight | Strength
+Leverage_Deadlift | Leverage Deadlift | Quads | Machine | Strength
+Leverage_Decline_Chest_Press | Leverage Decline Chest Press | Chest | Machine | Strength
+Leverage_High_Row | Leverage High Row | Back | Machine | Strength
+Leverage_Incline_Chest_Press | Leverage Incline Chest Press | Chest | Machine | Strength
+Leverage_Iso_Row | Leverage Iso Row | Back | Machine | Strength
+Leverage_Shoulder_Press | Leverage Shoulder Press | Shoulders | Machine | Strength
+Leverage_Shrug | Leverage Shrug | Traps | Machine | Strength
+Linear_3-Part_Start_Technique | Linear 3-Part Start Technique | Hamstrings | Bodyweight | Plyometrics
+Linear_Acceleration_Wall_Drill | Linear Acceleration Wall Drill | Hamstrings | Bodyweight | Plyometrics
+Linear_Depth_Jump | Linear Depth Jump | Quads | Other | Plyometrics
+Log_Lift | Log Lift | Shoulders | Other | Strongman
+London_Bridges | London Bridges | Back | Other | Strength
+Low_Cable_Crossover | Low Cable Crossover | Chest | Cable | Strength
+Low_Cable_Triceps_Extension | Low Cable Triceps Extension | Triceps | Cable | Strength
+Low_Pulley_Row_To_Neck | Low Pulley Row To Neck | Shoulders | Cable | Strength
+Lunge_Pass_Through | Lunge Pass Through | Hamstrings | Kettlebell | Strength
+Lunge_Sprint | Lunge Sprint | Quads | Machine | Strength
+Lying_Cable_Curl | Lying Cable Curl | Biceps | Cable | Strength
+Lying_Cambered_Barbell_Row | Lying Cambered Barbell Row | Back | Barbell | Strength
+Lying_Close-Grip_Bar_Curl_On_High_Pulley | Lying Close-Grip Bar Curl On High Pulley | Biceps | Cable | Strength
+Lying_Close-Grip_Barbell_Triceps_Extension_Behind_The_Head | Lying Close-Grip Barbell Triceps Extension Behind The Head | Triceps | Barbell | Strength
+Lying_Close-Grip_Barbell_Triceps_Press_To_Chin | Lying Close-Grip Barbell Triceps Press To Chin | Triceps | EzBar | Strength
+Lying_Dumbbell_Tricep_Extension | Lying Dumbbell Tricep Extension | Triceps | Dumbbell | Strength
+Lying_Face_Down_Plate_Neck_Resistance | Lying Face Down Plate Neck Resistance | Neck | Other | Strength
+Lying_Face_Up_Plate_Neck_Resistance | Lying Face Up Plate Neck Resistance | Neck | Other | Strength
+Lying_High_Bench_Barbell_Curl | Lying High Bench Barbell Curl | Biceps | Barbell | Strength
+Lying_Machine_Squat | Lying Machine Squat | Quads | Machine | Strength
+Lying_One-Arm_Lateral_Raise | Lying One-Arm Lateral Raise | Shoulders | Dumbbell | Strength
+Lying_Rear_Delt_Raise | Lying Rear Delt Raise | Shoulders | Dumbbell | Strength
+Lying_Supine_Dumbbell_Curl | Lying Supine Dumbbell Curl | Biceps | Dumbbell | Strength
+Lying_Triceps_Press | Lying Triceps Press | Triceps | EzBar | Strength
+Machine_Bench_Press | Machine Bench Press | Chest | Machine | Strength
+Machine_Bicep_Curl | Machine Bicep Curl | Biceps | Machine | Strength
+Machine_Preacher_Curls | Machine Preacher Curls | Biceps | Machine | Strength
+Machine_Triceps_Extension | Machine Triceps Extension | Triceps | Machine | Strength
+Medicine_Ball_Chest_Pass | Medicine Ball Chest Pass | Chest | Other | Plyometrics
+Medicine_Ball_Full_Twist | Medicine Ball Full Twist | Abs | Other | Plyometrics
+Medicine_Ball_Scoop_Throw | Medicine Ball Scoop Throw | Shoulders | Other | Plyometrics
+Middle_Back_Shrug | Middle Back Shrug | Back | Dumbbell | Strength
+Mixed_Grip_Chin | Mixed Grip Chin | Back | Other | Strength
+Monster_Walk | Monster Walk | Glutes | Band | Strength
+Mountain_Climbers | Mountain Climbers | Quads | Bodyweight | Plyometrics
+Moving_Claw_Series | Moving Claw Series | Hamstrings | Bodyweight | Plyometrics
+Muscle_Snatch | Muscle Snatch | Hamstrings | Barbell | Olympic weightlifting
+Muscle_Up | Muscle Up | Back | Other | Strength
+Narrow_Stance_Hack_Squats | Narrow Stance Hack Squats | Quads | Machine | Strength
+Narrow_Stance_Leg_Press | Narrow Stance Leg Press | Quads | Machine | Strength
+Narrow_Stance_Squats | Narrow Stance Squats | Quads | Barbell | Strength
+Neck_Press | Neck Press | Chest | Barbell | Strength
+Oblique_Crunches | Oblique Crunches | Abs | Bodyweight | Strength
+Oblique_Crunches_-_On_The_Floor | Oblique Crunches - On The Floor | Abs | Bodyweight | Strength
+Olympic_Squat | Olympic Squat | Quads | Barbell | Olympic weightlifting
+One-Arm_Flat_Bench_Dumbbell_Flye | One-Arm Flat Bench Dumbbell Flye | Chest | Dumbbell | Strength
+One-Arm_High-Pulley_Cable_Side_Bends | One-Arm High-Pulley Cable Side Bends | Abs | Cable | Strength
+One-Arm_Incline_Lateral_Raise | One-Arm Incline Lateral Raise | Shoulders | Dumbbell | Strength
+One-Arm_Kettlebell_Clean | One-Arm Kettlebell Clean | Hamstrings | Kettlebell | Strength
+One-Arm_Kettlebell_Clean_and_Jerk | One-Arm Kettlebell Clean and Jerk | Shoulders | Kettlebell | Strength
+One-Arm_Kettlebell_Floor_Press | One-Arm Kettlebell Floor Press | Chest | Kettlebell | Strength
+One-Arm_Kettlebell_Jerk | One-Arm Kettlebell Jerk | Shoulders | Kettlebell | Strength
+One-Arm_Kettlebell_Military_Press_To_The_Side | One-Arm Kettlebell Military Press To The Side | Shoulders | Kettlebell | Strength
+One-Arm_Kettlebell_Para_Press | One-Arm Kettlebell Para Press | Shoulders | Kettlebell | Strength
+One-Arm_Kettlebell_Push_Press | One-Arm Kettlebell Push Press | Shoulders | Kettlebell | Strength
+One-Arm_Kettlebell_Row | One-Arm Kettlebell Row | Back | Kettlebell | Strength
+One-Arm_Kettlebell_Snatch | One-Arm Kettlebell Snatch | Shoulders | Kettlebell | Strength
+One-Arm_Kettlebell_Split_Jerk | One-Arm Kettlebell Split Jerk | Shoulders | Kettlebell | Strength
+One-Arm_Kettlebell_Split_Snatch | One-Arm Kettlebell Split Snatch | Shoulders | Kettlebell | Strength
+One-Arm_Long_Bar_Row | One-Arm Long Bar Row | Back | Barbell | Strength
+One-Arm_Medicine_Ball_Slam | One-Arm Medicine Ball Slam | Abs | Other | Strength
+One-Arm_Open_Palm_Kettlebell_Clean | One-Arm Open Palm Kettlebell Clean | Hamstrings | Kettlebell | Strength
+One-Arm_Overhead_Kettlebell_Squats | One-Arm Overhead Kettlebell Squats | Quads | Kettlebell | Strength
+One-Arm_Side_Deadlift | One-Arm Side Deadlift | Quads | Barbell | Strength
+One-Arm_Side_Laterals | One-Arm Side Laterals | Shoulders | Dumbbell | Strength
+One_Arm_Chin-Up | One Arm Chin-Up | Back | Other | Strength
+One_Arm_Dumbbell_Bench_Press | One Arm Dumbbell Bench Press | Chest | Dumbbell | Strength
+One_Arm_Dumbbell_Preacher_Curl | One Arm Dumbbell Preacher Curl | Biceps | Dumbbell | Strength
+One_Arm_Floor_Press | One Arm Floor Press | Triceps | Barbell | Strength
+One_Arm_Lat_Pulldown | One Arm Lat Pulldown | Back | Cable | Strength
+One_Arm_Pronated_Dumbbell_Triceps_Extension | One Arm Pronated Dumbbell Triceps Extension | Triceps | Dumbbell | Strength
+One_Arm_Supinated_Dumbbell_Triceps_Extension | One Arm Supinated Dumbbell Triceps Extension | Triceps | Dumbbell | Strength
+One_Leg_Barbell_Squat | One Leg Barbell Squat | Quads | Barbell | Strength
+Open_Palm_Kettlebell_Clean | Open Palm Kettlebell Clean | Hamstrings | Kettlebell | Strength
+Otis-Up | Otis-Up | Abs | Other | Strength
+Overhead_Cable_Curl | Overhead Cable Curl | Biceps | Cable | Strength
+Overhead_Slam | Overhead Slam | Back | Other | Plyometrics
+Overhead_Squat | Overhead Squat | Quads | Barbell | Olympic weightlifting
+Pallof_Press | Pallof Press | Abs | Cable | Strength
+Pallof_Press_With_Rotation | Pallof Press With Rotation | Abs | Cable | Strength
+Palms-Down_Dumbbell_Wrist_Curl_Over_A_Bench | Palms-Down Dumbbell Wrist Curl Over A Bench | Forearms | Dumbbell | Strength
+Palms-Down_Wrist_Curl_Over_A_Bench | Palms-Down Wrist Curl Over A Bench | Forearms | Barbell | Strength
+Palms-Up_Barbell_Wrist_Curl_Over_A_Bench | Palms-Up Barbell Wrist Curl Over A Bench | Forearms | Barbell | Strength
+Palms-Up_Dumbbell_Wrist_Curl_Over_A_Bench | Palms-Up Dumbbell Wrist Curl Over A Bench | Forearms | Dumbbell | Strength
+Parallel_Bar_Dip | Parallel Bar Dip | Triceps | Other | Strength
+Physioball_Hip_Bridge | Physioball Hip Bridge | Glutes | Other | Strength
+Pin_Presses | Pin Presses | Triceps | Barbell | Powerlifting
+Plank | Plank | Abs | Bodyweight | Strength
+Plate_Pinch | Plate Pinch | Forearms | Other | Strength
+Plate_Twist | Plate Twist | Abs | Other | Strength
+Platform_Hamstring_Slides | Platform Hamstring Slides | Hamstrings | Other | Strength
+Plie_Dumbbell_Squat | Plie Dumbbell Squat | Quads | Dumbbell | Strength
+Plyo_Kettlebell_Pushups | Plyo Kettlebell Pushups | Chest | Kettlebell | Strength
+Plyo_Push-up | Plyo Push-up | Chest | Bodyweight | Plyometrics
+Power_Clean | Power Clean | Hamstrings | Barbell | Strength
+Power_Clean_from_Blocks | Power Clean from Blocks | Hamstrings | Barbell | Olympic weightlifting
+Power_Jerk | Power Jerk | Quads | Barbell | Olympic weightlifting
+Power_Partials | Power Partials | Shoulders | Dumbbell | Strength
+Power_Snatch | Power Snatch | Hamstrings | Barbell | Olympic weightlifting
+Power_Snatch_from_Blocks | Power Snatch from Blocks | Quads | Barbell | Olympic weightlifting
+Power_Stairs | Power Stairs | Hamstrings | Other | Strongman
+Preacher_Hammer_Dumbbell_Curl | Preacher Hammer Dumbbell Curl | Biceps | Dumbbell | Strength
+Press_Sit-Up | Press Sit-Up | Abs | Barbell | Strength
+Prone_Manual_Hamstring | Prone Manual Hamstring | Hamstrings | Bodyweight | Strength
+Pull_Through | Pull Through | Glutes | Cable | Strength
+Push-Up_Wide | Push-Up Wide | Chest | Bodyweight | Strength
+Push-Ups_With_Feet_Elevated | Push-Ups With Feet Elevated | Chest | Bodyweight | Strength
+Push-Ups_With_Feet_On_An_Exercise_Ball | Push-Ups With Feet On An Exercise Ball | Chest | Other | Strength
+Push_Press | Push Press | Shoulders | Barbell | Olympic weightlifting
+Push_Press_-_Behind_the_Neck | Push Press - Behind the Neck | Shoulders | Barbell | Olympic weightlifting
+Push_Up_to_Side_Plank | Push Up to Side Plank | Chest | Bodyweight | Strength
+Pushups_Close_and_Wide_Hand_Positions | Pushups (Close and Wide Hand Positions) | Chest | Bodyweight | Strength
+Quick_Leap | Quick Leap | Quads | Other | Plyometrics
+Rack_Delivery | Rack Delivery | Shoulders | Barbell | Olympic weightlifting
+Rack_Pull_with_Bands | Rack Pull with Bands | LowerBack | Barbell | Powerlifting
+Rack_Pulls | Rack Pulls | LowerBack | Barbell | Powerlifting
+Return_Push_from_Stance | Return Push from Stance | Shoulders | Other | Plyometrics
+Reverse_Band_Bench_Press | Reverse Band Bench Press | Triceps | Barbell | Powerlifting
+Reverse_Band_Box_Squat | Reverse Band Box Squat | Quads | Barbell | Powerlifting
+Reverse_Band_Deadlift | Reverse Band Deadlift | LowerBack | Barbell | Powerlifting
+Reverse_Band_Power_Squat | Reverse Band Power Squat | Quads | Barbell | Powerlifting
+Reverse_Band_Sumo_Deadlift | Reverse Band Sumo Deadlift | Hamstrings | Barbell | Powerlifting
+Reverse_Barbell_Preacher_Curls | Reverse Barbell Preacher Curls | Biceps | EzBar | Strength
+Reverse_Cable_Curl | Reverse Cable Curl | Biceps | Cable | Strength
+Reverse_Crunch | Reverse Crunch | Abs | Bodyweight | Strength
+Reverse_Flyes_With_External_Rotation | Reverse Flyes With External Rotation | Shoulders | Dumbbell | Strength
+Reverse_Grip_Bent-Over_Rows | Reverse Grip Bent-Over Rows | Back | Barbell | Strength
+Reverse_Grip_Triceps_Pushdown | Reverse Grip Triceps Pushdown | Triceps | Cable | Strength
+Reverse_Hyperextension | Reverse Hyperextension | Hamstrings | Machine | Strength
+Reverse_Plate_Curls | Reverse Plate Curls | Biceps | Other | Strength
+Reverse_Triceps_Bench_Press | Reverse Triceps Bench Press | Triceps | Barbell | Strength
+Rickshaw_Carry | Rickshaw Carry | Forearms | Other | Strongman
+Rickshaw_Deadlift | Rickshaw Deadlift | Quads | Other | Strongman
+Ring_Dips | Ring Dips | Triceps | Other | Strength
+Rocket_Jump | Rocket Jump | Quads | Bodyweight | Plyometrics
+Rocking_Standing_Calf_Raise | Rocking Standing Calf Raise | Calves | Barbell | Strength
+Rocky_Pull-Ups_Pulldowns | Rocky Pull-Ups/Pulldowns | Back | Other | Strength
+Romanian_Deadlift_from_Deficit | Romanian Deadlift from Deficit | Hamstrings | Barbell | Olympic weightlifting
+Rope_Climb | Rope Climb | Back | Other | Strength
+Rope_Crunch | Rope Crunch | Abs | Cable | Strength
+Rope_Straight-Arm_Pulldown | Rope Straight-Arm Pulldown | Back | Cable | Strength
+Russian_Twist | Russian Twist | Abs | Bodyweight | Strength
+Sandbag_Load | Sandbag Load | Quads | Other | Strongman
+Scapular_Pull-Up | Scapular Pull-Up | Traps | Bodyweight | Strength
+Scissors_Jump | Scissors Jump | Quads | Bodyweight | Plyometrics
+Seated_Band_Hamstring_Curl | Seated Band Hamstring Curl | Hamstrings | Other | Strength
+Seated_Barbell_Military_Press | Seated Barbell Military Press | Shoulders | Barbell | Strength
+Seated_Barbell_Twist | Seated Barbell Twist | Abs | Barbell | Strength
+Seated_Bent-Over_One-Arm_Dumbbell_Triceps_Extension | Seated Bent-Over One-Arm Dumbbell Triceps Extension | Triceps | Dumbbell | Strength
+Seated_Bent-Over_Rear_Delt_Raise | Seated Bent-Over Rear Delt Raise | Shoulders | Dumbbell | Strength
+Seated_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension | Seated Bent-Over Two-Arm Dumbbell Triceps Extension | Triceps | Dumbbell | Strength
+Seated_Cable_Shoulder_Press | Seated Cable Shoulder Press | Shoulders | Cable | Strength
+Seated_Close-Grip_Concentration_Barbell_Curl | Seated Close-Grip Concentration Barbell Curl | Biceps | Barbell | Strength
+Seated_Dumbbell_Curl | Seated Dumbbell Curl | Biceps | Dumbbell | Strength
+Seated_Dumbbell_Inner_Biceps_Curl | Seated Dumbbell Inner Biceps Curl | Biceps | Dumbbell | Strength
+Seated_Dumbbell_Palms-Down_Wrist_Curl | Seated Dumbbell Palms-Down Wrist Curl | Forearms | Dumbbell | Strength
+Seated_Dumbbell_Press | Seated Dumbbell Press | Shoulders | Dumbbell | Strength
+Seated_Flat_Bench_Leg_Pull-In | Seated Flat Bench Leg Pull-In | Abs | Bodyweight | Strength
+Seated_Good_Mornings | Seated Good Mornings | LowerBack | Barbell | Powerlifting
+Seated_Head_Harness_Neck_Resistance | Seated Head Harness Neck Resistance | Neck | Other | Strength
+Seated_Leg_Tucks | Seated Leg Tucks | Abs | Bodyweight | Strength
+Seated_One-Arm_Dumbbell_Palms-Down_Wrist_Curl | Seated One-Arm Dumbbell Palms-Down Wrist Curl | Forearms | Dumbbell | Strength
+Seated_One-Arm_Dumbbell_Palms-Up_Wrist_Curl | Seated One-Arm Dumbbell Palms-Up Wrist Curl | Forearms | Dumbbell | Strength
+Seated_One-arm_Cable_Pulley_Rows | Seated One-arm Cable Pulley Rows | Back | Cable | Strength
+Seated_Palm-Up_Barbell_Wrist_Curl | Seated Palm-Up Barbell Wrist Curl | Forearms | Barbell | Strength
+Seated_Palms-Down_Barbell_Wrist_Curl | Seated Palms-Down Barbell Wrist Curl | Forearms | Barbell | Strength
+Seated_Side_Lateral_Raise | Seated Side Lateral Raise | Shoulders | Dumbbell | Strength
+Seated_Triceps_Press | Seated Triceps Press | Triceps | Dumbbell | Strength
+Seated_Two-Arm_Palms-Up_Low-Pulley_Wrist_Curl | Seated Two-Arm Palms-Up Low-Pulley Wrist Curl | Forearms | Cable | Strength
+See-Saw_Press_Alternating_Side_Press | See-Saw Press (Alternating Side Press) | Shoulders | Dumbbell | Strength
+Shotgun_Row | Shotgun Row | Back | Cable | Strength
+Shoulder_Press_-_With_Bands | Shoulder Press - With Bands | Shoulders | Band | Strength
+Side_Bridge | Side Bridge | Abs | Bodyweight | Strength
+Side_Hop-Sprint | Side Hop-Sprint | Quads | Other | Plyometrics
+Side_Jackknife | Side Jackknife | Abs | Bodyweight | Strength
+Side_Laterals_to_Front_Raise | Side Laterals to Front Raise | Shoulders | Dumbbell | Strength
+Side_Standing_Long_Jump | Side Standing Long Jump | Quads | Bodyweight | Plyometrics
+Side_To_Side_Chins | Side To Side Chins | Back | Other | Strength
+Side_to_Side_Box_Shuffle | Side to Side Box Shuffle | Quads | Other | Plyometrics
+Single-Arm_Cable_Crossover | Single-Arm Cable Crossover | Chest | Cable | Strength
+Single-Arm_Linear_Jammer | Single-Arm Linear Jammer | Shoulders | Barbell | Strength
+Single-Arm_Push-Up | Single-Arm Push-Up | Chest | Bodyweight | Strength
+Single-Cone_Sprint_Drill | Single-Cone Sprint Drill | Quads | Other | Plyometrics
+Single-Leg_High_Box_Squat | Single-Leg High Box Squat | Quads | Other | Strength
+Single-Leg_Hop_Progression | Single-Leg Hop Progression | Quads | Other | Plyometrics
+Single-Leg_Lateral_Hop | Single-Leg Lateral Hop | Quads | Other | Plyometrics
+Single-Leg_Leg_Extension | Single-Leg Leg Extension | Quads | Machine | Strength
+Single-Leg_Stride_Jump | Single-Leg Stride Jump | Quads | Other | Plyometrics
+Single_Dumbbell_Raise | Single Dumbbell Raise | Shoulders | Dumbbell | Strength
+Single_Leg_Butt_Kick | Single Leg Butt Kick | Quads | Bodyweight | Plyometrics
+Single_Leg_Glute_Bridge | Single Leg Glute Bridge | Glutes | Bodyweight | Strength
+Single_Leg_Push-off | Single Leg Push-off | Quads | Other | Plyometrics
+Sit-Up | Sit-Up | Abs | Bodyweight | Strength
+Sled_Drag_-_Harness | Sled Drag - Harness | Quads | Other | Strongman
+Sled_Overhead_Backward_Walk | Sled Overhead Backward Walk | Shoulders | Other | Strength
+Sled_Overhead_Triceps_Extension | Sled Overhead Triceps Extension | Triceps | Other | Strength
+Sled_Push | Sled Push | Quads | Other | Strongman
+Sled_Reverse_Flye | Sled Reverse Flye | Shoulders | Other | Strength
+Sled_Row | Sled Row | Back | Other | Strength
+Sledgehammer_Swings | Sledgehammer Swings | Abs | Other | Plyometrics
+Smith_Incline_Shoulder_Raise | Smith Incline Shoulder Raise | Shoulders | Barbell | Strength
+Smith_Machine_Behind_the_Back_Shrug | Smith Machine Behind the Back Shrug | Traps | Machine | Strength
+Smith_Machine_Bench_Press | Smith Machine Bench Press | Chest | Machine | Strength
+Smith_Machine_Bent_Over_Row | Smith Machine Bent Over Row | Back | Machine | Strength
+Smith_Machine_Calf_Raise | Smith Machine Calf Raise | Calves | Machine | Strength
+Smith_Machine_Close-Grip_Bench_Press | Smith Machine Close-Grip Bench Press | Triceps | Machine | Strength
+Smith_Machine_Decline_Press | Smith Machine Decline Press | Chest | Machine | Strength
+Smith_Machine_Hang_Power_Clean | Smith Machine Hang Power Clean | Hamstrings | Machine | Strength
+Smith_Machine_Hip_Raise | Smith Machine Hip Raise | Abs | Machine | Strength
+Smith_Machine_Incline_Bench_Press | Smith Machine Incline Bench Press | Chest | Machine | Strength
+Smith_Machine_Leg_Press | Smith Machine Leg Press | Quads | Machine | Strength
+Smith_Machine_One-Arm_Upright_Row | Smith Machine One-Arm Upright Row | Shoulders | Machine | Strength
+Smith_Machine_Overhead_Shoulder_Press | Smith Machine Overhead Shoulder Press | Shoulders | Machine | Strength
+Smith_Machine_Pistol_Squat | Smith Machine Pistol Squat | Quads | Machine | Strength
+Smith_Machine_Reverse_Calf_Raises | Smith Machine Reverse Calf Raises | Calves | Machine | Strength
+Smith_Machine_Squat | Smith Machine Squat | Quads | Machine | Strength
+Smith_Machine_Stiff-Legged_Deadlift | Smith Machine Stiff-Legged Deadlift | Hamstrings | Machine | Strength
+Smith_Machine_Upright_Row | Smith Machine Upright Row | Traps | Machine | Strength
+Smith_Single-Leg_Split_Squat | Smith Single-Leg Split Squat | Quads | Machine | Strength
+Snatch | Snatch | Quads | Barbell | Olympic weightlifting
+Snatch_Balance | Snatch Balance | Quads | Barbell | Olympic weightlifting
+Snatch_Deadlift | Snatch Deadlift | Hamstrings | Barbell | Olympic weightlifting
+Snatch_Pull | Snatch Pull | Hamstrings | Barbell | Strength
+Snatch_Shrug | Snatch Shrug | Traps | Barbell | Olympic weightlifting
+Snatch_from_Blocks | Snatch from Blocks | Quads | Barbell | Olympic weightlifting
+Speed_Band_Overhead_Triceps | Speed Band Overhead Triceps | Triceps | Band | Strength
+Speed_Box_Squat | Speed Box Squat | Quads | Barbell | Powerlifting
+Speed_Squats | Speed Squats | Quads | Barbell | Strength
+Spell_Caster | Spell Caster | Abs | Dumbbell | Strength
+Spider_Crawl | Spider Crawl | Abs | Bodyweight | Strength
+Spider_Curl | Spider Curl | Biceps | EzBar | Strength
+Split_Clean | Split Clean | Quads | Barbell | Olympic weightlifting
+Split_Jerk | Split Jerk | Quads | Barbell | Olympic weightlifting
+Split_Jump | Split Jump | Quads | Bodyweight | Plyometrics
+Split_Snatch | Split Snatch | Hamstrings | Barbell | Olympic weightlifting
+Squat_Jerk | Squat Jerk | Quads | Barbell | Strength
+Squat_with_Bands | Squat with Bands | Quads | Barbell | Powerlifting
+Squat_with_Chains | Squat with Chains | Quads | Barbell | Powerlifting
+Squat_with_Plate_Movers | Squat with Plate Movers | Quads | Barbell | Strength
+Squats_-_With_Bands | Squats - With Bands | Quads | Band | Strength
+Standing_Alternating_Dumbbell_Press | Standing Alternating Dumbbell Press | Shoulders | Dumbbell | Strength
+Standing_Barbell_Calf_Raise | Standing Barbell Calf Raise | Calves | Barbell | Strength
+Standing_Barbell_Press_Behind_Neck | Standing Barbell Press Behind Neck | Shoulders | Barbell | Strength
+Standing_Bent-Over_One-Arm_Dumbbell_Triceps_Extension | Standing Bent-Over One-Arm Dumbbell Triceps Extension | Triceps | Dumbbell | Strength
+Standing_Bent-Over_Two-Arm_Dumbbell_Triceps_Extension | Standing Bent-Over Two-Arm Dumbbell Triceps Extension | Triceps | Dumbbell | Strength
+Standing_Bradford_Press | Standing Bradford Press | Shoulders | Barbell | Strength
+Standing_Cable_Chest_Press | Standing Cable Chest Press | Chest | Cable | Strength
+Standing_Cable_Lift | Standing Cable Lift | Abs | Cable | Strength
+Standing_Cable_Wood_Chop | Standing Cable Wood Chop | Abs | Cable | Strength
+Standing_Concentration_Curl | Standing Concentration Curl | Biceps | Dumbbell | Strength
+Standing_Dumbbell_Press | Standing Dumbbell Press | Shoulders | Dumbbell | Strength
+Standing_Dumbbell_Reverse_Curl | Standing Dumbbell Reverse Curl | Biceps | Dumbbell | Strength
+Standing_Dumbbell_Straight-Arm_Front_Delt_Raise_Above_Head | Standing Dumbbell Straight-Arm Front Delt Raise Above Head | Shoulders | Dumbbell | Strength
+Standing_Dumbbell_Upright_Row | Standing Dumbbell Upright Row | Traps | Dumbbell | Strength
+Standing_Front_Barbell_Raise_Over_Head | Standing Front Barbell Raise Over Head | Shoulders | Barbell | Strength
+Standing_Inner-Biceps_Curl | Standing Inner-Biceps Curl | Biceps | Dumbbell | Strength
+Standing_Leg_Curl | Standing Leg Curl | Hamstrings | Machine | Strength
+Standing_Long_Jump | Standing Long Jump | Quads | Bodyweight | Plyometrics
+Standing_Low-Pulley_Deltoid_Raise | Standing Low-Pulley Deltoid Raise | Shoulders | Cable | Strength
+Standing_Low-Pulley_One-Arm_Triceps_Extension | Standing Low-Pulley One-Arm Triceps Extension | Triceps | Cable | Strength
+Standing_Olympic_Plate_Hand_Squeeze | Standing Olympic Plate Hand Squeeze | Forearms | Other | Strength
+Standing_One-Arm_Cable_Curl | Standing One-Arm Cable Curl | Biceps | Cable | Strength
+Standing_One-Arm_Dumbbell_Curl_Over_Incline_Bench | Standing One-Arm Dumbbell Curl Over Incline Bench | Biceps | Dumbbell | Strength
+Standing_One-Arm_Dumbbell_Triceps_Extension | Standing One-Arm Dumbbell Triceps Extension | Triceps | Dumbbell | Strength
+Standing_Overhead_Barbell_Triceps_Extension | Standing Overhead Barbell Triceps Extension | Triceps | Barbell | Strength
+Standing_Palm-In_One-Arm_Dumbbell_Press | Standing Palm-In One-Arm Dumbbell Press | Shoulders | Dumbbell | Strength
+Standing_Palms-In_Dumbbell_Press | Standing Palms-In Dumbbell Press | Shoulders | Dumbbell | Strength
+Standing_Palms-Up_Barbell_Behind_The_Back_Wrist_Curl | Standing Palms-Up Barbell Behind The Back Wrist Curl | Forearms | Barbell | Strength
+Standing_Rope_Crunch | Standing Rope Crunch | Abs | Cable | Strength
+Standing_Towel_Triceps_Extension | Standing Towel Triceps Extension | Triceps | Bodyweight | Strength
+Standing_Two-Arm_Overhead_Throw | Standing Two-Arm Overhead Throw | Shoulders | Other | Plyometrics
+Star_Jump | Star Jump | Quads | Bodyweight | Plyometrics
+Step-up_with_Knee_Raise | Step-up with Knee Raise | Glutes | Bodyweight | Strength
+Stiff-Legged_Barbell_Deadlift | Stiff-Legged Barbell Deadlift | Hamstrings | Barbell | Strength
+Stiff_Leg_Barbell_Good_Morning | Stiff Leg Barbell Good Morning | LowerBack | Barbell | Strength
+Straight-Arm_Dumbbell_Pullover | Straight-Arm Dumbbell Pullover | Chest | Dumbbell | Strength
+Straight_Bar_Bench_Mid_Rows | Straight Bar Bench Mid Rows | Back | Barbell | Strength
+Straight_Raises_on_Incline_Bench | Straight Raises on Incline Bench | Shoulders | Barbell | Strength
+Stride_Jump_Crossover | Stride Jump Crossover | Quads | Other | Plyometrics
+Sumo_Deadlift | Sumo Deadlift | Hamstrings | Barbell | Powerlifting
+Sumo_Deadlift_with_Bands | Sumo Deadlift with Bands | Hamstrings | Barbell | Powerlifting
+Sumo_Deadlift_with_Chains | Sumo Deadlift with Chains | Hamstrings | Barbell | Powerlifting
+Supine_Chest_Throw | Supine Chest Throw | Triceps | Other | Plyometrics
+Supine_One-Arm_Overhead_Throw | Supine One-Arm Overhead Throw | Abs | Other | Plyometrics
+Supine_Two-Arm_Overhead_Throw | Supine Two-Arm Overhead Throw | Abs | Other | Plyometrics
+Suspended_Fallout | Suspended Fallout | Abs | Other | Strength
+Suspended_Push-Up | Suspended Push-Up | Chest | Other | Strength
+Suspended_Reverse_Crunch | Suspended Reverse Crunch | Abs | Other | Strength
+Suspended_Row | Suspended Row | Back | Other | Strength
+Suspended_Split_Squat | Suspended Split Squat | Quads | Other | Strength
+Svend_Press | Svend Press | Chest | Other | Strength
+Tate_Press | Tate Press | Triceps | Dumbbell | Strength
+Thigh_Abductor | Thigh Abductor | Glutes | Machine | Strength
+Thigh_Adductor | Thigh Adductor | Quads | Machine | Strength
+Tire_Flip | Tire Flip | Quads | Other | Strongman
+Trap_Bar_Deadlift | Trap Bar Deadlift | Quads | Other | Strength
+Tricep_Dumbbell_Kickback | Tricep Dumbbell Kickback | Triceps | Dumbbell | Strength
+Triceps_Overhead_Extension_with_Rope | Triceps Overhead Extension with Rope | Triceps | Cable | Strength
+Triceps_Pushdown_-_Rope_Attachment | Triceps Pushdown - Rope Attachment | Triceps | Cable | Strength
+Triceps_Pushdown_-_V-Bar_Attachment | Triceps Pushdown - V-Bar Attachment | Triceps | Cable | Strength
+Tuck_Crunch | Tuck Crunch | Abs | Bodyweight | Strength
+Two-Arm_Dumbbell_Preacher_Curl | Two-Arm Dumbbell Preacher Curl | Biceps | Dumbbell | Strength
+Two-Arm_Kettlebell_Clean | Two-Arm Kettlebell Clean | Shoulders | Kettlebell | Strength
+Two-Arm_Kettlebell_Jerk | Two-Arm Kettlebell Jerk | Shoulders | Kettlebell | Strength
+Two-Arm_Kettlebell_Military_Press | Two-Arm Kettlebell Military Press | Shoulders | Kettlebell | Strength
+Two-Arm_Kettlebell_Row | Two-Arm Kettlebell Row | Back | Kettlebell | Strength
+Underhand_Cable_Pulldowns | Underhand Cable Pulldowns | Back | Cable | Strength
+Upright_Barbell_Row | Upright Barbell Row | Shoulders | Barbell | Strength
+Upright_Cable_Row | Upright Cable Row | Traps | Cable | Strength
+Upright_Row_-_With_Bands | Upright Row - With Bands | Traps | Band | Strength
+V-Bar_Pulldown | V-Bar Pulldown | Back | Cable | Strength
+V-Bar_Pullup | V-Bar Pullup | Back | Bodyweight | Strength
+Vertical_Swing | Vertical Swing | Hamstrings | Dumbbell | Plyometrics
+Weighted_Ball_Hyperextension | Weighted Ball Hyperextension | LowerBack | Other | Strength
+Weighted_Ball_Side_Bend | Weighted Ball Side Bend | Abs | Other | Strength
+Weighted_Bench_Dip | Weighted Bench Dip | Triceps | Other | Strength
+Weighted_Crunches | Weighted Crunches | Abs | Other | Strength
+Weighted_Jump_Squat | Weighted Jump Squat | Quads | Barbell | Strength
+Weighted_Pull_Ups | Weighted Pull Ups | Back | Other | Strength
+Weighted_Sissy_Squat | Weighted Sissy Squat | Quads | Barbell | Strength
+Weighted_Sit-Ups_-_With_Bands | Weighted Sit-Ups - With Bands | Abs | Other | Strength
+Weighted_Squat | Weighted Squat | Quads | Other | Strength
+Wide-Grip_Barbell_Bench_Press | Wide-Grip Barbell Bench Press | Chest | Barbell | Strength
+Wide-Grip_Decline_Barbell_Bench_Press | Wide-Grip Decline Barbell Bench Press | Chest | Barbell | Strength
+Wide-Grip_Decline_Barbell_Pullover | Wide-Grip Decline Barbell Pullover | Chest | Barbell | Strength
+Wide-Grip_Pulldown_Behind_The_Neck | Wide-Grip Pulldown Behind The Neck | Back | Cable | Strength
+Wide-Grip_Rear_Pull-Up | Wide-Grip Rear Pull-Up | Back | Bodyweight | Strength
+Wide-Grip_Standing_Barbell_Curl | Wide-Grip Standing Barbell Curl | Biceps | Barbell | Strength
+Wide_Stance_Barbell_Squat | Wide Stance Barbell Squat | Quads | Barbell | Strength
+Wide_Stance_Stiff_Legs | Wide Stance Stiff Legs | Hamstrings | Barbell | Olympic weightlifting
+Wind_Sprints | Wind Sprints | Abs | Bodyweight | Strength
+Wrist_Roller | Wrist Roller | Forearms | Other | Strength
+Wrist_Rotations_with_Straight_Bar | Wrist Rotations with Straight Bar | Forearms | Barbell | Strength
+Yoke_Walk | Yoke Walk | Quads | Other | Strongman
+Zercher_Squats | Zercher Squats | Quads | Barbell | Strength
+Zottman_Curl | Zottman Curl | Biceps | Dumbbell | Strength
+Zottman_Preacher_Curl | Zottman Preacher Curl | Biceps | Dumbbell | Strength

@@ -14,12 +14,22 @@ public static class TrainingGoals
 
     /// <summary>Jumps, throws and Olympic lifts: trained for speed, in short sets.</summary>
     public static bool IsExplosive(Exercise ex) =>
-        ex.Id is "kb_swing" or "Power_Clean"
-        || ExerciseLibrary.Details(ex.Id)?.Category is { } c
-            && (c.Equals("Plyometrics", StringComparison.OrdinalIgnoreCase) || c.Equals("Olympic weightlifting", StringComparison.OrdinalIgnoreCase));
+        ex.Id == "kb_swing" || ExerciseLibrary.Details(ex.Id)?.Category is ExerciseCategory.Plyometric or ExerciseCategory.Olympic;
 
-    /// <summary>Isometric holds count each rep as a hold of a few seconds.</summary>
-    public static bool IsIsometric(Exercise ex) => ex.Name.Contains("Isometric", StringComparison.OrdinalIgnoreCase);
+    /// <summary>Isometric holds: for the neck each rep is a hold of a few seconds (see <see cref="IsTimed"/> for the rest).</summary>
+    public static bool IsIsometric(Exercise ex) =>
+        ExerciseLibrary.Details(ex.Id)?.Hold == true || ex.Name.Contains("Isometric", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Held rather than repeated (planks, stretches, yoga poses): each "rep" is a second of holding. Not the neck's holds.</summary>
+    public static bool IsTimed(Exercise ex) =>
+        ExerciseLibrary.Details(ex.Id)?.Category is ExerciseCategory.Stretch or ExerciseCategory.Yoga
+        || IsIsometric(ex) && ex.PrimaryMuscle != MuscleGroup.Neck;
+
+    /// <summary>Neck strength work, reps or isometric holds, trained its own careful way (its stretches and mobility drills aren't).</summary>
+    static bool IsNeckStrength(Exercise ex) => ex.PrimaryMuscle == MuscleGroup.Neck && !IsTimed(ex) && !IsControl(ex);
+
+    /// <summary>Pilates and mobility drills: a few slow, precise reps, never to fatigue.</summary>
+    static bool IsControl(Exercise ex) => ExerciseLibrary.Details(ex.Id)?.Category is ExerciseCategory.Pilates or ExerciseCategory.Mobility;
 
     /// <summary>Sets, reps, effort and rest for <paramref name="ex"/> under <paramref name="goal"/>; the rest times set in <paramref name="profile"/>, if any, replace the goal's.</summary>
     public static PlanExercise Prescription(Goal goal, Experience experience, Exercise ex, UserProfile? profile = null)
@@ -64,7 +74,7 @@ public static class TrainingGoals
         if (goal is Goal.Strength or Goal.Power && compound || explosive)
             rir = Math.Max(rir, 2);
 
-        if (ex.PrimaryMuscle == MuscleGroup.Neck)
+        if (IsNeckStrength(ex))
         {
             // The neck responds to steady, higher-rep work and is never taken close to failure.
             (min, max) = IsIsometric(ex) ? (5, 8) : (12, 20);
@@ -72,8 +82,24 @@ public static class TrainingGoals
             rir = 3;
             rest = 60;
         }
+        else if (IsTimed(ex))
+        {
+            // Seconds, not reps: a stretch or pose for 30–60, a plank-style hold for 20–45.
+            var stretch = ExerciseLibrary.Details(ex.Id)?.Category is ExerciseCategory.Stretch or ExerciseCategory.Yoga;
+            (min, max) = stretch ? (30, 60) : (20, 45);
+            sets = stretch ? 2 : experience == Experience.Beginner ? 2 : 3;
+            rir = 3;
+            rest = stretch ? 15 : 60;
+        }
+        else if (IsControl(ex))
+        {
+            (min, max) = (6, 10);
+            sets = 2;
+            rir = 3;
+            rest = 30;
+        }
 
-        if (RestOverride(profile, ex) is { } own)
+        if (RestOverride(profile, ex) is { } own && !IsTimed(ex) && !IsControl(ex))
             rest = own;
 
         return new PlanExercise { ExerciseId = ex.Id, Sets = sets, RepMin = min, RepMax = max, TargetRir = rir, RestSeconds = rest };
@@ -86,8 +112,12 @@ public static class TrainingGoals
     /// <summary>Roughly how long one rep takes, including the lowering.</summary>
     public static double SecondsPerRep(Goal goal, Exercise? ex)
     {
-        if (ex != null && ex.PrimaryMuscle == MuscleGroup.Neck)
+        if (ex != null && IsNeckStrength(ex))
             return IsIsometric(ex) ? 6 : 4;
+        if (ex != null && IsTimed(ex))
+            return 1;
+        if (ex != null && IsControl(ex))
+            return 5;
         if (ex != null && IsExplosive(ex))
             return 2.5;
         return goal switch
@@ -106,7 +136,7 @@ public static class TrainingGoals
         var compound = ex.Mechanic == Mechanic.Compound;
         var rest = Units.Rest(restSeconds);
 
-        if (ex.PrimaryMuscle == MuscleGroup.Neck)
+        if (IsNeckStrength(ex))
         {
             tips.Add(IsIsometric(ex)
                 ? $"Each rep is a 5-second hold: push steadily into your hand without letting your head move. {repMin}–{repMax} holds."
@@ -117,6 +147,22 @@ public static class TrainingGoals
             tips.Add(goal == Goal.Power
                 ? "Train it 2–3 times a week: a strong neck helps you absorb punches and resist chokes and takedowns."
                 : "Train it 2–3 times a week, like any other muscle. It supports your posture and protects the cervical spine.");
+            return tips;
+        }
+
+        if (IsTimed(ex))
+        {
+            tips.Add($"Count seconds, not reps: hold for {repMin}–{repMax} seconds and log the seconds as reps.");
+            tips.Add(ExerciseLibrary.Details(ex.Id)?.Category is ExerciseCategory.Stretch or ExerciseCategory.Yoga
+                ? "Ease into it and breathe slowly. A stretch should feel strong but never painful."
+                : "Stop the hold as soon as your position slips, rather than sagging through the last seconds.");
+            return tips;
+        }
+
+        if (IsControl(ex))
+        {
+            tips.Add($"{repMin}–{repMax} slow, precise reps. Quality of movement matters more than the number.");
+            tips.Add("Breathe steadily and keep your core engaged throughout; stop before your form fades.");
             return tips;
         }
 

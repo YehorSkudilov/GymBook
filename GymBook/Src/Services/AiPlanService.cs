@@ -446,7 +446,9 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
         var inPlan = plan?.Workouts.SelectMany(w => w.Exercises).Select(e => e.ExerciseId).ToHashSet() ?? [];
         return [.. store.AllExercises
             .Where(e => !e.IsDeleted)
-            .Where(e => inPlan.Contains(e.Id) || answers.EquipmentAccess.Allows(e.Equipment) && (answers.TrainNeck || e.PrimaryMuscle != MuscleGroup.Neck))
+            .Where(e => inPlan.Contains(e.Id) || answers.EquipmentAccess.Allows(e.Equipment) && (answers.TrainNeck || e.PrimaryMuscle != MuscleGroup.Neck)
+                // Stretches, poses and mobility drills aren't what plans are built from (and keep the list within its limit).
+                && ExerciseLibrary.Details(e.Id)?.Category is not (ExerciseCategory.Stretch or ExerciseCategory.Yoga or ExerciseCategory.Mobility))
             .OrderByDescending(e => inPlan.Contains(e.Id))
             .Take(PlanLimits.MaxCandidates)
             .Select(e => new PlanCandidate

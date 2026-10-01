@@ -7,11 +7,13 @@ using GymBook.Services;
 
 namespace GymBook.ViewModels;
 
-/// <summary>Searchable, muscle-filterable exercise list shared by the library tab and the picker.</summary>
+/// <summary>
+/// The exercise list shared by the library tab and the picker: ranked search (<see cref="ExerciseSearch"/>), quick
+/// muscle and kind chips, and the full filters (<see cref="ExerciseFilter"/>) behind the filter button.
+/// </summary>
 public abstract partial class ExerciseListViewModel : BaseViewModel
 {
     protected readonly DataStore Store;
-    MuscleGroup? _muscle;
 
     protected ExerciseListViewModel(DataStore store)
     {
@@ -19,7 +21,12 @@ public abstract partial class ExerciseListViewModel : BaseViewModel
         Chips.Add(new ChipItem("All", null, SelectChip) { IsSelected = true });
         foreach (var m in Enum.GetValues<MuscleGroup>())
             Chips.Add(new ChipItem(m.Display(), m, SelectChip));
+        foreach (var kind in ExerciseFilter.Kinds)
+            Chips.Add(new ChipItem(kind.Title, kind.Categories, SelectChip));
+        Filters.Changed += (_, _) => Filter();
     }
+
+    public ExerciseFilter Filters { get; } = new();
 
     public ObservableCollection<ChipItem> Chips { get; } = [];
 
@@ -27,30 +34,70 @@ public abstract partial class ExerciseListViewModel : BaseViewModel
     [ObservableProperty] List<ExerciseItem> items = [];
     [ObservableProperty] string countText = "";
 
+    /// <summary>How many filters are on beyond the chips, shown on the filter button.</summary>
+    [ObservableProperty] string filterBadge = "";
+    [ObservableProperty] bool hasFilterBadge;
+    [ObservableProperty] bool canClearFilters;
+
     partial void OnSearchTextChanged(string value) => Filter();
 
+    // A chip toggles its muscle or kind in the filter, so several can be on; "All" clears them.
     void SelectChip(ChipItem chip)
     {
-        foreach (var c in Chips)
-            c.IsSelected = c == chip;
-        _muscle = (MuscleGroup?)chip.Value;
-        Filter();
+        switch (chip.Value)
+        {
+            case MuscleGroup m:
+                if (!Filters.Muscles.Remove(m))
+                    Filters.Muscles.Add(m);
+                break;
+            case ExerciseCategory[] kinds:
+                if (kinds.All(Filters.Categories.Contains))
+                    Filters.Categories.ExceptWith(kinds);
+                else
+                    Filters.Categories.UnionWith(kinds);
+                break;
+            default:
+                Filters.Muscles.Clear();
+                Filters.Categories.Clear();
+                break;
+        }
+        Filters.Notify();
     }
+
+    /// <summary>What the list starts from, before searching and filtering.</summary>
+    protected virtual IEnumerable<Exercise> Source => Store.AllExercises.Where(e => !e.IsDeleted);
+
+    /// <summary>The source is already in a meaningful order (most alike first) that "best match" keeps.</summary>
+    protected virtual bool IsRanked => false;
 
     protected void Filter()
     {
-        var q = SearchText.Trim();
-        Items = Store.AllExercises
-            .Where(e => _muscle == null || e.PrimaryMuscle == _muscle)
-            .Where(e => q.Length == 0
-                || e.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
-                || e.PrimaryMuscle.Display().Contains(q, StringComparison.OrdinalIgnoreCase)
-                || e.Equipment.Display().Contains(q, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(e => e.Name)
+        foreach (var c in Chips)
+            c.IsSelected = c.Value switch
+            {
+                MuscleGroup m => Filters.Muscles.Contains(m),
+                ExerciseCategory[] kinds => kinds.All(Filters.Categories.Contains),
+                _ => Filters.Muscles.Count == 0 && Filters.Categories.Count == 0,
+            };
+
+        var query = SearchText.Trim();
+        var list = Source;
+        if (query.Length > 0)
+            list = ExerciseSearch.Search(list, query);
+        Items = Filters.Apply(list, Store, searching: query.Length > 0 || IsRanked)
             .Select(e => new ExerciseItem(e, OnTap) { IsSelected = IsSelected(e) })
             .ToList();
         CountText = Items.Count == 1 ? "1 exercise" : $"{Items.Count} exercises";
+        FilterBadge = Filters.ActiveCount.ToString();
+        HasFilterBadge = Filters.ActiveCount > 0;
+        CanClearFilters = !Filters.IsEmpty;
     }
+
+    [RelayCommand]
+    Task OpenFilters() => Views.ExerciseFilterPage.ShowAsync(this);
+
+    [RelayCommand]
+    void ClearFilters() => Filters.Clear();
 
     protected virtual bool IsSelected(Exercise e) => false;
 
@@ -113,14 +160,64 @@ public partial class ExercisePickerViewModel(DataStore store) : ExerciseListView
 
     public bool IsMultiple => !IsSingle;
 
-    /// <summary>Ready for the next pick: several exercises to add, or with <paramref name="single"/> one, under <paramref name="title"/>.</summary>
-    public void Reset(bool single = false, string title = "Add exercises")
+    // Replacing an exercise: what it's replacing, so the list can show just the ones like it.
+    Exercise? _similarTo;
+
+    /// <summary>Showing only exercises like the one being replaced (same muscle and movement first), not the whole library.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SimilarBackground), nameof(SimilarTextColor), nameof(AllBackground), nameof(AllTextColor))]
+    bool isFocused;
+
+    /// <summary>There's an exercise to be like (a replacement), so the Similar / All switch shows.</summary>
+    [ObservableProperty] bool canFocus;
+    [ObservableProperty] string focusHint = "";
+
+    public Color SimilarBackground => IsFocused ? Color.FromArgb("#3F7DFF") : Colors.Transparent;
+    public Color SimilarTextColor => IsFocused ? Colors.White : Color.FromArgb("#9AA3B5");
+    public Color AllBackground => IsFocused ? Colors.Transparent : Color.FromArgb("#3F7DFF");
+    public Color AllTextColor => IsFocused ? Color.FromArgb("#9AA3B5") : Colors.White;
+
+    /// <summary>
+    /// Ready for the next pick: several exercises to add, or with <paramref name="single"/> one, under <paramref name="title"/>.
+    /// With <paramref name="similarTo"/> (replacing it) the list starts on the exercises like it, with the full list a tap away.
+    /// </summary>
+    public void Reset(bool single = false, string title = "Add exercises", Exercise? similarTo = null)
     {
         IsSingle = single;
         Title = title;
+        _similarTo = similarTo;
+        CanFocus = similarTo != null;
+        IsFocused = CanFocus;
+        FocusHint = similarTo == null ? "" : $"Same muscles and movement as {similarTo.Name}, closest first";
         _selected.Clear();
         SearchText = "";
+        Filters.Clear();
         UpdateAdd();
+        Filter();
+    }
+
+    protected override IEnumerable<Exercise> Source => IsFocused && _similarTo is { } original
+        ? base.Source
+            .Select(e => (e, score: ExerciseSearch.Similarity(original, e)))
+            .Where(x => x.score > 0)
+            .OrderByDescending(x => x.score)
+            .ThenBy(x => x.e.Name)
+            .Select(x => x.e)
+        : base.Source;
+
+    protected override bool IsRanked => IsFocused;
+
+    [RelayCommand]
+    void ShowSimilar()
+    {
+        IsFocused = true;
+        Filter();
+    }
+
+    [RelayCommand]
+    void ShowAll()
+    {
+        IsFocused = false;
         Filter();
     }
 
@@ -179,14 +276,19 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     [ObservableProperty] IDrawable? chart;
     [ObservableProperty] List<LineItem> history = [];
     [ObservableProperty] bool isCustom;
-    [ObservableProperty] string? imageStart;
-    [ObservableProperty] string? imageEnd;
-    [ObservableProperty] bool hasImages;
+    [ObservableProperty] string? videoUrl;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(WatchText))]
+    bool hasVideo;
+
+    public string WatchText => HasVideo ? "Open in YouTube" : "Search form videos";
+    ExerciseVideo? _video;
     [ObservableProperty] string tags = "";
     [ObservableProperty] bool hasTags;
-    [ObservableProperty] bool showSummary;
     [ObservableProperty] List<LineItem> steps = [];
     [ObservableProperty] bool hasSteps;
+    [ObservableProperty] List<string> formTips = [];
+    [ObservableProperty] bool hasFormTips;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) => _id = query["id"]?.ToString();
 
@@ -207,16 +309,15 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         IsCustom = ex.IsCustom;
 
         var details = ExerciseLibrary.Details(ex.Id);
-        ImageStart = details?.Images.ElementAtOrDefault(0);
-        ImageEnd = details?.Images.ElementAtOrDefault(1);
-        HasImages = ImageStart != null;
-        var tags = new[] { details?.Level, details?.Force, details?.Category }.Where(t => !string.IsNullOrEmpty(t)).ToList();
-        Tags = string.Join(" · ", tags);
-        HasTags = tags.Count > 0;
+        _video = details?.Video;
+        VideoUrl = _video?.EmbedUrl;
+        HasVideo = VideoUrl != null;
+        Tags = details == null ? "" : $"{details.Category} · {details.Level}";
+        HasTags = details != null;
         Steps = details?.Steps.Select((s, i) => new LineItem { Title = (i + 1).ToString(), Detail = s }).ToList() ?? [];
         HasSteps = Steps.Count > 0;
-        // Imported exercises' instructions are just their steps joined; curated ones have their own short summary.
-        ShowSummary = details == null || ex.Instructions != string.Join(" ", details.Steps);
+        FormTips = [.. details?.Tips ?? []];
+        HasFormTips = FormTips.Count > 0;
 
         var sessions = store.History
             .Select(s => (s, e: s.Exercises.FirstOrDefault(x => x.ExerciseId == ex.Id)))
@@ -251,10 +352,18 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         return Task.CompletedTask;
     }
 
-    /// <summary>No open dataset has licensable demo videos, so this searches YouTube for form videos instead.</summary>
+    /// <summary>Stops the video when the page is left (it's loaded again on coming back).</summary>
+    public override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        VideoUrl = null;
+    }
+
+    /// <summary>The demonstration in the YouTube app; without one, a search for form videos.</summary>
     [RelayCommand]
     Task WatchVideo() => Browser.Default.OpenAsync(
-        $"https://www.youtube.com/results?search_query={Uri.EscapeDataString($"{Name} exercise proper form")}", BrowserLaunchMode.External);
+        _video?.WatchUrl ?? $"https://www.youtube.com/results?search_query={Uri.EscapeDataString($"{Name} exercise proper form")}",
+        BrowserLaunchMode.External);
 
     [RelayCommand]
     async Task Delete()

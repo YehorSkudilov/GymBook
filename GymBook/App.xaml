@@ -11,6 +11,7 @@
                 <ResourceDictionary Source="Resources/Styles/Icons.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <converters:InverseBoolConverter x:Key="Not" />
+            <converters:ThumbnailConverter x:Key="Thumb" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

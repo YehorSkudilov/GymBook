@@ -1,14 +1,13 @@
 import { BoltIcon, ChartIcon, DumbbellIcon, ListIcon, PlayIcon } from "./Icons";
 import styles from "./PhoneMockup.module.css";
 
-// The same exercise photos the app shows (free-exercise-db, pinned like ExerciseCatalog.json's imageBase).
-const imageBase =
-  "https://raw.githubusercontent.com/yuhonas/free-exercise-db/a859101d633a01c4a1a920d6a8ce41dabba0705f/exercises/";
+// The same thumbnails the app shows: each exercise's demonstration video (ExerciseLibrary.Thumbnail).
+const thumbnail = (youTubeId: string) => `https://i.ytimg.com/vi/${youTubeId}/mqdefault.jpg`;
 const pushDay = [
-  "Barbell_Bench_Press_-_Medium_Grip/0.jpg",
-  "Dumbbell_Shoulder_Press/0.jpg",
-  "Barbell_Incline_Bench_Press_-_Medium_Grip/0.jpg",
-  "Triceps_Pushdown/0.jpg",
+  "_FkbD0FhgVE", // Bench Press
+  "fAlu-BsnPqE", // Seated Dumbbell Shoulder Press
+  "98HWfiRonkE", // Incline Bench Press
+  "e0g_ZbWlWRI", // Triceps Pushdown
 ];
 
 const week = [
@@ -91,9 +90,9 @@ export function PhoneMockup() {
               </div>
             </div>
             <div className={styles.thumbs}>
-              {pushDay.map((src) => (
+              {pushDay.map((id) => (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img key={src} src={imageBase + src} alt="" loading="lazy" />
+                <img key={id} src={thumbnail(id)} alt="" loading="lazy" />
               ))}
             </div>
             <div className={styles.startRow}>

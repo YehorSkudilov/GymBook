@@ -3,6 +3,7 @@
     x:Class="GymBook.Views.ExerciseDetailPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:GymBook.Controls"
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:ExerciseDetailViewModel"
@@ -18,15 +19,12 @@
                        TextColor="{StaticResource TextTertiary}" />
             </VerticalStackLayout>
 
-            <!-- Start and end position photos, cross-faded by the page to show the movement. -->
-            <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding HasImages}" HeightRequest="240">
-                <Grid BackgroundColor="White">
-                    <Image Source="{Binding ImageStart}" Aspect="AspectFit" />
-                    <Image x:Name="EndImage" Source="{Binding ImageEnd}" Aspect="AspectFit" Opacity="0" />
-                </Grid>
+            <!-- The demonstration, trimmed to just the movement -->
+            <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding HasVideo}" HeightRequest="420" BackgroundColor="Black">
+                <controls:YouTubePlayer Url="{Binding VideoUrl}" />
             </Border>
 
-            <Button Text="Watch form videos" Style="{StaticResource SecondaryButton}" Command="{Binding WatchVideoCommand}"
+            <Button Text="{Binding WatchText}" Style="{StaticResource SecondaryButton}" Command="{Binding WatchVideoCommand}"
                     IsVisible="{Binding IsCustom, Converter={StaticResource Not}}" />
 
             <Border Style="{StaticResource Card}">
@@ -52,7 +50,7 @@
             <Border Style="{StaticResource Card}">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="How to perform" Style="{StaticResource H3}" />
-                    <Label Text="{Binding Instructions}" IsVisible="{Binding ShowSummary}" FontSize="14" LineHeight="1.35"
+                    <Label Text="{Binding Instructions}" FontSize="14" LineHeight="1.35"
                            TextColor="{StaticResource TextSecondary}" />
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Steps}" IsVisible="{Binding HasSteps}" Spacing="10">
                         <BindableLayout.ItemTemplate>
@@ -65,6 +63,23 @@
                                     </Border>
                                     <Label Grid.Column="1" Text="{Binding Detail}" FontSize="14" LineHeight="1.3"
                                            TextColor="{StaticResource TextSecondary}" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Form cues and the common mistakes -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasFormTips}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Form tips" Style="{StaticResource H3}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding FormTips}" Spacing="8">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <Ellipse Fill="{StaticResource Accent}" WidthRequest="6" HeightRequest="6" VerticalOptions="Start" Margin="0,7,0,0" />
+                                    <Label Grid.Column="1" Text="{Binding .}" FontSize="14" LineHeight="1.3" TextColor="{StaticResource TextSecondary}" />
                                 </Grid>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>

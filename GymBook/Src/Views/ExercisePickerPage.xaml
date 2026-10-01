@@ -10,7 +10,7 @@
 
     <!-- A sheet over the workout or plan it adds to, like the other sheets -->
     <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Padding="0,16,0,0">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Padding="0,16,0,0">
         <Grid ColumnDefinitions="Auto,*,Auto" Padding="12,0" ColumnSpacing="8">
             <Button Text="Cancel" Style="{StaticResource GhostButton}" TextColor="{StaticResource TextSecondary}" Command="{Binding CancelCommand}" />
             <Label Grid.Column="1" Text="{Binding Title}" Style="{StaticResource H3}" HorizontalOptions="Center" VerticalOptions="Center" />
@@ -18,16 +18,54 @@
                     IsEnabled="{Binding CanAdd}" Command="{Binding AddCommand}" IsVisible="{Binding IsMultiple}" />
         </Grid>
 
-        <Border Grid.Row="1" Style="{StaticResource InputBox}" HeightRequest="46" Margin="10,14,10,10" Padding="12,0">
-            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
-                <Image Source="{StaticResource IconSearch}" WidthRequest="18" HeightRequest="18" />
-                <Entry Grid.Column="1" Text="{Binding SearchText}" Placeholder="Search exercises" ClearButtonVisibility="WhileEditing" />
+        <!-- Replacing an exercise: just the ones like it, or the whole library -->
+        <VerticalStackLayout Grid.Row="1" IsVisible="{Binding CanFocus}" Spacing="6" Margin="10,14,10,0">
+            <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 14" StrokeThickness="0" Padding="4" HeightRequest="44">
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+                    <Border BackgroundColor="{Binding SimilarBackground}" StrokeShape="RoundRectangle 10" StrokeThickness="0">
+                        <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding ShowSimilarCommand}" /></Border.GestureRecognizers>
+                        <Label Text="Similar" TextColor="{Binding SimilarTextColor}" FontFamily="OpenSansSemibold" FontSize="14"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <Border Grid.Column="1" BackgroundColor="{Binding AllBackground}" StrokeShape="RoundRectangle 10" StrokeThickness="0">
+                        <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding ShowAllCommand}" /></Border.GestureRecognizers>
+                        <Label Text="All exercises" TextColor="{Binding AllTextColor}" FontFamily="OpenSansSemibold" FontSize="14"
+                               HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                </Grid>
+            </Border>
+            <Label Text="{Binding FocusHint}" IsVisible="{Binding IsFocused}" Style="{StaticResource Caption}" FontSize="12" Margin="4,0" />
+        </VerticalStackLayout>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="10,14,10,10">
+            <Border Style="{StaticResource InputBox}" HeightRequest="46" Padding="12,0">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                    <Image Source="{StaticResource IconSearch}" WidthRequest="18" HeightRequest="18" />
+                    <Entry Grid.Column="1" Text="{Binding SearchText}" Placeholder="Search name, muscle or equipment" ClearButtonVisibility="WhileEditing" />
+                </Grid>
+            </Border>
+            <!-- All the filters; the badge counts the ones on beyond the chips -->
+            <Grid Grid.Column="1" WidthRequest="46" HeightRequest="46">
+                <ImageButton Source="{StaticResource IconFilter}" Padding="12" CornerRadius="14" BackgroundColor="{StaticResource Surface2}"
+                             Command="{Binding OpenFiltersCommand}" SemanticProperties.Description="Filters" />
+                <Border IsVisible="{Binding HasFilterBadge}" BackgroundColor="{StaticResource Accent}" StrokeShape="RoundRectangle 9" StrokeThickness="0"
+                        HeightRequest="18" MinimumWidthRequest="18" Padding="5,0" HorizontalOptions="End" VerticalOptions="Start" Margin="0,-4,-4,0"
+                        InputTransparent="True">
+                    <Label Text="{Binding FilterBadge}" FontSize="11" TextColor="White" FontFamily="OpenSansSemibold" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
             </Grid>
-        </Border>
+        </Grid>
 
-        <views:ChipBar Grid.Row="2" />
+        <views:ChipBar Grid.Row="3" />
 
-        <CollectionView Grid.Row="3" ItemsSource="{Binding Items}" Margin="10,8,10,0">
+        <CollectionView Grid.Row="4" ItemsSource="{Binding Items}" Margin="10,8,10,0">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" Margin="0,40" Spacing="4">
+                    <Label Text="No exercises found" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                    <Button Text="Clear filters" Style="{StaticResource GhostButton}" Command="{Binding ClearFiltersCommand}" IsVisible="{Binding CanClearFilters}" />
+                    <Button Text="Show all exercises" Style="{StaticResource GhostButton}" Command="{Binding ShowAllCommand}" IsVisible="{Binding IsFocused}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="vm:ExerciseItem">
                     <views:ExerciseRow IsPicker="True" />

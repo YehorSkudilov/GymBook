@@ -71,6 +71,28 @@ public class DataStore
     public IEnumerable<WorkoutSession> History => Data.Sessions.Where(s => s.EndedAt != null).OrderByDescending(s => s.StartedAt);
 
     /// <summary>
+    /// Plans and workouts that still use an exercise id from an earlier library (also synced from another device or an
+    /// older app) are moved to today's id, so history, progress and plans all agree. Saving is up to the caller.
+    /// </summary>
+    /// <returns>Whether anything was changed.</returns>
+    public bool MigrateExerciseIds()
+    {
+        var changed = false;
+        foreach (var e in Data.Plans.SelectMany(p => p.Workouts).SelectMany(w => w.Exercises).Where(e => ExerciseLibrary.IsAlias(e.ExerciseId)))
+        {
+            e.ExerciseId = ExerciseLibrary.Canonical(e.ExerciseId);
+            changed = true;
+        }
+        var sessions = Data.ActiveSession is { } active ? Data.Sessions.Append(active) : Data.Sessions;
+        foreach (var e in sessions.SelectMany(s => s.Exercises).Where(e => ExerciseLibrary.IsAlias(e.ExerciseId)))
+        {
+            e.ExerciseId = ExerciseLibrary.Canonical(e.ExerciseId);
+            changed = true;
+        }
+        return changed;
+    }
+
+    /// <summary>
     /// After workouts are deleted or a week is reset: every plan's weeks renumbered so none is left empty before one
     /// with progress (see <see cref="PlanProgress.CompactWeeks"/>). Also on showing the plan, for gaps from before this
     /// existed (or synced from another device). Saving is up to the caller.

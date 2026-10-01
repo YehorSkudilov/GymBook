@@ -63,8 +63,9 @@ export default function PrivacyPage() {
       <p>Gym Book contains no advertising, analytics or tracking software. A few features use other services:</p>
       <ul>
         <li>
-          <strong>Exercise photos</strong> are loaded from GitHub (raw.githubusercontent.com), which receives your device&apos;s IP address
-          when it serves them. No account information is sent.
+          <strong>Exercise videos</strong> are YouTube videos: an exercise&apos;s page plays its demonstration in YouTube&apos;s
+          embedded player, so YouTube receives your device&apos;s IP address and which video is shown. (The exercise pictures are part
+          of the app and load nothing.) No account information is sent. What YouTube collects is covered by Google&apos;s privacy policy.
         </li>
         <li>
           <strong>AI features</strong> (AI plans, importing a plan, the AI coach and AI suggestions) send what they need to OpenAI to
@@ -77,8 +78,8 @@ export default function PrivacyPage() {
           and the message.
         </li>
         <li>
-          <strong>&quot;Watch video&quot;</strong> on an exercise opens a YouTube search in your browser. What YouTube collects is covered
-          by Google&apos;s privacy policy.
+          <strong>&quot;Open in YouTube&quot;</strong> on an exercise opens its video (for your own exercises, a YouTube search) in your
+          browser or the YouTube app.
         </li>
       </ul>
 
