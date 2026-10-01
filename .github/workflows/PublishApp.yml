@@ -1054,7 +1054,7 @@ jobs:
   # ==================================================
 
   release:
-    needs: [version, build-android, build-windows, build-ios, build-macos]
+    needs: [version, build-android, build-wear, build-windows, build-ios, build-macos]
     # Runs once every selected platform succeeded - an unselected one is skipped, not failed.
     if: ${{ !cancelled() && needs.version.result == 'success' && !contains(needs.*.result, 'failure') }}
     runs-on: ubuntu-latest
@@ -1073,6 +1073,22 @@ jobs:
         with:
           name: android-apk
           path: dist
+
+      # Same package as the phone app, so the same file name: rename it so the release can hold both.
+      - name: Download Wear OS AAB
+        if: ${{ inputs.publish_wear }}
+        uses: actions/download-artifact@v4
+        with:
+          name: wear-aab
+          path: wear
+
+      - name: Rename Wear OS AAB
+        if: ${{ inputs.publish_wear }}
+        run: |
+          mkdir -p dist
+          for f in wear/*.aab; do
+            mv "$f" "dist/com.yehorskudilov.gymbook-wear-${{ needs.version.outputs.new_version }}.aab"
+          done
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
