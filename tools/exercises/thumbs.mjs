@@ -78,7 +78,11 @@ async function make(x) {
       outputTokens += j.usage?.output_tokens ?? 0;
       const png = Buffer.from(j.data[0].b64_json, "base64");
       // 384 px is sharp on a phone at the sizes the app shows (up to ~120 pt); WebP keeps it ~6 KB at low quality.
-      await sharp(png).resize(384, 384).webp({ quality: 82 }).toFile(`${out}/${x.id}.webp`);
+      await sharp(png)
+        .trim({ background: "#151821", threshold: 10 })
+        .resize(384, 384, { fit: "contain", background: "#151821" })
+        .webp({ quality: 82 })
+        .toFile(`${out}/${x.id}.webp`);
       done++;
       if (done % 10 === 0) console.log(`${done}/${todo.length} (tokens in ${inputTokens}, out ${outputTokens})`);
       return;

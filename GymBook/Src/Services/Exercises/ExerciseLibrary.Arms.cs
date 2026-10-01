@@ -67,7 +67,7 @@ public static partial class ExerciseLibrary
                 "Use less weight than a normal curl; the range is shorter but harder.",
                 "Don't shrug or lean back to get the bar up.",
             ],
-            Video = new("1PoCjM1iJSw"),
+            Video = new("LMdNTHH6G8I"),
         },
         new("preacher_curl", "EZ-Bar Preacher Curl", Biceps, EzBar, Isolation)
         {
@@ -85,7 +85,7 @@ public static partial class ExerciseLibrary
                 "Don't lift your elbows or upper arms off the pad to finish the curl.",
                 "Stop just short of locking out hard at the bottom if your elbows feel strained.",
             ],
-            Video = new("e7X6G07KnPI"),
+            Video = new("sxA__DoLsgo"),
         },
 
         // Dumbbell curls
@@ -355,7 +355,7 @@ public static partial class ExerciseLibrary
                 "Keep your hips up and your body in one line; don't sag.",
                 "Don't let your elbows drop; keep them pointing at the anchor.",
             ],
-            Video = new("HefuHKboqNg"),
+            Video = new("BV3l5Q5t9fo"),
         },
 
         // Triceps: pushdowns
@@ -392,7 +392,7 @@ public static partial class ExerciseLibrary
                 "Finish with your hands beside your thighs, not in front of them.",
                 "Don't let your elbows flare or drift forward on the way up.",
             ],
-            Video = new("ZlUXjJeT1ek"),
+            Video = new("-xa-6cQaZKY"),
         },
         new("single_arm_pushdown", "Single-Arm Cable Pushdown", Triceps, Cable, Isolation)
         {
@@ -572,7 +572,7 @@ public static partial class ExerciseLibrary
                 "Lowering behind the head gives more stretch and is easier on the elbows.",
                 "Control the bar; don't let it drop toward your face.",
             ],
-            Video = new("UCnIm8l8Bxc"),
+            Video = new("S3xRQfb4Alo"),
         },
         new("db_skull_crusher", "Dumbbell Skull Crusher", Triceps, Dumbbell, Isolation)
         {
@@ -609,7 +609,7 @@ public static partial class ExerciseLibrary
                 "Keep your hips in line with your body; don't pike up.",
                 "Don't let your elbows flare out to the sides.",
             ],
-            Video = new("MYw-v1WQgEk"),
+            Video = new("toGzo1GAJ1A"),
         },
         new("close_grip_bench", "Close-Grip Bench Press", Triceps, Barbell, Compound)
         {
@@ -629,7 +629,7 @@ public static partial class ExerciseLibrary
                 "Don't let your elbows flare out on the way down.",
                 "Use a spotter or safety arms when going heavy.",
             ],
-            Video = new("xXd7sddHGa0"),
+            Video = new("FiQUzPtS90E"),
         },
         new("jm_press", "JM Press", Triceps, Barbell, Compound)
         {
@@ -722,7 +722,7 @@ public static partial class ExerciseLibrary
                 "Keep your elbows on the pad and your back against the seat.",
                 "Don't let the stack slam between reps.",
             ],
-            Video = new("1AFJTda1btg"),
+            Video = new("Bx8ga1BLHLE"),
         },
         new("machine_dip", "Seated Dip Machine", Triceps, Machine, Compound)
         {
@@ -885,7 +885,7 @@ public static partial class ExerciseLibrary
                 "Start light; it's easy to lose the bar off the fingertips.",
                 "Don't rush; control the roll in both directions.",
             ],
-            Video = new("gMGqYTG9C0c"),
+            Video = new("gnDRXH2J5Yc", 14, 38),
         },
 
         // Forearms: curls and rotations
@@ -1090,7 +1090,7 @@ public static partial class ExerciseLibrary
                 "Keep your shoulders active; don't hang completely limp.",
                 "Use strong towels and check they're secure before you hang.",
             ],
-            Video = new("tTeAcQdG73s"),
+            Video = new("tTeAcQdG73s", 22, 32),
         },
     ];
 }

@@ -1,13 +1,13 @@
 import { BoltIcon, ChartIcon, DumbbellIcon, ListIcon, PlayIcon } from "./Icons";
 import styles from "./PhoneMockup.module.css";
 
-// The same thumbnails the app shows: each exercise's demonstration video (ExerciseLibrary.Thumbnail).
-const thumbnail = (youTubeId: string) => `https://i.ytimg.com/vi/${youTubeId}/mqdefault.jpg`;
+// The same exercise illustrations the app shows in workout cards.
+const thumbnail = (exerciseId: string) => `/exercises/${exerciseId}.webp`;
 const pushDay = [
-  "_FkbD0FhgVE", // Bench Press
-  "fAlu-BsnPqE", // Seated Dumbbell Shoulder Press
-  "98HWfiRonkE", // Incline Bench Press
-  "e0g_ZbWlWRI", // Triceps Pushdown
+  "bench_press",
+  "db_shoulder_press",
+  "incline_bench_press",
+  "triceps_pushdown",
 ];
 
 const week = [

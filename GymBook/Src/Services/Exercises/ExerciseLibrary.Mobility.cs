@@ -458,7 +458,7 @@ public static partial class ExerciseLibrary
                 "Set the band low on the front of the ankle, not on the shin.",
                 "Keep the heel planted throughout.",
             ],
-            Video = new("ApaYeUkyots"),
+            Video = new("ILSbK8RnGdI", 22),
         },
 
         // Shoulders and wrists
@@ -480,7 +480,7 @@ public static partial class ExerciseLibrary
                 "Narrow the grip gradually as your shoulders loosen up.",
                 "Don't arch your lower back to get the bar over.",
             ],
-            Video = new("a9rqTzZaI7s"),
+            Video = new("qG_pdxLm4t8"),
         },
         new("mob_arm_circles", "Arm Circles", Shoulders, Bodyweight, Isolation)
         {
@@ -591,7 +591,7 @@ public static partial class ExerciseLibrary
                 "Support your head with your hands if your neck gets tired.",
                 "Don't roll down onto the lower back.",
             ],
-            Video = new("X8P9KSaYOkE"),
+            Video = new("X8P9KSaYOkE", 95, 142),
         },
         new("mob_foam_roll_lats", "Foam Roll Lats", Back, Other, Isolation)
         {
@@ -609,7 +609,7 @@ public static partial class ExerciseLibrary
                 "Small rotations toward the front and back find different parts of the muscle.",
                 "Keep the movement slow.",
             ],
-            Video = new("QmBx0M2yzr0"),
+            Video = new("1GaR-a9TWYM"),
         },
         new("mob_foam_roll_calves", "Foam Roll Calves", Calves, Other, Isolation)
         {
@@ -627,7 +627,7 @@ public static partial class ExerciseLibrary
                 "Pause and point and flex the foot on tight spots.",
                 "Don't roll on the back of the knee.",
             ],
-            Video = new("AmQuxR1W2sA"),
+            Video = new("nZZe9ai7Vvw"),
         },
         new("mob_foam_roll_glutes", "Foam Roll Glutes", Glutes, Other, Isolation)
         {
@@ -645,7 +645,7 @@ public static partial class ExerciseLibrary
                 "Lean further to reach the outer hip.",
                 "Control the pressure with your hands and supporting foot.",
             ],
-            Video = new("zSYOUFpDZlk"),
+            Video = new("G8zhISjVxfU"),
         },
         new("mob_foam_roll_hamstrings", "Foam Roll Hamstrings", Hamstrings, Other, Isolation)
         {
@@ -663,7 +663,7 @@ public static partial class ExerciseLibrary
                 "Keep your arms straight and shoulders down.",
                 "Don't roll on the back of the knee.",
             ],
-            Video = new("78ZE9Dznsfg"),
+            Video = new("lLswx0vSvtk"),
         },
         new("mob_ball_pec_release", "Lacrosse Ball Pec Release", Chest, Other, Isolation)
         {
@@ -700,7 +700,7 @@ public static partial class ExerciseLibrary
                 "Stay off the tailbone and the bony points of the hip.",
                 "Stop if you feel shooting or tingling pain down the leg.",
             ],
-            Video = new("w0gyYXdrfIg"),
+            Video = new("tH1qhsuO4AE", 15, 128),
         },
 
         // Upper body stretches
@@ -741,7 +741,7 @@ public static partial class ExerciseLibrary
                 "Keep your chin level and your chest lifted.",
                 "Hold a towel between your hands if you can't clasp them.",
             ],
-            Video = new("2kx8BdPtONY"),
+            Video = new("bbhQYh-Dfm4"),
         },
         new("stretch_cross_body_shoulder", "Cross-Body Shoulder Stretch", Shoulders, Bodyweight, Isolation)
         {
@@ -760,7 +760,7 @@ public static partial class ExerciseLibrary
                 "Keep the shoulder of the stretched arm down, not hunched up.",
                 "Pull at the upper arm, not the elbow joint.",
             ],
-            Video = new("aIq0fLi8iak"),
+            Video = new("swvXpKN832E"),
         },
         new("stretch_sleeper", "Sleeper Stretch", Shoulders, Bodyweight, Isolation)
         {
@@ -778,7 +778,7 @@ public static partial class ExerciseLibrary
                 "Use gentle pressure; this is a mild stretch, not a forced one.",
                 "Stop if you feel pinching at the front of the shoulder.",
             ],
-            Video = new("a_Z9WhGyKkE"),
+            Video = new("9BN8bRVq3Xo"),
         },
         new("stretch_overhead_triceps", "Overhead Triceps Stretch", Triceps, Bodyweight, Compound)
         {
@@ -816,7 +816,7 @@ public static partial class ExerciseLibrary
                 "Keep the elbow straight but not locked hard.",
                 "Moving the hand lower stretches the biceps more and the chest less.",
             ],
-            Video = new("BzPzDuIn1PA"),
+            Video = new("QY4gCIYbGQk"),
         },
         new("stretch_bench_lat", "Kneeling Bench Lat Stretch", Back, Bodyweight, Compound)
         {
@@ -835,7 +835,7 @@ public static partial class ExerciseLibrary
                 "Keep a neutral back; brace your ribs down so the stretch goes to the lats, not the lower back.",
                 "Breathe out to sink a little deeper.",
             ],
-            Video = new("g089z7DcXMc"),
+            Video = new("6Fc0u9xPkL8"),
         },
         new("stretch_childs_pose_side_reach", "Child's Pose Side Reach", Back, Bodyweight, Compound)
         {
@@ -854,7 +854,7 @@ public static partial class ExerciseLibrary
                 "Keep your hips sitting back toward your heels.",
                 "Breathe into the side that's stretching.",
             ],
-            Video = new("5uQ2Xuc3LiE"),
+            Video = new("2FMOcD_jY5A"),
         },
         new("stretch_upper_back_hug", "Upper Back Hug Stretch", Back, Bodyweight, Isolation)
         {

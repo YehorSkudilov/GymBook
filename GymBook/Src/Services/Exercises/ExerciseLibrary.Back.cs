@@ -49,7 +49,7 @@ public static partial class ExerciseLibrary
                 "Keep your elbows in front of your body rather than flaring them out.",
                 "Don't crane your neck to get your chin over; bring your chest up instead.",
             ],
-            Video = new("ykPUIEj4-W0"),
+            Video = new("mRy9m2Q9_1I"),
         },
         new("neutral_grip_pull_up", "Neutral-Grip Pull-Up", Back, Bodyweight, Compound)
         {
@@ -68,7 +68,7 @@ public static partial class ExerciseLibrary
                 "A good choice if overhand pull-ups bother your shoulders or elbows.",
                 "Don't swing; keep your body still and legs quiet.",
             ],
-            Video = new("A3kl7Do0a3g"),
+            Video = new("D6zsOn2OUz0"),
         },
         new("wide_grip_pull_up", "Wide-Grip Pull-Up", Back, Bodyweight, Compound)
         {
@@ -87,7 +87,7 @@ public static partial class ExerciseLibrary
                 "Go only as wide as your shoulders tolerate; wider isn't better.",
                 "Don't shrug at the top or let your shoulders roll forward.",
             ],
-            Video = new("rJENeh0j-X4"),
+            Video = new("GRgWPT9XSQQ"),
         },
         new("weighted_pull_up", "Weighted Pull-Up", Back, Other, Compound)
         {
@@ -107,7 +107,7 @@ public static partial class ExerciseLibrary
                 "Keep the weight from swinging; brace your abs and keep your legs still.",
                 "Don't trade range for load; still go to a full hang each rep.",
             ],
-            Video = new("zJ299GVSQ4I"),
+            Video = new("fnJ0F1Xsu7Y"),
         },
         new("assisted_pull_up_machine", "Assisted Pull-Up Machine", Back, Machine, Compound)
         {
@@ -125,7 +125,7 @@ public static partial class ExerciseLibrary
                 "Reduce the assistance over time until you need none.",
                 "Don't let the pad bounce you up; control both directions.",
             ],
-            Video = new("JcGwiiGyYFA"),
+            Video = new("wFj808u2HWU"),
         },
         new("band_assisted_pull_up", "Band-Assisted Pull-Up", Back, Band, Compound)
         {
@@ -144,7 +144,7 @@ public static partial class ExerciseLibrary
                 "Use thinner bands as you get stronger.",
                 "Don't let the band snap you up; stay in control.",
             ],
-            Video = new("YnljPuIRrgo"),
+            Video = new("4yE-XGDWJPg"),
         },
         new("negative_pull_up", "Negative Pull-Up", Back, Bodyweight, Compound)
         {
@@ -162,7 +162,7 @@ public static partial class ExerciseLibrary
                 "Keep the lowering even all the way down, not fast at the end.",
                 "Don't drop into the bottom; finish with a controlled hang.",
             ],
-            Video = new("kEn94bm0PRw"),
+            Video = new("gbPURTSxQLY"),
         },
         new("l_sit_pull_up", "L-Sit Pull-Up", Back, Bodyweight, Compound)
         {
@@ -200,7 +200,7 @@ public static partial class ExerciseLibrary
                 "The straight arm should help as little as you can manage.",
                 "Don't rotate your body; keep your chest facing the bar.",
             ],
-            Video = new("AeBvpCCYpGI"),
+            Video = new("ziQjz1-DmX8"),
         },
         new("typewriter_pull_up", "Typewriter Pull-Up", Back, Bodyweight, Compound)
         {
@@ -259,7 +259,7 @@ public static partial class ExerciseLibrary
                 "Keep your body still; don't swing.",
                 "Step down rather than drop if your grip fails suddenly.",
             ],
-            Video = new("9eY15prKcUY"),
+            Video = new("dOCQjaasbGs"),
         },
         new("active_hang", "Active Hang", Back, Bodyweight, Isolation)
         {
@@ -278,7 +278,7 @@ public static partial class ExerciseLibrary
                 "Think of putting your shoulder blades in your back pockets.",
                 "Don't bend the elbows or arch your lower back to cheat the position.",
             ],
-            Video = new("FJWc-ynbvAo"),
+            Video = new("aGpThXQhHuA"),
         },
 
         // Calisthenics skills
@@ -300,7 +300,7 @@ public static partial class ExerciseLibrary
                 "A false grip (wrist over the bar) makes the transition easier.",
                 "Don't chicken-wing one elbow over; both arms go over together.",
             ],
-            Video = new("Al2P0nR2lB8"),
+            Video = new("ZseoNNiEtIw"),
         },
         new("ring_muscle_up", "Ring Muscle-Up", Back, Other, Compound)
         {
@@ -339,7 +339,7 @@ public static partial class ExerciseLibrary
                 "Keep your arms locked; bent elbows turn it into a row.",
                 "Round your upper back slightly rather than arching.",
             ],
-            Video = new("EkdHh8DYlQ0"),
+            Video = new("AGhb8V8M758", 123, 171),
         },
         new("advanced_tuck_front_lever", "Advanced Tuck Front Lever", Back, Bodyweight, Compound)
         {
@@ -359,7 +359,7 @@ public static partial class ExerciseLibrary
                 "Your back should be flat and horizontal, not rounded.",
                 "Don't let your hips sag below your shoulders.",
             ],
-            Video = new("cQWwBx_C_NY"),
+            Video = new("AGhb8V8M758", 171, 217),
         },
         new("straddle_front_lever", "Straddle Front Lever", Back, Bodyweight, Compound)
         {
@@ -400,7 +400,7 @@ public static partial class ExerciseLibrary
                 "Keep your hips in line; a pike or arch means you're not there yet.",
                 "Don't bend your elbows.",
             ],
-            Video = new("OzZ4IiKzUvc"),
+            Video = new("AGhb8V8M758", 307, 323),
         },
         new("tuck_back_lever", "Tuck Back Lever", Shoulders, Bodyweight, Compound)
         {
