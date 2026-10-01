@@ -57,7 +57,7 @@
 
             <!-- The plan's week: tap "Week N" for another week, a day to start it -->
             <VerticalStackLayout IsVisible="{Binding HasPlan}" Spacing="6" Margin="0,4,0,0">
-                <!-- The plan's name, and its ⋯ menu (change plan, pick a week), like the phone's -->
+                <!-- The plan's name, and its ⋯ menu (change plan), like the phone's -->
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
                     <Label Text="{Binding PlanName}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource Accent}" MaxLines="1"
                            LineBreakMode="TailTruncation" HorizontalOptions="Start" HorizontalTextAlignment="Start" VerticalOptions="Center" />

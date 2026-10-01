@@ -328,23 +328,20 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand]
     void SyncNow() => _sync.Schedule(TimeSpan.Zero);
 
-    /// <summary>The ⋯ beside the plan's name, as on the phone: switch to another plan, or look at another week.</summary>
+    /// <summary>The ⋯ beside the plan's name, as on the phone: switch to another plan (weeks are under "Week N ▾").</summary>
     [RelayCommand]
     async Task PlanOptions()
     {
         if (_store.ActivePlan is not { } plan)
             return;
-        const string change = "Change plan", week = "Choose week";
-        string[] options = CanChangePlan ? [change, week] : [week];
-        switch (await Page.DisplayActionSheetAsync(plan.Name, "Cancel", null, options))
+        if (!CanChangePlan)
         {
-            case change:
-                await ChangePlan();
-                break;
-            case week:
-                await ChooseWeek();
-                break;
+            await Page.DisplayAlertAsync(plan.Name, "It's your only plan. Make another in Gym Book on your phone to switch.", "OK");
+            return;
         }
+        const string change = "Change plan";
+        if (await Page.DisplayActionSheetAsync(plan.Name, "Cancel", null, change) == change)
+            await ChangePlan();
     }
 
     /// <summary>Switches the active plan, as the phone's plan ··· menu does. It syncs, so the phone follows.</summary>

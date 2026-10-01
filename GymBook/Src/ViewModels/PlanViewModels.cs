@@ -349,17 +349,9 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     [RelayCommand]
     Task Generate() => GoTo(Routes.Wizard);
 
-    /// <summary>A plan from text, an image or a file, read by AI; needs an account.</summary>
+    /// <summary>The import sheet: a plan read by AI (needs an account), or another app's plans and workout history (CSV).</summary>
     [RelayCommand]
-    async Task Import()
-    {
-        if (!ai.IsAvailable)
-        {
-            await dialogs.Alert("Sign in to import plans", "Importing reads the plan with AI, which needs an account. Sign in from the Profile tab.");
-            return;
-        }
-        await GoTo(Routes.ImportPlan);
-    }
+    Task Import() => GoTo(Routes.ImportPlan);
 
     [RelayCommand]
     async Task CreateEmpty()

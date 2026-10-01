@@ -11,23 +11,37 @@
     Shell.NavBarIsVisible="False"
     Backdrop="#B3000000">
 
-    <!-- A sheet to import a plan from text, a link or a file; the AI turns it into a GymBook plan. -->
+    <!--
+        A sheet to import from elsewhere, one way per tab: the AI turns pasted text, a link or a file into a plan; the CSV
+        tabs read another app's exports, plans and workout history from separate files.
+    -->
     <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
-        <Grid RowDefinitions="Auto,*,Auto">
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
             <Button Text="Cancel" Style="{StaticResource GhostButton}" FontSize="17" HorizontalOptions="Start" Margin="12,8,8,0"
                     Command="{Binding CloseCommand}" />
 
-            <ScrollView Grid.Row="1">
-                <VerticalStackLayout Padding="10,4,10,24" Spacing="16">
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="Import a plan" Style="{StaticResource Title}" FontSize="30" />
-                        <Label Text="Paste it, add a link to it, or pick a photo, screenshot, PDF or text file. AI turns it into a plan you can track."
-                               Style="{StaticResource Caption}" FontSize="15" />
-                    </VerticalStackLayout>
+            <Label Grid.Row="1" Text="Import" Style="{StaticResource Title}" FontSize="30" Margin="10,0,10,6" />
 
-                    <!-- Text -->
-                    <VerticalStackLayout Spacing="8">
-                        <Label Text="PASTE THE PLAN" Style="{StaticResource Overline}" />
+            <!-- The tabs -->
+            <FlexLayout Grid.Row="2" Wrap="Wrap" Margin="10,0,2,6" BindableLayout.ItemsSource="{Binding Tabs}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ImportTab">
+                        <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,7" Margin="0,0,8,8">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                            </Border.GestureRecognizers>
+                            <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+
+            <ScrollView Grid.Row="3">
+                <VerticalStackLayout Padding="10,4,10,24" Spacing="16">
+
+                    <!-- AI: paste -->
+                    <VerticalStackLayout IsVisible="{Binding IsPaste}" Spacing="8">
+                        <Label Text="Paste a plan from anywhere. AI turns it into a plan you can track." Style="{StaticResource Caption}" FontSize="15" />
                         <!-- A few rows to start with, growing as the plan is typed or pasted (HeightRequest -1 clears InputBox's fixed height) -->
                         <Border Style="{StaticResource InputBox}" Padding="12,6" MinimumHeightRequest="150" HeightRequest="-1">
                             <Editor Text="{Binding Text}" Placeholder="Day 1 - Push&#10;Bench press 4x6-8&#10;Overhead press 3x8-10&#10;…"
@@ -35,17 +49,17 @@
                         </Border>
                     </VerticalStackLayout>
 
-                    <!-- Link: a web page, image or document with the plan -->
-                    <VerticalStackLayout Spacing="8">
-                        <Label Text="OR A LINK" Style="{StaticResource Overline}" />
+                    <!-- AI: a link to a web page, image or document with the plan -->
+                    <VerticalStackLayout IsVisible="{Binding IsLink}" Spacing="8">
+                        <Label Text="A link to a web page, image or document with the plan. AI reads it and builds the plan." Style="{StaticResource Caption}" FontSize="15" />
                         <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
                             <Entry Text="{Binding Link}" Placeholder="https://…" Keyboard="Url" />
                         </Border>
                     </VerticalStackLayout>
 
-                    <!-- File -->
-                    <VerticalStackLayout Spacing="8">
-                        <Label Text="OR A FILE" Style="{StaticResource Overline}" />
+                    <!-- AI: a file -->
+                    <VerticalStackLayout IsVisible="{Binding IsFile}" Spacing="8">
+                        <Label Text="A photo, screenshot, PDF or text file of the plan. AI reads it and builds the plan." Style="{StaticResource Caption}" FontSize="15" />
                         <Button Text="Choose a file" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Accent}"
                                 Command="{Binding PickFileCommand}" IsVisible="{Binding HasFile, Converter={StaticResource Not}}" />
                         <Border IsVisible="{Binding HasFile}" BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 14" StrokeThickness="0" Padding="14,6">
@@ -63,17 +77,35 @@
                     </VerticalStackLayout>
 
                     <skeleton:CLabel Text="{Binding Error}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" FontSize="14" />
+
+                    <!-- CSV: plans, then (separately) workouts -->
+                    <!-- Shown by the outer view (bound to this page), filled by the inner one (bound to its import) -->
+                    <ContentView IsVisible="{Binding IsPlans}">
+                        <views:ImportCsvView BindingContext="{Binding PlansImport}" />
+                    </ContentView>
+                    <ContentView IsVisible="{Binding IsWorkouts}">
+                        <views:ImportCsvView BindingContext="{Binding WorkoutsImport}" />
+                    </ContentView>
                 </VerticalStackLayout>
             </ScrollView>
 
-            <VerticalStackLayout Grid.Row="2" Padding="10,8,10,16" Spacing="6">
-                <Button Text="Import plan" Style="{StaticResource PrimaryButton}" Command="{Binding ImportCommand}"
-                        IsVisible="{Binding IsImporting, Converter={StaticResource Not}}" />
-                <HorizontalStackLayout IsVisible="{Binding IsImporting}" HorizontalOptions="Center" Spacing="10" HeightRequest="52">
-                    <ActivityIndicator IsRunning="{Binding IsImporting}" Color="{StaticResource Accent}" WidthRequest="26" HeightRequest="26" VerticalOptions="Center" />
-                    <Label Text="Reading your plan…" Style="{StaticResource Caption}" VerticalOptions="Center" />
-                </HorizontalStackLayout>
-                <Label Text="{Binding QuotaText}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
+            <!-- The tab's button: the AI import, or the CSV import of the tab shown -->
+            <VerticalStackLayout Grid.Row="4" Padding="10,8,10,16" Spacing="6">
+                <VerticalStackLayout IsVisible="{Binding IsAi}" Spacing="6">
+                    <Button Text="Import plan" Style="{StaticResource PrimaryButton}" Command="{Binding ImportCommand}"
+                            IsVisible="{Binding IsImporting, Converter={StaticResource Not}}" />
+                    <HorizontalStackLayout IsVisible="{Binding IsImporting}" HorizontalOptions="Center" Spacing="10" HeightRequest="52">
+                        <ActivityIndicator IsRunning="{Binding IsImporting}" Color="{StaticResource Accent}" WidthRequest="26" HeightRequest="26" VerticalOptions="Center" />
+                        <Label Text="Reading your plan…" Style="{StaticResource Caption}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding QuotaText}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+                <ContentView IsVisible="{Binding IsPlans}">
+                    <views:ImportCsvButton BindingContext="{Binding PlansImport}" />
+                </ContentView>
+                <ContentView IsVisible="{Binding IsWorkouts}">
+                    <views:ImportCsvButton BindingContext="{Binding WorkoutsImport}" />
+                </ContentView>
             </VerticalStackLayout>
         </Grid>
     </Border>

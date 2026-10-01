@@ -2,16 +2,83 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Contracts;
 using GymBook.Services;
+using GymBook.Services.Import;
 using GymBook.Services.Sync;
 
 namespace GymBook.ViewModels;
 
-/// <summary>
-/// Imports a plan from elsewhere: pasted text, a link (to a web page, image or document), or a file (a photo or screenshot, a PDF, or a text
-/// file). The AI reads it and rebuilds it from the app's exercises; the new plan opens when it's done.
-/// </summary>
-public partial class ImportPlanViewModel(DataStore store, AiPlanService ai) : BaseViewModel
+/// <summary>The import sheet's tabs: the AI's three ways in, and another app's CSV exports, plans and workouts apart.</summary>
+public enum ImportMode { Paste, Link, File, Plans, Workouts }
+
+/// <summary>A tab at the top of the import sheet; the selected one is filled with the accent.</summary>
+public partial class ImportTab(string title, ImportMode mode, Action<ImportMode> select) : ObservableObject
 {
+    public string Title => title;
+    public ImportMode Mode => mode;
+    public IRelayCommand SelectCommand { get; } = new RelayCommand(() => select(mode));
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Background), nameof(TextColor))]
+    bool isSelected;
+
+    public Color Background => IsSelected ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#1D212C");
+    public Color TextColor => IsSelected ? Colors.White : Color.FromArgb("#9AA3B5");
+}
+
+/// <summary>
+/// Imports from elsewhere, one way per tab. The AI tabs: pasted text, a link (to a web page, image or document), or a file
+/// (a photo or screenshot, a PDF, or a text file), which the AI reads and rebuilds as a plan from the app's exercises; the
+/// new plan opens when it's done. The CSV tabs: another app's exports of plans and of workout history, separate files
+/// (see <see cref="ImportCsvViewModel"/>).
+/// </summary>
+public partial class ImportPlanViewModel : BaseViewModel
+{
+    readonly DataStore store;
+    readonly AiPlanService ai;
+
+    public ImportPlanViewModel(DataStore store, AiPlanService ai, CsvImporter importer, ExercisePickerService picker, DialogService dialogs)
+    {
+        this.store = store;
+        this.ai = ai;
+        Tabs =
+        [
+            new("Paste", ImportMode.Paste, SelectMode),
+            new("Link", ImportMode.Link, SelectMode),
+            new("File", ImportMode.File, SelectMode),
+            new("Plans CSV", ImportMode.Plans, SelectMode),
+            new("Workouts CSV", ImportMode.Workouts, SelectMode),
+        ];
+        Tabs[0].IsSelected = true;
+        PlansImport = new ImportCsvViewModel(CsvImportKind.Plans, importer, picker, dialogs);
+        WorkoutsImport = new ImportCsvViewModel(CsvImportKind.Workouts, importer, picker, dialogs);
+        PlansImport.Imported += () => _ = GoBack();
+        WorkoutsImport.Imported += () => _ = GoBack();
+    }
+
+    public IReadOnlyList<ImportTab> Tabs { get; }
+    public ImportCsvViewModel PlansImport { get; }
+    public ImportCsvViewModel WorkoutsImport { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPaste), nameof(IsLink), nameof(IsFile), nameof(IsAi), nameof(IsPlans), nameof(IsWorkouts), nameof(CanImport))]
+    [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
+    ImportMode mode;
+
+    public bool IsPaste => Mode == ImportMode.Paste;
+    public bool IsLink => Mode == ImportMode.Link;
+    public bool IsFile => Mode == ImportMode.File;
+    public bool IsAi => Mode is ImportMode.Paste or ImportMode.Link or ImportMode.File;
+    public bool IsPlans => Mode == ImportMode.Plans;
+    public bool IsWorkouts => Mode == ImportMode.Workouts;
+
+    void SelectMode(ImportMode value)
+    {
+        Mode = value;
+        foreach (var tab in Tabs)
+            tab.IsSelected = tab.Mode == value;
+        Error = "";
+    }
+
     /// <summary>What the API accepts once base64-encoded.</summary>
     const long MaxFileBytes = 7 * 1024 * 1024;
 
@@ -45,7 +112,14 @@ public partial class ImportPlanViewModel(DataStore store, AiPlanService ai) : Ba
 
     [ObservableProperty] string quotaText = "";
 
-    public bool CanImport => !IsImporting && (Text.Trim().Length > 0 || Link.Trim().Length > 0 || _file != null);
+    /// <summary>The AI tab's own input is there: each tab imports only what it shows.</summary>
+    public bool CanImport => !IsImporting && Mode switch
+    {
+        ImportMode.Paste => Text.Trim().Length > 0,
+        ImportMode.Link => Link.Trim().Length > 0,
+        ImportMode.File => _file != null,
+        _ => false,
+    };
 
     public override async Task OnAppearingAsync()
     {
@@ -128,10 +202,21 @@ public partial class ImportPlanViewModel(DataStore store, AiPlanService ai) : Ba
     async Task Import()
     {
         Error = "";
+        // The AI tabs need the account (the CSV tabs don't).
+        if (!ai.IsAvailable)
+        {
+            Error = "Importing with AI needs an account. Sign in from the Profile tab.";
+            return;
+        }
         IsImporting = true;
         try
         {
-            var plan = await ai.ImportAsync(Text, Link, _file);
+            var plan = Mode switch
+            {
+                ImportMode.Paste => await ai.ImportAsync(Text, "", null),
+                ImportMode.Link => await ai.ImportAsync("", Link, null),
+                _ => await ai.ImportAsync("", "", _file),
+            };
             store.Data.Plans.Add(plan);
             store.Data.ActivePlanId ??= plan.Id;
             store.Save();

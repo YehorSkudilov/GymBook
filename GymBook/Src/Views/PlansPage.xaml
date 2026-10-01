@@ -65,7 +65,7 @@
                     </HorizontalStackLayout>
                     <Button Text="Generate plan" Style="{StaticResource PrimaryButton}" Command="{Binding GenerateCommand}" />
                     <Button Text="Create empty plan" Style="{StaticResource SecondaryButton}" Command="{Binding CreateEmptyCommand}" />
-                    <Button Text="Import plan" Style="{StaticResource SecondaryButton}" Command="{Binding ImportCommand}" />
+                    <Button Text="Import" Style="{StaticResource SecondaryButton}" Command="{Binding ImportCommand}" />
                 </VerticalStackLayout>
             </Border>
             <VerticalStackLayout BindableLayout.ItemsSource="{Binding OtherPlans}" Spacing="10">

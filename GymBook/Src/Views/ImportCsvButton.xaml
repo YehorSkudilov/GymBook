@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- A CSV tab's import button at the bottom of the import sheet, or its progress while importing. -->
+<ContentView
+    x:Class="GymBook.Views.ImportCsvButton"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:ImportCsvViewModel">
+
+    <Grid>
+        <Button Text="{Binding ImportText}" Style="{StaticResource PrimaryButton}" Command="{Binding ImportCommand}"
+                IsVisible="{Binding IsImporting, Converter={StaticResource Not}}" />
+        <HorizontalStackLayout IsVisible="{Binding IsImporting}" HorizontalOptions="Center" Spacing="10" HeightRequest="52">
+            <ActivityIndicator IsRunning="{Binding IsImporting}" Color="{StaticResource Accent}" WidthRequest="26" HeightRequest="26" VerticalOptions="Center" />
+            <Label Text="Importing…" Style="{StaticResource Caption}" VerticalOptions="Center" />
+        </HorizontalStackLayout>
+    </Grid>
+</ContentView>

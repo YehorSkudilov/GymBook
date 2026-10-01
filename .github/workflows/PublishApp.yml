@@ -492,9 +492,34 @@ jobs:
           name: wear-aab
           path: ${{ steps.find_aab.outputs.file }}
 
-      # =============================
-      # GOOGLE PLAY UPLOAD
-      # =============================
+  # ==================================================
+  # UPLOAD WEAR OS
+  # ==================================================
+
+  # Its own job, after the phone's upload: Google Play allows one open edit per app, and starting a second one expires
+  # the first ("This edit has expired"), so the two uploads can't overlap. The builds still run side by side.
+  upload-wear:
+    needs: [build-android, build-wear]
+    # After the phone upload finished (or the phone wasn't selected), once the watch build is done.
+    if: ${{ !cancelled() && needs.build-wear.result == 'success' && needs.build-android.result != 'failure' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Wear OS AAB
+        uses: actions/download-artifact@v4
+        with:
+          name: wear-aab
+          path: wear
+
+      - name: Find AAB
+        id: find_aab
+        run: |
+          FILE=$(find wear -name "*.aab" | head -1)
+          if [ -z "$FILE" ]; then
+            echo "No Wear OS AAB found"
+            exit 1
+          fi
+          echo "file=$FILE" >> "$GITHUB_OUTPUT"
 
       # Dedicated form factor tracks are named "<form factor>:<track>", e.g. wear:internal.
       - name: Upload AAB to Google Play (Wear OS track)

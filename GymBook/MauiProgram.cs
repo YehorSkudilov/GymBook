@@ -42,6 +42,7 @@ public static class MauiProgram
 #endif
         builder.Services.AddSingleton<AccountService>();
         builder.Services.AddSingleton<AiPlanService>();
+        builder.Services.AddSingleton<GymBook.Services.Import.CsvImporter>();
         builder.Services.AddSingleton<WatchLink>();
 #if ANDROID
         builder.Services.AddSingleton<WatchSync>();
