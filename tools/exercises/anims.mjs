@@ -3,10 +3,10 @@
 // the same figure, colours and style): one request returns a 2×2 storyboard of four keyframes of the movement, which
 // is cut into frames and played start → end → start, like one rep.
 //   OPENAI_API_KEY=key[,key...] node anims.mjs [--model gpt-image-2] [--quality low] [--only id,id] [--force]
-//       [--size 288] [--per-minute 5] [--concurrency 1] [--fidelity high] [--hint "pose detail"] [--from-sheets]
+//       [--size 288] [--pause 700] [--step 240] [--per-minute 5] [--concurrency 1] [--fidelity high] [--hint "pose detail"] [--from-sheets]
 // Several keys (comma separated, e.g. one per OpenAI project) are each paced on their own, so they add up.
 // Output: GymBook/Resources/Raw/exercise-animations/<id>.gif, plus the storyboard itself in anim-sheets/<id>.webp so
-// the GIFs can be rebuilt (other size, timing) without paying again: --from-sheets does only that, no key needed.
+// the GIFs can be rebuilt (other --size, --pause, --step) without paying again: --from-sheets does only that, no key needed.
 // Needs `sharp` (npm install sharp) where it runs. Skips exercises that already have a GIF unless --force.
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -30,9 +30,8 @@ const size = +opt("size", "288");
 const concurrency = +opt("concurrency", "1");
 // OpenAI limits images per minute by account tier (5 at the lowest): each key starts requests no faster than this.
 const perMinute = +opt("per-minute", "5");
-// Frame order and how long each shows (ms): a pause at the start and the end of the rep, quick in between.
-const order = [0, 1, 2, 3, 2, 1];
-const delays = (opt("delays", "700,240,240,700,240,240")).split(",").map(Number);
+// How long each frame shows (ms): a pause at both ends of the rep, quick in between.
+const pause = +opt("pause", "700"), step = +opt("step", "240");
 const require = createRequire(opt("sharp-from", process.cwd() + "/"));
 const sharp = require("sharp");
 const keys = (process.env.OPENAI_API_KEY ?? "").split(",").map(k => k.trim()).filter(Boolean);
@@ -56,17 +55,29 @@ for (const f of readdirSync(dir).filter(f => /^ExerciseLibrary\.\w+\.cs$/.test(f
   }
 }
 
+const muscleWords = { LowerBack: "lower back", Abs: "abdominals", Traps: "trapezius", Quads: "quadriceps" };
+const muscles = x => [x.primary, ...(x.secondary ?? [])].map(m => muscleWords[m] ?? m.toLowerCase()).join(", ");
+const equipmentWords = { Other: "", Bodyweight: "no equipment", EzBar: "an EZ curl bar", Band: "a resistance band" };
+
+// With the thumbnail as a reference the model tends to copy it into the first panel and turn the camera for the
+// rest, so by default the storyboard is drawn from the thumbnails' own style description instead (--reference to
+// send the thumbnail anyway).
+const useReference = args.includes("--reference");
 const prompt = x => [
-  `The attached image is the thumbnail of the exercise "${x.name}" in a fitness app. Turn it into a 2×2 storyboard of`,
-  `four keyframes of one repetition, drawn exactly in the attached image's style: the same figure, flat vector look,`,
-  `soft light grey body with simple shading, working muscles glowing electric blue #3F7DFF, equipment in mid grey,`,
-  `solid very dark navy background #151821.`,
+  useReference
+    ? `The attached image is the thumbnail of the exercise "${x.name}" in a fitness app. Turn it into a 2×2 storyboard of four keyframes of one repetition, drawn exactly in the attached image's style:`
+    : `A 2×2 storyboard of four keyframes of one repetition of the exercise "${x.name}", for a fitness app, as clean, modern flat vector illustrations in one consistent icon-set style:`,
+  `one athletic, gender-neutral figure drawn in soft light grey with simple shading, the working muscles (${muscles(x)}) glowing electric blue #3F7DFF,`,
+  `equipment (${equipmentWords[x.equipment] ?? x.equipment.toLowerCase()}) in mid grey, solid very dark navy background #151821.`,
   `What it is: ${x.summary}`,
   x.steps.length ? `How it's done: ${x.steps.join(" ")}` : "",
   x.hold
     ? `It's a hold, so the panels show getting into it: top-left the set-up, top-right and bottom-left moving into the position, bottom-right the held position.`
-    : `Panel order: top-left the starting position, top-right a third of the way through the movement, bottom-left two thirds of the way, bottom-right the end of the movement (the point where the repetition turns around).`,
-  `Every panel uses the same camera angle, the same scale and the same position in its panel, so that played one after another they animate smoothly:`,
+    : `The four panels go one way only, from one end of the movement to the other, never back: top-left the starting position, top-right a third of the way, bottom-left two thirds of the way, bottom-right the opposite end of the movement, where the repetition turns around (so the bottom-right pose is the one most different from the top-left).`,
+  useReference
+    ? `Keep the attached image's camera angle exactly: all four panels are seen from the same viewpoint as the attached image, never turning the figure or the camera between panels.`
+    : `Pick the one camera angle that shows this movement most clearly (a side or three-quarter view) and draw all four panels from exactly that viewpoint, never turning the figure or the camera between panels.`,
+  `Every panel uses that same camera angle, the same scale and the same position in its panel, so that played one after another they animate smoothly:`,
   `only the moving body parts and the equipment they move change; whatever stays still (feet on the floor, a bench, a machine) stays exactly in place.`,
   `Whole body and all equipment in frame in every panel, centered with some margin.`,
   `Each panel is exactly one quarter of the square image. The navy background runs continuously across all four panels:`,
@@ -103,10 +114,14 @@ function split(data, width, height, vertical) {
   return best;
 }
 
-// The storyboard as four equal square frames of `size` px, in panel order.
+// The storyboard as four equal square frames of `size` px, in panel order, as raw RGB, and its background colour
+// (the model's navy is never quite #151821, and the frames are filled out with it).
 async function frames(sheet) {
   const { data, info } = await sharp(sheet).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const { width, height } = info;
+  const corners = [[4, 4], [width - 5, 4], [4, height - 5], [width - 5, height - 5]].map(([cx, cy]) => (cy * width + cx) * 3);
+  const bg = [0, 1, 2].map(c => corners.map(i => data[i + c]).sort((p, q) => p - q)[1]);
+  const fill = { r: bg[0], g: bg[1], b: bg[2] };
   const x = split(data, width, height, true), y = split(data, width, height, false);
   // A few px off each inner edge, in case the model drew a thin divider after all.
   const inset = Math.round(width / 170);
@@ -116,15 +131,84 @@ async function frames(sheet) {
     { left: 0, top: y + inset, width: x - inset, height: height - y - inset },
     { left: x + inset, top: y + inset, width: width - x - inset, height: height - y - inset },
   ];
-  return Promise.all(boxes.map(box => sharp(sheet).extract(box)
-    .resize(size, size, { fit: "contain", background: "#151821" }).removeAlpha().png().toBuffer()));
+  const raw = await Promise.all(boxes.map(box => sharp(sheet).extract(box)
+    .resize(size, size, { fit: "contain", background: fill }).removeAlpha().raw().toBuffer()));
+  return { raw, bg };
+}
+
+// Which pixels are drawing rather than background.
+const ink = (frame, bg) => {
+  const mask = new Uint8Array(size * size);
+  for (let i = 0; i < mask.length; i++)
+    mask[i] = Math.abs(frame[i * 3] - bg[0]) + Math.abs(frame[i * 3 + 1] - bg[1]) + Math.abs(frame[i * 3 + 2] - bg[2]) > 36 ? 1 : 0;
+  return mask;
+};
+
+// How much of a's drawing lands on b's when a is moved by (dx, dy), sampling every `step` px.
+function overlap(a, b, dx, dy, step) {
+  let n = 0;
+  for (let yy = 0; yy < size; yy += step)
+    for (let xx = 0; xx < size; xx += step) {
+      const sx = xx - dx, sy = yy - dy;
+      if (sx >= 0 && sy >= 0 && sx < size && sy < size && a[sy * size + sx] && b[yy * size + xx])
+        n++;
+    }
+  return n;
+}
+
+// The model doesn't place the figure in exactly the same spot in every panel: each frame is moved so that what
+// stays still (most of the drawing) sits on the first frame's, or the animation would wobble.
+function shiftTo(frame, reference, bg) {
+  const a = ink(frame, bg), b = ink(reference, bg);
+  const range = Math.round(size / 6);
+  let best = [0, 0], bestScore = -1;
+  for (let dy = -range; dy <= range; dy += 3)
+    for (let dx = -range; dx <= range; dx += 3) {
+      const score = overlap(a, b, dx, dy, 3);
+      if (score > bestScore) [best, bestScore] = [[dx, dy], score];
+    }
+  const [cx, cy] = best;
+  for (let dy = cy - 2; dy <= cy + 2; dy++)
+    for (let dx = cx - 2; dx <= cx + 2; dx++) {
+      const score = overlap(a, b, dx, dy, 1);
+      if (score > bestScore || (dx === cx && dy === cy && score >= bestScore)) [best, bestScore] = [[dx, dy], score];
+    }
+  const [dx, dy] = best;
+  const out = Buffer.alloc(frame.length);
+  for (let i = 0; i < size * size; i++)
+    out.set(bg, i * 3);
+  for (let yy = 0; yy < size; yy++)
+    for (let xx = 0; xx < size; xx++) {
+      const sx = xx - dx, sy = yy - dy;
+      if (sx >= 0 && sy >= 0 && sx < size && sy < size)
+        frame.copy(out, (yy * size + xx) * 3, (sy * size + sx) * 3, (sy * size + sx) * 3 + 3);
+    }
+  return out;
+}
+
+// How different two frames are (share of pixels whose drawing differs).
+function difference(a, b, bg) {
+  const ma = ink(a, bg), mb = ink(b, bg);
+  let n = 0;
+  for (let i = 0; i < ma.length; i++)
+    n += ma[i] !== mb[i] ? 1 : 0;
+  return n / ma.length;
 }
 
 async function gif(id, sheet) {
-  const f = await frames(sheet);
-  await sharp(order.map(i => f[i]), { join: { animated: true } })
+  const { raw, bg } = await frames(sheet);
+  const f = [raw[0], ...raw.slice(1).map(frame => shiftTo(frame, raw[0], bg))];
+  // Asked for start → end, but sometimes the model draws a whole rep, ending where it started: then the third panel
+  // is the turning point, and the rep is played 1 → 2 → 3 → 2.
+  const roundTrip = difference(f[0], f[3], bg) < 0.6 * difference(f[0], f[2], bg);
+  const [order, delays] = roundTrip
+    ? [[0, 1, 2, 1], [pause, step, pause, step]]
+    : [[0, 1, 2, 3, 2, 1], [pause, step, step, pause, step, step]];
+  const pages = order.map(i => sharp(f[i], { raw: { width: size, height: size, channels: 3 } }).png().toBuffer());
+  await sharp(await Promise.all(pages), { join: { animated: true } })
     .gif({ loop: 0, delay: delays, colours: 128, dither: 0, effort: 10, interFrameMaxError: 6, interPaletteMaxError: 3 })
     .toFile(`${out}/${id}.gif`);
+  return roundTrip;
 }
 
 let done = 0, failed = 0, inputTokens = 0, outputTokens = 0;
@@ -147,25 +231,35 @@ async function make(x, k) {
     }
     return;
   }
-  const reference = await sharp(`${thumbs}/${x.id}.webp`).resize(1024, 1024).png().toBuffer();
+  const reference = useReference ? await sharp(`${thumbs}/${x.id}.webp`).resize(1024, 1024).png().toBuffer() : null;
   for (let attempt = 0; attempt < 6; attempt++) {
     try {
       await slot(k);
-      const form = new FormData();
-      form.append("model", model);
-      form.append("prompt", prompt(x));
-      form.append("image[]", new Blob([reference], { type: "image/png" }), `${x.id}.png`);
-      form.append("size", "1024x1024");
-      form.append("quality", quality);
-      form.append("n", "1");
-      if (fidelity)
-        form.append("input_fidelity", fidelity);
-      const res = await fetch("https://api.openai.com/v1/images/edits", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${keys[k]}` },
-        body: form,
-        signal: AbortSignal.timeout(240000),
-      });
+      let res;
+      if (useReference) {
+        const form = new FormData();
+        form.append("model", model);
+        form.append("prompt", prompt(x));
+        form.append("image[]", new Blob([reference], { type: "image/png" }), `${x.id}.png`);
+        form.append("size", "1024x1024");
+        form.append("quality", quality);
+        form.append("n", "1");
+        if (fidelity)
+          form.append("input_fidelity", fidelity);
+        res = await fetch("https://api.openai.com/v1/images/edits", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${keys[k]}` },
+          body: form,
+          signal: AbortSignal.timeout(240000),
+        });
+      } else {
+        res = await fetch("https://api.openai.com/v1/images/generations", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${keys[k]}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model, prompt: prompt(x), size: "1024x1024", quality, n: 1 }),
+          signal: AbortSignal.timeout(240000),
+        });
+      }
       const j = await res.json();
       if (res.status === 429 && !/quota|billing/i.test(j.error?.message ?? "")) {
         // "Please try again in 12s": wait that long (plus a little) and keep the pace after it.
