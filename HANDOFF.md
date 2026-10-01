@@ -2,7 +2,7 @@
 
 ## LATEST (2026-10-01, later session): read this section first; it supersedes the "State" section below
 
-### 1. Adding ~110 missing exercises (in progress, nothing committed)
+### 1. Adding missing exercises (writing done; pictures still missing for 50)
 - The brief the writers followed is `tools/exercises/ADD_BRIEF.md`. It builds on `BRIEF.md` (entries) and
   `CURATE_BRIEF.md` (videos). Every new entry gets a full Summary, Steps and Tips, plus a video checked with `yt.mjs info` + `check`.
 - `tools/exercises/check.mjs`: the hardcoded `C:/GitHub/...` path is now relative (the repo moved to D:).
@@ -34,11 +34,22 @@
     Foam Roll Adductors).
   - **How to resume:** run `node tools/exercises/check.mjs` and compare each file against these lists. Finish anything missing
     or half-written by following ADD_BRIEF.md, then make sure `check.mjs` says `no problems` and every entry has a video.
-- **Pictures: 766 of 841 done when this session stopped.** `ExerciseThumbnailAssets.cs` was synced to the files on disk.
-  `thumbs.mjs` needs `OPENAI_API_KEY`. No key is stored anywhere in the repo, so the owner has to supply a new one.
-  - Done: the 8 Pilates pictures and some of Power/Core/Cardio (look in `GymBook/Resources/Raw/exercises/`).
-  - When all entries are in, run `node thumbs.mjs` with no `--only`. It skips existing files and makes the rest, then rewrites
-    `ExerciseThumbnailAssets.cs`.
+- **Coverage pass (later the same day): +42 entries, so the library has 883**, all with a video, and `check.mjs` reports no problems.
+  The pass added stretching and mobility, which were thin, and filled strength gaps in thin muscle groups:
+  - Stretches: towel shoulder, foam roller chest opener, banded lat, prayer wrist, doorway hamstring, Thomas, bretzel,
+    standing figure-four, side lunge, wall straddle, towel calf, plantar fascia.
+  - Mobility/warm-up: walking knee hug, walking quad stretch, toy soldier, open/close the gate, banded hip distraction, sciatic nerve floss.
+  - Yoga: humble warrior, revolved side angle, extended hand-to-big-toe, standing split, gate, fire log, head-to-knee, hero,
+    reclining hero, reverse prayer, three-legged dog.
+  - Strength: band leg curl, single-leg hamstring bridge, band-assisted Nordic, stability ball back extension, barbell /
+    seated dumbbell calf raise, band calf press, band shrug, kettlebell curl, bodyweight biceps curl, cable cross-body
+    triceps extension, cable wrist curl, kettlebell floor press.
+  - Weaker video sources, worth a look: yoga_fire_log (apyogaindia), yoga_reverse_prayer (Yog With Himanshu),
+    yoga_three_legged_dog ("Yoga tutorial"), stretch_wall_straddle (World Wide Athletics), band_calf_press (Storm Performance),
+    mob_hip_gates (Dave Robinson). These were the clearest correct demos found.
+- **Pictures: 833 of 883.** Missing: the 42 new entries above, plus 8 that hit OpenAI rate limits. `thumbs.mjs` needs
+  `OPENAI_API_KEY` (no key is stored in the repo). Each key allows about 5 images a minute, so use `--concurrency 1` or 2 per key.
+  - Run `node thumbs.mjs` with no `--only`. It skips existing files, makes the rest, then rewrites `ExerciseThumbnailAssets.cs`.
   - Open and check every new picture. Known bad one: `pilates_reformer_short_box_tree.webp` shows a standing stretch, but the
     exercise is seated on the box. Regenerate it with `--only pilates_reformer_short_box_tree --force --hint "seated on the short box, one leg raised and held, hands walking up the leg"`.
 - Then update the counts in this file and in `tools/exercises/HANDOFF.md`.

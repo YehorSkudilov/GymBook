@@ -129,6 +129,25 @@ public static partial class ExerciseLibrary
             ],
             Video = new("T0Y3OBF1bNI"),
         },
+        new("kb_floor_press", "Kettlebell Floor Press", Chest, Kettlebell, Compound)
+        {
+            Secondary = [Triceps, Shoulders],
+            Summary = "A press lying on the floor with kettlebells, where the floor limits the range and the bell resting on the forearm challenges stability.",
+            Steps =
+            [
+                "Lie on your back with your knees bent, a kettlebell in each hand resting on the back of the forearm, upper arms on the floor.",
+                "Press the kettlebells up until your arms are straight over your chest.",
+                "Lower under control until your upper arms touch the floor.",
+                "Pause briefly and press again.",
+            ],
+            Tips =
+            [
+                "Keep your wrists straight with the handle low in the palm.",
+                "Elbows about 45° from your body.",
+                "Roll to one side to set the bells down at the end; don't drop them on your chest.",
+            ],
+            Video = new("4ULa6AJcjr8"),
+        },
         new("neutral_grip_db_press", "Neutral-Grip Dumbbell Press", Chest, Dumbbell, Compound)
         {
             Secondary = [Triceps, Shoulders],

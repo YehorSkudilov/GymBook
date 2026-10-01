@@ -1208,6 +1208,25 @@ public static partial class ExerciseLibrary
             ],
             Video = new("n-5T_oYc1oU"),
         },
+        new("barbell_calf_raise", "Barbell Calf Raise", Calves, Barbell, Isolation)
+        {
+            Level = Intermediate,
+            Summary = "A standing calf raise with a barbell on the back, for heavy calf work without a calf machine.",
+            Steps =
+            [
+                "Set up in a squat rack with the bar on your upper back, balls of your feet on a plate or step if you have one.",
+                "Stand tall with your feet hip-width apart.",
+                "Lower your heels as far as you can for a stretch.",
+                "Rise up onto your toes as high as you can, pause, and lower slowly.",
+            ],
+            Tips =
+            [
+                "Keep your knees straight but not locked.",
+                "Use the rack's safety pins; balance gets harder as the calves tire.",
+                "Pause in the stretch instead of bouncing out of it.",
+            ],
+            Video = new("3UWi44yN-wM"),
+        },
         new("seated_calf_raise", "Seated Calf Raise", Calves, Machine, Isolation)
         {
             Summary = "A calf raise sitting with bent knees and a pad on your thighs, which targets the soleus.",
@@ -1261,6 +1280,40 @@ public static partial class ExerciseLibrary
                 "Don't rush the lowering.",
             ],
             Video = new("E1mG5L9rpFc"),
+        },
+        new("seated_db_calf_raise", "Seated Dumbbell Calf Raise", Calves, Dumbbell, Isolation)
+        {
+            Summary = "A seated calf raise with dumbbells on the knees, which works the soleus like the seated calf machine.",
+            Steps =
+            [
+                "Sit on a bench with the balls of your feet on a step or plate and dumbbells resting on your knees.",
+                "Lower your heels as far as you can.",
+                "Push up onto your toes as high as you can and squeeze.",
+                "Lower slowly and repeat.",
+            ],
+            Tips =
+            [
+                "Pause at the bottom; the stretch makes it work.",
+                "Put a towel between the dumbbells and your knees for comfort.",
+            ],
+            Video = new("fFWpWJy8ybU"),
+        },
+        new("band_calf_press", "Band Calf Press", Calves, Band, Isolation)
+        {
+            Summary = "Sitting with the legs straight and a band looped around the balls of the feet, pointing the toes against the band.",
+            Steps =
+            [
+                "Sit on the floor with your legs straight and loop a band around the balls of your feet.",
+                "Hold the ends of the band with your hands, enough to feel tension.",
+                "Point your toes away from you as far as you can against the band.",
+                "Return slowly and repeat.",
+            ],
+            Tips =
+            [
+                "Sit tall and keep the knees straight.",
+                "Go slowly: it's easy to rush the return.",
+            ],
+            Video = new("jkH3WP_a_8E"),
         },
         new("bw_calf_raise", "Single-Leg Calf Raise", Calves, Bodyweight, Isolation)
         {

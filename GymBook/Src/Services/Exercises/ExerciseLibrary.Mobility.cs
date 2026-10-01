@@ -135,6 +135,44 @@ public static partial class ExerciseLibrary
             ],
             Video = new("9svtEV4vkp0"),
         },
+        new("mob_banded_hip_distraction", "Banded Hip Distraction", Glutes, Band, Isolation)
+        {
+            Secondary = [Abs],
+            Category = Mobility,
+            Summary = "A heavy band around the top of the thigh pulls the hip joint while you move through a lunge, to free up a stiff hip.",
+            Steps =
+            [
+                "Anchor a heavy band low to a rack and loop it around the top of one thigh, high in the hip crease.",
+                "Step away until the band pulls hard, then kneel on that leg in a half-kneeling lunge (band pulling backward).",
+                "Tuck the pelvis, squeeze the glute and drive the hips forward into a hip flexor stretch.",
+                "Rock in and out slowly for 1–2 minutes, then switch sides. Turn to let the band pull sideways or forward for other positions.",
+            ],
+            Tips =
+            [
+                "The band should be right up in the hip crease, not on the mid-thigh.",
+                "Expect a stretch, not a pinch; adjust the direction if you feel pinching in the front of the hip.",
+            ],
+            Video = new("2b3lbYf8SuE"),
+        },
+        new("mob_sciatic_nerve_floss", "Sciatic Nerve Floss", Hamstrings, Bodyweight, Isolation)
+        {
+            Category = Mobility,
+            Summary = "A seated nerve glide that moves the sciatic nerve back and forth by straightening the knee while lifting the head, then reversing.",
+            Steps =
+            [
+                "Sit tall on a chair or bench and slump slightly with your hands behind you.",
+                "Straighten one knee and pull the toes up while looking up toward the ceiling.",
+                "Then bend the knee and point the toes while dropping your chin toward your chest.",
+                "Move smoothly between the two for 10–15 reps per leg.",
+            ],
+            Tips =
+            [
+                "Keep it gentle: a mild pulling is fine, but stop if tingling or pain increases.",
+                "It's a glide, not a stretch; don't hold the end positions.",
+                "Persistent leg pain or numbness needs a professional assessment.",
+            ],
+            Video = new("tr88uGR5w80"),
+        },
         new("mob_quadruped_rock_back", "Quadruped Rock-Back", Glutes, Bodyweight, Compound)
         {
             Secondary = [LowerBack],
@@ -229,6 +267,82 @@ public static partial class ExerciseLibrary
                 "Don't twist your pelvis to make the swing bigger.",
             ],
             Video = new("6yKgqrpiBYs"),
+        },
+        new("mob_walking_knee_hug", "Walking Knee Hug", Glutes, Bodyweight, Isolation)
+        {
+            Secondary = [Hamstrings],
+            Category = Mobility,
+            Summary = "A dynamic warm-up step: pull one knee to the chest while rising onto the toes of the standing leg, then step and switch.",
+            Steps =
+            [
+                "Stand tall and step forward with one foot.",
+                "Lift the other knee and hug it to your chest with both hands.",
+                "Rise onto the toes of the standing leg and hold for a moment.",
+                "Step down and repeat with the other leg, walking for 10–20 metres.",
+            ],
+            Tips =
+            [
+                "Stay tall; pull the knee up to you rather than bending down to it.",
+                "Squeeze the glute of the standing leg.",
+            ],
+            Video = new("Ksph5W10bFg"),
+        },
+        new("mob_walking_quad_pull", "Walking Quad Stretch", Quads, Bodyweight, Isolation)
+        {
+            Secondary = [Abs],
+            Category = Mobility,
+            Summary = "A dynamic warm-up that pulls one heel to the glute for a moment with each step, opening the quads and hip flexors.",
+            Steps =
+            [
+                "Step forward and bend the back knee, bringing that heel up behind you.",
+                "Hold the foot with the same-side hand and pull it toward your glute.",
+                "Reach the other arm overhead and hold for a second, knees together.",
+                "Let go, step through and repeat on the other side for 10–20 metres.",
+            ],
+            Tips =
+            [
+                "Tuck your pelvis and squeeze the glute to feel it in the hip flexor too.",
+                "Keep the knees close together rather than letting the bent knee drift out.",
+            ],
+            Video = new("yGN2Z6XkWNQ"),
+        },
+        new("mob_toy_soldier", "Toy Soldier", Hamstrings, Bodyweight, Isolation)
+        {
+            Secondary = [Abs],
+            Category = Mobility,
+            Summary = "A dynamic hamstring warm-up, also called the Frankenstein walk: kick a straight leg up toward the opposite hand with each step.",
+            Steps =
+            [
+                "Stand tall and reach one arm straight out in front of you.",
+                "Kick the opposite leg straight up toward that hand, keeping the knee straight.",
+                "Step forward and repeat with the other leg and arm.",
+                "Continue for 10–20 metres, letting the height build.",
+            ],
+            Tips =
+            [
+                "Keep your back straight; only kick as high as you can without rounding.",
+                "Bring the leg up under control rather than flinging it.",
+            ],
+            Video = new("cIqzwOUilR4"),
+        },
+        new("mob_hip_gates", "Open and Close the Gate", Glutes, Bodyweight, Isolation)
+        {
+            Secondary = [Quads, Abs],
+            Category = Mobility,
+            Summary = "A walking hip warm-up: lift the knee up and circle it out to the side (open the gate), or from the side across the front (close the gate).",
+            Steps =
+            [
+                "Stand tall and lift one knee up in front of you to hip height.",
+                "Open the gate: rotate the knee out to the side, then step down and repeat on the other leg.",
+                "Close the gate: lift the knee out to the side first, then bring it around to the front before stepping down.",
+                "Do 8–10 per leg in each direction, walking or on the spot.",
+            ],
+            Tips =
+            [
+                "Make the circle as big as you can while keeping your torso still.",
+                "Hold onto something at first if your balance wobbles.",
+            ],
+            Video = new("1cITjYcQdBI"),
         },
         new("mob_deep_squat_pry", "Deep Squat Prying", Quads, Bodyweight, Compound)
         {
@@ -804,6 +918,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("bbhQYh-Dfm4"),
         },
+        new("stretch_foam_roller_chest", "Foam Roller Chest Opener", Chest, Other, Isolation)
+        {
+            Secondary = [Shoulders],
+            Category = ExerciseCategory.Stretch,
+            Summary = "Lying lengthwise on a foam roller with the arms out to the sides, letting gravity open the chest and the front of the shoulders.",
+            Steps =
+            [
+                "Lie on your back along a foam roller so your head and tailbone are both supported, knees bent and feet flat.",
+                "Let your arms fall out to the sides, palms up, at about shoulder height or slightly above.",
+                "Relax and let your chest open and your arms sink toward the floor.",
+                "Breathe slowly and hold for 60–90 seconds.",
+            ],
+            Tips =
+            [
+                "Move the arms higher or lower to change where you feel it.",
+                "If your hands tingle, bring the arms closer to your sides.",
+                "Keep your lower back resting on the roller rather than arching off it.",
+            ],
+            Video = new("AzqdRXuDGbY"),
+        },
         new("stretch_cross_body_shoulder", "Cross-Body Shoulder Stretch", Shoulders, Bodyweight, Isolation)
         {
             Secondary = [Back],
@@ -840,6 +974,24 @@ public static partial class ExerciseLibrary
                 "Stop if you feel pinching at the front of the shoulder.",
             ],
             Video = new("9BN8bRVq3Xo"),
+        },
+        new("stretch_towel_shoulder", "Towel Shoulder Stretch", Shoulders, Bodyweight, Isolation)
+        {
+            Category = ExerciseCategory.Stretch,
+            Summary = "A stretch for shoulder internal rotation: a towel held behind the back pulls the lower hand up between the shoulder blades.",
+            Steps =
+            [
+                "Hold a towel in one hand and drape it over that shoulder so it hangs down your back.",
+                "Reach behind your lower back with the other hand and grab the bottom of the towel.",
+                "Pull the towel upward with the top hand, drawing the lower hand up your back until you feel a stretch in the front and back of that shoulder.",
+                "Hold for 20–30 seconds, then switch sides.",
+            ],
+            Tips =
+            [
+                "Keep your chest up and shoulders level; don't lean or twist to get higher.",
+                "Pull gently and steadily. A pinch in the front of the shoulder means ease off.",
+            ],
+            Video = new("-YFWrYkJVBs"),
         },
         new("stretch_overhead_triceps", "Overhead Triceps Stretch", Triceps, Bodyweight, Compound)
         {
@@ -897,6 +1049,25 @@ public static partial class ExerciseLibrary
                 "Breathe out to sink a little deeper.",
             ],
             Video = new("6Fc0u9xPkL8"),
+        },
+        new("stretch_banded_lat", "Banded Lat Stretch", Back, Band, Isolation)
+        {
+            Secondary = [Shoulders],
+            Category = ExerciseCategory.Stretch,
+            Summary = "A band anchored high pulls the arm overhead while you sit the hips back, stretching the lat and opening overhead range.",
+            Steps =
+            [
+                "Loop a long band over a pull-up bar or high anchor and put one hand through it, gripping the band.",
+                "Step back so the band pulls your arm straight overhead.",
+                "Hinge at the hips and push them back and away from the anchor, letting your chest drop toward the floor.",
+                "Shift your hips slightly away from the working side to feel it down the side of your back. Hold for 30–60 seconds per side.",
+            ],
+            Tips =
+            [
+                "Keep your ribs tucked; arching the lower back takes the stretch out of the lat.",
+                "Let the band do the pulling instead of hanging on with a tight grip.",
+            ],
+            Video = new("1L0PB5KrIt8"),
         },
         new("stretch_childs_pose_side_reach", "Child's Pose Side Reach", Back, Bodyweight, Compound)
         {
@@ -971,6 +1142,24 @@ public static partial class ExerciseLibrary
             ],
             Video = new("_uINTR_7X-g"),
         },
+        new("stretch_prayer_wrist", "Prayer Wrist Stretch", Forearms, Bodyweight, Isolation)
+        {
+            Category = ExerciseCategory.Stretch,
+            Summary = "Palms pressed together in front of the chest and lowered toward the waist, stretching the wrist and finger flexors of both hands.",
+            Steps =
+            [
+                "Press your palms and fingers together in front of your chest, elbows out to the sides.",
+                "Keeping the palms together, slowly lower your hands toward your waist.",
+                "Stop when you feel a stretch on the underside of your forearms and wrists.",
+                "Hold for 20–30 seconds.",
+            ],
+            Tips =
+            [
+                "Keep the heels of your hands pressed together as you lower.",
+                "Good between sets of grip work and for long days at a keyboard.",
+            ],
+            Video = new("XnJu70SLsJk"),
+        },
 
         // Hamstring stretches
         new("stretch_standing_hamstring", "Standing Hamstring Stretch", Hamstrings, Bodyweight, Isolation)
@@ -1029,6 +1218,25 @@ public static partial class ExerciseLibrary
                 "Relax your shoulders and let the strap do the work.",
             ],
             Video = new("Il1L75v6gq0"),
+        },
+        new("stretch_doorway_hamstring", "Doorway Hamstring Stretch", Hamstrings, Bodyweight, Isolation)
+        {
+            Secondary = [Calves],
+            Category = ExerciseCategory.Stretch,
+            Summary = "A relaxed hamstring stretch lying in a doorway with one leg straight up the door frame and the other flat through the opening.",
+            Steps =
+            [
+                "Lie on your back in a doorway with one leg through the opening, flat on the floor.",
+                "Rest the heel of the other leg up against the door frame, knee straight.",
+                "Scoot your hips closer to the frame until you feel a gentle stretch behind the raised thigh.",
+                "Relax and hold for 30–60 seconds, then switch legs.",
+            ],
+            Tips =
+            [
+                "Keep the lower leg flat and both hips on the floor.",
+                "Move closer to the frame over the hold as the hamstring lets go.",
+            ],
+            Video = new("VWk9QD10Xjg"),
         },
 
         // Quad and hip flexor stretches
@@ -1108,6 +1316,46 @@ public static partial class ExerciseLibrary
             ],
             Video = new("34SlL-PPCWQ"),
         },
+        new("stretch_thomas", "Thomas Stretch", Abs, Bodyweight, Isolation)
+        {
+            Secondary = [Quads],
+            Category = ExerciseCategory.Stretch,
+            Summary = "Lying back off the end of a bench with one knee hugged to the chest and the other leg hanging, stretching the hip flexors (iliopsoas) and quads of the hanging leg.",
+            Steps =
+            [
+                "Sit on the very end of a sturdy bench or bed and hug one knee to your chest.",
+                "Lie back, keeping that knee pulled in, so your lower back stays flat.",
+                "Let the other leg hang off the end, thigh dropping toward the floor and knee bending.",
+                "Relax and hold for 30–60 seconds, then switch legs.",
+            ],
+            Tips =
+            [
+                "Keep hugging the knee; letting it go arches the lower back and ends the stretch.",
+                "Bend the hanging knee more to bring the quad in.",
+                "Physios use the same position to test hip flexor tightness.",
+            ],
+            Video = new("Pb1znb1PvBc"),
+        },
+        new("stretch_bretzel", "Bretzel Stretch", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Abs, Back],
+            Category = ExerciseCategory.Stretch,
+            Level = Intermediate,
+            Summary = "A side-lying stretch that combines a quad and hip flexor stretch on one leg with a thoracic rotation through the upper back.",
+            Steps =
+            [
+                "Lie on your side with your head supported, bend the top knee up to hip height and hold it to the floor with the bottom hand.",
+                "Bend the bottom knee and reach back with the top hand to hold that foot.",
+                "Keeping the top knee pinned, rotate your chest and shoulders toward the ceiling and the floor behind you.",
+                "Breathe out to sink deeper into the rotation. Hold for 60 seconds per side.",
+            ],
+            Tips =
+            [
+                "Don't let the top knee lift; it anchors the whole stretch.",
+                "Use a strap for the back foot if you can't reach it.",
+            ],
+            Video = new("nVdIns5WQ8Y"),
+        },
 
         // Hip and glute stretches
         new("stretch_sleeping_pigeon", "Sleeping Pigeon Stretch", Glutes, Bodyweight, Compound)
@@ -1147,6 +1395,25 @@ public static partial class ExerciseLibrary
                 "Flex the crossed foot to protect the knee.",
             ],
             Video = new("xVq2-g_leTI"),
+        },
+        new("stretch_standing_figure_four", "Standing Figure-Four Stretch", Glutes, Bodyweight, Isolation)
+        {
+            Category = ExerciseCategory.Stretch,
+            Level = Intermediate,
+            Summary = "A glute and outer-hip stretch done standing: one ankle crossed over the other knee as you sit back into a single-leg squat.",
+            Steps =
+            [
+                "Stand near a wall or rack for balance and cross one ankle over the opposite knee.",
+                "Flex the raised foot and let that knee drop out to the side.",
+                "Sit your hips back as if into a chair, bending the standing knee, with your chest up.",
+                "Hold for 20–30 seconds, then switch sides.",
+            ],
+            Tips =
+            [
+                "Hinge forward a little more from the hips to deepen it.",
+                "Hold onto something until your balance is solid.",
+            ],
+            Video = new("YWmgKkMuMvg"),
         },
         new("stretch_supine_glute", "Supine Glute Stretch", Glutes, Bodyweight, Isolation)
         {
@@ -1265,6 +1532,44 @@ public static partial class ExerciseLibrary
             ],
             Video = new("m6S7_qSm6k8"),
         },
+        new("stretch_side_lunge", "Side Lunge Stretch", Quads, Bodyweight, Isolation)
+        {
+            Secondary = [Hamstrings],
+            Category = ExerciseCategory.Stretch,
+            Summary = "A static wide-stance lunge to one side that stretches the adductors (inner thigh) of the straight leg.",
+            Steps =
+            [
+                "Stand with your feet wide apart, toes pointing forward or slightly out.",
+                "Bend one knee and shift your hips toward that side and back, keeping the other leg straight.",
+                "Stop when you feel a stretch along the inner thigh of the straight leg.",
+                "Hold for 20–30 seconds, then shift to the other side.",
+            ],
+            Tips =
+            [
+                "Keep both feet flat and your chest up.",
+                "Keep the bent knee tracking over the toes.",
+            ],
+            Video = new("g5pmfvi0fzc"),
+        },
+        new("stretch_wall_straddle", "Wall Straddle Stretch", Quads, Bodyweight, Isolation)
+        {
+            Secondary = [Hamstrings],
+            Category = ExerciseCategory.Stretch,
+            Summary = "A passive adductor stretch lying on your back with your legs up a wall, letting them slide apart into a straddle.",
+            Steps =
+            [
+                "Lie on your back with your hips close to a wall and your legs straight up it.",
+                "Let your legs slowly slide apart into a wide V.",
+                "Relax completely and let gravity open the inner thighs.",
+                "Hold for 1–2 minutes, then bring the legs back together with your hands.",
+            ],
+            Tips =
+            [
+                "Scoot your hips closer to the wall for a stronger stretch, further away for less.",
+                "Keep your lower back resting on the floor.",
+            ],
+            Video = new("i2eGM1Xo0Ww"),
+        },
         new("stretch_seated_straddle", "Seated Straddle Stretch", Quads, Bodyweight, Isolation)
         {
             Secondary = [Hamstrings, LowerBack],
@@ -1360,6 +1665,43 @@ public static partial class ExerciseLibrary
                 "Hold on to something solid.",
             ],
             Video = new("6ou4w4ICXvo"),
+        },
+        new("stretch_towel_calf", "Towel Calf Stretch", Calves, Bodyweight, Isolation)
+        {
+            Category = ExerciseCategory.Stretch,
+            Summary = "A seated calf and Achilles stretch, pulling the ball of a straight-legged foot toward you with a towel or strap.",
+            Steps =
+            [
+                "Sit on the floor with one leg straight in front of you.",
+                "Loop a towel or strap around the ball of that foot and hold both ends.",
+                "Keeping the knee straight, pull the towel to draw your toes toward you.",
+                "Hold for 20–30 seconds, then switch legs.",
+            ],
+            Tips =
+            [
+                "Sit tall instead of rounding forward.",
+                "Bend the knee slightly to shift the stretch into the lower calf (soleus).",
+                "A good first stretch of the day for plantar fascia and Achilles pain.",
+            ],
+            Video = new("iwrsMmIXOwg"),
+        },
+        new("stretch_plantar_fascia", "Plantar Fascia Stretch", Calves, Bodyweight, Isolation)
+        {
+            Category = ExerciseCategory.Stretch,
+            Summary = "A seated stretch for the sole of the foot: pulling the toes back toward the shin stretches the plantar fascia.",
+            Steps =
+            [
+                "Sit and cross one ankle over the opposite knee.",
+                "Hold the toes with one hand and pull them back toward your shin.",
+                "Feel the stretch along the arch; you can feel the band tighten with your other thumb.",
+                "Hold for 10–30 seconds and repeat 3 times per foot.",
+            ],
+            Tips =
+            [
+                "Especially useful first thing in the morning, before standing, for plantar fasciitis.",
+                "Pull firmly but without pain.",
+            ],
+            Video = new("mPHe25Kuuqo"),
         },
         new("stretch_kneeling_shin", "Kneeling Shin Stretch", Calves, Bodyweight, Isolation)
         {
@@ -1561,6 +1903,27 @@ public static partial class ExerciseLibrary
             ],
             Video = new("h_iHFVf-1J4", 7.06),
         },
+        new("yoga_humble_warrior", "Humble Warrior", Shoulders, Bodyweight, Compound)
+        {
+            Secondary = [Quads, Glutes, Chest],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Humble Warrior (Baddha Virabhadrasana): from a Warrior I stance, hands clasped behind the back and the torso folding inside the front knee, opening the shoulders and hips.",
+            Steps =
+            [
+                "Start in Warrior I with the front knee bent over the ankle and the back foot angled in.",
+                "Interlace your fingers behind your back and straighten your arms.",
+                "Inhale to lengthen, then exhale and fold your torso forward inside the front knee.",
+                "Let your clasped hands reach up and over toward the floor. Hold for 5 breaths, then switch sides.",
+            ],
+            Tips =
+            [
+                "Keep the front knee bent and pressing into the outside of your shoulder.",
+                "Hold a strap between the hands if they don't reach each other.",
+                "Come up slowly, especially if you feel light-headed.",
+            ],
+            Video = new("fXujuk3RIxk"),
+        },
         new("yoga_warrior_3", "Warrior III", Glutes, Bodyweight, Compound)
         {
             Secondary = [Hamstrings, LowerBack, Abs],
@@ -1661,6 +2024,27 @@ public static partial class ExerciseLibrary
             ],
             Video = new("0k0A_N_FA7k"),
         },
+        new("yoga_revolved_side_angle", "Revolved Side Angle", Abs, Bodyweight, Compound)
+        {
+            Secondary = [Quads, Glutes, Back],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Revolved Side Angle Pose (Parivrtta Parsvakonasana): a deep lunge with the torso twisted toward the front leg, building leg strength and spinal rotation.",
+            Steps =
+            [
+                "Step into a high lunge with the front knee over the ankle; lower the back knee to start if you like.",
+                "Bring your palms together at your chest.",
+                "Twist toward the front leg and hook the opposite elbow outside the front knee.",
+                "Press the palms together to turn your chest open toward the sky. Hold for 5 breaths per side.",
+            ],
+            Tips =
+            [
+                "Lengthen the spine before each twist; rotating while rounded strains the back.",
+                "Keep the front knee from drifting toward the midline.",
+                "Progress to a hand on the floor or a block outside the front foot.",
+            ],
+            Video = new("wnC5-P4-8oQ"),
+        },
         new("yoga_crescent_lunge", "Crescent Lunge", Quads, Bodyweight, Compound)
         {
             Secondary = [Glutes, Abs],
@@ -1743,6 +2127,47 @@ public static partial class ExerciseLibrary
                 "Use a strap around the foot if you can't reach it comfortably.",
             ],
             Video = new("aAgvS7xDvN0"),
+        },
+        new("yoga_extended_hand_to_toe", "Extended Hand-to-Big-Toe Pose", Hamstrings, Bodyweight, Isolation)
+        {
+            Secondary = [Glutes, Abs],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Extended Hand-to-Big-Toe Pose (Utthita Hasta Padangusthasana): standing on one leg, holding the big toe of the other leg extended in front, for balance and hamstring flexibility.",
+            Steps =
+            [
+                "Stand tall, shift your weight onto one foot and lift the other knee toward your chest.",
+                "Hook the big toe with your first two fingers, or loop a strap around the foot.",
+                "Straighten the lifted leg in front of you as far as you can without rounding.",
+                "Optionally open it out to the side. Hold for 5 breaths, then switch.",
+            ],
+            Tips =
+            [
+                "Keep the standing leg straight and both hips level.",
+                "Use a strap or keep the knee bent rather than collapsing your posture.",
+                "Fix your gaze on one spot to help your balance.",
+            ],
+            Video = new("kcRs6Bm4kFo"),
+        },
+        new("yoga_standing_split", "Standing Split", Hamstrings, Bodyweight, Isolation)
+        {
+            Secondary = [Glutes, Calves],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Standing Split (Urdhva Prasarita Eka Padasana): a standing forward fold on one leg with the other lifted high behind, a deep hamstring stretch.",
+            Steps =
+            [
+                "From a standing forward fold, put your hands on the floor or on blocks.",
+                "Shift your weight onto one leg and lift the other straight up behind you.",
+                "Fold your torso toward the standing leg; you can hold its ankle.",
+                "Hold for 5 breaths, then switch legs.",
+            ],
+            Tips =
+            [
+                "Keep the hips square to the floor rather than opening the lifted hip.",
+                "A slight bend in the standing knee is fine; use blocks if the floor is far away.",
+            ],
+            Video = new("0OtrIGirgFY"),
         },
         new("yoga_half_moon", "Half Moon Pose", Glutes, Bodyweight, Compound)
         {
@@ -1864,6 +2289,25 @@ public static partial class ExerciseLibrary
             ],
             Video = new("qMPN9cCDCq8"),
         },
+        new("yoga_gate", "Gate Pose", Abs, Bodyweight, Isolation)
+        {
+            Secondary = [Back, Hamstrings],
+            Category = Yoga,
+            Summary = "Gate Pose (Parighasana): kneeling with one leg out to the side and bending sideways over it, stretching the side body and inner thigh.",
+            Steps =
+            [
+                "Kneel upright and extend one leg straight out to the side, foot flat on the floor.",
+                "Rest the hand on that side on your leg.",
+                "Reach the other arm overhead and bend sideways over the extended leg.",
+                "Breathe into the stretched side for 5 breaths, then switch.",
+            ],
+            Tips =
+            [
+                "Keep your hips stacked over the kneeling knee and your chest facing forward.",
+                "Pad the knee on the floor.",
+            ],
+            Video = new("EgnAOxqOnJI"),
+        },
         new("yoga_lizard", "Lizard Pose", Abs, Bodyweight, Compound)
         {
             Secondary = [Quads, Hamstrings],
@@ -1945,6 +2389,27 @@ public static partial class ExerciseLibrary
                 "Bring the front heel closer to your body if the knee complains.",
             ],
             Video = new("lqCqETr7Q0g"),
+        },
+        new("yoga_fire_log", "Fire Log Pose", Glutes, Bodyweight, Isolation)
+        {
+            Secondary = [Quads],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Fire Log Pose (Agnistambhasana): sitting with the shins stacked one on top of the other like logs, a strong stretch for the outer hips.",
+            Steps =
+            [
+                "Sit tall with your knees bent.",
+                "Place one shin on the floor parallel to the front of your mat.",
+                "Stack the other shin on top, ankle over the bottom knee and knee over the bottom ankle.",
+                "Flex both feet, then hinge forward from the hips if you like. Hold for 5–10 breaths and switch.",
+            ],
+            Tips =
+            [
+                "Flex the feet to protect the knees.",
+                "If the top knee floats high, sit on a cushion or prop the knee on a block.",
+                "Stop if you feel pain in the knee rather than a stretch in the hip.",
+            ],
+            Video = new("rxLRdDrs7vY"),
         },
         new("yoga_happy_baby", "Happy Baby", Quads, Bodyweight, Compound)
         {
@@ -2043,6 +2508,25 @@ public static partial class ExerciseLibrary
             ],
             Video = new("1CkumUyO7tE"),
         },
+        new("yoga_head_to_knee", "Head-to-Knee Pose", Hamstrings, Bodyweight, Isolation)
+        {
+            Secondary = [LowerBack, Calves],
+            Category = Yoga,
+            Summary = "Head-to-Knee Pose (Janu Sirsasana): a seated forward fold over one straight leg with the other foot against the inner thigh.",
+            Steps =
+            [
+                "Sit with one leg straight and the other knee bent, its sole against the inner thigh of the straight leg.",
+                "Turn your chest to face the straight leg and sit tall.",
+                "Hinge forward from the hips over the straight leg, holding the shin, ankle or foot.",
+                "Hold for 5–10 breaths, then switch sides.",
+            ],
+            Tips =
+            [
+                "Lead with your chest rather than pulling your head to your knee.",
+                "Sit on a folded blanket if your lower back rounds.",
+            ],
+            Video = new("dIvn6YyIaWc"),
+        },
         new("yoga_seated_spinal_twist", "Seated Spinal Twist", LowerBack, Bodyweight, Compound)
         {
             Secondary = [Abs, Glutes],
@@ -2083,6 +2567,65 @@ public static partial class ExerciseLibrary
                 "Don't force the knees; back off at any knee pain.",
             ],
             Video = new("5VSNmqtW7uw"),
+        },
+        new("yoga_hero", "Hero Pose", Quads, Bodyweight, Isolation)
+        {
+            Secondary = [Calves],
+            Category = Yoga,
+            Summary = "Hero Pose (Virasana): kneeling and sitting between the heels, which stretches the quads, the front of the ankles and the feet.",
+            Steps =
+            [
+                "Kneel with your knees together and your feet a little wider than your hips, tops of the feet flat.",
+                "Sit back between your heels, onto a block or cushion if needed.",
+                "Sit tall with your hands on your thighs.",
+                "Hold for 1–3 minutes, breathing slowly.",
+            ],
+            Tips =
+            [
+                "Use as much height under your seat as it takes to avoid any knee pain.",
+                "Turn the calves out with your hands before sitting so the knees aren't twisted.",
+            ],
+            Video = new("KlYkyAUHrO8", 562.44, 661.6),
+        },
+        new("yoga_reclining_hero", "Reclining Hero Pose", Quads, Bodyweight, Isolation)
+        {
+            Secondary = [Abs],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Reclining Hero Pose (Supta Virasana): from Hero Pose, leaning back toward the floor for a deep stretch of the quads and hip flexors.",
+            Steps =
+            [
+                "Sit in Hero Pose, between your heels.",
+                "Lean back onto your hands, then your forearms.",
+                "If comfortable, lower your back onto a bolster or all the way to the floor.",
+                "Hold for 1–2 minutes, then come up on your forearms and hands.",
+            ],
+            Tips =
+            [
+                "Keep your knees on the floor and close together; prop your back higher if they lift.",
+                "Stop at once if you feel strain in the knees or lower back.",
+            ],
+            Video = new("kzQvZksDnFQ"),
+        },
+        new("yoga_reverse_prayer", "Reverse Prayer Pose", Shoulders, Bodyweight, Isolation)
+        {
+            Secondary = [Forearms, Chest],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Reverse Prayer Pose (Paschima Namaskarasana): palms pressed together behind the back, fingers pointing up, opening the shoulders, chest and wrists.",
+            Steps =
+            [
+                "Stand or sit tall and roll your shoulders back.",
+                "Bring your hands behind your back with the fingertips pointing down, then turn them to point up.",
+                "Press the palms together and slide them as high up your spine as you can.",
+                "Open your chest and hold for 5–10 breaths.",
+            ],
+            Tips =
+            [
+                "Start by holding opposite elbows or forearms behind your back if the palms won't meet.",
+                "Keep your shoulders down and back rather than hunching.",
+            ],
+            Video = new("6_Eb8_UNkts"),
         },
         new("yoga_legs_up_the_wall", "Legs Up the Wall", Hamstrings, Bodyweight, Isolation)
         {
@@ -2391,6 +2934,25 @@ public static partial class ExerciseLibrary
                 "Spread your fingers and press through the knuckles at the base of the index finger.",
             ],
             Video = new("ljYDGXjyKNA"),
+        },
+        new("yoga_three_legged_dog", "Three-Legged Dog", Hamstrings, Bodyweight, Compound)
+        {
+            Secondary = [Shoulders, Glutes, Calves],
+            Category = Yoga,
+            Summary = "Three-Legged Downward Dog (Eka Pada Adho Mukha Svanasana): Downward-Facing Dog with one leg lifted high behind you, for shoulder strength and a hip and hamstring stretch.",
+            Steps =
+            [
+                "Start in Downward-Facing Dog.",
+                "Inhale and lift one leg straight up and back, in line with your torso.",
+                "Keep your hips level, or open the lifted hip and bend that knee for a hip stretch.",
+                "Hold for 3–5 breaths, step back to Downward Dog and switch.",
+            ],
+            Tips =
+            [
+                "Keep pressing evenly through both hands.",
+                "Lift the leg only as high as you can without the hips twisting, unless you mean to open the hip.",
+            ],
+            Video = new("PPUAjosakvY"),
         },
         new("yoga_plank", "Plank Pose", Abs, Bodyweight, Compound)
         {

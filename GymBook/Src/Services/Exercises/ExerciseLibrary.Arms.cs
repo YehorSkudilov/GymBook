@@ -432,6 +432,24 @@ public static partial class ExerciseLibrary
             ],
             Video = new("AaA7Yj3zHiU"),
         },
+        new("kb_curl", "Kettlebell Curl", Biceps, Kettlebell, Isolation)
+        {
+            Secondary = [Forearms],
+            Summary = "A biceps curl holding a kettlebell by the handle (or the horns), where the offset weight also challenges grip and the forearms.",
+            Steps =
+            [
+                "Stand tall holding a kettlebell by the handle in one hand, arm straight, or by the horns with both hands.",
+                "Keep your elbows by your sides.",
+                "Curl the kettlebell up toward your shoulder.",
+                "Lower it slowly to straight arms.",
+            ],
+            Tips =
+            [
+                "Don't swing; keep the elbows still.",
+                "Holding it by the horns with both hands lets you go heavier.",
+            ],
+            Video = new("8AFAuaTXbWw"),
+        },
         new("suspension_biceps_curl", "Suspension Trainer Biceps Curl", Biceps, Other, Isolation)
         {
             Secondary = [Forearms],
@@ -450,6 +468,24 @@ public static partial class ExerciseLibrary
                 "Don't let your elbows drop; keep them pointing at the anchor.",
             ],
             Video = new("BV3l5Q5t9fo"),
+        },
+        new("bodyweight_biceps_curl", "Bodyweight Biceps Curl", Biceps, Bodyweight, Isolation)
+        {
+            Level = Intermediate,
+            Summary = "A biceps curl using your body weight: hanging under a low bar with an underhand grip and curling your head toward your hands.",
+            Steps =
+            [
+                "Set a bar at about hip height and hold it underhand, hands narrow.",
+                "Walk your feet forward and lean back with straight arms and a straight body.",
+                "Curl your forehead toward the bar by bending only at the elbows.",
+                "Lower under control to straight arms.",
+            ],
+            Tips =
+            [
+                "Keep the elbows in front, not pulling back like a row.",
+                "Walk your feet back (more upright) to make it easier.",
+            ],
+            Video = new("vByJfI8acOw"),
         },
 
         // Triceps: pushdowns
@@ -504,6 +540,23 @@ public static partial class ExerciseLibrary
                 "Don't rotate your torso to help the weight down.",
             ],
             Video = new("oxXEsQgIUrM"),
+        },
+        new("cable_cross_body_triceps_extension", "Cable Cross-Body Triceps Extension", Triceps, Cable, Isolation)
+        {
+            Summary = "A single-arm triceps extension pulling a cable from the opposite side across the body, for a long range of motion.",
+            Steps =
+            [
+                "Set a cable at about shoulder height and stand side-on, holding the cable (no handle or a single handle) with the far hand.",
+                "Start with the hand near the opposite shoulder and the elbow pointing toward the stack.",
+                "Extend the arm out across your body until it's straight.",
+                "Return slowly to the bent position.",
+            ],
+            Tips =
+            [
+                "Keep the upper arm still; only the forearm moves.",
+                "Use a light weight and full range rather than heavy jerky reps.",
+            ],
+            Video = new("xzs9RTtt5y8"),
         },
         new("reverse_grip_pushdown", "Reverse-Grip Pushdown", Triceps, Cable, Isolation)
         {
@@ -967,6 +1020,23 @@ public static partial class ExerciseLibrary
                 "Don't lift your forearms off the bench.",
             ],
             Video = new("lA3QwdAn19Y"),
+        },
+        new("cable_wrist_curl", "Cable Wrist Curl", Forearms, Cable, Isolation)
+        {
+            Summary = "A wrist curl on a low cable, which keeps constant tension on the forearm flexors through the whole range.",
+            Steps =
+            [
+                "Attach a straight bar to a low cable and kneel or sit facing it, holding it underhand.",
+                "Rest your forearms on your thighs or a bench with your wrists just past the edge.",
+                "Let the bar roll down toward your fingertips.",
+                "Curl your wrists up as high as you can, then lower slowly.",
+            ],
+            Tips =
+            [
+                "Keep the forearms pinned; only the wrists move.",
+                "Use higher reps (12–20) and a controlled tempo.",
+            ],
+            Video = new("WVAaKJvToe0"),
         },
         new("reverse_wrist_curl", "Dumbbell Reverse Wrist Curl", Forearms, Dumbbell, Isolation)
         {

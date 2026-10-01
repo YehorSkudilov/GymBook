@@ -416,6 +416,25 @@
  },
  {
   "file": "ExerciseLibrary.Arms.cs",
+  "id": "kb_curl",
+  "name": "Kettlebell Curl",
+  "primary": "Biceps",
+  "equipment": "Kettlebell",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Forearms"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "8AFAuaTXbWw",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
   "id": "suspension_biceps_curl",
   "name": "Suspension Trainer Biceps Curl",
   "primary": "Biceps",
@@ -429,6 +448,23 @@
   "hold": false,
   "video": [
    "BV3l5Q5t9fo",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
+  "id": "bodyweight_biceps_curl",
+  "name": "Bodyweight Biceps Curl",
+  "primary": "Biceps",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "vByJfI8acOw",
    null,
    null
   ]
@@ -480,6 +516,23 @@
   "hold": false,
   "video": [
    "oxXEsQgIUrM",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
+  "id": "cable_cross_body_triceps_extension",
+  "name": "Cable Cross-Body Triceps Extension",
+  "primary": "Triceps",
+  "equipment": "Cable",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "xzs9RTtt5y8",
    null,
    null
   ]
@@ -933,6 +986,23 @@
   "hold": false,
   "video": [
    "lA3QwdAn19Y",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
+  "id": "cable_wrist_curl",
+  "name": "Cable Wrist Curl",
+  "primary": "Forearms",
+  "equipment": "Cable",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "WVAaKJvToe0",
    null,
    null
   ]
@@ -2518,6 +2588,23 @@
  },
  {
   "file": "ExerciseLibrary.Back.cs",
+  "id": "band_shrug",
+  "name": "Band Shrug",
+  "primary": "Traps",
+  "equipment": "Band",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "KNQkqCvAhpI",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
   "id": "incline_db_shrug",
   "name": "Incline Dumbbell Shrug",
   "primary": "Traps",
@@ -3771,6 +3858,26 @@
   "hold": false,
   "video": [
    "T0Y3OBF1bNI",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Chest.cs",
+  "id": "kb_floor_press",
+  "name": "Kettlebell Floor Press",
+  "primary": "Chest",
+  "equipment": "Kettlebell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "4ULa6AJcjr8",
    null,
    null
   ]
@@ -7121,6 +7228,23 @@
  },
  {
   "file": "ExerciseLibrary.Legs.cs",
+  "id": "barbell_calf_raise",
+  "name": "Barbell Calf Raise",
+  "primary": "Calves",
+  "equipment": "Barbell",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "3UWi44yN-wM",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
   "id": "seated_calf_raise",
   "name": "Seated Calf Raise",
   "primary": "Calves",
@@ -7166,6 +7290,40 @@
   "hold": false,
   "video": [
    "E1mG5L9rpFc",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
+  "id": "seated_db_calf_raise",
+  "name": "Seated Dumbbell Calf Raise",
+  "primary": "Calves",
+  "equipment": "Dumbbell",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "fFWpWJy8ybU",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
+  "id": "band_calf_press",
+  "name": "Band Calf Press",
+  "primary": "Calves",
+  "equipment": "Band",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "jkH3WP_a_8E",
    null,
    null
   ]
@@ -7405,6 +7563,42 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "mob_banded_hip_distraction",
+  "name": "Banded Hip Distraction",
+  "primary": "Glutes",
+  "equipment": "Band",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Abs"
+  ],
+  "category": "Mobility",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "2b3lbYf8SuE",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "mob_sciatic_nerve_floss",
+  "name": "Sciatic Nerve Floss",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Mobility",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "tr88uGR5w80",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "mob_quadruped_rock_back",
   "name": "Quadruped Rock-Back",
   "primary": "Glutes",
@@ -7495,6 +7689,83 @@
   "hold": false,
   "video": [
    "6yKgqrpiBYs",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "mob_walking_knee_hug",
+  "name": "Walking Knee Hug",
+  "primary": "Glutes",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Hamstrings"
+  ],
+  "category": "Mobility",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "Ksph5W10bFg",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "mob_walking_quad_pull",
+  "name": "Walking Quad Stretch",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Abs"
+  ],
+  "category": "Mobility",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "yGN2Z6XkWNQ",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "mob_toy_soldier",
+  "name": "Toy Soldier",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Abs"
+  ],
+  "category": "Mobility",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "cIqzwOUilR4",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "mob_hip_gates",
+  "name": "Open and Close the Gate",
+  "primary": "Glutes",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Quads",
+   "Abs"
+  ],
+  "category": "Mobility",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "1cITjYcQdBI",
    null,
    null
   ]
@@ -8059,6 +8330,25 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_foam_roller_chest",
+  "name": "Foam Roller Chest Opener",
+  "primary": "Chest",
+  "equipment": "Other",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Shoulders"
+  ],
+  "category": "Stretch",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "AzqdRXuDGbY",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "stretch_cross_body_shoulder",
   "name": "Cross-Body Shoulder Stretch",
   "primary": "Shoulders",
@@ -8089,6 +8379,23 @@
   "hold": false,
   "video": [
    "9BN8bRVq3Xo",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_towel_shoulder",
+  "name": "Towel Shoulder Stretch",
+  "primary": "Shoulders",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Stretch",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "-YFWrYkJVBs",
    null,
    null
   ]
@@ -8148,6 +8455,25 @@
   "hold": false,
   "video": [
    "6Fc0u9xPkL8",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_banded_lat",
+  "name": "Banded Lat Stretch",
+  "primary": "Back",
+  "equipment": "Band",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Shoulders"
+  ],
+  "category": "Stretch",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "1L0PB5KrIt8",
    null,
    null
   ]
@@ -8227,6 +8553,23 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_prayer_wrist",
+  "name": "Prayer Wrist Stretch",
+  "primary": "Forearms",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Stretch",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "XnJu70SLsJk",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "stretch_standing_hamstring",
   "name": "Standing Hamstring Stretch",
   "primary": "Hamstrings",
@@ -8279,6 +8622,25 @@
   "hold": false,
   "video": [
    "Il1L75v6gq0",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_doorway_hamstring",
+  "name": "Doorway Hamstring Stretch",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Calves"
+  ],
+  "category": "Stretch",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "VWk9QD10Xjg",
    null,
    null
   ]
@@ -8357,6 +8719,45 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_thomas",
+  "name": "Thomas Stretch",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Quads"
+  ],
+  "category": "Stretch",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "Pb1znb1PvBc",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_bretzel",
+  "name": "Bretzel Stretch",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Abs",
+   "Back"
+  ],
+  "category": "Stretch",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "nVdIns5WQ8Y",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "stretch_sleeping_pigeon",
   "name": "Sleeping Pigeon Stretch",
   "primary": "Glutes",
@@ -8387,6 +8788,23 @@
   "hold": false,
   "video": [
    "xVq2-g_leTI",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_standing_figure_four",
+  "name": "Standing Figure-Four Stretch",
+  "primary": "Glutes",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Stretch",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "YWmgKkMuMvg",
    null,
    null
   ]
@@ -8505,6 +8923,44 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_side_lunge",
+  "name": "Side Lunge Stretch",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Hamstrings"
+  ],
+  "category": "Stretch",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "g5pmfvi0fzc",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_wall_straddle",
+  "name": "Wall Straddle Stretch",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Hamstrings"
+  ],
+  "category": "Stretch",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "i2eGM1Xo0Ww",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "stretch_seated_straddle",
   "name": "Seated Straddle Stretch",
   "primary": "Quads",
@@ -8589,6 +9045,40 @@
   "hold": false,
   "video": [
    "6ou4w4ICXvo",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_towel_calf",
+  "name": "Towel Calf Stretch",
+  "primary": "Calves",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Stretch",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "iwrsMmIXOwg",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_plantar_fascia",
+  "name": "Plantar Fascia Stretch",
+  "primary": "Calves",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Stretch",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "mPHe25Kuuqo",
    null,
    null
   ]
@@ -8792,6 +9282,27 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_humble_warrior",
+  "name": "Humble Warrior",
+  "primary": "Shoulders",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Quads",
+   "Glutes",
+   "Chest"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "fXujuk3RIxk",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "yoga_warrior_3",
   "name": "Warrior III",
   "primary": "Glutes",
@@ -8893,6 +9404,27 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_revolved_side_angle",
+  "name": "Revolved Side Angle",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Quads",
+   "Glutes",
+   "Back"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "wnC5-P4-8oQ",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "yoga_crescent_lunge",
   "name": "Crescent Lunge",
   "primary": "Quads",
@@ -8968,6 +9500,46 @@
   "hold": true,
   "video": [
    "aAgvS7xDvN0",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_extended_hand_to_toe",
+  "name": "Extended Hand-to-Big-Toe Pose",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Glutes",
+   "Abs"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "kcRs6Bm4kFo",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_standing_split",
+  "name": "Standing Split",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Glutes",
+   "Calves"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "0OtrIGirgFY",
    null,
    null
   ]
@@ -9095,6 +9667,26 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_gate",
+  "name": "Gate Pose",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Back",
+   "Hamstrings"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "EgnAOxqOnJI",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "yoga_lizard",
   "name": "Lizard Pose",
   "primary": "Abs",
@@ -9167,6 +9759,25 @@
   "hold": false,
   "video": [
    "lqCqETr7Q0g",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_fire_log",
+  "name": "Fire Log Pose",
+  "primary": "Glutes",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Quads"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "rxLRdDrs7vY",
    null,
    null
   ]
@@ -9273,6 +9884,26 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_head_to_knee",
+  "name": "Head-to-Knee Pose",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "LowerBack",
+   "Calves"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "dIvn6YyIaWc",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "yoga_seated_spinal_twist",
   "name": "Seated Spinal Twist",
   "primary": "LowerBack",
@@ -9307,6 +9938,64 @@
   "hold": false,
   "video": [
    "5VSNmqtW7uw",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_hero",
+  "name": "Hero Pose",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Calves"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "KlYkyAUHrO8",
+   "562.44",
+   "661.6"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_reclining_hero",
+  "name": "Reclining Hero Pose",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Abs"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "kzQvZksDnFQ",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_reverse_prayer",
+  "name": "Reverse Prayer Pose",
+  "primary": "Shoulders",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Forearms",
+   "Chest"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "6_Eb8_UNkts",
    null,
    null
   ]
@@ -9608,6 +10297,27 @@
   "hold": false,
   "video": [
    "ljYDGXjyKNA",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_three_legged_dog",
+  "name": "Three-Legged Dog",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Glutes",
+   "Calves"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "PPUAjosakvY",
    null,
    null
   ]
@@ -12698,6 +13408,44 @@
  },
  {
   "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "band_leg_curl",
+  "name": "Band Leg Curl",
+  "primary": "Hamstrings",
+  "equipment": "Band",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Calves"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "LtTcXXgeRYo",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "single_leg_hamstring_bridge",
+  "name": "Single-Leg Hamstring Bridge",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "7CwUsyTqSTI",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
   "id": "hamstring_walkout",
   "name": "Hamstring Walkout",
   "primary": "Hamstrings",
@@ -12728,6 +13476,23 @@
   "hold": false,
   "video": [
    "DAwJCKwMUIg",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "band_assisted_nordic_curl",
+  "name": "Band-Assisted Nordic Curl",
+  "primary": "Hamstrings",
+  "equipment": "Band",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "RS9yc3i69M8",
    null,
    null
   ]
@@ -13320,6 +14085,26 @@
   "hold": false,
   "video": [
    "P489_62b8JU",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "stability_ball_back_extension",
+  "name": "Stability Ball Back Extension",
+  "primary": "LowerBack",
+  "equipment": "Other",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Glutes",
+   "Hamstrings"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "TizvV0WRALA",
    null,
    null
   ]

@@ -549,6 +549,43 @@ public static partial class ExerciseLibrary
             ],
             Video = new("kkkTfzi2gj4"),
         },
+        new("band_leg_curl", "Band Leg Curl", Hamstrings, Band, Isolation)
+        {
+            Secondary = [Calves],
+            Summary = "A leg curl at home: lying face down with a band anchored low around your ankle, curling the heel toward your glutes.",
+            Steps =
+            [
+                "Anchor a band low to something sturdy and loop the other end around one ankle (or both).",
+                "Lie face down with your legs straight and enough distance for tension in the band.",
+                "Curl your heel toward your glutes against the band.",
+                "Lower slowly back to straight.",
+            ],
+            Tips =
+            [
+                "Keep your hips pressed into the floor.",
+                "Control the return; the band pulls hardest at the end.",
+            ],
+            Video = new("LtTcXXgeRYo"),
+        },
+        new("single_leg_hamstring_bridge", "Single-Leg Hamstring Bridge", Hamstrings, Bodyweight, Compound)
+        {
+            Secondary = [Glutes],
+            Summary = "A hamstring-focused bridge on one leg with the heel on a box or bench and the knee only slightly bent.",
+            Steps =
+            [
+                "Lie on your back with one heel on a box or bench, knee slightly bent, and the other leg in the air.",
+                "Arms on the floor by your sides.",
+                "Drive the heel down and lift your hips until your body is straight from shoulder to knee.",
+                "Lower under control and repeat, then switch legs.",
+            ],
+            Tips =
+            [
+                "The straighter the knee, the more the hamstring works.",
+                "Don't arch the lower back to get the hips higher.",
+                "Stop if the hamstring cramps; bend the knee a little more next set.",
+            ],
+            Video = new("7CwUsyTqSTI"),
+        },
         new("hamstring_walkout", "Hamstring Walkout", Hamstrings, Bodyweight, Compound)
         {
             Secondary = [Glutes],
@@ -586,6 +623,24 @@ public static partial class ExerciseLibrary
                 "Don't bend at the hips to make the lowering easier.",
             ],
             Video = new("DAwJCKwMUIg"),
+        },
+        new("band_assisted_nordic_curl", "Band-Assisted Nordic Curl", Hamstrings, Band, Isolation)
+        {
+            Level = Intermediate,
+            Summary = "A Nordic curl with a band from a high anchor around the chest, taking some of your weight so you can control the whole way down.",
+            Steps =
+            [
+                "Anchor a band high behind you and loop it around your chest under the arms.",
+                "Kneel on a pad with your ankles held down, body straight from knees to head.",
+                "Lower forward as slowly as you can, letting the band help as you get lower.",
+                "Pull back up with your hamstrings (help with your hands if needed).",
+            ],
+            Tips =
+            [
+                "Use a lighter band over time until you can do the full Nordic.",
+                "Keep your hips extended; don't bend at the waist.",
+            ],
+            Video = new("RS9yc3i69M8"),
         },
         new("glute_ham_raise", "Glute-Ham Raise", Hamstrings, Bodyweight, Compound)
         {
@@ -1201,6 +1256,24 @@ public static partial class ExerciseLibrary
                 "Don't throw yourself back with momentum.",
             ],
             Video = new("P489_62b8JU"),
+        },
+        new("stability_ball_back_extension", "Stability Ball Back Extension", LowerBack, Other, Isolation)
+        {
+            Secondary = [Glutes, Hamstrings],
+            Summary = "A back extension done face down over a stability ball with the feet braced, a home-friendly way to train the erectors and glutes.",
+            Steps =
+            [
+                "Lie face down over a stability ball with it under your hips and stomach.",
+                "Brace your feet wide against a wall or on the floor, legs straight.",
+                "Hands behind your ears or crossed on your chest, round down over the ball.",
+                "Lift your chest until your body is in a straight line, then lower under control.",
+            ],
+            Tips =
+            [
+                "Stop at a straight line; don't hyperextend at the top.",
+                "Squeeze the glutes as you lift.",
+            ],
+            Video = new("TizvV0WRALA"),
         },
         new("reverse_hyper", "Reverse Hyperextension", LowerBack, Machine, Isolation)
         {

@@ -1274,6 +1274,23 @@ public static partial class ExerciseLibrary
             ],
             Video = new("Wab3-dsZohU"),
         },
+        new("band_shrug", "Band Shrug", Traps, Band, Isolation)
+        {
+            Summary = "A shrug standing on a resistance band, a way to train the upper traps at home or on the road.",
+            Steps =
+            [
+                "Stand on the middle of a band with your feet hip-width apart and hold an end in each hand.",
+                "Stand tall with your arms straight at your sides.",
+                "Shrug your shoulders straight up toward your ears and squeeze.",
+                "Lower slowly and repeat.",
+            ],
+            Tips =
+            [
+                "Lift straight up; don't roll the shoulders.",
+                "Shorten the band or use a wider stance for more resistance.",
+            ],
+            Video = new("KNQkqCvAhpI"),
+        },
         new("incline_db_shrug", "Incline Dumbbell Shrug", Traps, Dumbbell, Isolation)
         {
             Summary = "A shrug lying face down on an incline bench, pulling the shoulder blades up and together to target the mid traps.",
