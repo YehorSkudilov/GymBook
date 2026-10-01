@@ -8,8 +8,8 @@
     "title": "Standing Banded External Rotation (Neutral)",
     "timeSource": "whole",
     "chapter": null,
-    "note": "E3 Rehab demo, 15s; replaces a small PT clinic clip.",
-    "verdict": null
+    "note": "verified: E3 Rehab 15s standing band ER at side, embeds; replaces a small PT clinic clip.",
+    "verdict": "ok"
   },
   {
     "id": "band_internal_rotation",
@@ -20,8 +20,8 @@
     "title": "Standing Banded Internal Rotation (Neutral)",
     "timeSource": "whole",
     "chapter": null,
-    "note": "E3 Rehab demo, 14s; replaces a 20-view clip.",
-    "verdict": null
+    "note": "verified: E3 Rehab 14s standing band IR at side, embeds; replaces a 20-view clip.",
+    "verdict": "ok"
   },
   {
     "id": "cable_external_rotation",
@@ -32,8 +32,8 @@
     "title": "Cable Shoulder External Rotation",
     "timeSource": "whole",
     "chapter": null,
-    "note": "E3 Rehab demo, 26s.",
-    "verdict": null
+    "note": "verified: E3 Rehab 26s cable ER at elbow height, embeds.",
+    "verdict": "ok"
   },
   {
     "id": "cable_internal_rotation",
@@ -44,8 +44,8 @@
     "title": "Cable Shoulder Internal Rotations",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Kept current (14s, 41k views): no reputable-channel cable internal rotation found (searched E3 Rehab and general).",
-    "verdict": null
+    "note": "verified: Athletes' Potential 14s cable IR at elbow height, embeds (kept current); one more search found no reputable-channel alternative (only small-channel Shorts).",
+    "verdict": "ok"
   },
   {
     "id": "side_lying_external_rotation",
@@ -56,8 +56,8 @@
     "title": "Sidelying External Rotation",
     "timeSource": "whole",
     "chapter": null,
-    "note": "E3 Rehab demo, 14s.",
-    "verdict": null
+    "note": "verified: E3 Rehab 14s side-lying ER, embeds.",
+    "verdict": "ok"
   },
   {
     "id": "external_rotation_90_90",
@@ -68,8 +68,8 @@
     "title": "Standing Banded External Rotation (90/90)",
     "timeSource": "whole",
     "chapter": null,
-    "note": "E3 Rehab demo, 15s, band at 90/90.",
-    "verdict": null
+    "note": "verified: E3 Rehab 15s band ER at 90/90, embeds.",
+    "verdict": "ok"
   },
   {
     "id": "cuban_press",
@@ -80,8 +80,8 @@
     "title": "Cuban Press | Nuffield Health",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Kept current: Nuffield Health PT demo, 35s.",
-    "verdict": null
+    "note": "verified: Nuffield Health PT 35s dumbbell Cuban press, embeds (kept current).",
+    "verdict": "ok"
   },
   {
     "id": "ytw_raise",
@@ -92,8 +92,8 @@
     "title": "Incline YTW",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Kept current (12s): no reputable-channel incline Y-T-W found.",
-    "verdict": null
+    "note": "verified: Edge Performance Systems 12s incline dumbbell Y-T-W, embeds (kept current); one more search found no reputable-channel alternative.",
+    "verdict": "ok"
   },
   {
     "id": "prone_iyt",
@@ -104,8 +104,8 @@
     "title": "Prone Y's, T's, & I's",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Kept current: [P]rehab, 11s.",
-    "verdict": null
+    "note": "verified: [P]rehab 11s prone I/Y/T, embeds (kept current).",
+    "verdict": "ok"
   },
   {
     "id": "wall_slide",
@@ -116,8 +116,8 @@
     "title": "Exercises for Shoulder Pain: Wall Slides",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Kept current: British Elbow & Shoulder Society, 48s; chapters all about this exercise.",
-    "verdict": null
+    "note": "verified: BESS 48s wall slide, all chapters about this exercise, embeds (kept current).",
+    "verdict": "ok"
   },
   {
     "id": "pike_push_up",
@@ -128,20 +128,20 @@
     "title": "How to do a Pike Push-Up",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Kept current: NASM, 17s.",
-    "verdict": null
+    "note": "verified: NASM 17s pike push-up, embeds (kept current).",
+    "verdict": "ok"
   },
   {
     "id": "elevated_pike_push_up",
-    "videoId": "8URA3YSur2M",
+    "videoId": "_FfCWr4B6z8",
     "start": null,
     "end": null,
-    "channel": "Tom Peto Training",
-    "title": "PIKE PUSH UP FEET ELEVATED | Technique Demo",
+    "channel": "Live Lean TV Daily Exercises",
+    "title": "How To Do A Feet Elevated Pike Push Up | Exercise Demonstration Video and Guide",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Kept current (calisthenics coach, 26s technique demo); FitnessFAQs videos cover deficit/floor pikes without a feet-elevated chapter.",
-    "verdict": null
+    "note": "fixed: Live Lean TV (listed in brief) 43s feet-elevated pike push-up demo, embeds; replaces Tom Peto Training current.",
+    "verdict": "fixed"
   },
   {
     "id": "handstand_push_up",
@@ -152,8 +152,8 @@
     "title": "The Chest-to-Wall Handstand Push-Up",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Kept current: official CrossFit, 40s, wall handstand push-up (chest to wall).",
-    "verdict": null
+    "note": "verified: CrossFit 40s chest-to-wall handstand push-up, embeds (kept current).",
+    "verdict": "ok"
   },
   {
     "id": "wall_walk",
@@ -164,8 +164,8 @@
     "title": "How To Do Wall Walks | Exercise Guide",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Kept current: Bodybuilding.com, 62s; single chapter at 4.91s (non-integer), so no Start.",
-    "verdict": null
+    "note": "verified: Bodybuilding.com 62s wall walk guide, embeds (kept current); single chapter, no trim needed.",
+    "verdict": "ok"
   },
   {
     "id": "wall_handstand_hold",
@@ -176,8 +176,8 @@
     "title": "The Wall Handstand | Do It Right! (ft UlrikOnHands)",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Tom Merrick, 3:03 focused tutorial on the wall handstand; chapters Intro/Common Mistakes/Conclusion all about it. Replaces Calixpert (7k views).",
-    "verdict": null
+    "note": "verified: Tom Merrick 3:03 focused wall handstand tutorial, all chapters about it, embeds; replaces Calixpert (7k views).",
+    "verdict": "ok"
   },
   {
     "id": "planche_lean",
@@ -188,8 +188,8 @@
     "title": "HOW TO DO PLANCHE LEAN",
     "timeSource": "whole",
     "chapter": null,
-    "note": "Kept current (14s Short, 3.6M views): no reputable-channel planche lean demo found (FitnessFAQs videos either lack a lean chapter or are 2011-era).",
-    "verdict": null
+    "note": "verified: Daniel Hristov 14s planche lean Short, embeds (kept current); one more search found no reputable-channel video clearly titled planche lean (FitnessFAQs Short \"Cant Planche Yet? Start Here\" not confirmable as a lean).",
+    "verdict": "ok"
   },
   {
     "id": "tuck_planche",
@@ -200,7 +200,7 @@
     "title": "How To Planche - Beginner Tutorial",
     "timeSource": "chapter",
     "chapter": "Tuck Planche",
-    "note": "Calisthenicmovement; chapter 'Tuck Planche' 0:17-1:32 (next chapter 'Exercises' at 92s).",
-    "verdict": null
+    "note": "verified: Calisthenicmovement; chapter \"Tuck Planche\" starts 17s, next chapter \"Exercises\" at 92s, embeds.",
+    "verdict": "ok"
   }
 ]

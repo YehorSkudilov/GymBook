@@ -34,7 +34,7 @@ Picks kept from smaller or older channels because no reputable alternative fitte
 show the right movement): Pilates side_kick_circles, clam; Howcast 2012 videos for hip_circles, swimming, seal;
 Power sled_pull, landmine_rotational_punch, band_resisted_punch, sledgehammer_tire_strike; Shoulders
 standing_db_press, chest_supported_reverse_fly (alternative: DeltaBolic sIQNCJ6Xwsk), z_press (Buff Dudes; title
-doesn't say barbell); plus the Shoulders-3 items listed in its results notes. Some agents truncated fractional
+doesn't say barbell), cable_internal_rotation, ytw_raise, planche_lean. Some agents truncated fractional
 chapter times to whole seconds, others kept them exact; both work (`ExerciseVideo` takes doubles and the YouTube URL
 rounds).
 

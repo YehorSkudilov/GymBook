@@ -698,7 +698,7 @@ public static partial class ExerciseLibrary
                 "Keep your wrist straight and your shoulder down.",
                 "Don't twist your torso to make the band move.",
             ],
-            Video = new("4fM554Org3o"),
+            Video = new("UyBb2-bP0CU"),
         },
         new("band_internal_rotation", "Band Internal Rotation", Shoulders, Band, Isolation)
         {
@@ -715,7 +715,7 @@ public static partial class ExerciseLibrary
                 "Move slowly in both directions.",
                 "Don't let your elbow drift away from your side.",
             ],
-            Video = new("-CaOjDo6pIg"),
+            Video = new("7bXPgfGzW9k"),
         },
         new("cable_external_rotation", "Cable External Rotation", Shoulders, Cable, Isolation)
         {
@@ -732,7 +732,7 @@ public static partial class ExerciseLibrary
                 "Use the lightest plate or two; the rotator cuff is small.",
                 "Don't lean or twist away to finish the rep.",
             ],
-            Video = new("GxDF2AYsI1Q"),
+            Video = new("X-JP6sJTZAI"),
         },
         new("cable_internal_rotation", "Cable Internal Rotation", Shoulders, Cable, Isolation)
         {
@@ -766,7 +766,7 @@ public static partial class ExerciseLibrary
                 "Use a very light weight; 1–3 kg is plenty for most people.",
                 "Don't roll your body backward to lift the weight higher.",
             ],
-            Video = new("v5bPOsQbq7g"),
+            Video = new("YzL3koB1mE4"),
         },
         new("external_rotation_90_90", "90/90 External Rotation", Shoulders, Band, Isolation)
         {
@@ -785,7 +785,7 @@ public static partial class ExerciseLibrary
                 "Don't arch your lower back to get more range.",
                 "Can also be done with a cable or a light dumbbell with your elbow resting on a bench.",
             ],
-            Video = new("H1d0tcL-WsI"),
+            Video = new("67dz9MJ63xc"),
         },
         new("cuban_press", "Cuban Press", Shoulders, Dumbbell, Compound)
         {
@@ -904,7 +904,7 @@ public static partial class ExerciseLibrary
                 "The higher the box and the more vertical your torso, the harder it gets.",
                 "Keep your neck neutral and don't drop onto your head.",
             ],
-            Video = new("8URA3YSur2M"),
+            Video = new("_FfCWr4B6z8"),
         },
         new("handstand_push_up", "Handstand Push-Up", Shoulders, Bodyweight, Compound)
         {
@@ -964,7 +964,7 @@ public static partial class ExerciseLibrary
                 "Spread your fingers and grip the floor for balance.",
                 "Learn to bail out safely before holding for long.",
             ],
-            Video = new("2v1YDTzMcO8"),
+            Video = new("H2KSIMwNOfA"),
         },
         new("planche_lean", "Planche Lean", Shoulders, Bodyweight, Compound)
         {
@@ -1006,7 +1006,7 @@ public static partial class ExerciseLibrary
                 "Get comfortable holding a deep planche lean before trying it.",
                 "Parallettes are easier on the wrists than the floor.",
             ],
-            Video = new("7d8fffrFeQA"),
+            Video = new("UZ-1jwG7aQ4", 17, 92),
         },
     ];
 }
