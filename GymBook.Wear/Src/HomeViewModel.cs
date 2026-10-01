@@ -55,6 +55,8 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] bool isBusy;
     [ObservableProperty] string message = "";
     [ObservableProperty] string syncStatus = "";
+    [ObservableProperty] bool isSyncing;
+    [ObservableProperty] Color syncColor = Green;
     [ObservableProperty] string account = "";
 
     // The card: Up next, or the workout in progress.
@@ -138,6 +140,14 @@ public partial class HomeViewModel : ObservableObject
     {
         IsSignedIn = _account.IsSignedIn;
         Account = _account.Email ?? "";
+        IsSyncing = _sync.State == SyncState.Syncing;
+        SyncColor = _sync.State switch
+        {
+            SyncState.UpToDate => Green,
+            SyncState.Offline => Amber,
+            SyncState.Failed or SyncState.SignInRequired => Color.FromArgb("#FF4D5E"),
+            _ => Grey,
+        };
         SyncStatus = !IsSignedIn ? "" : _sync.State switch
         {
             SyncState.Syncing => "Syncing…",
@@ -313,6 +323,10 @@ public partial class HomeViewModel : ObservableObject
         _chosenWeek = index + 1;
         Refresh();
     }
+
+    /// <summary>The sync status tapped: sync now.</summary>
+    [RelayCommand]
+    void SyncNow() => _sync.Schedule(TimeSpan.Zero);
 
     /// <summary>The ⋯ beside the plan's name, as on the phone: switch to another plan, or look at another week.</summary>
     [RelayCommand]

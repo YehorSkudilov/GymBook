@@ -28,7 +28,17 @@
     <ScrollView VerticalScrollBarVisibility="Never">
         <VerticalStackLayout Padding="20,22,20,64" Spacing="8">
             <Label Text="Gym Book" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource Accent}" />
-            <Label Text="{Binding SyncStatus}" Style="{StaticResource Small}" FontSize="10" IsVisible="{Binding IsSignedIn}" />
+            <!-- Sync: a spinner while it runs, then a dot in its colour (green up to date, amber offline, red needs attention) -->
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="5" IsVisible="{Binding IsSignedIn}">
+                <ActivityIndicator IsRunning="{Binding IsSyncing}" IsVisible="{Binding IsSyncing}" Color="{StaticResource Accent}"
+                                   WidthRequest="12" HeightRequest="12" VerticalOptions="Center" />
+                <BoxView IsVisible="{Binding IsSyncing, Converter={StaticResource Not}}" Color="{Binding SyncColor}"
+                         WidthRequest="7" HeightRequest="7" CornerRadius="3.5" VerticalOptions="Center" />
+                <Label Text="{Binding SyncStatus}" Style="{StaticResource Small}" FontSize="10" VerticalOptions="Center" />
+                <HorizontalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SyncNowCommand}" />
+                </HorizontalStackLayout.GestureRecognizers>
+            </HorizontalStackLayout>
 
             <!-- Up next, or the workout in progress: tap it, or its button -->
             <Border IsVisible="{Binding HasCard}" BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 22" StrokeThickness="0" Padding="14,12">
