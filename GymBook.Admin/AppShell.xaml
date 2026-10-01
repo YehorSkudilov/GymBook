@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="GymBook.Admin.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Admin.Views"
+    Title="Gym Book Admin"
+    Shell.FlyoutBehavior="Disabled">
+
+    <TabBar>
+        <ShellContent Title="Dashboard" Route="dashboard" ContentTemplate="{DataTemplate views:DashboardPage}" />
+        <ShellContent Title="Users" Route="users" ContentTemplate="{DataTemplate views:UsersPage}" />
+        <ShellContent Title="AI usage" Route="ai" ContentTemplate="{DataTemplate views:AiUsagePage}" />
+    </TabBar>
+
+</Shell>

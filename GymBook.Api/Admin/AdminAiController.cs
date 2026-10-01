@@ -1,6 +1,7 @@
 using GymBook.Api.Auth;
 using GymBook.Api.Data;
 using GymBook.Api.Plans;
+using GymBook.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

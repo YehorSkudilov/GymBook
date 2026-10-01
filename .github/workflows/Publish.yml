@@ -70,13 +70,6 @@ jobs:
     secrets: inherit
 
   # ==================================================
-  # DEPLOY ADMIN SITE
-  # ==================================================
-  deploy-admin:
-    uses: ./.github/workflows/PublishAdmin.yml
-    secrets: inherit
-
-  # ==================================================
   # VERSION BUMP + BUILD ANDROID/WINDOWS/IOS/MACOS + RELEASE
   # ==================================================
   publish-app:

@@ -82,7 +82,7 @@ jobs:
             # iOS OAuth client ID: the iOS app's tokens are addressed to it (leave unset without iOS sign-in)
             Google__IosClientId=${{ vars.GOOGLE_IOS_CLIENT_ID }}
 
-            # Admin site: accounts made SuperAdmin at startup (comma-separated; sign up in the app first)
+            # Admin app: accounts made SuperAdmin at startup (comma-separated; sign up in the app first)
             Admin__BootstrapEmails=${{ vars.ADMIN_BOOTSTRAP_EMAILS }}
 
             # Rate limits

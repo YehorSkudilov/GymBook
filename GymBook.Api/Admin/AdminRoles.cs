@@ -3,7 +3,7 @@ using GymBook.Api.Data;
 namespace GymBook.Api.Admin;
 
 /// <summary>
-/// Who may use the admin site. A role is a plain column on the user (<see cref="AppUser.AdminRole"/>) that
+/// Who may use the admin app. A role is a plain column on the user (<see cref="AppUser.AdminRole"/>) that
 /// <see cref="Auth.TokenService"/> copies into the access token's "role" claim:
 /// <list type="bullet">
 ///   <item><see cref="Admin"/>: sees every user and the stats, and can disable accounts, sign them out, reset their AI

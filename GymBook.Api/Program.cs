@@ -91,7 +91,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().RequireClaim(AuthPolicies.EmailVerifiedClaim, "true").Build())
     .AddPolicy(AuthPolicies.AnyAccount, p => p.RequireAuthenticatedUser())
-    // The admin site (see Admin/AdminRoles.cs).
+    // The admin app (see Admin/AdminRoles.cs).
     .AddPolicy(AuthPolicies.AdminAccess, p => p.RequireAuthenticatedUser().RequireClaim(AuthPolicies.EmailVerifiedClaim, "true")
         .RequireRole(AdminRoles.Admin, AdminRoles.SuperAdmin))
     .AddPolicy(AuthPolicies.SuperAdminOnly, p => p.RequireAuthenticatedUser().RequireClaim(AuthPolicies.EmailVerifiedClaim, "true")

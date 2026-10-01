@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Admin.Views.UserDetailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Admin.Views"
+    xmlns:vm="clr-namespace:GymBook.Admin.ViewModels"
+    xmlns:controls="clr-namespace:GymBook.Admin.Controls"
+    x:DataType="vm:UserDetailViewModel"
+    Title="{Binding Title}"
+    Shell.TabBarIsVisible="False">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Refresh" Command="{Binding RefreshCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="12,8,12,28" Spacing="16">
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Accent}" HeightRequest="24" />
+            <Label Text="{Binding Error}" TextColor="{StaticResource Danger}" IsVisible="{Binding HasError}" />
+
+            <VerticalStackLayout Spacing="16" IsVisible="{Binding HasData}">
+                <!-- Who -->
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="{Binding Title}" Style="{StaticResource H2}" />
+                    <Label Text="{Binding Email}" Style="{StaticResource Caption}" />
+                    <HorizontalStackLayout Spacing="4" BindableLayout.ItemsSource="{Binding Badges}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:Badge">
+                                <Border Style="{StaticResource Badge}" BackgroundColor="{Binding Background}">
+                                    <Label Text="{Binding Text}" TextColor="{Binding Color}" Style="{StaticResource BadgeText}" />
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Actions -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Actions" Style="{StaticResource H3}" />
+                        <Label Text="{Binding ActionsNote}" Style="{StaticResource Caption}" IsVisible="{Binding CanAct, Converter={StaticResource Not}}" />
+                        <FlexLayout Wrap="Wrap" IsVisible="{Binding CanAct}">
+                            <Button Text="{Binding DisableText}" Style="{StaticResource SmallButton}" Command="{Binding ToggleDisabledCommand}" Margin="0,0,8,8" />
+                            <Button Text="Sign out everywhere" Style="{StaticResource SmallButton}" Command="{Binding SignOutEverywhereCommand}" Margin="0,0,8,8" />
+                            <Button Text="{Binding VerifyText}" Style="{StaticResource SmallButton}" Command="{Binding ToggleVerifiedCommand}" Margin="0,0,8,8" />
+                            <Button Text="Reset AI quota" Style="{StaticResource SmallButton}" Command="{Binding ResetAiQuotaCommand}" Margin="0,0,8,8" />
+                            <Button Text="Send password reset" Style="{StaticResource SmallButton}" Command="{Binding SendPasswordResetCommand}" IsVisible="{Binding CanResetPassword}" Margin="0,0,8,8" />
+                            <Button Text="Change role" Style="{StaticResource SmallButton}" Command="{Binding ChangeRoleCommand}" IsVisible="{Binding CanManage}" Margin="0,0,8,8" />
+                            <Button Text="Delete account" Style="{StaticResource SmallButton}" TextColor="{StaticResource Danger}" Command="{Binding DeleteCommand}" IsVisible="{Binding CanManage}" Margin="0,0,8,8" />
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Account -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="Account" Style="{StaticResource H3}" Margin="0,0,0,6" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding AccountRows}" BindableLayout.ItemTemplate="{StaticResource InfoRow}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Training -->
+                <VerticalStackLayout>
+                    <Label Text="Training" Style="{StaticResource H3}" Margin="4,0,0,8" />
+                    <FlexLayout Wrap="Wrap" BindableLayout.ItemsSource="{Binding StatTiles}" BindableLayout.ItemTemplate="{StaticResource StatTile}" />
+                </VerticalStackLayout>
+
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Workouts per week" Style="{StaticResource H3}" />
+                        <controls:BarChart Values="{Binding WorkoutsByWeek}" />
+                        <Label Text="{Binding WeeksRange}" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- AI -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="AI usage" Style="{StaticResource H3}" Margin="0,0,0,6" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding AiRows}" BindableLayout.ItemTemplate="{StaticResource InfoRow}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Profile -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="Profile" Style="{StaticResource H3}" Margin="0,0,0,6" />
+                        <Label Text="No profile synced yet." Style="{StaticResource Caption}" IsVisible="{Binding HasProfile, Converter={StaticResource Not}}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding ProfileRows}" BindableLayout.ItemTemplate="{StaticResource InfoRow}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Plans -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="Plans" Style="{StaticResource H3}" Margin="0,0,0,6" />
+                        <Label Text="No plans." Style="{StaticResource Caption}" IsVisible="{Binding HasPlans, Converter={StaticResource Not}}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Plans}" BindableLayout.ItemTemplate="{StaticResource StackedRow}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Workouts -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout>
+                        <Label Text="Recent workouts" Style="{StaticResource H3}" Margin="0,0,0,6" />
+                        <Label Text="No workouts." Style="{StaticResource Caption}" IsVisible="{Binding HasWorkouts, Converter={StaticResource Not}}" />
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding Workouts}" BindableLayout.ItemTemplate="{StaticResource StackedRow}" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>

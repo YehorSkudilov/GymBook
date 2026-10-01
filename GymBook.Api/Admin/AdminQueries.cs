@@ -1,5 +1,6 @@
 using GymBook.Api.Auth;
 using GymBook.Api.Data;
+using GymBook.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace GymBook.Api.Admin;

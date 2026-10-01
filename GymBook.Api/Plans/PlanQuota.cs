@@ -81,7 +81,7 @@ public class PlanQuota(ApiDbContext db, PlanQuotaSettings settings, TimeProvider
 
         var now = time.GetUtcNow();
         var since = now - options.Window;
-        // Older ones are kept (not deleted once out of the window) for the admin site's AI usage history.
+        // Older ones are kept (not deleted once out of the window) for the admin app's AI usage history.
         var used = await db.PlanGenerations.CountAsync(g => g.UserId == userId && g.Kind == kind && g.CreatedAt > since, ct);
         if (used >= options.Limit)
             return null;

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Admin.Views.LoginPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Admin.Views"
+    xmlns:vm="clr-namespace:GymBook.Admin.ViewModels"
+    x:DataType="vm:LoginViewModel"
+    Title="Sign in">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20,60,20,20" Spacing="14" MaximumWidthRequest="420">
+            <Label Text="Gym Book Admin" Style="{StaticResource Title}" HorizontalOptions="Center" />
+            <Label Text="Sign in with an Admin or SuperAdmin account." Style="{StaticResource Caption}" HorizontalOptions="Center" />
+
+            <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Email" Style="{StaticResource Overline}" />
+                    <Border Style="{StaticResource InputBox}">
+                        <Entry Text="{Binding Email}" Keyboard="Email" Placeholder="you@example.com" ReturnType="Next" />
+                    </Border>
+                    <Label Text="Password" Style="{StaticResource Overline}" />
+                    <Border Style="{StaticResource InputBox}">
+                        <Entry Text="{Binding Password}" IsPassword="True" ReturnType="Go" ReturnCommand="{Binding SignInCommand}" />
+                    </Border>
+                    <Label Text="{Binding Error}" TextColor="{StaticResource Danger}" IsVisible="{Binding HasError}" FontSize="14" />
+                    <Button Text="Sign in" Style="{StaticResource PrimaryButton}" Command="{Binding SignInCommand}" Margin="0,4,0,0" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Accent}" HeightRequest="24" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="{Binding Server, StringFormat='Server: {0}'}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>

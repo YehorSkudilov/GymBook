@@ -50,7 +50,7 @@ public class TokenService(JwtOptions options, ApiDbContext db, TimeProvider cloc
             [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString("N"),
             [AuthPolicies.EmailVerifiedClaim] = IsVerified(user) ? "true" : "false",
         };
-        // Read from the database on every sign-in and refresh, so a role change reaches the admin site within one
+        // Read from the database on every sign-in and refresh, so a role change reaches the admin app within one
         // access token lifetime.
         if (Admin.AdminRoles.IsValid(user.AdminRole))
             claims[AuthPolicies.RoleClaim] = user.AdminRole!;
@@ -167,7 +167,7 @@ public static class AuthPolicies
     /// <summary>In the access token of admins only: their <see cref="AppUser.AdminRole"/>.</summary>
     public const string RoleClaim = "role";
 
-    /// <summary>The admin site's endpoints: an Admin or SuperAdmin with a verified email.</summary>
+    /// <summary>The admin app's endpoints: an Admin or SuperAdmin with a verified email.</summary>
     public const string AdminAccess = "admin-access";
 
     /// <summary>What only a SuperAdmin may do: change roles and delete accounts.</summary>

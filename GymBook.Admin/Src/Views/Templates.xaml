@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Item templates shared by the pages. -->
+<ResourceDictionary
+    x:Class="GymBook.Admin.Views.Templates"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:GymBook.Admin.ViewModels"
+    xmlns:controls="clr-namespace:GymBook.Admin.Controls">
+
+    <controls:InverseBoolConverter x:Key="Not" />
+
+    <!-- A small coloured tag, e.g. a role or account status. -->
+    <Style x:Key="Badge" TargetType="Border">
+        <Setter Property="StrokeShape" Value="RoundRectangle 999" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Padding" Value="8,2" />
+    </Style>
+    <Style x:Key="BadgeText" TargetType="Label">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+    </Style>
+
+    <DataTemplate x:Key="UserRow" x:DataType="vm:UserItem">
+        <Border Style="{StaticResource InnerCard}" Margin="0,0,0,8">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding OpenCommand}" CommandParameter="{Binding Id}" />
+            </Border.GestureRecognizers>
+            <VerticalStackLayout Spacing="4">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="16" LineBreakMode="TailTruncation" />
+                    <HorizontalStackLayout Grid.Column="1" Spacing="4" BindableLayout.ItemsSource="{Binding Badges}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:Badge">
+                                <Border Style="{StaticResource Badge}" BackgroundColor="{Binding Background}" VerticalOptions="Center">
+                                    <Label Text="{Binding Text}" TextColor="{Binding Color}" Style="{StaticResource BadgeText}" />
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
+                </Grid>
+                <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" />
+                <Label Text="{Binding Activity}" Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource TextTertiary}" />
+            </VerticalStackLayout>
+        </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="RankedRow" x:DataType="vm:RankedUser">
+        <Grid ColumnDefinitions="*,Auto" Padding="0,8" ColumnSpacing="8">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding OpenCommand}" CommandParameter="{Binding Id}" />
+            </Grid.GestureRecognizers>
+            <Label Text="{Binding Email}" LineBreakMode="TailTruncation" />
+            <Label Grid.Column="1" Text="{Binding Value}" Style="{StaticResource Caption}" />
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="StatTile" x:DataType="vm:StatTile">
+        <Border Style="{StaticResource Card}" WidthRequest="170" Margin="0,0,10,10" Padding="14">
+            <VerticalStackLayout Spacing="2">
+                <Label Text="{Binding Label}" Style="{StaticResource Overline}" />
+                <Label Text="{Binding Value}" Style="{StaticResource StatValue}" />
+                <Label Text="{Binding Note}" Style="{StaticResource Caption}" FontSize="12" />
+            </VerticalStackLayout>
+        </Border>
+    </DataTemplate>
+
+    <!-- A label over its value, for longer values like a plan or a workout. -->
+    <DataTemplate x:Key="StackedRow" x:DataType="vm:InfoRow">
+        <VerticalStackLayout Padding="0,6" Spacing="2">
+            <Label Text="{Binding Label}" FontFamily="OpenSansSemibold" />
+            <Label Text="{Binding Value}" Style="{StaticResource Caption}" />
+        </VerticalStackLayout>
+    </DataTemplate>
+
+    <DataTemplate x:Key="InfoRow" x:DataType="vm:InfoRow">
+        <Grid ColumnDefinitions="150,*" Padding="0,4" ColumnSpacing="10">
+            <Label Text="{Binding Label}" Style="{StaticResource Caption}" />
+            <Label Grid.Column="1" Text="{Binding Value}" />
+        </Grid>
+    </DataTemplate>
+
+</ResourceDictionary>

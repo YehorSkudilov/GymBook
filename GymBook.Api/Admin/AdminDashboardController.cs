@@ -1,13 +1,14 @@
 using GymBook.Api.Auth;
 using GymBook.Api.Data;
 using GymBook.Api.Plans;
+using GymBook.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace GymBook.Api.Admin;
 
-/// <summary>The admin site's home page: how many people use Gym Book and how much they train.</summary>
+/// <summary>The admin app's dashboard: how many people use Gym Book and how much they train.</summary>
 [ApiController]
 [Route("api/admin/dashboard")]
 [Authorize(Policy = AuthPolicies.AdminAccess)]

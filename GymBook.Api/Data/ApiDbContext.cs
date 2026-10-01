@@ -18,7 +18,7 @@ public class AppUser : IdentityUser
 
     /// <summary>
     /// Null for everyone but the people running Gym Book: <see cref="Admin.AdminRoles.Admin"/> or
-    /// <see cref="Admin.AdminRoles.SuperAdmin"/>, which open the admin site (see <see cref="Admin.AdminRoles"/>).
+    /// <see cref="Admin.AdminRoles.SuperAdmin"/>, which open the admin app (see <see cref="Admin.AdminRoles"/>).
     /// </summary>
     [MaxLength(16)]
     public string? AdminRole { get; set; }

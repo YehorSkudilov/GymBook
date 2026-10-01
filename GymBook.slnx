@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="../AppSkeleton/AppSkeleton/AppSkeleton.csproj" />
+  <Project Path="GymBook.Admin/GymBook.Admin.csproj" />
   <Project Path="GymBook.Api/GymBook.Api.csproj" />
   <Project Path="GymBook.LocalData/GymBook.LocalData.csproj" />
   <Project Path="GymBook.Shared/GymBook.Shared.csproj" />

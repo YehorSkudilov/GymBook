@@ -6,7 +6,7 @@ namespace GymBook.Api.Admin;
 /// <summary>
 /// Makes the accounts in Admin:BootstrapEmails (Admin__BootstrapEmails, comma-separated) SuperAdmins at startup, so
 /// there's someone to hand out the other roles. Sign up in the app first; an email without an account is retried on the
-/// next start. Accounts that already have a role keep it, so a SuperAdmin can still change it from the admin site.
+/// next start. Accounts that already have a role keep it, so a SuperAdmin can still change it from the admin app.
 /// </summary>
 public static class AdminBootstrapper
 {

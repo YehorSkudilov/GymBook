@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Admin.Views.UsersPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Admin.Views"
+    xmlns:vm="clr-namespace:GymBook.Admin.ViewModels"
+    x:DataType="vm:UsersViewModel"
+    Title="Users">
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="12,8,12,0" RowSpacing="8">
+        <Grid ColumnDefinitions="*,140" ColumnSpacing="8">
+            <Border Style="{StaticResource InputBox}">
+                <Entry Text="{Binding Query}" Placeholder="Search email or name" ClearButtonVisibility="WhileEditing" ReturnCommand="{Binding RefreshCommand}" />
+            </Border>
+            <Border Grid.Column="1" Style="{StaticResource InputBox}">
+                <Picker ItemsSource="{Binding FilterOptions}" SelectedItem="{Binding Filter}" TextColor="{StaticResource TextPrimary}" BackgroundColor="Transparent" />
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+            <Label Text="{Binding Summary}" Style="{StaticResource Caption}" VerticalOptions="Center" />
+            <Label Text="{Binding Error}" TextColor="{StaticResource Danger}" IsVisible="{Binding HasError}" />
+            <ActivityIndicator Grid.Column="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Accent}" HeightRequest="20" WidthRequest="20" />
+        </Grid>
+
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Users}" ItemTemplate="{StaticResource UserRow}" />
+    </Grid>
+</views:BasePage>
