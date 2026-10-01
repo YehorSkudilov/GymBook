@@ -37,14 +37,14 @@
   },
   {
     "id": "glute_ham_raise",
-    "videoId": "blX1If7ScxY",
+    "videoId": "SBGYSfoqyfU",
     "start": null,
     "end": null,
-    "channel": "TylerPath",
-    "title": "How to use the GLUTE HAM RAISE",
+    "channel": "Renaissance Periodization",
+    "title": "Glute Ham Raise",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 11s glute-ham raise demo",
+    "note": "Replaced weak source with focused 8s Renaissance Periodization glute-ham raise demo",
     "verdict": "ok"
   },
   {
@@ -61,14 +61,14 @@
   },
   {
     "id": "hip_thrust",
-    "videoId": "-GEVlyzVbcg",
+    "videoId": "aweBS7K71l8",
     "start": null,
     "end": null,
-    "channel": "Mixed Fitness Arts",
-    "title": "Perfect Hip Thrust Form in 30 Seconds! #workout #glutes #tutorial",
+    "channel": "PureGym",
+    "title": "How To Do A Barbell Hip Thrust",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused hip thrust form demo",
+    "note": "Replaced weak source with focused 16s PureGym barbell hip thrust demo",
     "verdict": "ok"
   },
   {
@@ -181,14 +181,14 @@
   },
   {
     "id": "frog_pump",
-    "videoId": "NNOUE6uAV0E",
+    "videoId": "MQ62r2V7Lw8",
     "start": null,
     "end": null,
-    "channel": "Forty Steps",
-    "title": "How To: Frog Pump",
+    "channel": "Men's Health",
+    "title": "Frog Pump",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: focused 40s frog pump tutorial",
+    "note": "Replaced weak source with focused 57s Men's Health frog pump demonstration",
     "verdict": "ok"
   },
   {
