@@ -1,4 +1,5 @@
 using Android.App;
+using Android.Runtime;
 using AndroidX.Concurrent.Futures;
 using AndroidX.Wear.Tiles;
 // The Tiles library still ships deprecated copies of these builders under the same names; the Tile uses ProtoLayout's.
@@ -104,11 +105,12 @@ public class WorkoutTileService : TileService
         return ("GYM BOOK", "Quick workout", "Tap to open", Primary);
     }
 
-    static LayoutElementBuilders.Text Text(string text, LayoutElementBuilders.FontStyle.Builder style, int color) =>
+    // The bindings type these builders' Build() as the ILayoutElement interface; the font style needs casting back.
+    static LayoutElementBuilders.ILayoutElement Text(string text, LayoutElementBuilders.FontStyle.Builder style, int color) =>
         new LayoutElementBuilders.Text.Builder()
             .SetText(text)
             .SetMaxLines(2)
-            .SetFontStyle(style.SetColor(ColorBuilders.Argb(color)).Build())
+            .SetFontStyle(style.SetColor(ColorBuilders.Argb(color)).Build().JavaCast<LayoutElementBuilders.FontStyle>())
             .Build();
 
     // Opens the app's activity by its fixed name (see MainActivity).
