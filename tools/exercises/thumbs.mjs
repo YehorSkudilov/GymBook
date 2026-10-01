@@ -1,6 +1,6 @@
 // Exercise thumbnails: one illustration per exercise, made with OpenAI's image API in one consistent style, saved as
 // small WebP files shipped inside the app (GymBook/Resources/Raw/exercises/<id>.webp, ~6 KB each at low quality).
-//   OPENAI_API_KEY=... node thumbs.mjs [--model gpt-image-2] [--quality medium] [--only id,id] [--out dir] [--force]
+//   OPENAI_API_KEY=... node thumbs.mjs [--model gpt-image-2] [--quality medium] [--only id,id] [--out dir] [--force] [--hint "pose detail"]
 // Needs `sharp` (npm install sharp) where it runs. Skips exercises that already have a file unless --force.
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -12,6 +12,8 @@ const quality = opt("quality", "low");
 const out = opt("out", new URL("../../GymBook/Resources/Raw/exercises/", import.meta.url).pathname.replace(/^\/(\w:)/, "$1"));
 const only = opt("only", null)?.split(",");
 const force = args.includes("--force");
+// Extra pose guidance appended to the prompt, for regenerating one picture that came out wrong (use with --only).
+const hint = opt("hint", null);
 const concurrency = +opt("concurrency", "1");
 // OpenAI limits images per minute by account tier (5 at the lowest): requests start no faster than this.
 const perMinute = +opt("per-minute", "5");
@@ -41,7 +43,8 @@ const prompt = x => [
   `The figure is drawn in soft light grey with simple shading; the working muscles (${muscles(x)}) glow in electric blue #3F7DFF. Equipment in mid grey.`,
   `Solid very dark navy background #151821 filling the whole square, no floor line, no scenery.`,
   `No text, letters, numbers, logos or watermarks. Same minimal style as a consistent icon set.`,
-].join(" ");
+  hint,
+].filter(Boolean).join(" ");
 
 mkdirSync(out, { recursive: true });
 const todo = items.filter(x => (!only || only.includes(x.id)) && (force || !existsSync(`${out}/${x.id}.webp`)));

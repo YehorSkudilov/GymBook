@@ -1,4 +1,4 @@
-// Generated from Resources/Raw/exercises by tools/exercises/sync-thumbnail-manifest.mjs.
+// Generated from Resources/Raw/exercises by tools/exercises/thumbs.mjs.
 namespace GymBook.Services;
 
 public static class ExerciseThumbnailAssets
@@ -106,6 +106,7 @@ public static class ExerciseThumbnailAssets
         "cable_lat_prayer",
         "cable_lateral_neck_flexion",
         "cable_lateral_raise",
+        "cable_lean_away_lateral_raise",
         "cable_leg_curl",
         "cable_neck_extension",
         "cable_neck_flexion",

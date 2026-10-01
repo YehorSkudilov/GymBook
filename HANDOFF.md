@@ -7,14 +7,14 @@ remove an id.
 
 ## State
 
-- **Pictures: done.** All 734 exercises have a picture in `GymBook/Resources/Raw/exercises/<id>.webp` (384×384 WebP,
+- **Pictures: done.** All 735 exercises have a picture in `GymBook/Resources/Raw/exercises/<id>.webp` (384×384 WebP,
   dark background; every file opens and the set was spot-checked for style). `ExerciseThumbnailAssets.cs` lists all
-  734 (`node tools/exercises/sync-thumbnail-manifest.mjs` refreshes it). The website mockup's four pictures are in
+  735 (`node tools/exercises/sync-thumbnail-manifest.mjs` refreshes it). The website mockup's four pictures are in
   `GymBook.Web/public/exercises/` and `PhoneMockup.tsx` uses `/exercises/<id>.webp`. The OpenAI keys that were here
   are no longer needed and were removed (they expire 2026-10-02 anyway).
 - **Videos: done.** All 35 curation chunks in `tools/exercises/curate/results/` are verified `.json` files and have
   been applied to `ExerciseLibrary.*.cs`; every change is logged in `tools/exercises/logs/videos-curated.md`.
-  `node tools/exercises/check.mjs` reports `total 734 with video 734` and `no problems`.
+  `node tools/exercises/check.mjs` reports `total 735 with video 735` and `no problems`. (735 since `cable_lean_away_lateral_raise` was added; it isn't in a curation chunk).
 - **Nothing from these sessions has been compiled.**
 
 ## Fixed in this session
@@ -54,7 +54,7 @@ rounds).
 
 ## Background: what these sessions built (none of it compiled yet)
 
-1. **Exercise library** (`GymBook/Src/Services/Exercises/`, 734 hand-written exercises, each with a curated YouTube
+1. **Exercise library** (`GymBook/Src/Services/Exercises/`, 735 hand-written exercises, each with a curated YouTube
    video, Start/End from chapters where the video is longer than the demonstration).
 2. **Sign-in required** (`Src/Views/SignInGate.cs`, `AccountViewModel` "required" mode, `App.xaml.cs`): without a
    session a sign-in sheet that can't be closed covers the app. Users with local data and no connection get
@@ -75,4 +75,4 @@ rounds).
 Rules: `tools/exercises/CURATE_BRIEF.md`. Picks format and verify procedure: one JSON array per chunk in
 `curate/results/<key>.json`, `{"id","videoId","start","end","channel","title","timeSource","chapter","note","verdict"}`;
 every id must pass `node yt.mjs info <id>` and `node yt.mjs check <id>`. Apply with `node curate/apply.mjs <key>`,
-then `node check.mjs` must end with `with video 734` and `no problems`.
+then `node check.mjs` must end with `with video 735` and `no problems`.

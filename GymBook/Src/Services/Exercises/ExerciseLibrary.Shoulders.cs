@@ -442,6 +442,24 @@ public static partial class ExerciseLibrary
             ],
             Video = new("Z5FA9aq3L6A"),
         },
+        new("cable_lean_away_lateral_raise", "Cable Lean-Away Lateral Raise", Shoulders, Cable, Isolation)
+        {
+            Level = Intermediate,
+            Summary = "A one-arm low-cable lateral raise done while leaning away from the machine, which keeps the side delt loaded through a longer range, especially at the bottom.",
+            Steps =
+            [
+                "Set a single handle at the lowest pulley, stand side-on to it and hold the machine with your near hand.",
+                "Take the handle in the far hand and lean away until your body is at a slight angle and the cable crosses in front of you.",
+                "With a slight elbow bend, raise your arm out to the side to about shoulder height.",
+                "Lower it slowly until the cable pulls your hand across your body, do all reps, then switch sides.",
+            ],
+            Tips =
+            [
+                "Keep your body straight and still while leaning; only the arm moves.",
+                "Lead with your elbow and don't shrug the shoulder toward your ear.",
+            ],
+            Video = new("lq7eLC30b9w"),
+        },
         new("machine_lateral_raise", "Machine Lateral Raise", Shoulders, Machine, Isolation)
         {
             Summary = "A lateral raise on a dedicated machine with pads on the arms, a stable way to take the side delts close to failure.",

@@ -13529,6 +13529,23 @@
  },
  {
   "file": "ExerciseLibrary.Shoulders.cs",
+  "id": "cable_lean_away_lateral_raise",
+  "name": "Cable Lean-Away Lateral Raise",
+  "primary": "Shoulders",
+  "equipment": "Cable",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "lq7eLC30b9w",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Shoulders.cs",
   "id": "machine_lateral_raise",
   "name": "Machine Lateral Raise",
   "primary": "Shoulders",
