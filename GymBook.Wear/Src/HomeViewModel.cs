@@ -76,6 +76,12 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] bool canChangePlan;
     [ObservableProperty] bool canQuickStart;
 
+    // The pill floating at the bottom while a workout runs (minimized), like the phone's: tap to go back to it.
+    [ObservableProperty] bool hasPill;
+    [ObservableProperty] string pillName = "";
+    [ObservableProperty] string pillTime = "";
+    IDispatcherTimer? _pillTimer;
+
     /// <summary>The phone is running a workout, other than the watch's own one that it picked up by syncing.</summary>
     bool PhoneOwnsWorkout => _phone.Workout.IsActive && _phone.Workout.SessionId != WatchOwnership.SessionId;
 
@@ -158,6 +164,8 @@ public partial class HomeViewModel : ObservableObject
         else
             Days = [];
 
+        UpdatePill();
+
         // The card: the workout in progress first, the plan's next one otherwise.
         if (HasOwnWorkout)
             ShowRunning("IN PROGRESS", _workouts.Active!.Name, _workouts.Active);
@@ -221,6 +229,40 @@ public partial class HomeViewModel : ObservableObject
 
     [RelayCommand]
     Task OpenCard() => _cardAction?.Invoke() ?? Task.CompletedTask;
+
+    /// <summary>The pill: the workout in progress and its running time, ticking while the home is on screen.</summary>
+    void UpdatePill()
+    {
+        DateTime? started = HasOwnWorkout ? _workouts.Active!.StartedAt : PhoneOwnsWorkout ? _phone.Workout.StartedAt.LocalDateTime : null;
+        HasPill = started != null;
+        PillName = HasOwnWorkout ? _workouts.Active!.Name : _phone.Workout.Name;
+        if (started is { } at)
+        {
+            var t = DateTime.Now - at;
+            PillTime = t.TotalHours >= 1 ? $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}" : $"{(int)t.TotalMinutes}:{t.Seconds:00}";
+        }
+    }
+
+    /// <summary>While the home is on screen: the pill's clock.</summary>
+    public void StartTicking()
+    {
+        _pillTimer ??= Application.Current!.Dispatcher.CreateTimer();
+        _pillTimer.Interval = TimeSpan.FromSeconds(1);
+        _pillTimer.Tick -= OnPillTick;
+        _pillTimer.Tick += OnPillTick;
+        _pillTimer.Start();
+    }
+
+    public void StopTicking() => _pillTimer?.Stop();
+
+    void OnPillTick(object? sender, EventArgs e) => UpdatePill();
+
+    /// <summary>The pill tapped: back into the workout, the watch's own or the phone's.</summary>
+    [RelayCommand]
+    Task OpenRunning() => HasOwnWorkout ? ResumeWatchWorkout() : PhoneOwnsWorkout ? OpenPhoneWorkout() : Task.CompletedTask;
+
+    [RelayCommand]
+    async Task OpenSettings() => await Navigation.PushAsync(_services.GetRequiredService<SettingsPage>());
 
     /// <summary>The shown week's days, as on the phone: done, running, up next, or rest.</summary>
     void BuildDays(WorkoutPlan plan, PlanProgress progress)
@@ -364,21 +406,6 @@ public partial class HomeViewModel : ObservableObject
 
     [RelayCommand]
     async Task SignInWithEmail() => await Navigation.PushAsync(_services.GetRequiredService<SignInPage>());
-
-    [RelayCommand]
-    void SyncNow() => _sync.Schedule(TimeSpan.Zero);
-
-    [RelayCommand]
-    async Task SignOut()
-    {
-        var warning = _store.Local.HasPendingChanges
-            ? "Some workouts haven't synced yet and will be lost."
-            : "Your workouts stay in your account.";
-        if (!await Page.DisplayAlertAsync("Sign out?", warning, "Sign out", "Cancel"))
-            return;
-        await _account.SignOutAsync();
-        Refresh();
-    }
 
     static Page Page => Application.Current!.Windows[0].Page!;
 

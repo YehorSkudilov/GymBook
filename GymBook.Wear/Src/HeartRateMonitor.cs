@@ -20,7 +20,8 @@ public class HeartRateMonitor : Java.Lang.Object, ISensorEventListener
     {
         if (_running)
             return true;
-        if (await Permissions.RequestAsync<HeartRatePermission>() != PermissionStatus.Granted)
+        // Turned off in Settings, or not allowed: no heart rate.
+        if (!WatchSettings.HeartRate || await Permissions.RequestAsync<HeartRatePermission>() != PermissionStatus.Granted)
             return false;
         _sensors ??= (SensorManager?)Android.App.Application.Context.GetSystemService(Android.Content.Context.SensorService);
         if (_sensors?.GetDefaultSensor(SensorType.HeartRate) is not { } sensor)

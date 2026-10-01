@@ -27,6 +27,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<AuthSession>();
         builder.Services.AddSingleton(sp => new ApiClient(ApiConfig.CreateClient(), sp.GetRequiredService<AuthSession>()));
         builder.Services.AddSingleton<SyncService>();
+        builder.Services.AddSingleton<LiveSync>();
 
         // The watch's own.
         builder.Services.AddSingleton<PhoneLink>();
@@ -43,6 +44,8 @@ public static class MauiProgram
         builder.Services.AddTransient<SignInPage>();
         builder.Services.AddTransient<ExercisePickerViewModel>();
         builder.Services.AddTransient<ExercisePickerPage>();
+        builder.Services.AddSingleton<SettingsViewModel>();
+        builder.Services.AddTransient<SettingsPage>();
 
         // The crown or rotating bezel scrolls every page.
         RotaryScroll.Register();

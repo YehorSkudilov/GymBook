@@ -30,10 +30,17 @@
 
     <ScrollView VerticalScrollBarVisibility="Never">
         <VerticalStackLayout Padding="24,22,24,30" Spacing="6">
-            <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
-                <Label Text="{Binding Elapsed}" Style="{StaticResource Small}" />
-                <Label Text="{Binding HeartRate}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" IsVisible="{Binding IsInteractive}" />
-            </HorizontalStackLayout>
+            <!-- Minimize (back to the home, the pill there brings it back), the time and heart rate, and the options -->
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="4">
+                <Button Text="⌄" Command="{Binding MinimizeCommand}" Style="{StaticResource Step}" WidthRequest="32" HeightRequest="32" CornerRadius="16"
+                        FontSize="14" IsVisible="{Binding IsInteractive}" />
+                <HorizontalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="8" VerticalOptions="Center">
+                    <Label Text="{Binding Elapsed}" Style="{StaticResource Small}" />
+                    <Label Text="{Binding HeartRate}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" IsVisible="{Binding IsInteractive}" />
+                </HorizontalStackLayout>
+                <Button Grid.Column="2" Text="⋯" Command="{Binding OptionsCommand}" Style="{StaticResource Step}" WidthRequest="32" HeightRequest="32" CornerRadius="16"
+                        FontSize="14" IsVisible="{Binding IsInteractive}" />
+            </Grid>
 
             <!-- A quick workout before its first exercise -->
             <VerticalStackLayout IsVisible="{Binding IsEmpty}" Spacing="8">

@@ -38,6 +38,8 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.90" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<!-- Live sync with the API's SyncHub (the phone app's LiveSync.cs, linked below). -->
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
 		<!-- The link to the phone app (Src/PhoneLink.cs). -->
 		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="120.0.1.2" />
 		<!-- Ambient mode: the workout stays on screen, dimmed, when the watch would otherwise go to its watch face. -->
@@ -92,6 +94,7 @@
 		<Compile Include="..\GymBook\Src\Services\Sync\ApiConfig.cs" Link="Shared\Sync\ApiConfig.cs" />
 		<Compile Include="..\GymBook\Src\Services\Sync\AuthSession.cs" Link="Shared\Sync\AuthSession.cs" />
 		<Compile Include="..\GymBook\Src\Services\Sync\SyncService.cs" Link="Shared\Sync\SyncService.cs" />
+		<Compile Include="..\GymBook\Src\Services\Sync\LiveSync.cs" Link="Shared\Sync\LiveSync.cs" />
 		<!-- The exercise catalogue ExerciseLibrary reads (names, the curated list's extra exercises). -->
 		<EmbeddedResource Include="..\GymBook\Src\Services\ExerciseCatalog.json" LogicalName="ExerciseCatalog.json" Link="Shared\ExerciseCatalog.json" />
 	</ItemGroup>

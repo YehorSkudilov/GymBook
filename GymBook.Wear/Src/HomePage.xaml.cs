@@ -15,6 +15,13 @@ public partial class HomePage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
+        _vm.StartTicking();
         await _vm.OnAppearingAsync();
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        _vm.StopTicking();
     }
 }

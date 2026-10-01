@@ -24,8 +24,9 @@
         </Style>
     </ContentPage.Resources>
 
+    <Grid>
     <ScrollView VerticalScrollBarVisibility="Never">
-        <VerticalStackLayout Padding="20,22,20,34" Spacing="8">
+        <VerticalStackLayout Padding="20,22,20,64" Spacing="8">
             <Label Text="Gym Book" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource Accent}" />
             <Label Text="{Binding SyncStatus}" Style="{StaticResource Small}" FontSize="10" IsVisible="{Binding IsSignedIn}" />
 
@@ -46,7 +47,12 @@
 
             <!-- The plan's week: tap "Week N" for another week, a day to start it -->
             <VerticalStackLayout IsVisible="{Binding HasPlan}" Spacing="6" Margin="0,4,0,0">
-                <Label Text="{Binding PlanName}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource Accent}" MaxLines="1" LineBreakMode="TailTruncation" />
+                <!-- The plan's name: tap to switch to another plan -->
+                <Label Text="{Binding PlanName}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource Accent}" MaxLines="1" LineBreakMode="TailTruncation">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ChangePlanCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
                 <Button Text="{Binding WeekText}" Command="{Binding ChooseWeekCommand}" BackgroundColor="Transparent"
                         TextColor="{StaticResource Accent}" FontSize="13" HeightRequest="32" Padding="0" />
                 <Border BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 20" StrokeThickness="0" Padding="8,6">
@@ -91,12 +97,23 @@
             <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Accent}" HeightRequest="20" />
             <Label Text="{Binding Message}" Style="{StaticResource Small}" TextColor="{StaticResource Danger}" />
 
-            <!-- Account -->
-            <VerticalStackLayout IsVisible="{Binding IsSignedIn}" Spacing="6" Margin="0,10,0,0">
-                <Button Text="Sync now" Command="{Binding SyncNowCommand}" Style="{StaticResource Secondary}" />
-                <Label Text="{Binding Account}" Style="{StaticResource Small}" FontSize="11" LineBreakMode="MiddleTruncation" />
-                <Button Text="Sign out" Command="{Binding SignOutCommand}" Style="{StaticResource Secondary}" TextColor="{StaticResource Danger}" />
-            </VerticalStackLayout>
+            <!-- Settings: units, rest timer, heart rate, buzzes, the account and syncing -->
+            <Button Text="⚙  Settings" Command="{Binding OpenSettingsCommand}" Style="{StaticResource Secondary}" Margin="0,10,0,0" />
         </VerticalStackLayout>
     </ScrollView>
+
+    <!-- A workout in progress, minimized: a pill floating at the bottom, like the phone's; tap to go back to it -->
+    <Border IsVisible="{Binding HasPill}" BackgroundColor="#272C39" StrokeShape="RoundRectangle 17" StrokeThickness="1" Stroke="#3DFFFFFF"
+            HorizontalOptions="Center" VerticalOptions="End" Margin="0,0,0,14" Padding="12,6">
+        <Border.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding OpenRunningCommand}" />
+        </Border.GestureRecognizers>
+        <HorizontalStackLayout Spacing="6">
+            <BoxView WidthRequest="8" HeightRequest="8" CornerRadius="4" Color="{StaticResource Success}" VerticalOptions="Center" />
+            <Label Text="{Binding PillName}" FontFamily="OpenSansSemibold" FontSize="12" MaxLines="1" LineBreakMode="TailTruncation"
+                   MaximumWidthRequest="110" VerticalOptions="Center" />
+            <Label Text="{Binding PillTime}" FontSize="12" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+        </HorizontalStackLayout>
+    </Border>
+    </Grid>
 </ContentPage>

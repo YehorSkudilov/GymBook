@@ -16,6 +16,7 @@ public partial class WorkoutPage : ContentPage, ILivePage
     {
         base.OnAppearing();
         _vm.Ended += OnEnded;
+        _vm.Minimized += OnEnded;
         await _vm.StartAsync();
     }
 
@@ -23,6 +24,7 @@ public partial class WorkoutPage : ContentPage, ILivePage
     {
         base.OnDisappearing();
         _vm.Ended -= OnEnded;
+        _vm.Minimized -= OnEnded;
         _vm.Stop();
     }
 
@@ -30,10 +32,11 @@ public partial class WorkoutPage : ContentPage, ILivePage
 
     public void Pause() => _vm.Stop();
 
-    // Finished or discarded: back to the watch's home, which syncs it.
+    // Finished, discarded or minimized: back to the watch's home (which syncs it, or shows the pill to come back).
     async void OnEnded()
     {
         _vm.Ended -= OnEnded;
+        _vm.Minimized -= OnEnded;
         if (Navigation.NavigationStack.LastOrDefault() == this)
             await Navigation.PopAsync();
     }

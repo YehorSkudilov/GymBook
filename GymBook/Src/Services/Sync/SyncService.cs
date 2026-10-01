@@ -35,6 +35,9 @@ public class SyncService
         };
     }
 
+    /// <summary>This app's live sync connection while there is one (set by <see cref="LiveSync"/>), sent with each sync.</summary>
+    public string? LiveConnectionId { get; set; }
+
     public SyncState State { get; private set; } = SyncState.SignedOut;
     public string Status { get; private set; } = "";
     public DateTimeOffset? LastSyncedAt { get; private set; }
@@ -94,7 +97,7 @@ public class SyncService
             {
                 var pending = _store.Local.GetPendingChanges(PushBatch);
                 skipped = HoldBackInvalid(pending);
-                var response = await _api.SyncAsync(new SyncRequest { Since = _store.Local.SyncCursor, Changes = pending });
+                var response = await _api.SyncAsync(new SyncRequest { Since = _store.Local.SyncCursor, Changes = pending }, LiveConnectionId);
                 if (_store.Local.ApplySync(pending, response))
                     _store.RaiseChanged();
 

@@ -41,19 +41,25 @@ public partial class App : Application
         var window = new Window(navigation);
         // Leaving the app (or the screen turning off) doesn't make the page disappear, so follow the window: nothing
         // runs while the app isn't on screen, and coming back picks up whatever changed on the phone or the account.
+        var live = _services.GetRequiredService<LiveSync>();
         window.Stopped += (_, _) =>
         {
             _phone.Stop();
+            // The live sync connection too: the battery. Coming back reconnects and catches up.
+            _ = live.StopAsync();
             (navigation.CurrentPage as ILivePage)?.Pause();
         };
         window.Resumed += async (_, _) =>
         {
             await StartPhoneLinkAsync();
             _sync.Schedule(TimeSpan.Zero);
+            _ = live.StartAsync();
             if (navigation.CurrentPage is ILivePage page)
                 await page.ResumeAsync();
         };
         _ = StartPhoneLinkAsync();
+        // Changes from the phone, the website or another watch the moment they're made, while the app is open.
+        _ = live.StartAsync();
         return window;
     }
 

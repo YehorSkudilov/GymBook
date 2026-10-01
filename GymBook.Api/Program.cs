@@ -68,6 +68,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o =>
     {
         o.MapInboundClaims = false;
+        // The live sync hub's WebSocket can't always carry an Authorization header: SignalR then sends the access
+        // token as ?access_token=, accepted for the hub only.
+        o.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/hubs") && context.Request.Query["access_token"] is { Count: > 0 } token)
+                    context.Token = token.ToString();
+                return Task.CompletedTask;
+            },
+        };
         o.TokenValidationParameters = new TokenValidationParameters
         {
             ValidIssuer = jwt.Issuer,
@@ -142,6 +153,9 @@ builder.Services.AddControllers(o =>
     })
     .AddJsonOptions(o => GymBookJson.Configure(o.JsonSerializerOptions));
 builder.Services.AddSwagger(builder.Configuration);
+// Live sync (see Sync/SyncHub.cs).
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<GymBook.Api.Sync.SyncNotifier>();
 
 var app = builder.Build();
 
@@ -175,6 +189,7 @@ app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<GymBook.Api.Sync.SyncHub>("/hubs/sync").DisableRateLimiting();
 app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
 // Public, login-free pages for the store listing and the app: the privacy policy and how to delete an account.
 app.MapGet("/privacy", GymBook.Api.Privacy.PrivacyPolicy.Page).AllowAnonymous().DisableRateLimiting();

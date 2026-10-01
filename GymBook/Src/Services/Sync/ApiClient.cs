@@ -102,8 +102,27 @@ public class ApiClient(HttpClient http, AuthSession session)
         }
     }
 
-    public Task<SyncResponse> SyncAsync(SyncRequest request, CancellationToken ct = default) =>
-        SendAuthorizedAsync<SyncRequest, SyncResponse>("api/sync", request, ct);
+    /// <summary>
+    /// Pushes and pulls changes. <paramref name="liveConnection"/>: this app's live sync connection (see LiveSync), so the
+    /// server tells only the user's other devices about these changes, not this one.
+    /// </summary>
+    public async Task<SyncResponse> SyncAsync(SyncRequest request, string? liveConnection = null, CancellationToken ct = default)
+    {
+        using var response = await SendWithTokenAsync(() =>
+        {
+            var message = new HttpRequestMessage(HttpMethod.Post, "api/sync") { Content = JsonContent.Create(request, TypeInfo<SyncRequest>()) };
+            if (liveConnection != null)
+                message.Headers.Add(LiveSyncConnectionHeader, liveConnection);
+            return message;
+        }, ct);
+        return await ReadAsync<SyncResponse>(response);
+    }
+
+    /// <summary>The API's SyncHub.ConnectionHeader.</summary>
+    const string LiveSyncConnectionHeader = "X-Sync-Connection";
+
+    /// <summary>A current access token (renewed when it's about to expire), for the live sync connection.</summary>
+    public Task<string> AccessTokenAsync(CancellationToken ct = default) => GetAccessTokenAsync(forceRefresh: false, ct);
 
     /// <summary>An AI-made plan for the wizard's answers. Signed-in users only; it can take the model a minute.</summary>
     public Task<GeneratePlanResponse> GeneratePlanAsync(GeneratePlanRequest request, CancellationToken ct = default) =>

@@ -34,6 +34,9 @@ public partial class WorkoutViewModel : ObservableObject
     /// <summary>The workout was finished or discarded: the page goes back to the watch's home.</summary>
     public event Action? Ended;
 
+    /// <summary>Minimized: back to the home, where a pill keeps it a tap away; the workout carries on.</summary>
+    public event Action? Minimized;
+
     // What's on screen: one of these (an empty quick workout shows none of the first three).
     [ObservableProperty] bool isLifting;
     [ObservableProperty] bool isResting;
@@ -172,7 +175,8 @@ public partial class WorkoutViewModel : ObservableObject
             _restEndsAt = null;
             try
             {
-                Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
+                if (WatchSettings.RestBuzz)
+                    Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
             }
             catch (Exception)
             {
@@ -252,7 +256,8 @@ public partial class WorkoutViewModel : ObservableObject
         _workouts.Save();
         try
         {
-            HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+            if (WatchSettings.TapFeedback)
+                HapticFeedback.Default.Perform(HapticFeedbackType.Click);
         }
         catch (Exception)
         {
@@ -329,6 +334,45 @@ public partial class WorkoutViewModel : ObservableObject
         WatchOwnership.SessionId = null;
         Ended?.Invoke();
     }
+
+    /// <summary>The workout's options, as on the phone: minimize it, start it over, or throw it away.</summary>
+    [RelayCommand]
+    async Task Options()
+    {
+        if (Session is not { } session)
+            return;
+        const string minimize = "Minimize", reset = "Reset workout", discard = "Discard workout";
+        switch (await Page.DisplayActionSheetAsync(session.Name, "Cancel", discard, minimize, reset))
+        {
+            case minimize:
+                Minimized?.Invoke();
+                break;
+            case reset:
+                if (!await Page.DisplayAlertAsync("Reset workout?", "Every set is unticked and the clock starts again. Exercises, weights and reps stay.", "Reset", "Cancel"))
+                    return;
+                foreach (var set in session.Exercises.SelectMany(e => e.Sets))
+                {
+                    set.IsCompleted = false;
+                    set.CompletedAt = null;
+                }
+                session.StartedAt = DateTime.Now;
+                _restEndsAt = null;
+                _exercise = 0;
+                _workouts.Save();
+                Refresh();
+                break;
+            case discard:
+                if (!await Page.DisplayAlertAsync("Discard workout?", "It's deleted, with every set done in it.", "Discard", "Keep"))
+                    return;
+                _workouts.Discard();
+                WatchOwnership.SessionId = null;
+                Ended?.Invoke();
+                break;
+        }
+    }
+
+    [RelayCommand]
+    void Minimize() => Minimized?.Invoke();
 
     static Page Page => Application.Current!.Windows[0].Page!;
 

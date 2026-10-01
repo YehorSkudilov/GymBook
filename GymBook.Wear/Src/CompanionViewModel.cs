@@ -230,7 +230,8 @@ public partial class CompanionViewModel : ObservableObject
                 _restAlertedFor = last.At;
                 try
                 {
-                    Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
+                    if (WatchSettings.RestBuzz)
+                        Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(500));
                 }
                 catch (Exception)
                 {
@@ -277,7 +278,8 @@ public partial class CompanionViewModel : ObservableObject
         Message = "";
         try
         {
-            HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+            if (WatchSettings.TapFeedback)
+                HapticFeedback.Default.Perform(HapticFeedbackType.Click);
         }
         catch (Exception)
         {

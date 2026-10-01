@@ -9,7 +9,7 @@ namespace GymBook.Api.Controllers;
 
 [ApiController]
 [Route("api/sync")]
-public class SyncController(ApiDbContext db, SyncProcessor sync, ICurrentUser currentUser) : ControllerBase
+public class SyncController(ApiDbContext db, SyncProcessor sync, ICurrentUser currentUser, SyncNotifier notifier) : ControllerBase
 {
     /// <summary>A full batch of large sessions fits comfortably; anything bigger is rejected before it's buffered.</summary>
     const long MaxRequestBytes = 10 * 1024 * 1024;
@@ -27,7 +27,11 @@ public class SyncController(ApiDbContext db, SyncProcessor sync, ICurrentUser cu
                 return Unauthorized();
             try
             {
-                return await sync.ApplyAsync(user, request, ct);
+                var response = await sync.ApplyAsync(user, request, ct);
+                // Something was pushed: the user's other devices that are connected live sync now (see SyncHub).
+                if (request.Changes.Count > 0)
+                    await notifier.ChangedAsync(user.Id, response.Cursor, Request.Headers[SyncHub.ConnectionHeader].FirstOrDefault());
+                return response;
             }
             catch (SyncLimitException e)
             {

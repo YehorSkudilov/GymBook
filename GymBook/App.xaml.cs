@@ -43,13 +43,18 @@ public partial class App : Application
         {
             window.AddOverlay(new Controls.SyncToast(window, _sync));
             _sync.Schedule(TimeSpan.Zero);
+            // Changes from other devices the moment they're made, while the app is open.
+            _ = _services.GetRequiredService<LiveSync>().StartAsync();
             _ = VerifyEmailPage.ShowIfNeededAsync(_services);
             // The weekly AI look at the active plan; does nothing most of the time.
             _ = _services.GetRequiredService<AiPlanService>().CheckActivePlanAsync();
         };
+        // In the background the live connection goes (the battery); coming back reconnects and catches up.
+        window.Stopped += (_, _) => _ = _services.GetRequiredService<LiveSync>().StopAsync();
         window.Resumed += (_, _) =>
         {
             _sync.Schedule(TimeSpan.Zero);
+            _ = _services.GetRequiredService<LiveSync>().StartAsync();
             _ = VerifyEmailPage.ShowIfNeededAsync(_services);
             _ = _services.GetRequiredService<AiPlanService>().CheckActivePlanAsync();
         };

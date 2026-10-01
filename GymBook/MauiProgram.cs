@@ -34,6 +34,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<AuthSession>();
         builder.Services.AddSingleton(sp => new ApiClient(ApiConfig.CreateClient(), sp.GetRequiredService<AuthSession>()));
         builder.Services.AddSingleton<SyncService>();
+        builder.Services.AddSingleton<LiveSync>();
 #if ANDROID || IOS
         builder.Services.AddSingleton<IGoogleSignIn, GoogleSignInService>();
 #else

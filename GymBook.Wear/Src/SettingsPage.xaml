@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- The watch app's settings: one column of switches for round screens; scroll or turn the crown. -->
+<ContentPage
+    x:Class="GymBook.Wear.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:GymBook.Wear"
+    x:DataType="local:SettingsViewModel">
+
+    <ContentPage.Resources>
+        <!-- A setting: its name on the left, its switch on the right, on a dark tile. -->
+        <Style x:Key="Row" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="Padding" Value="12,4,6,4" />
+        </Style>
+        <Style x:Key="RowLabel" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HorizontalOptions" Value="Start" />
+            <Setter Property="HorizontalTextAlignment" Value="Start" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="Section" TargetType="Label">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="CharacterSpacing" Value="1.2" />
+            <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+            <Setter Property="Margin" Value="0,6,0,0" />
+        </Style>
+        <Style TargetType="Switch">
+            <Setter Property="OnColor" Value="{StaticResource Accent}" />
+            <Setter Property="ThumbColor" Value="White" />
+        </Style>
+        <Style x:Key="Secondary" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Surface}" />
+            <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="HeightRequest" Value="42" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView VerticalScrollBarVisibility="Never">
+        <VerticalStackLayout Padding="20,22,20,34" Spacing="6">
+            <Label Text="Settings" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource Accent}" />
+
+            <!-- The account's, the same as on the phone -->
+            <Label Text="WORKOUTS" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Pounds (lb)" Style="{StaticResource RowLabel}" />
+                    <Switch Grid.Column="1" IsToggled="{Binding UsesPounds}" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Rest timer after a set" Style="{StaticResource RowLabel}" />
+                    <Switch Grid.Column="1" IsToggled="{Binding AutoRestTimer}" />
+                </Grid>
+            </Border>
+            <Label Text="Also on your phone." Style="{StaticResource Small}" FontSize="10" />
+
+            <!-- This watch's -->
+            <Label Text="THIS WATCH" Style="{StaticResource Section}" />
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Heart rate" Style="{StaticResource RowLabel}" />
+                    <Switch Grid.Column="1" IsToggled="{Binding HeartRate}" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Buzz when rest ends" Style="{StaticResource RowLabel}" />
+                    <Switch Grid.Column="1" IsToggled="{Binding RestBuzz}" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Row}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="Tap on Done" Style="{StaticResource RowLabel}" />
+                    <Switch Grid.Column="1" IsToggled="{Binding TapFeedback}" />
+                </Grid>
+            </Border>
+
+            <!-- Account and sync -->
+            <Label Text="ACCOUNT" Style="{StaticResource Section}" />
+            <Label Text="{Binding Account}" FontSize="12" LineBreakMode="MiddleTruncation" IsVisible="{Binding IsSignedIn}" />
+            <Label Text="{Binding SyncStatus}" Style="{StaticResource Small}" FontSize="11" />
+            <Button Text="Sync now" Command="{Binding SyncNowCommand}" Style="{StaticResource Secondary}" IsVisible="{Binding IsSignedIn}" />
+            <Button Text="Sign out" Command="{Binding SignOutCommand}" Style="{StaticResource Secondary}" TextColor="{StaticResource Danger}"
+                    IsVisible="{Binding IsSignedIn}" />
+
+            <Label Text="{Binding Version}" Style="{StaticResource Small}" FontSize="10" Margin="0,10,0,0" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
