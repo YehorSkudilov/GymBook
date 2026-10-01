@@ -51,6 +51,11 @@ on:
         type: boolean
         default: true
 
+      publish_admin:
+        description: "Admin app (Windows + Android builds, no upload)"
+        type: boolean
+        default: true
+
 jobs:
 
   # ==================================================
@@ -81,4 +86,12 @@ jobs:
       publish_windows: ${{ inputs.publish_windows }}
       publish_ios: ${{ inputs.publish_ios }}
       publish_macos: ${{ inputs.publish_macos }}
+    secrets: inherit
+
+  # ==================================================
+  # BUILD ADMIN APP (artifacts only)
+  # ==================================================
+  publish-admin:
+    if: ${{ inputs.publish_admin }}
+    uses: ./.github/workflows/PublishAdminApp.yml
     secrets: inherit

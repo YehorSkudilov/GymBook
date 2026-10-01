@@ -1,0 +1,166 @@
+name: Publish Admin App
+
+# Builds the admin app (GymBook.Admin) for Windows and Android. Nothing is uploaded to a store: the builds are
+# attached to the run as artifacts (Summary page -> Artifacts) to download and install by hand.
+permissions:
+  contents: read
+
+env:
+  PROJECT_PATH: GymBook.Admin/GymBook.Admin.csproj
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_windows:
+        description: "Windows (zip with the .exe)"
+        type: boolean
+        default: true
+      build_android:
+        description: "Android (signed .apk)"
+        type: boolean
+        default: true
+
+  # Lets Publish.yml call this as a reusable workflow - see that file's publish-admin job.
+  workflow_call:
+    inputs:
+      build_windows:
+        type: boolean
+        default: true
+      build_android:
+        type: boolean
+        default: true
+
+jobs:
+  # ==================================================
+  # WINDOWS
+  # ==================================================
+  build-windows:
+    if: ${{ inputs.build_windows }}
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Only install when missing: any `dotnet workload install` reinstalls every workload Visual Studio registered.
+      - name: Install MAUI workloads
+        shell: pwsh
+        run: |
+          dotnet workload list
+          # Restore evaluates every target framework in the csproj, so Android is needed even for the Windows build.
+          foreach ($workload in "maui-windows", "maui-android") {
+            if (dotnet workload list | Select-String -Pattern "^\s*$workload\s" -Quiet) {
+              Write-Host "$workload already installed"
+            } else {
+              dotnet workload install $workload --skip-manifest-update
+            }
+          }
+
+      # Unpackaged and self-contained (the .NET and Windows App SDK runtimes included): unzip anywhere and run
+      # GymBook.Admin.exe, nothing to install first.
+      - name: Publish Windows
+        shell: pwsh
+        run: |
+          dotnet publish "${{ env.PROJECT_PATH }}" `
+            -c Release `
+            -f net10.0-windows10.0.19041.0 `
+            -r win-x64 `
+            -o "$env:RUNNER_TEMP/admin-windows" `
+            /p:WindowsPackageType=None `
+            /p:SelfContained=true `
+            /p:WindowsAppSDKSelfContained=true `
+            "/p:ApplicationVersion=${{ github.run_number }}" `
+            "/p:ApiBaseUrl=${{ vars.API_BASE_URL }}"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gymbook-admin-windows
+          path: ${{ runner.temp }}/admin-windows
+
+  # ==================================================
+  # ANDROID
+  # ==================================================
+  build-android:
+    if: ${{ inputs.build_android }}
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install MAUI workloads
+        shell: pwsh
+        run: |
+          dotnet workload list
+          foreach ($workload in "maui-windows", "maui-android") {
+            if (dotnet workload list | Select-String -Pattern "^\s*$workload\s" -Quiet) {
+              Write-Host "$workload already installed"
+            } else {
+              dotnet workload install $workload --skip-manifest-update
+            }
+          }
+
+      # Signed with the GymBook app's upload keystore, so each new APK installs over the last one.
+      - name: Restore keystore
+        id: keystore
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace("${{ secrets.ANDROID_KEYSTORE_BASE64 }}")) {
+            throw "ANDROID_KEYSTORE_BASE64 secret is not set"
+          }
+
+          $keystore = Join-Path $env:RUNNER_TEMP "gymbook.keystore"
+          [IO.File]::WriteAllBytes($keystore, [Convert]::FromBase64String("${{ secrets.ANDROID_KEYSTORE_BASE64 }}"))
+
+          echo "path=$keystore" >> $env:GITHUB_OUTPUT
+
+      # The run number is the version code, so every build counts as newer than the one installed.
+      - name: Publish Android APK
+        shell: pwsh
+        run: |
+          dotnet publish "${{ env.PROJECT_PATH }}" `
+            -c Release `
+            -f net10.0-android `
+            /p:AndroidPackageFormat=apk `
+            /p:AndroidKeyStore=true `
+            "/p:AndroidSigningKeyStore=${{ steps.keystore.outputs.path }}" `
+            "/p:AndroidSigningKeyAlias=${{ secrets.ANDROID_KEYALIAS_NAME }}" `
+            "/p:AndroidSigningKeyPass=${{ secrets.ANDROID_KEYALIAS_PASS }}" `
+            "/p:AndroidSigningStorePass=${{ secrets.ANDROID_KEYSTORE_PASS }}" `
+            "/p:ApplicationVersion=${{ github.run_number }}" `
+            "/p:ApiBaseUrl=${{ vars.API_BASE_URL }}"
+
+      - name: Find APK
+        id: find_apk
+        shell: pwsh
+        run: |
+          $file = Get-ChildItem -Recurse -Filter "*-Signed.apk" |
+            Where-Object { $_.FullName -like "*Release*" } |
+            Select-Object -First 1
+
+          if ($null -eq $file) {
+            Write-Host "No signed APK found"
+            Get-ChildItem -Recurse -Filter *.apk
+            throw "APK not found"
+          }
+
+          $posix = $file.FullName -replace "\\", "/"
+          Write-Host "APK: $posix"
+          echo "file=$posix" >> $env:GITHUB_OUTPUT
+
+      - name: Upload Android artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gymbook-admin-android
+          path: ${{ steps.find_apk.outputs.file }}
