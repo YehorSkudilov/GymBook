@@ -811,7 +811,7 @@
  {
   "file": "ExerciseLibrary.Arms.cs",
   "id": "reverse_wrist_curl",
-  "name": "Reverse Wrist Curl",
+  "name": "Dumbbell Reverse Wrist Curl",
   "primary": "Forearms",
   "equipment": "Dumbbell",
   "mechanic": "Isolation",
@@ -827,8 +827,25 @@
  },
  {
   "file": "ExerciseLibrary.Arms.cs",
+  "id": "barbell_reverse_wrist_curl",
+  "name": "Barbell Reverse Wrist Curl",
+  "primary": "Forearms",
+  "equipment": "Barbell",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "Q9Em17et6Z8",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
   "id": "behind_back_wrist_curl",
-  "name": "Behind-the-Back Wrist Curl",
+  "name": "Barbell Behind-the-Back Wrist Curl",
   "primary": "Forearms",
   "equipment": "Barbell",
   "mechanic": "Isolation",

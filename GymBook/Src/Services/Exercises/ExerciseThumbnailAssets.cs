@@ -59,6 +59,7 @@ public static class ExerciseThumbnailAssets
         "barbell_front_raise",
         "barbell_glute_bridge",
         "barbell_lunge",
+        "barbell_reverse_wrist_curl",
         "barbell_rollout",
         "barbell_row",
         "barbell_shrug",

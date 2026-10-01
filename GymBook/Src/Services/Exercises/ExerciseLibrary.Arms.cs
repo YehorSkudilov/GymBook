@@ -835,7 +835,7 @@ public static partial class ExerciseLibrary
             ],
             Video = new("lA3QwdAn19Y"),
         },
-        new("reverse_wrist_curl", "Reverse Wrist Curl", Forearms, Dumbbell, Isolation)
+        new("reverse_wrist_curl", "Dumbbell Reverse Wrist Curl", Forearms, Dumbbell, Isolation)
         {
             Summary = "A wrist curl with palms facing down, lifting the back of the hands to train the forearm extensors.",
             Steps =
@@ -853,7 +853,24 @@ public static partial class ExerciseLibrary
             ],
             Video = new("kqjHELzVjxQ"),
         },
-        new("behind_back_wrist_curl", "Behind-the-Back Wrist Curl", Forearms, Barbell, Isolation)
+        new("barbell_reverse_wrist_curl", "Barbell Reverse Wrist Curl", Forearms, Barbell, Isolation)
+        {
+            Summary = "Standing with a barbell hanging in front of your thighs, palms down, lift the backs of your hands with your wrists to train the forearm extensors.",
+            Steps =
+            [
+                "Stand tall holding a light barbell in front of your thighs with an overhand grip, hands about shoulder-width apart.",
+                "Keep your arms straight and let your wrists bend down so your knuckles point toward the floor.",
+                "Lift the backs of your hands up as far as you can, moving only at the wrists.",
+                "Lower slowly back down.",
+            ],
+            Tips =
+            [
+                "Use much less weight than palms-up wrist curls; an empty or light fixed bar is often plenty.",
+                "Keep your arms straight and still; don't swing the bar with your shoulders.",
+            ],
+            Video = new("Q9Em17et6Z8"),
+        },
+        new("behind_back_wrist_curl", "Barbell Behind-the-Back Wrist Curl", Forearms, Barbell, Isolation)
         {
             Summary = "Standing with a barbell held behind you, curl it up with your wrists, letting you go heavier than seated wrist curls.",
             Steps =
