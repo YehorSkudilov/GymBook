@@ -30,9 +30,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!-- Wear OS masks the icon to a circle two thirds of its canvas: at 0.5 the book fills that circle, its corners
-		     just inside it (0.32 left it small in a wide black ring). -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="0.5" Color="#0B0D12" />
+		<!-- Wear OS masks the icon to a circle two thirds of its canvas: at 0.42 the book sits in that circle with a margin
+		     around it (0.32 left it small in a wide black ring, 0.5 filled the circle edge to edge). -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="0.42" Color="#0B0D12" />
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#000000" BaseSize="200,200" />
 		<MauiFont Include="Resources\Fonts\*" />
 	</ItemGroup>

@@ -1,9 +1,0 @@
-{
-  "muscles": ["Hamstrings", "Glutes", "LowerBack"],
-  "anchor": "near.ankle", "at": [360, 600],
-  "props": { "barbell": {} },
-  "keyframes": [
-    { "pose": { "torso": 180, "head": 180, "upperArm": -4, "forearm": -4, "thigh": 0, "shin": 0 } },
-    { "pose": { "torso": 115, "head": 112, "upperArm": -14, "forearm": -14, "thigh": 33, "shin": -9 }, "units": 1.6 }
-  ]
-}
