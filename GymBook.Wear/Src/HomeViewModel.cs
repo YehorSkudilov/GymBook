@@ -7,29 +7,45 @@ using GymBook.Services.Sync;
 
 namespace GymBook.Wear;
 
-/// <summary>A plan workout to start from the watch.</summary>
-public record PlanWorkoutItem(string Name, string Detail, ICommand StartCommand);
+/// <summary>A day of the shown plan week, as on the phone's Workout tab: ✓ done, ▶ running, its number, or – for rest.</summary>
+public record WatchDayItem(string Badge, Color BadgeColor, string Name, Color NameColor, string Status, Color StatusColor, ICommand OpenCommand)
+{
+    public bool HasStatus => Status.Length > 0;
+}
 
 /// <summary>
-/// The watch's home. Two modes, one screen: a workout running on the phone opens the companion page (the phone owns
-/// it); otherwise the watch works on its own: resume its workout, or start one of the active plan's (the plan's next
-/// one first), stored on the watch and synced to the account whenever there's a connection. Plans arrive by syncing,
-/// so starting from the watch needs it signed in; the companion mode doesn't.
+/// The watch's home, laid out like the phone's Workout tab: an Up next card (the plan's next workout, how recovered its
+/// muscles are, Start), and the plan's week below it (pick any unlocked week, see which days are done, start one), with
+/// the active plan switchable. A workout in progress takes the card's place: the watch's own (Resume), or the phone's,
+/// which opens the companion page (the phone owns it). Workouts started here are stored on the watch and synced to the
+/// account whenever there's a connection; plans arrive by syncing, so the plan part needs the watch signed in.
 /// </summary>
 public partial class HomeViewModel : ObservableObject
 {
+    static readonly Color Green = Color.FromArgb("#2ED47A"), Blue = Color.FromArgb("#3F7DFF"), Amber = Color.FromArgb("#FFB020");
+    static readonly Color Grey = Color.FromArgb("#626B7E"), TextPrimary = Color.FromArgb("#F4F6FB"), TextSecondary = Color.FromArgb("#9AA3B5");
+
     readonly IServiceProvider _services;
     readonly DataStore _store;
     readonly WorkoutService _workouts;
+    readonly RecoveryService _recovery;
+    readonly WorkoutEstimator _estimator;
     readonly SyncService _sync;
     readonly WatchAccount _account;
     readonly PhoneLink _phone;
     bool _opened;
     bool _askedNotifications;
+    string? _lastPhoneSession;
+    // The week picked with "Week N ▾" (for that plan); otherwise the plan's current week.
+    string? _chosenPlanId;
+    int _chosenWeek;
+    int _week;
+    Func<Task>? _cardAction;
 
-    public HomeViewModel(IServiceProvider services, DataStore store, WorkoutService workouts, SyncService sync, WatchAccount account, PhoneLink phone)
+    public HomeViewModel(IServiceProvider services, DataStore store, WorkoutService workouts, RecoveryService recovery, WorkoutEstimator estimator,
+        SyncService sync, WatchAccount account, PhoneLink phone)
     {
-        (_services, _store, _workouts, _sync, _account, _phone) = (services, store, workouts, sync, account, phone);
+        (_services, _store, _workouts, _recovery, _estimator, _sync, _account, _phone) = (services, store, workouts, recovery, estimator, sync, account, phone);
         _phone.WorkoutChanged += _ => OnPhoneWorkoutChanged();
         _sync.StatusChanged += (_, _) => MainThread.BeginInvokeOnMainThread(Refresh);
         _store.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(Refresh);
@@ -41,17 +57,24 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] string syncStatus = "";
     [ObservableProperty] string account = "";
 
-    [ObservableProperty] bool hasPhoneWorkout;
-    [ObservableProperty] string phoneWorkoutName = "";
-    [ObservableProperty] bool hasWatchWorkout;
-    [ObservableProperty] string watchWorkoutName = "";
+    // The card: Up next, or the workout in progress.
+    [ObservableProperty] bool hasCard;
+    [ObservableProperty] string cardLabel = "";
+    [ObservableProperty] Color cardColor = Blue;
+    [ObservableProperty] string cardName = "";
+    [ObservableProperty] string cardMuscles = "";
+    [ObservableProperty] string cardStatus = "";
+    [ObservableProperty] string cardMeta = "";
+    [ObservableProperty] string cardButton = "▶  Start";
 
-    [ObservableProperty] bool canStart;
-    [ObservableProperty] bool canQuickStart;
+    // The plan's week.
+    [ObservableProperty] bool hasPlan;
     [ObservableProperty] string planName = "";
-    [ObservableProperty] PlanWorkoutItem? nextWorkout;
-    [ObservableProperty] IReadOnlyList<PlanWorkoutItem> otherWorkouts = [];
+    [ObservableProperty] string weekText = "";
+    [ObservableProperty] IReadOnlyList<WatchDayItem> days = [];
     [ObservableProperty] bool hasNoPlan;
+    [ObservableProperty] bool canChangePlan;
+    [ObservableProperty] bool canQuickStart;
 
     /// <summary>The phone is running a workout, other than the watch's own one that it picked up by syncing.</summary>
     bool PhoneOwnsWorkout => _phone.Workout.IsActive && _phone.Workout.SessionId != WatchOwnership.SessionId;
@@ -104,8 +127,6 @@ public partial class HomeViewModel : ObservableObject
             _ = OpenPhoneWorkout();
     }
 
-    string? _lastPhoneSession;
-
     void Refresh()
     {
         IsSignedIn = _account.IsSignedIn;
@@ -120,43 +141,178 @@ public partial class HomeViewModel : ObservableObject
             _ => "",
         };
 
-        // The phone's workout, when it's running one; the watch's own otherwise (both can show: its own wins below).
-        HasPhoneWorkout = PhoneOwnsWorkout;
-        PhoneWorkoutName = _phone.Workout.Name;
-        var active = _workouts.Active;
-        HasWatchWorkout = HasOwnWorkout;
-        WatchWorkoutName = active?.Name ?? "";
-
-        // Starting one: signed in (plans come from the account), with nothing running on either.
-        var plan = _store.ActivePlan;
-        var idle = active == null && !HasPhoneWorkout;
-        CanStart = IsSignedIn && plan is { Workouts.Count: > 0 } && idle;
-        // A quick workout needs no plan, nor an account: made before signing in, it joins the account at sign-in.
-        CanQuickStart = idle;
-        HasNoPlan = IsSignedIn && plan is not { Workouts.Count: > 0 } && idle;
-        PlanName = plan?.Name ?? "";
+        var plan = IsSignedIn ? _store.ActivePlan : null;
+        CanQuickStart = !HasOwnWorkout && !PhoneOwnsWorkout;
+        CanChangePlan = IsSignedIn && _store.Data.Plans.Count > (plan == null ? 0 : 1);
+        HasPlan = plan is { Workouts.Count: > 0 };
+        HasNoPlan = IsSignedIn && !HasPlan;
+        PlanProgress? progress = null;
         if (plan is { Workouts.Count: > 0 })
         {
-            var next = Math.Clamp(plan.NextWorkoutIndex, 0, plan.Workouts.Count - 1);
-            NextWorkout = Item(plan, plan.Workouts[next]);
-            OtherWorkouts = plan.Workouts.Where((_, i) => i != next).Select(w => Item(plan, w)).ToList();
+            progress = new PlanProgress(plan, _store.History);
+            _week = _chosenPlanId == plan.Id ? Math.Min(_chosenWeek, progress.LastUnlockedWeek) : progress.CurrentWeek;
+            PlanName = plan.Name;
+            WeekText = $"Week {_week} ▾";
+            BuildDays(plan, progress);
+        }
+        else
+            Days = [];
+
+        // The card: the workout in progress first, the plan's next one otherwise.
+        if (HasOwnWorkout)
+            ShowRunning("IN PROGRESS", _workouts.Active!.Name, _workouts.Active);
+        else if (PhoneOwnsWorkout)
+            ShowRunning("ON YOUR PHONE", _phone.Workout.Name, null);
+        else if (plan != null && progress != null)
+            ShowUpNext(plan, progress);
+        else
+            HasCard = false;
+    }
+
+    /// <summary>Up next: the plan's next workout (in the shown week, or the week after once it's done), and how recovered its muscles are.</summary>
+    void ShowUpNext(WorkoutPlan plan, PlanProgress progress)
+    {
+        var (week, next) = progress.NextWorkout(_week) is { } inWeek
+            ? (_week, inWeek)
+            : (_week + 1, progress.NextWorkout(_week + 1) ?? progress.Days.OfType<PlanWorkout>().First());
+        var now = DateTime.Now;
+        var readiness = Math.Clamp(_recovery.Readiness(next, now), 0, 1);
+        var tired = _recovery.NotReady(next, now);
+        var exercises = next.Exercises.Select(e => _store.GetExercise(e.ExerciseId)).OfType<Exercise>().ToList();
+        HasCard = true;
+        CardLabel = week == _week ? "UP NEXT" : $"UP NEXT · WEEK {week}";
+        CardColor = readiness < 0.6 ? Amber : readiness < 0.85 ? Blue : Green;
+        CardName = next.Name;
+        CardMuscles = string.Join(" · ", exercises.Select(e => e.PrimaryMuscle).Distinct().Take(3).Select(m => m.Display()));
+        CardStatus = tired.Count == 0
+            ? $"{readiness:P0} recovered · ready"
+            : $"{readiness:P0} · {string.Join(", ", tired.Take(2).Select(t => t.Muscle.Display()))} recovering";
+        CardMeta = $"{exercises.Count} exercises · {next.Exercises.Sum(e => e.Sets)} sets · {WorkoutEstimator.Format(_estimator.Minutes(next, plan.Goal))}";
+        CardButton = "▶  Start";
+        _cardAction = () => StartAsync(plan, next, week);
+    }
+
+    /// <summary>A workout in progress in the card's place: how far along it is, and Resume.</summary>
+    void ShowRunning(string label, string name, WorkoutSession? session)
+    {
+        HasCard = true;
+        CardLabel = label;
+        CardColor = Green;
+        CardName = name;
+        if (session != null)
+        {
+            var sets = session.Exercises.SelectMany(e => e.Sets).Where(s => !s.IsWarmup).ToList();
+            CardMuscles = string.Join(" · ", session.Exercises.Select(e => _store.GetExercise(e.ExerciseId)?.PrimaryMuscle).OfType<MuscleGroup>()
+                .Distinct().Take(3).Select(m => m.Display()));
+            CardStatus = $"{sets.Count(s => s.IsCompleted)}/{sets.Count} sets done";
+            CardMeta = $"Started {session.StartedAt:HH:mm} · {(int)(DateTime.Now - session.StartedAt).TotalMinutes} min in";
+            _cardAction = ResumeWatchWorkout;
         }
         else
         {
-            NextWorkout = null;
-            OtherWorkouts = [];
+            var sets = _phone.Workout.Exercises.SelectMany(e => e.Sets).Where(s => !s.IsWarmup).ToList();
+            CardMuscles = "";
+            CardStatus = $"{sets.Count(s => s.IsCompleted)}/{sets.Count} sets done";
+            CardMeta = $"Started {_phone.Workout.StartedAt.ToLocalTime():HH:mm}";
+            _cardAction = OpenPhoneWorkout;
         }
+        CardButton = "▶  Resume";
     }
 
-    PlanWorkoutItem Item(WorkoutPlan plan, PlanWorkout workout) =>
-        new(workout.Name, $"{workout.Exercises.Count} exercises", new AsyncRelayCommand(() => StartAsync(plan, workout)));
+    [RelayCommand]
+    Task OpenCard() => _cardAction?.Invoke() ?? Task.CompletedTask;
 
-    async Task StartAsync(WorkoutPlan plan, PlanWorkout workout)
+    /// <summary>The shown week's days, as on the phone: done, running, up next, or rest.</summary>
+    void BuildDays(WorkoutPlan plan, PlanProgress progress)
+    {
+        var week = _week;
+        var next = progress.NextWorkout(week);
+        var active = _workouts.Active;
+        var running = HasOwnWorkout && active?.PlanId == plan.Id && (active.PlanWeek ?? week) == week ? active.PlanWorkoutId : null;
+        Days = progress.Days.Select((workout, day) =>
+        {
+            if (workout == null)
+            {
+                var restDone = progress.IsRestDone(day, week);
+                return new WatchDayItem(restDone ? "✓" : "–", restDone ? Green : Grey, "Rest", TextSecondary, restDone ? "Done" : "", Green,
+                    new AsyncRelayCommand(() => ToggleRestAsync(plan, day, week, !restDone)));
+            }
+            var isRunning = workout.Id == running;
+            var done = progress.SessionFor(workout, week) != null;
+            var isNext = workout == next && !isRunning && running == null;
+            var badge = isRunning ? "▶" : done ? "✓" : (plan.Workouts.IndexOf(workout) + 1).ToString();
+            var badgeColor = isRunning || done ? Green : isNext ? Blue : Grey;
+            var status = isRunning ? "In progress" : done ? "Done" : isNext ? "Up next" : "";
+            var statusColor = isRunning || done ? Green : Blue;
+            ICommand open = isRunning
+                ? new AsyncRelayCommand(ResumeWatchWorkout)
+                : new AsyncRelayCommand(() => StartAsync(plan, workout, week, confirm: true, again: done));
+            return new WatchDayItem(badge, badgeColor, workout.Name, TextPrimary, status, statusColor, open);
+        }).ToList();
+    }
+
+    /// <summary>"Week N ▾": any unlocked week, with how much of it is done.</summary>
+    [RelayCommand]
+    async Task ChooseWeek()
+    {
+        if (_store.ActivePlan is not { Workouts.Count: > 0 } plan)
+            return;
+        var progress = new PlanProgress(plan, _store.History);
+        var labels = Enumerable.Range(1, progress.LastUnlockedWeek)
+            .Select(w => $"Week {w} · {progress.WorkoutsDone(w)}/{plan.Workouts.Count}{(progress.IsComplete(w) ? " ✓" : "")}")
+            .ToList();
+        var pick = await Page.DisplayActionSheetAsync("Week", "Cancel", null, [.. labels]);
+        var index = pick == null ? -1 : labels.IndexOf(pick);
+        if (index < 0)
+            return;
+        _chosenPlanId = plan.Id;
+        _chosenWeek = index + 1;
+        Refresh();
+    }
+
+    /// <summary>Switches the active plan, as the phone's plan ··· menu does. It syncs, so the phone follows.</summary>
+    [RelayCommand]
+    async Task ChangePlan()
+    {
+        var current = _store.ActivePlan;
+        var plans = _store.Data.Plans.Where(p => p != current).ToList();
+        if (plans.Count == 0)
+            return;
+        // Numbered so plans with the same name stay distinguishable.
+        var labels = plans.Select((p, i) => $"{i + 1}. {p.Name}").ToList();
+        var pick = await Page.DisplayActionSheetAsync(current == null ? "Choose a plan" : "Switch plan", "Cancel", null, [.. labels]);
+        var index = pick == null ? -1 : labels.IndexOf(pick);
+        if (index < 0)
+            return;
+        _store.Data.ActivePlanId = plans[index].Id;
+        _chosenPlanId = null;
+        _store.Save();
+        Refresh();
+    }
+
+    async Task StartAsync(WorkoutPlan plan, PlanWorkout workout, int week, bool confirm = false, bool again = false)
     {
         if (_workouts.Active != null || PhoneOwnsWorkout)
+        {
+            Message = "Finish the workout in progress first.";
             return;
-        WatchOwnership.SessionId = _workouts.StartFromPlan(plan, workout).Id;
+        }
+        if (confirm && !await Page.DisplayAlertAsync(again ? $"Do {workout.Name} again?" : $"Start {workout.Name}?",
+                again ? $"It's already done in week {week}." : $"Week {week} · {workout.Exercises.Count} exercises", "Start", "Cancel"))
+            return;
+        Message = "";
+        WatchOwnership.SessionId = _workouts.StartFromPlan(plan, workout, week).Id;
         await ResumeWatchWorkout();
+    }
+
+    /// <summary>A rest day ticked off (or not), as on the phone, so the week can be complete.</summary>
+    async Task ToggleRestAsync(WorkoutPlan plan, int day, int week, bool done)
+    {
+        if (!await Page.DisplayAlertAsync(done ? "Rest day done?" : "Undo rest day?", $"Week {week}", done ? "Mark done" : "Undo", "Cancel"))
+            return;
+        PlanProgress.SetRestDone(plan, day, week, done);
+        _store.Save();
+        Refresh();
     }
 
     /// <summary>An empty workout, built on the watch by adding exercises from the catalogue.</summary>
@@ -215,15 +371,16 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand]
     async Task SignOut()
     {
-        var page = Application.Current!.Windows[0].Page!;
         var warning = _store.Local.HasPendingChanges
             ? "Some workouts haven't synced yet and will be lost."
             : "Your workouts stay in your account.";
-        if (!await page.DisplayAlertAsync("Sign out?", warning, "Sign out", "Cancel"))
+        if (!await Page.DisplayAlertAsync("Sign out?", warning, "Sign out", "Cancel"))
             return;
         await _account.SignOutAsync();
         Refresh();
     }
 
-    static INavigation Navigation => Application.Current!.Windows[0].Page!.Navigation;
+    static Page Page => Application.Current!.Windows[0].Page!;
+
+    static INavigation Navigation => Page.Navigation;
 }

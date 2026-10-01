@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    The watch's home: the workout running (on the phone or the watch), the plan's workouts to start, sign-in and sync.
-    One centred column for round screens; it scrolls (with the crown on watches that have one).
+    The watch's home, after the phone's Workout tab: the Up next card (or the workout in progress), the plan's week with
+    its days, then quick workout, account and sync. One centred column for round screens; scroll or turn the crown.
 -->
 <ContentPage
     x:Class="GymBook.Wear.HomePage"
@@ -17,45 +17,72 @@
             <Setter Property="FontSize" Value="13" />
             <Setter Property="HeightRequest" Value="42" />
         </Style>
+        <Style x:Key="Overline" TargetType="Label">
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="CharacterSpacing" Value="1.2" />
+        </Style>
     </ContentPage.Resources>
 
     <ScrollView VerticalScrollBarVisibility="Never">
-        <VerticalStackLayout Padding="24,22,24,34" Spacing="8">
-            <Label Text="Gym Book" FontFamily="OpenSansSemibold" FontSize="16" TextColor="{StaticResource Accent}" />
-            <Label Text="{Binding SyncStatus}" Style="{StaticResource Small}" FontSize="11" IsVisible="{Binding IsSignedIn}" />
+        <VerticalStackLayout Padding="20,22,20,34" Spacing="8">
+            <Label Text="Gym Book" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource Accent}" />
+            <Label Text="{Binding SyncStatus}" Style="{StaticResource Small}" FontSize="10" IsVisible="{Binding IsSignedIn}" />
 
-            <!-- A workout running on the phone -->
-            <VerticalStackLayout IsVisible="{Binding HasPhoneWorkout}" Spacing="4">
-                <Label Text="On your phone" Style="{StaticResource Small}" />
-                <Button Text="{Binding PhoneWorkoutName}" Command="{Binding OpenPhoneWorkoutCommand}" />
-            </VerticalStackLayout>
-
-            <!-- The watch's own workout -->
-            <VerticalStackLayout IsVisible="{Binding HasWatchWorkout}" Spacing="4">
-                <Label Text="In progress" Style="{StaticResource Small}" />
-                <Button Text="{Binding WatchWorkoutName}" Command="{Binding ResumeWatchWorkoutCommand}" />
-            </VerticalStackLayout>
-
-            <!-- The plan's workouts to start, the next one first -->
-            <VerticalStackLayout IsVisible="{Binding CanStart}" Spacing="6">
-                <Label Text="{Binding PlanName}" Style="{StaticResource Small}" />
-                <Button Text="{Binding NextWorkout.Name, StringFormat='Start {0}'}" Command="{Binding NextWorkout.StartCommand}" />
-                <VerticalStackLayout BindableLayout.ItemsSource="{Binding OtherWorkouts}" Spacing="6">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="local:PlanWorkoutItem">
-                            <Button Text="{Binding Name}" Command="{Binding StartCommand}" Style="{StaticResource Secondary}" />
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
+            <!-- Up next, or the workout in progress: tap it, or its button -->
+            <Border IsVisible="{Binding HasCard}" BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 22" StrokeThickness="0" Padding="14,12">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenCardCommand}" />
+                </Border.GestureRecognizers>
+                <VerticalStackLayout Spacing="3">
+                    <Label Text="{Binding CardLabel}" Style="{StaticResource Overline}" TextColor="{Binding CardColor}" />
+                    <Label Text="{Binding CardName}" FontFamily="OpenSansSemibold" FontSize="17" MaxLines="2" LineBreakMode="TailTruncation" />
+                    <Label Text="{Binding CardMuscles}" Style="{StaticResource Small}" FontSize="11" MaxLines="1" LineBreakMode="TailTruncation" />
+                    <Label Text="{Binding CardStatus}" TextColor="{Binding CardColor}" FontSize="11" FontFamily="OpenSansSemibold" />
+                    <Label Text="{Binding CardMeta}" Style="{StaticResource Small}" FontSize="10" />
+                    <Button Text="{Binding CardButton}" Command="{Binding OpenCardCommand}" BackgroundColor="{Binding CardColor}" HeightRequest="40" Margin="0,6,0,0" />
                 </VerticalStackLayout>
+            </Border>
+
+            <!-- The plan's week: tap "Week N" for another week, a day to start it -->
+            <VerticalStackLayout IsVisible="{Binding HasPlan}" Spacing="6" Margin="0,4,0,0">
+                <Label Text="{Binding PlanName}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource Accent}" MaxLines="1" LineBreakMode="TailTruncation" />
+                <Button Text="{Binding WeekText}" Command="{Binding ChooseWeekCommand}" BackgroundColor="Transparent"
+                        TextColor="{StaticResource Accent}" FontSize="13" HeightRequest="32" Padding="0" />
+                <Border BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 20" StrokeThickness="0" Padding="8,6">
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Days}" Spacing="2">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="local:WatchDayItem">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Padding="2,5" BackgroundColor="Transparent">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                                    </Grid.GestureRecognizers>
+                                    <Border WidthRequest="26" HeightRequest="26" StrokeShape="RoundRectangle 13" StrokeThickness="1.5"
+                                            Stroke="{Binding BadgeColor}" BackgroundColor="Transparent" VerticalOptions="Center">
+                                        <Label Text="{Binding Badge}" TextColor="{Binding BadgeColor}" FontFamily="OpenSansSemibold" FontSize="11"
+                                               HorizontalOptions="Center" VerticalOptions="Center" />
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                        <Label Text="{Binding Name}" TextColor="{Binding NameColor}" FontFamily="OpenSansSemibold" FontSize="13"
+                                               HorizontalOptions="Start" HorizontalTextAlignment="Start" MaxLines="1" LineBreakMode="TailTruncation" />
+                                        <Label Text="{Binding Status}" TextColor="{Binding StatusColor}" FontSize="10" IsVisible="{Binding HasStatus}"
+                                               HorizontalOptions="Start" HorizontalTextAlignment="Start" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
 
-            <Label Text="No active plan. Pick or make one in Gym Book on your phone." Style="{StaticResource Small}" IsVisible="{Binding HasNoPlan}" />
+            <Label Text="No active plan. Choose one below, or make one in Gym Book on your phone." Style="{StaticResource Small}" IsVisible="{Binding HasNoPlan}" />
+            <Button Text="Change plan" Command="{Binding ChangePlanCommand}" Style="{StaticResource Secondary}" IsVisible="{Binding CanChangePlan}" />
 
             <!-- A workout without a plan: exercises are added as it goes -->
             <Button Text="Quick workout" Command="{Binding QuickWorkoutCommand}" Style="{StaticResource Secondary}" IsVisible="{Binding CanQuickStart}" />
 
-            <!-- Signed out: the phone mode still works; starting from the watch needs the account -->
-            <VerticalStackLayout IsVisible="{Binding IsSignedIn, Converter={StaticResource Not}}" Spacing="6">
+            <!-- Signed out: the phone mode still works; the plan needs the account -->
+            <VerticalStackLayout IsVisible="{Binding IsSignedIn, Converter={StaticResource Not}}" Spacing="6" Margin="0,6,0,0">
                 <Label Text="Sign in to use your plan and sync your workouts. Workouts on your phone show here either way." Style="{StaticResource Small}" />
                 <Button Text="Sign in with phone" Command="{Binding SignInWithPhoneCommand}" />
                 <Button Text="Use email" Command="{Binding SignInWithEmailCommand}" Style="{StaticResource Secondary}" />

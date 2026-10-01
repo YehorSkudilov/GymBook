@@ -50,7 +50,7 @@ public class WorkoutNotifier : IWorkoutNotifier
 
     public void Show(WorkoutStatus status)
     {
-        var resting = status.RestEndsAt is { } end && end > DateTime.Now;
+        var resting = status.RestEndsAt is { } restEnd && restEnd > DateTime.Now;
         // Redrawn when what it says changes, and while resting every few seconds for the bar.
         var restLeft = resting ? (int)(status.RestEndsAt!.Value - DateTime.Now).TotalSeconds : 0;
         var key = $"{status.Name}|{status.Detail}|{status.Progress}|{status.RestEndsAt:O}|{restLeft / 3}";

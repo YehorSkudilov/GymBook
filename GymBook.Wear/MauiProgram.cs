@@ -22,6 +22,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<ProgressionEngine>();
         builder.Services.AddSingleton<WorkoutService>();
         builder.Services.AddSingleton<RecoveryService>();
+        builder.Services.AddSingleton<WorkoutEstimator>();
         builder.Services.AddSingleton<StatsService>();
         builder.Services.AddSingleton<AuthSession>();
         builder.Services.AddSingleton(sp => new ApiClient(ApiConfig.CreateClient(), sp.GetRequiredService<AuthSession>()));
