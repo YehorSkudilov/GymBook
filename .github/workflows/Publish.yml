@@ -32,27 +32,33 @@ on:
           - production
 
       publish_android:
-        description: "Android (Google Play)"
+        description: "── Gym Book app ── Android (Google Play)"
         type: boolean
         default: true
 
       publish_windows:
-        description: "Windows (Microsoft Store)"
+        description: "── Gym Book app ── Windows (Microsoft Store)"
         type: boolean
         default: true
 
       publish_ios:
-        description: "iOS (TestFlight)"
+        description: "── Gym Book app ── iOS (TestFlight)"
         type: boolean
         default: true
 
       publish_macos:
-        description: "macOS (Mac App Store / TestFlight)"
+        description: "── Gym Book app ── macOS (Mac App Store / TestFlight)"
         type: boolean
         default: true
 
-      publish_admin:
-        description: "Admin app (Windows + Android builds, no upload)"
+      # Admin app: builds attached to the run as artifacts, never uploaded anywhere.
+      admin_windows:
+        description: "── Admin app ── Windows (.exe zip)"
+        type: boolean
+        default: true
+
+      admin_android:
+        description: "── Admin app ── Android (.apk)"
         type: boolean
         default: true
 
@@ -92,6 +98,9 @@ jobs:
   # BUILD ADMIN APP (artifacts only)
   # ==================================================
   publish-admin:
-    if: ${{ inputs.publish_admin }}
+    if: ${{ inputs.admin_windows || inputs.admin_android }}
     uses: ./.github/workflows/PublishAdminApp.yml
+    with:
+      build_windows: ${{ inputs.admin_windows }}
+      build_android: ${{ inputs.admin_android }}
     secrets: inherit
