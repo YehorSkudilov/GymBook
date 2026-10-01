@@ -74,6 +74,7 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty] IReadOnlyList<WatchDayItem> days = [];
     [ObservableProperty] bool hasNoPlan;
     [ObservableProperty] bool canChangePlan;
+    [ObservableProperty] bool canChoosePlan;
     [ObservableProperty] bool canQuickStart;
 
     // The pill floating at the bottom while a workout runs (minimized), like the phone's: tap to go back to it.
@@ -152,6 +153,7 @@ public partial class HomeViewModel : ObservableObject
         CanChangePlan = IsSignedIn && _store.Data.Plans.Count > (plan == null ? 0 : 1);
         HasPlan = plan is { Workouts.Count: > 0 };
         HasNoPlan = IsSignedIn && !HasPlan;
+        CanChoosePlan = HasNoPlan && CanChangePlan;
         PlanProgress? progress = null;
         if (plan is { Workouts.Count: > 0 })
         {
@@ -310,6 +312,25 @@ public partial class HomeViewModel : ObservableObject
         _chosenPlanId = plan.Id;
         _chosenWeek = index + 1;
         Refresh();
+    }
+
+    /// <summary>The ⋯ beside the plan's name, as on the phone: switch to another plan, or look at another week.</summary>
+    [RelayCommand]
+    async Task PlanOptions()
+    {
+        if (_store.ActivePlan is not { } plan)
+            return;
+        const string change = "Change plan", week = "Choose week";
+        string[] options = CanChangePlan ? [change, week] : [week];
+        switch (await Page.DisplayActionSheetAsync(plan.Name, "Cancel", null, options))
+        {
+            case change:
+                await ChangePlan();
+                break;
+            case week:
+                await ChooseWeek();
+                break;
+        }
     }
 
     /// <summary>Switches the active plan, as the phone's plan ··· menu does. It syncs, so the phone follows.</summary>

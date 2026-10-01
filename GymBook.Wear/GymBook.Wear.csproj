@@ -30,7 +30,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="0.45" Color="#0B0D12" />
+		<!-- Wear OS shows the icon in a tighter circle than phone launchers, so the book sits smaller than on the phone (0.45). -->
+		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="0.32" Color="#0B0D12" />
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#000000" BaseSize="200,200" />
 		<MauiFont Include="Resources\Fonts\*" />
 	</ItemGroup>

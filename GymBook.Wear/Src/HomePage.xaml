@@ -47,12 +47,13 @@
 
             <!-- The plan's week: tap "Week N" for another week, a day to start it -->
             <VerticalStackLayout IsVisible="{Binding HasPlan}" Spacing="6" Margin="0,4,0,0">
-                <!-- The plan's name: tap to switch to another plan -->
-                <Label Text="{Binding PlanName}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource Accent}" MaxLines="1" LineBreakMode="TailTruncation">
-                    <Label.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding ChangePlanCommand}" />
-                    </Label.GestureRecognizers>
-                </Label>
+                <!-- The plan's name, and its ⋯ menu (change plan, pick a week), like the phone's -->
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                    <Label Text="{Binding PlanName}" FontFamily="OpenSansSemibold" FontSize="14" TextColor="{StaticResource Accent}" MaxLines="1"
+                           LineBreakMode="TailTruncation" HorizontalOptions="Start" HorizontalTextAlignment="Start" VerticalOptions="Center" />
+                    <Button Grid.Column="1" Text="⋯" Command="{Binding PlanOptionsCommand}" BackgroundColor="{StaticResource Surface}"
+                            TextColor="{StaticResource TextPrimary}" FontSize="14" WidthRequest="36" HeightRequest="28" CornerRadius="14" Padding="0" />
+                </Grid>
                 <Button Text="{Binding WeekText}" Command="{Binding ChooseWeekCommand}" BackgroundColor="Transparent"
                         TextColor="{StaticResource Accent}" FontSize="13" HeightRequest="32" Padding="0" />
                 <Border BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 20" StrokeThickness="0" Padding="8,6">
@@ -81,8 +82,9 @@
                 </Border>
             </VerticalStackLayout>
 
-            <Label Text="No active plan. Choose one below, or make one in Gym Book on your phone." Style="{StaticResource Small}" IsVisible="{Binding HasNoPlan}" />
-            <Button Text="Change plan" Command="{Binding ChangePlanCommand}" Style="{StaticResource Secondary}" IsVisible="{Binding CanChangePlan}" />
+            <Label Text="No active plan. Choose one, or make one in Gym Book on your phone." Style="{StaticResource Small}" IsVisible="{Binding HasNoPlan}" />
+            <!-- Only without an active plan; otherwise switching is in the plan's ⋯ -->
+            <Button Text="Choose a plan" Command="{Binding ChangePlanCommand}" Style="{StaticResource Secondary}" IsVisible="{Binding CanChoosePlan}" />
 
             <!-- A workout without a plan: exercises are added as it goes -->
             <Button Text="Quick workout" Command="{Binding QuickWorkoutCommand}" Style="{StaticResource Secondary}" IsVisible="{Binding CanQuickStart}" />
