@@ -105,5 +105,53 @@
     "chapter": "",
     "note": "Kept current: sports medicine clinic, focused 1:52 frog rocks demo; no more reputable frog (both-knees-wide) version found",
     "verdict": "ok"
+  },
+  {
+    "id": "mob_half_kneeling_hip_flexor_rock",
+    "videoId": "_HrlhENbT0w",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "Dynamic Half Kneeling Hip Flexor Stretch",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "E3 Rehab (listed rehab source) 15s dynamic half-kneeling hip flexor rock, replaces unknown 11s channel",
+    "verdict": "fixed"
+  },
+  {
+    "id": "mob_leg_swing_front",
+    "videoId": "KAxtr0DwaQA",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "Leg Swings (Flexion and Extension)",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "E3 Rehab (listed rehab source) 13s front-to-back leg swing demo, replaces unlisted channel",
+    "verdict": "fixed"
+  },
+  {
+    "id": "mob_leg_swing_side",
+    "videoId": "6yKgqrpiBYs",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "Leg Swings (Abduction and Adduction)",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "E3 Rehab (listed rehab source) 14s side-to-side leg swing demo, more trusted than the Runna app channel",
+    "verdict": "fixed"
+  },
+  {
+    "id": "mob_deep_squat_pry",
+    "videoId": "h6icB2irtCc",
+    "start": null,
+    "end": null,
+    "channel": "Bullett Performance Training",
+    "title": "Deep Squat with Prying",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: performance coaching channel, exact 44s bodyweight deep squat pry; reputable alternatives found are kettlebell goblet variants",
+    "verdict": "ok"
   }
 ]

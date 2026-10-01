@@ -82,5 +82,89 @@
   "chapter": "",
   "note": "Kept current: Pilates Anytime tutorial solely about kneeling side kick",
   "verdict": "ok"
+ },
+ {
+  "id": "pilates_side_bend",
+  "videoId": "zprsJDjeONM",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: Side Bend | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Fixed: replaced 2008 pilatesdigest video with Pilates Anytime focused 2:47 side bend tutorial",
+  "verdict": "fixed"
+ },
+ {
+  "id": "pilates_boomerang",
+  "videoId": "SRonJI25raE",
+  "start": 0,
+  "end": 108,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: Boomerang | Pilates Anytime",
+  "timeSource": "chapter",
+  "chapter": "Boomerang",
+  "note": "Fixed: Pilates Anytime tutorial, chapter Boomerang 0:00 to next chapter Teaser at 108s",
+  "verdict": "fixed"
+ },
+ {
+  "id": "pilates_seal",
+  "videoId": "G5zO03AJlwU",
+  "start": null,
+  "end": null,
+  "channel": "Howcast",
+  "title": "How to Do Seal | Pilates Workout",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: focused 1:32 Pilates seal tutorial",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_control_balance",
+  "videoId": "jy4GQNfbmfQ",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Encyclopedia",
+  "title": "Control Balance on the Mat ⎮Pilates Encyclopedia",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Fixed: Pilates Encyclopedia focused 1:06 mat control balance tutorial instead of unknown channel",
+  "verdict": "fixed"
+ },
+ {
+  "id": "pilates_push_up",
+  "videoId": "4wS_wf12Ezk",
+  "start": null,
+  "end": null,
+  "channel": "PILATESOLOGY",
+  "title": "Pilates Mat Encyclopedia: Push-Ups",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Fixed: Pilatesology focused 1:15 mat push-up tutorial instead of small channel",
+  "verdict": "fixed"
+ },
+ {
+  "id": "pilates_toe_taps",
+  "videoId": "KAs2Cgp85LU",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Encyclopedia",
+  "title": "Toe Taps On the Mat⎮Pilates Encyclopedia",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: NCPT-created Pilates Encyclopedia focused 1:14 tutorial",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_side_lying_double_leg_lift",
+  "videoId": "3YcYZvnAYz4",
+  "start": null,
+  "end": null,
+  "channel": "Central Lakes Physio and Pilates",
+  "title": "Side Lying Double Leg Lifts",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: physiotherapy/Pilates studio focused 43s demo",
+  "verdict": "ok"
  }
 ]

@@ -94,5 +94,41 @@
     "chapter": "",
     "note": "Strongman coach Kalle Beck, focused 92s keg carry tutorial, embeds",
     "verdict": "ok"
+  },
+  {
+    "id": "sandbag_carry",
+    "videoId": "sAOjLtEdxWs",
+    "start": 34,
+    "end": 130,
+    "channel": "Brian Alsruhe",
+    "title": "SANDBAG EXERCISE DIRECTORY 3: Sandbag CARRY, Single Shoulder Sandbag LUNGES, SQUATS & CARRIES",
+    "timeSource": "chapter",
+    "chapter": "How to Perform a Sandbag Carry (Bearhug Position)",
+    "note": "Replaced unknown channel with strongman coach Brian Alsruhe; chapter 0:34 to next chapter 2:10",
+    "verdict": "fixed"
+  },
+  {
+    "id": "sled_push",
+    "videoId": "9XRRXaUpnLk",
+    "start": null,
+    "end": null,
+    "channel": "Mind Pump TV",
+    "title": "How To Do The Sled Push The RIGHT Way! (AVOID MISTAKES!)",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced unknown-channel Short (fractional chapter times) with Mind Pump focused 2:21 sled push tutorial, embeds",
+    "verdict": "fixed"
+  },
+  {
+    "id": "tire_flip",
+    "videoId": "aIDjGG_xwHg",
+    "start": null,
+    "end": null,
+    "channel": "Live Lean TV Daily Exercises",
+    "title": "How To Do A TIRE FLIP | Exercise Demonstration Video and Guide",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Live Lean TV focused 57s tire flip demo, embeds",
+    "verdict": "ok"
   }
 ]

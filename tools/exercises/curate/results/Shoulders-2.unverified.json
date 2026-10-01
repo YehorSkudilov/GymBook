@@ -46,5 +46,77 @@
     "chapter": null,
     "note": "11s RP demo; replaces DeltaBolic short",
     "verdict": null
+  },
+  {
+    "id": "seated_lateral_raise",
+    "videoId": "xDrYB81QXmY",
+    "start": null,
+    "end": null,
+    "channel": "PureGym",
+    "title": "How To Do A Seated Lateral Raise",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "15s PureGym demo; replaces Rachel Gregory",
+    "verdict": null
+  },
+  {
+    "id": "lean_away_lateral_raise",
+    "videoId": "SgyUoY0IZ7A",
+    "start": 178,
+    "end": 193,
+    "channel": "Jeff Nippard",
+    "title": "The Best And Worst Shoulder Exercises",
+    "timeSource": "chapter",
+    "chapter": "Lean-Away Dumbbell Lateral Raise",
+    "note": "Jeff Nippard chapter; replaces Functional AF",
+    "verdict": null
+  },
+  {
+    "id": "cable_y_raise",
+    "videoId": "SgyUoY0IZ7A",
+    "start": 533,
+    "end": 546,
+    "channel": "Jeff Nippard",
+    "title": "The Best And Worst Shoulder Exercises",
+    "timeSource": "chapter",
+    "chapter": "Cable Y-Raise",
+    "note": "Jeff Nippard chapter; current FormFocus was a repost of this video",
+    "verdict": null
+  },
+  {
+    "id": "cable_lateral_raise",
+    "videoId": "Z5FA9aq3L6A",
+    "start": null,
+    "end": null,
+    "channel": "PureGym",
+    "title": "How To Do Cable Lateral Raises",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "kept current (PureGym 15s demo)",
+    "verdict": null
+  },
+  {
+    "id": "machine_lateral_raise",
+    "videoId": "0o07iGKUarI",
+    "start": null,
+    "end": null,
+    "channel": "Renaissance Periodization",
+    "title": "Machine Lateral Raise",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "kept current (RP 12s demo)",
+    "verdict": null
+  },
+  {
+    "id": "band_lateral_raise",
+    "videoId": "yfNg5sFndbw",
+    "start": null,
+    "end": null,
+    "channel": "Men's Health",
+    "title": "Band Lateral Raise",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "kept current (Men's Health 47s demo)",
+    "verdict": null
   }
 ]

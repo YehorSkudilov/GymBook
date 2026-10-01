@@ -34,5 +34,53 @@
     "chapter": "Setup and Execution",
     "note": "Replaced Alex Leonidas short with Mind Pump TV 4:01 tutorial whose chapters are all on this press; start skips intro chapter",
     "verdict": "fixed"
+  },
+  {
+    "id": "z_press",
+    "videoId": "0fHdnBH9Gdo",
+    "start": null,
+    "end": null,
+    "channel": "Buff Dudes Workouts",
+    "title": "How To Perform The Z Press | Experts Only Shoulders Exercise",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced TrainFTW clip with Buff Dudes 2:34 Z press tutorial; all chapters are about the Z press",
+    "verdict": "fixed"
+  },
+  {
+    "id": "landmine_press",
+    "videoId": "6cSTRPhpubs",
+    "start": null,
+    "end": null,
+    "channel": "[P]rehab",
+    "title": "Standing Landmine Shoulder Press - Developing Overhead Control",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced low-reach KevTheTrainer pick with [P]rehab 22s standing landmine press demo",
+    "verdict": "fixed"
+  },
+  {
+    "id": "bradford_press",
+    "videoId": "7aCSp9GtQDw",
+    "start": null,
+    "end": null,
+    "channel": "Buff Dudes Workouts",
+    "title": "How to perform the BRADFORD PRESS - Shoulder Exercise Tutorial",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced TrainFTW clip with Buff Dudes focused 1:48 Bradford press tutorial",
+    "verdict": "fixed"
+  },
+  {
+    "id": "db_shoulder_press",
+    "videoId": "fAlu-BsnPqE",
+    "start": null,
+    "end": null,
+    "channel": "JayCutlerTV",
+    "title": "SEATED DUMBBELL SHOULDER PRESS",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "4x Mr. Olympia Jay Cutler, focused 59s seated dumbbell shoulder press demo",
+    "verdict": "ok"
   }
 ]

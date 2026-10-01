@@ -1,5 +1,65 @@
 [
   {
+    "id": "band_external_rotation",
+    "videoId": "UyBb2-bP0CU",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "Standing Banded External Rotation (Neutral)",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "E3 Rehab demo, 15s; replaces a small PT clinic clip.",
+    "verdict": null
+  },
+  {
+    "id": "band_internal_rotation",
+    "videoId": "7bXPgfGzW9k",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "Standing Banded Internal Rotation (Neutral)",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "E3 Rehab demo, 14s; replaces a 20-view clip.",
+    "verdict": null
+  },
+  {
+    "id": "cable_external_rotation",
+    "videoId": "X-JP6sJTZAI",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "Cable Shoulder External Rotation",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "E3 Rehab demo, 26s.",
+    "verdict": null
+  },
+  {
+    "id": "side_lying_external_rotation",
+    "videoId": "YzL3koB1mE4",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "Sidelying External Rotation",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "E3 Rehab demo, 14s.",
+    "verdict": null
+  },
+  {
+    "id": "external_rotation_90_90",
+    "videoId": "67dz9MJ63xc",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "Standing Banded External Rotation (90/90)",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "E3 Rehab demo, 15s, band at 90/90.",
+    "verdict": null
+  },
+  {
     "id": "cuban_press",
     "videoId": "zD4Vp44roow",
     "start": null,
