@@ -48,6 +48,19 @@ public class PlanProgress
     /// <summary>The first workout of <paramref name="week"/> that isn't done yet, in day order.</summary>
     public PlanWorkout? NextWorkout(int week) => Days.OfType<PlanWorkout>().FirstOrDefault(w => SessionFor(w, week) == null);
 
+    /// <summary>
+    /// What Up next starts: the first workout left in <paramref name="week"/>, or once that week is all done, in the
+    /// first week after it with one left (skipping weeks that are finished too). The last unlocked week has nothing
+    /// done, so the search stops there. Null only for a plan without workouts.
+    /// </summary>
+    public (int Week, PlanWorkout Workout)? NextWorkoutFrom(int week)
+    {
+        for (var w = week; w <= Math.Max(week, LastUnlockedWeek); w++)
+            if (NextWorkout(w) is { } next)
+                return (w, next);
+        return null;
+    }
+
     /// <summary>Sessions from before plan weeks were stored count toward the calendar week they were done in.</summary>
     int WeekOf(WorkoutSession s) =>
         s.PlanWeek ?? Math.Max(1, (StatsService.WeekStart(s.StartedAt) - StatsService.WeekStart(_plan.CreatedAt)).Days / 7 + 1);

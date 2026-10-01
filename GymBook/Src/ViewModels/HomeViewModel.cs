@@ -155,9 +155,7 @@ public partial class HomeViewModel(
         {
             var progress = new PlanProgress(plan, store.History);
             _week = _chosenPlanId == plan.Id ? Math.Min(_chosenWeek, progress.LastUnlockedWeek) : progress.CurrentWeek;
-            (_nextWeek, _next) = progress.NextWorkout(_week) is { } inWeek
-                ? (_week, inWeek)
-                : (_week + 1, progress.NextWorkout(_week + 1) ?? progress.Days.OfType<PlanWorkout>().First());
+            (_nextWeek, _next) = progress.NextWorkoutFrom(_week) ?? (_week, progress.Days.OfType<PlanWorkout>().First());
             // Up next is always the plan's next workout (the same one the week below marks). Recovery only colours the
             // card, and when it would hit muscles still recovering, names a fresher workout left this week.
             var now = DateTime.Now;

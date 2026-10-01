@@ -189,12 +189,10 @@ public partial class HomeViewModel : ObservableObject
             HasCard = false;
     }
 
-    /// <summary>Up next: the plan's next workout (in the shown week, or the week after once it's done), and how recovered its muscles are.</summary>
+    /// <summary>Up next: the plan's next workout (in the shown week, or the first later week with one left), and how recovered its muscles are.</summary>
     void ShowUpNext(WorkoutPlan plan, PlanProgress progress)
     {
-        var (week, next) = progress.NextWorkout(_week) is { } inWeek
-            ? (_week, inWeek)
-            : (_week + 1, progress.NextWorkout(_week + 1) ?? progress.Days.OfType<PlanWorkout>().First());
+        var (week, next) = progress.NextWorkoutFrom(_week) ?? (_week, progress.Days.OfType<PlanWorkout>().First());
         var now = DateTime.Now;
         var readiness = Math.Clamp(_recovery.Readiness(next, now), 0, 1);
         var tired = _recovery.NotReady(next, now);
