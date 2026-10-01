@@ -133,15 +133,15 @@
   },
   {
     "id": "sled_pull",
-    "videoId": "D7PdhZXG4iI",
+    "videoId": "ZmQOg00gtSA",
     "start": null,
     "end": null,
-    "channel": "TrainFTW",
-    "title": "Hand-Over-Hand Sled Pull",
+    "channel": "Live Lean TV Daily Exercises",
+    "title": "How To Do A STANDING BATTLE ROPE SLED PULL | Exercise Demonstration Video and Guide",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Firefighter strength coaching org, focused 19s hand-over-hand sled pull demo, embeds; no more reputable alternative found",
-    "verdict": "ok"
+    "note": "Review pass: Replaces TrainFTW (small channel). Live Lean TV (established media on the brief's list), 2022, 35s focused demo of a standing hand-over-hand rope sled pull, sled pulled all the way to the feet; matches 'stand still and pull toward you'. Embeds OK. Alternatives checked: PureGym BSJIKV7h5po (9s, OK embed), PureGym Hyrox tips WgRM2e5U6H0 chapter 'Sled Pull Technique' 35-66s, Third Space London gdtO9qeaiCE, Squat University QaTrePoCT4g (push+pull, no chapters).",
+    "verdict": "fixed"
   },
   {
     "id": "sandbag_clean",
@@ -205,38 +205,38 @@
   },
   {
     "id": "landmine_rotational_punch",
-    "videoId": "-mtU3hc1OVE",
-    "start": null,
-    "end": null,
-    "channel": "Littauer Strength Training",
-    "title": "Landmine Rotational Punch",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Strength coach channel, focused 36s landmine rotational punch demo (single chapter, so start 0 dropped), embeds; no more reputable alternative found",
-    "verdict": "ok"
+    "videoId": "HRzERntj2iI",
+    "start": 0,
+    "end": 64.43,
+    "channel": "Boxing Science",
+    "title": "Landmine Punch for Boxing - Increase Your Punch Power",
+    "timeSource": "chapter",
+    "chapter": "Proper landmine technique",
+    "note": "Review pass: Replaces Littauer Strength Training (small). Boxing Science (boxing sport-science/S&C coaches to pro boxers) chapter 'Proper landmine technique' 0s to next chapter 'Common training mistakes' at 64.43s; landmine punch driven by hip rotation. Embeds OK. Runner-up: Testosterone Nation n-jjDk5N7FI (17s, embeds OK).",
+    "verdict": "fixed"
   },
   {
     "id": "band_resisted_punch",
-    "videoId": "XEt7q2kg-hY",
+    "videoId": "gYliCzGOsTs",
     "start": null,
     "end": null,
-    "channel": "66 Days Fitness Coaching",
-    "title": "Resistance band punch",
+    "channel": "Phil Daru",
+    "title": "Band Drill for Punching 🥊",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Fitness coaching channel, focused 15s band punch demo, embeds; no reputable-source alternative found (Howcast option is a 2013 kickboxing shadowbox lesson)",
-    "verdict": "ok"
+    "note": "Review pass: Replaces XEt7q2kg-hY (66 Days Fitness Coaching, 15s, 2022). 50s Short (2024) from Phil Daru, CSCS and S&C coach for UFC champions (Poirier, Jedrzejczyk); a band-resisted punching drill. Whole video, no chapters. Embed check OK. Other options looked at: FightCamp LiFp7Gi1PVU is about stance/footwork, Howcast TX9XfhdueEg is from 2013 (shadowboxing), the Tony Jeffries and Mind Pump/Daru long videos have no chapter that names a band punch, and Evolve MMA Hf1jRd0tWlg is a mixed 18s drill clip.",
+    "verdict": "fixed"
   },
   {
     "id": "sledgehammer_tire_strike",
-    "videoId": "yTxcbJ6csus",
-    "start": null,
-    "end": null,
-    "channel": "Ewa Eckert",
-    "title": "How to properly use sledgehammer in hitting the tire during workouts  #sledgehammer #workouts",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Kept current (verified movement), focused 28s sledgehammer tire strike demo, embeds; searches found no reputable-source tutorial",
-    "verdict": "ok"
+    "videoId": "hTo28QSkLZY",
+    "start": 0,
+    "end": 322,
+    "channel": "Brian Alsruhe",
+    "title": "SLEDGEHAMMER TRAINING - How to Swing a Sledgehammer or Splitting Maul Like a Pro! Stop Looking Silly",
+    "timeSource": "chapter",
+    "chapter": "0–322: all technique chapters, before the closing promo chapter",
+    "note": "Review pass: Replaces a 28s hashtag Short from a small channel (Ewa Eckert). Brian Alsruhe (strongman coach, on the brief's trusted list) gives a focused 6-minute sledgehammer swing tutorial (2021); every chapter is about this movement (stance, grip/hand placement, starting and finishing the swing, catching the rebound, breathing), so no trim is needed. Searched Onnit, Rogue, Alan Thrall, Garage Strength, Elitefts, Men's Health, Mind Pump, Scott Herman, Mark Bell, Bodybuilding.com, Joe DeFranco (only 15-18-year-old low-res clips) and Ross Enamait (11-19 years old); none had a better modern tire-strike demo. info + check OK. End set to 322 (start of the closing workout-template pitch chapter).",
+    "verdict": "fixed"
   }
 ]

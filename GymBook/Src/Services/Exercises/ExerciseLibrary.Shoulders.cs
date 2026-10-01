@@ -167,7 +167,7 @@ public static partial class ExerciseLibrary
                 "Keep your ribs down and don't lean back to turn it into an incline press.",
                 "Don't use your legs; that's a push press.",
             ],
-            Video = new("qLZU6Fl2sI4"),
+            Video = new("Raemd3qWgJc"),
         },
         new("single_arm_db_press", "Single-Arm Dumbbell Shoulder Press", Shoulders, Dumbbell, Compound)
         {
@@ -530,7 +530,7 @@ public static partial class ExerciseLibrary
                 "Keep your chest on the pad throughout.",
                 "Use light weights; the rear delts are small.",
             ],
-            Video = new("G4KcUxqcXO8"),
+            Video = new("sIQNCJ6Xwsk"),
         },
         new("cable_reverse_fly", "Cable Reverse Fly", Shoulders, Cable, Isolation)
         {
@@ -826,7 +826,7 @@ public static partial class ExerciseLibrary
                 "Use 1–4 kg at most; this is about control, not load.",
                 "Don't shrug toward your ears or lift your chest off the bench.",
             ],
-            Video = new("3wgOMSF9LG8"),
+            Video = new("RKErhESiLYo"),
         },
         new("prone_iyt", "Prone I-Y-T Raise", Shoulders, Bodyweight, Isolation)
         {
@@ -985,7 +985,7 @@ public static partial class ExerciseLibrary
                 "Lean further over time rather than all at once; it loads the wrists and elbows heavily.",
                 "Warm up your wrists first.",
             ],
-            Video = new("oVpte1edulI"),
+            Video = new("RrObFYecZbM", 3.34, 92.619),
         },
         new("tuck_planche", "Tuck Planche", Shoulders, Bodyweight, Compound)
         {

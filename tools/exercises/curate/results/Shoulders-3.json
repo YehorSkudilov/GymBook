@@ -44,7 +44,7 @@
     "title": "Cable Shoulder Internal Rotations",
     "timeSource": "whole",
     "chapter": null,
-    "note": "verified: Athletes' Potential 14s cable IR at elbow height, embeds (kept current); one more search found no reputable-channel alternative (only small-channel Shorts).",
+    "note": "Review pass: Kept after ~45 searches. None of E3 Rehab, [P]rehab, Hinge Health, Bob & Brad, AskDoctorJo, Mike Reinold, Champion PT, Eric Cressey, Jeff Nippard, RP, Jeremy Ethier, ATHLEAN-X, PureGym, Muscle & Motion, NASM, Mayo Clinic, Cleveland Clinic, Squat University or Rehab Science has a standing cable internal rotation demo or a chapter for it. Their long videos have chapters only for external rotation, full can, or IR mobility/stretches (E3 b7yQwf-K7z0 'Internal Rotation' is a mobility chapter; Physio REHAB xDDsCnJllIU uses a band). The Muscle & Motion Short 5Hg034XGMq8 is an anatomy animation, not a cable demo. The remaining cable IR clips come from small channels (Cooney Strength Conditioning kBhQ4B7rl0w, Trident Physical Therapy YOc7DYcASNk, Justin Kompf Eh8pu_wUKHU, and others) and none is clearly more reputable. The current 14s clip is the exact variant and passes the embed check.",
     "verdict": "ok"
   },
   {
@@ -85,15 +85,15 @@
   },
   {
     "id": "ytw_raise",
-    "videoId": "3wgOMSF9LG8",
+    "videoId": "RKErhESiLYo",
     "start": null,
     "end": null,
-    "channel": "Edge Performance Systems",
-    "title": "Incline YTW",
+    "channel": "Astros Strength",
+    "title": "DB Chest Supported Y-T-W",
     "timeSource": "whole",
     "chapter": null,
-    "note": "verified: Edge Performance Systems 12s incline dumbbell Y-T-W, embeds (kept current); one more search found no reputable-channel alternative.",
-    "verdict": "ok"
+    "note": "Review pass: Replaces 3wgOMSF9LG8 (Edge Performance Systems, 12s vertical clip). Houston Astros strength & conditioning staff channel; 13s focused demo, landscape, shot in the team facility, prone on an incline bench with dumbbells doing Y, T and W (verified from thumbnails). No reputable channel listed in the brief (E3 Rehab, [P]rehab, Hinge Health, Cressey, Reinold, Nippard, RP, Ethier, ATHLEAN-X, Squat University, Scott Herman, PureGym, Muscle & Motion, NASM, Men's Health, Bodybuilding.com) has a dedicated incline-bench YTW video or chapter. T Nation's YTW (v-TX00NNyE4) is the bodyweight floor version, so wrong variant. Whole video, no timecodes needed. Embed check OK.",
+    "verdict": "fixed"
   },
   {
     "id": "prone_iyt",
@@ -181,15 +181,15 @@
   },
   {
     "id": "planche_lean",
-    "videoId": "oVpte1edulI",
-    "start": null,
-    "end": null,
-    "channel": "Daniel Hristov",
-    "title": "HOW TO DO PLANCHE LEAN",
-    "timeSource": "whole",
-    "chapter": null,
-    "note": "verified: Daniel Hristov 14s planche lean Short, embeds (kept current); one more search found no reputable-channel video clearly titled planche lean (FitnessFAQs Short \"Cant Planche Yet? Start Here\" not confirmable as a lean).",
-    "verdict": "ok"
+    "videoId": "RrObFYecZbM",
+    "start": 3.34,
+    "end": 92.619,
+    "channel": "Simonster Strength",
+    "title": "How Should You Measure Planche Leans?",
+    "timeSource": "chapter",
+    "chapter": "Planche Lean",
+    "note": "Review pass: Replaces a 14s Daniel Hristov Short (oVpte1edulI). Simonster Strength is a dedicated planche coach (co-presenter of FitnessFAQs' 'Planche For Beginners'). Chapter 0:03 'Planche Lean' up to the next chapter 1:32 'Ways To Measure the Planche Lean' covers the planche lean hold itself. Alternatives checked: Chris Heria OmKfROtB45Q chapter 'Planche Lean Hold' 466-517 (OK embed), SaturnoMovement IlibAbLDB8U chapter '1. PLANCHE LEAN' 10-83 (OK embed, tips-oriented); FitnessFAQs Short --W7pVSWIpM has no description of content so variant not verifiable.",
+    "verdict": "fixed"
   },
   {
     "id": "tuck_planche",

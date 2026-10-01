@@ -1,15 +1,15 @@
 [
   {
     "id": "pilates_side_kick_circles",
-    "videoId": "J1aGomkLcS0",
+    "videoId": "NdSJUeSOCxs",
     "start": null,
     "end": null,
-    "channel": "In & Up Pilates",
-    "title": "Pilates Side Kick with Small Circles",
+    "channel": "PILATESOLOGY",
+    "title": "Pilates Mat Encyclopedia: Side Kicks Circles",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: Pilates instructor focused 45s side kick circles demo",
-    "verdict": "ok"
+    "note": "Review pass: Pilatesology Mat Encyclopedia 27s demo of the classical Side Kick Series circles (2024); replaces 106-view In & Up Pilates clip from 2015. Pilates Anytime only has the full Side Kick (front/back), Howcast is 2012.",
+    "verdict": "fixed"
   },
   {
     "id": "pilates_teaser",
@@ -25,27 +25,27 @@
   },
   {
     "id": "pilates_hip_circles",
-    "videoId": "dN1elhfKzYo",
+    "videoId": "GcLhAGh_t-8",
     "start": null,
     "end": null,
-    "channel": "Howcast",
-    "title": "How to Do Hip Circles | Pilates Workout",
+    "channel": "PILATESOLOGY",
+    "title": "Pilates Mat Encyclopedia: Hip Circles",
     "timeSource": "whole",
-    "chapter": "",
-    "note": "Kept current: focused 1:16 Pilates hip circles tutorial",
-    "verdict": "ok"
+    "chapter": null,
+    "note": "Review pass: Pilatesology (brief-listed Pilates source) 30s classical mat Hip Circles from its Mat Encyclopedia, uploaded 2024; description cues lift in the upper body and an open chest on the support arms, legs circling together. Replaces Howcast 2012 (dN1elhfKzYo). Runner-up: Pilates Anytime YDM1g6f9aDA (2014), chapter 'Hip Twist with Straight Arms' 2.04-48.969, older.",
+    "verdict": "fixed"
   },
   {
     "id": "pilates_swimming",
-    "videoId": "bY6ZyiO_7ek",
+    "videoId": "fMH4cAOVRrM",
     "start": null,
     "end": null,
-    "channel": "Howcast",
-    "title": "How to Do Swimming | Pilates Workout",
+    "channel": "PILATESOLOGY",
+    "title": "Pilates Mat Encyclopedia: Swimming",
     "timeSource": "whole",
-    "chapter": "",
-    "note": "Kept current: focused 1:18 Pilates swimming tutorial",
-    "verdict": "ok"
+    "chapter": null,
+    "note": "Review pass: Replaces Howcast 2012 (bY6ZyiO_7ek). Pilatesology (top-trust Pilates source in brief) 2024 34s classical mat Swimming demo from their Pilates Mat Encyclopedia; prone, arms and legs lifted, opposite arm/leg flutter. Whole video is the demo, no chapters. Runner-up: Pilates Anytime rbcvbbtB6E0 (2014, 1:50, embed OK) - older. Club Pilates RcYlNLM-JXc (2024, 17s) shorter, less reputable.",
+    "verdict": "fixed"
   },
   {
     "id": "pilates_leg_pull_front",
@@ -109,15 +109,15 @@
   },
   {
     "id": "pilates_seal",
-    "videoId": "G5zO03AJlwU",
+    "videoId": "l0PHCLIo1Kg",
     "start": null,
     "end": null,
-    "channel": "Howcast",
-    "title": "How to Do Seal | Pilates Workout",
+    "channel": "PILATESOLOGY",
+    "title": "Pilates Mat Encyclopedia: Seal",
     "timeSource": "whole",
-    "chapter": "",
-    "note": "Kept current: focused 1:32 Pilates seal tutorial",
-    "verdict": "ok"
+    "chapter": null,
+    "note": "Review pass: Replaces Howcast 2012 (G5zO03AJlwU). Pilatesology (brief-listed Pilates source) Mat Encyclopedia entry, uploaded 2024, 38s focused demo of classical mat Seal (feet off mat, clapping from hips, roll back and up). Runner-up: Pilates Anytime JwB8i8rrZUY (2014, 2:17). Embed check OK.",
+    "verdict": "fixed"
   },
   {
     "id": "pilates_control_balance",
@@ -181,15 +181,15 @@
   },
   {
     "id": "pilates_clam",
-    "videoId": "udZmLr8Fly4",
-    "start": null,
-    "end": null,
-    "channel": "LivAligned Pilates",
-    "title": "How to: ✨Pilates Clam✨ #pilates #pilatesworkout #matpilates #shorts #howto",
-    "timeSource": "whole",
-    "chapter": "",
-    "note": "Kept current: exact focused 12s Pilates clam Short",
-    "verdict": "ok"
+    "videoId": "gFyIjunfbbg",
+    "start": 0,
+    "end": 35,
+    "channel": "Hinge Health",
+    "title": "How to Do the Clamshell Exercise",
+    "timeSource": "chapter",
+    "chapter": "How to perform the exercise",
+    "note": "Review pass: Hinge Health 2024 tutorial, bodyweight side-lying clamshell; chapter 0:00 (0.625s) to Muscle activation (35.035s). Replaces 12s LivAligned Pilates Short.",
+    "verdict": "fixed"
   },
   {
     "id": "pilates_side_lying_double_leg_lift",

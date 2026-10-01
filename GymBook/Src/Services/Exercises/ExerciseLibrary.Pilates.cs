@@ -522,7 +522,7 @@ public static partial class ExerciseLibrary
                 "Keep the circles small and the torso completely still.",
                 "Reach the leg long out of the hip rather than gripping it up.",
             ],
-            Video = new("J1aGomkLcS0"),
+            Video = new("NdSJUeSOCxs"),
         },
 
         // Classical mat order (continued)
@@ -564,7 +564,7 @@ public static partial class ExerciseLibrary
                 "Keep the chest lifted and the shoulders away from the ears; don't sink into the wrists.",
                 "Make the circle only as big as you can keep the back from arching.",
             ],
-            Video = new("dN1elhfKzYo"),
+            Video = new("GcLhAGh_t-8"),
         },
         new("pilates_swimming", "Pilates Swimming", LowerBack, Bodyweight, Compound)
         {
@@ -584,7 +584,7 @@ public static partial class ExerciseLibrary
                 "Keep the abdominals lifted and reach long rather than high so the lower back isn't crunched.",
                 "Keep your gaze down to the mat to protect the neck.",
             ],
-            Video = new("bY6ZyiO_7ek"),
+            Video = new("fMH4cAOVRrM"),
         },
         new("pilates_leg_pull_front", "Leg Pull Front", Abs, Bodyweight, Compound)
         {
@@ -704,7 +704,7 @@ public static partial class ExerciseLibrary
                 "Keep the head and spine in the same rounded shape throughout.",
                 "Never roll onto the neck.",
             ],
-            Video = new("G5zO03AJlwU"),
+            Video = new("l0PHCLIo1Kg"),
         },
         new("pilates_control_balance", "Control Balance", Abs, Bodyweight, Compound)
         {
@@ -820,7 +820,7 @@ public static partial class ExerciseLibrary
                 "Don't let the top hip roll back; open only as far as the pelvis stays still.",
                 "Add a band around the thighs for more resistance.",
             ],
-            Video = new("udZmLr8Fly4"),
+            Video = new("gFyIjunfbbg", 0, 35),
         },
         new("pilates_side_lying_double_leg_lift", "Side-Lying Double Leg Lift", Abs, Bodyweight, Compound)
         {

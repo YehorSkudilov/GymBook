@@ -169,15 +169,15 @@
   },
   {
     "id": "chest_supported_reverse_fly",
-    "videoId": "G4KcUxqcXO8",
+    "videoId": "sIQNCJ6Xwsk",
     "start": null,
     "end": null,
-    "channel": "Christian Lawal - Personal Trainer & Online coach",
-    "title": "Chest Supported Reverse Fly",
+    "channel": "Andrew Kwong (DeltaBolic)",
+    "title": "The PERFECT Chest-Supported Rear Delt Fly",
     "timeSource": "whole",
-    "chapter": null,
-    "note": "verified: kept current personal trainer 23s, 45-degree bench face down; only alternatives were unlisted Shorts channels; kept current: personal trainer, 23s demo on 45-degree bench; no reputable alternative found",
-    "verdict": "ok"
+    "chapter": "",
+    "note": "Review pass: Replaced Christian Lawal (small channel) with DeltaBolic (Andrew Kwong, physical therapist, large professional channel) 16s 2026 demo of the dumbbell reverse fly lying face down on an incline bench, with cues in the description. Alternatives checked: Mind Pump TV 51YM340QE9M (Incline Bench Reverse Fly, 4:03, 2016, no chapters, embed OK), Jeremy Ethier FqfYvaRgKyM (better reverse fly but no chapters), Jeremy Ethier zcpYZkBXOxc (chapters are incline row, not fly), PureGym nlkF7_2O_Lw (seated bent-over, wrong variant), RP and Nippard (no matching chapter or Short).",
+    "verdict": "fixed"
   },
   {
     "id": "band_face_pull",

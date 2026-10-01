@@ -44,7 +44,7 @@
     "title": "How To Perform The Z Press | Experts Only Shoulders Exercise",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Replaced TrainFTW clip with Buff Dudes 2:34 Z press tutorial; all chapters are about the Z press",
+    "note": "Review pass: Kept. Buff Dudes is on the reputable list, and the description confirms a barbell Z press ('Set your barbell on an elevated surface... Press the barbell'), so the variant matches. It is a focused 2:34 tutorial with chapters for form demonstration and how-to. No candidate was clearly better: BarBend/Rob Kearney (DkI_hV92ZKg) is the same age, and its Setup chapter does not say which implement it uses (it also has DB/KB chapters). Men's Health Muscle (FtxS_l-6kOU) has 2.2k views and doesn't name the implement. Brian Alsruhe (UCnd_nPlHOk) is 11:48 with the demo split across several chapters. Mind Pump has no chapters. PureGym (8s) has no implement stated. The barbell Shorts are all from unknown channels. Nippard, RP, Ethier, ATHLEAN-X, Squat U, Thrall, Juggernaut, Bell, Herman and Bodybuilding.com have no Z press demo.",
     "verdict": "fixed"
   },
   {
@@ -85,15 +85,15 @@
   },
   {
     "id": "standing_db_press",
-    "videoId": "qLZU6Fl2sI4",
+    "videoId": "Raemd3qWgJc",
     "start": null,
     "end": null,
-    "channel": "KevTheTrainer",
-    "title": "STANDING DUMBBELL SHOULDER PRESS TUTORIAL // Build your shoulders using a pair of dumbbells!",
+    "channel": "Renaissance Periodization",
+    "title": "Standing Dumbbell Shoulder Press",
     "timeSource": "whole",
     "chapter": "",
-    "note": "Kept current: trainer-led focused 1:06 standing dumbbell press tutorial; no clearly more reputable standing-specific demo found",
-    "verdict": "ok"
+    "note": "Review pass: Replaced KevTheTrainer (small channel, 66s talk-through) with Renaissance Periodization's 10s demo titled exactly Standing Dumbbell Shoulder Press. Also checked: PureGym aI2hGzsAMXs (20s, standing per description, also OK), Men's Health 47haESZnuiw, Bodybuilding.com 0JfYxMRsUCQ, Scott Herman qEwKCR5JCog (2010), Jeremy Ethier/ATHLEAN-X/Nippard (no standing DB chapter).",
+    "verdict": "fixed"
   },
   {
     "id": "single_arm_db_press",

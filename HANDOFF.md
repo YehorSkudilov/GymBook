@@ -30,12 +30,14 @@ remove an id.
 
 ## Judgement calls the owner may want to review
 
-Picks kept from smaller or older channels because no reputable alternative fitted the exact variant (all embed and
-show the right movement): pilates_side_kick_circles, pilates_clam; Howcast 2012 videos for pilates_hip_circles,
-pilates_swimming, pilates_seal;
-Power sled_pull, landmine_rotational_punch, band_resisted_punch, sledgehammer_tire_strike; Shoulders
-standing_db_press, chest_supported_reverse_fly (alternative: DeltaBolic sIQNCJ6Xwsk), z_press (Buff Dudes; title
-doesn't say barbell), cable_internal_rotation, ytw_raise, planche_lean. Some agents truncated fractional
+A review pass replaced 13 weak picks (small channels, 2012 Howcast) with better sources: Pilatesology for four
+Pilates mat exercises, Hinge Health (clam), Live Lean TV (sled pull), Boxing Science (landmine punch), Phil Daru
+(band punch), Brian Alsruhe (sledgehammer, trimmed before its closing promo), RP (standing DB press), DeltaBolic
+(chest-supported reverse fly), Astros Strength (incline Y-T-W), Simonster Strength (planche lean chapter). Worth a
+glance in the app: band_resisted_punch and sledgehammer_tire_strike were matched on title and description only
+(the sledgehammer video may not show a tire). Still from small channels after a deep search, because nothing better
+exists: cable_internal_rotation (Athletes' Potential). z_press stays Buff Dudes (barbell, per its description).
+Some agents truncated fractional
 chapter times to whole seconds, others kept them exact; both work (`ExerciseVideo` takes doubles and the YouTube URL
 rounds).
 

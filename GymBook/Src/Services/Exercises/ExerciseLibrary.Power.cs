@@ -1191,7 +1191,7 @@ public static partial class ExerciseLibrary
                 "Pull with your lats, driving your elbows back.",
                 "Don't stand up straight and pull only with your arms.",
             ],
-            Video = new("D7PdhZXG4iI"),
+            Video = new("ZmQOg00gtSA"),
         },
 
         // Strongman
@@ -1317,7 +1317,7 @@ public static partial class ExerciseLibrary
                 "Keep it explosive with a load you can move fast.",
                 "Don't just press with your arm.",
             ],
-            Video = new("-mtU3hc1OVE"),
+            Video = new("HRzERntj2iI", 0, 64.43),
         },
         new("band_resisted_punch", "Band-Resisted Punch", Shoulders, Band, Compound)
         {
@@ -1336,7 +1336,7 @@ public static partial class ExerciseLibrary
                 "Snap the punch out and back; the band will try to pull your hand back sloppily.",
                 "Don't lock your elbow hard at full extension.",
             ],
-            Video = new("XEt7q2kg-hY"),
+            Video = new("gYliCzGOsTs"),
         },
         new("sledgehammer_tire_strike", "Sledgehammer Tire Strike", Abs, Other, Compound)
         {
@@ -1355,7 +1355,7 @@ public static partial class ExerciseLibrary
                 "Keep a firm grip and watch for the rebound.",
                 "Don't round your back at the bottom of each strike.",
             ],
-            Video = new("yTxcbJ6csus"),
+            Video = new("hTo28QSkLZY", 0, 322),
         },
     ];
 }
