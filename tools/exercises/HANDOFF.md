@@ -40,6 +40,8 @@ outdoor_cycling kept (no closer match exists on YouTube).
 
 - `node yt.mjs search|info|check`: YouTube search, video info with chapters (start seconds) and description, and the
   embed check. No transcripts: YouTube bot-checks every way of reading them, so timecodes come from chapters only.
+  `info` uses YouTube's internal API (the watch page gets HTTP 429 quickly) and prints `embeddable: ?`; `check` is
+  the embed test.
 - `CURATE_BRIEF.md` + `curate/chunks.json`: how the reputable-source video curation (fourth session, multi-agent) picked
   videos and timecodes; 35 chunks of ~22 exercises.
 - `thumbs.mjs`: the AI exercise pictures (OpenAI gpt-image-2, low quality, one consistent style) into

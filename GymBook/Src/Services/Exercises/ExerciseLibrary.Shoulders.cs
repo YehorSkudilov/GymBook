@@ -368,7 +368,7 @@ public static partial class ExerciseLibrary
                 "Squeeze the plate firmly; the grip work is part of it.",
                 "Don't lean back or swing it up.",
             ],
-            Video = new("-TlT6aXNok4"),
+            Video = new("HN8HYJTOl8c"),
         },
 
         // Lateral raises
@@ -388,7 +388,7 @@ public static partial class ExerciseLibrary
                 "Keep your shoulders down; don't shrug the weight up with your traps.",
                 "Don't swing; light weight with control beats heavy cheating.",
             ],
-            Video = new("Kl3LEzQ5Zqs"),
+            Video = new("OuG1smZTsQQ"),
         },
         new("seated_lateral_raise", "Seated Dumbbell Lateral Raise", Shoulders, Dumbbell, Isolation)
         {
@@ -405,7 +405,7 @@ public static partial class ExerciseLibrary
                 "Expect to use a little less weight than standing.",
                 "Don't lean back or shrug at the top.",
             ],
-            Video = new("x1RdFea59Fs"),
+            Video = new("xDrYB81QXmY"),
         },
         new("lean_away_lateral_raise", "Lean-Away Lateral Raise", Shoulders, Dumbbell, Isolation)
         {
@@ -423,7 +423,7 @@ public static partial class ExerciseLibrary
                 "Keep your body straight and still while leaning; only the arm moves.",
                 "Don't shrug the shoulder toward your ear.",
             ],
-            Video = new("Qc3v4fAdv9c"),
+            Video = new("SgyUoY0IZ7A", 178, 193),
         },
         new("cable_lateral_raise", "Cable Lateral Raise", Shoulders, Cable, Isolation)
         {
@@ -492,7 +492,7 @@ public static partial class ExerciseLibrary
                 "Keep your thumbs pointing up and slightly back as you raise.",
                 "Don't shrug or arch your lower back at the top.",
             ],
-            Video = new("9D1c_EVhM-o"),
+            Video = new("SgyUoY0IZ7A", 533, 546),
         },
 
         // Rear delts
@@ -512,7 +512,7 @@ public static partial class ExerciseLibrary
                 "Think of moving your hands out wide, not squeezing your shoulder blades together hard.",
                 "Keep your back flat and your torso still; don't heave the weight up.",
             ],
-            Video = new("evXOlgLTPCw"),
+            Video = new("SgyUoY0IZ7A", 696, 718),
         },
         new("chest_supported_reverse_fly", "Chest-Supported Reverse Fly", Shoulders, Dumbbell, Isolation)
         {
@@ -548,7 +548,7 @@ public static partial class ExerciseLibrary
                 "Keep your arms at shoulder height and your shoulders down.",
                 "Don't lean back or turn it into a row by bending your elbows.",
             ],
-            Video = new("JENKmsEZQO8"),
+            Video = new("qZlDovba6ik"),
         },
         new("rear_delt_machine", "Reverse Pec Deck", Shoulders, Machine, Isolation)
         {
@@ -566,7 +566,7 @@ public static partial class ExerciseLibrary
                 "Keep a slight bend in your elbows and lead with the backs of your hands.",
                 "Don't pull your chest off the pad or shrug.",
             ],
-            Video = new("v0rJuhEa59c"),
+            Video = new("5YK4bgzXDp0"),
         },
         new("face_pull", "Face Pull", Shoulders, Cable, Compound)
         {
@@ -584,7 +584,7 @@ public static partial class ExerciseLibrary
                 "Keep your elbows at or above shoulder height.",
                 "Don't lean back or turn it into a heavy row; use a weight you can pause with.",
             ],
-            Video = new("eQaSpG7aMYQ"),
+            Video = new("SgyUoY0IZ7A", 661, 696),
         },
         new("band_face_pull", "Band Face Pull", Shoulders, Band, Compound)
         {
@@ -602,7 +602,7 @@ public static partial class ExerciseLibrary
                 "Pause for a second at the end of each rep.",
                 "Don't let your elbows drop below your shoulders.",
             ],
-            Video = new("AlTGQrDOd98"),
+            Video = new("CSP7YpPv3ds"),
         },
         new("band_pull_apart", "Band Pull-Apart", Shoulders, Band, Isolation)
         {
@@ -621,7 +621,7 @@ public static partial class ExerciseLibrary
                 "Don't arch your lower back or push your ribs forward.",
                 "Try palms up or palms down; both work.",
             ],
-            Video = new("stwYTTPXubo"),
+            Video = new("smSSXITNpCI"),
         },
 
         // Upright rows
@@ -643,7 +643,7 @@ public static partial class ExerciseLibrary
                 "Don't pull your elbows above shoulder height if it pinches.",
                 "Keep the bar close to your body and don't swing.",
             ],
-            Video = new("-QXGSGrgfnY"),
+            Video = new("nwkLwMRHMQo", 201, 234),
         },
         new("cable_upright_row", "Cable Upright Row", Shoulders, Cable, Compound)
         {
@@ -661,7 +661,7 @@ public static partial class ExerciseLibrary
                 "A rope lets your hands move apart at the top, which many find easier on the shoulders.",
                 "Don't lean back to finish the pull.",
             ],
-            Video = new("WNz7O59GORA"),
+            Video = new("qr3ziolhjvQ"),
         },
         new("db_upright_row", "Dumbbell Upright Row", Shoulders, Dumbbell, Compound)
         {
@@ -679,7 +679,7 @@ public static partial class ExerciseLibrary
                 "Keep your wrists below your elbows throughout.",
                 "Don't shrug or swing the weights up.",
             ],
-            Video = new("K0dYqPCaO14"),
+            Video = new("Ub6QruNKfbY"),
         },
 
         // Rotator cuff
