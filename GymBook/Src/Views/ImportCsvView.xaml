@@ -36,8 +36,14 @@
 
         <skeleton:CLabel Text="{Binding Error}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" FontSize="14" />
 
+        <!-- The AI matching the exercises the word matcher wasn't sure of -->
+        <HorizontalStackLayout IsVisible="{Binding IsMatching}" Spacing="10">
+            <ActivityIndicator IsRunning="{Binding IsMatching}" Color="{StaticResource Accent}" WidthRequest="20" HeightRequest="20" />
+            <Label Text="Matching exercises with AI…" Style="{StaticResource Caption}" FontSize="13" VerticalOptions="Center" />
+        </HorizontalStackLayout>
+
         <!-- What each exercise becomes: tap one to change it -->
-        <VerticalStackLayout IsVisible="{Binding HasFile}" Spacing="8">
+        <VerticalStackLayout IsVisible="{Binding IsReady}" Spacing="8">
             <Label Text="EXERCISES" Style="{StaticResource Overline}" />
             <Label Text="{Binding MappingSummary}" Style="{StaticResource Caption}" FontSize="13" />
             <Border Style="{StaticResource Card}" Padding="0,4">

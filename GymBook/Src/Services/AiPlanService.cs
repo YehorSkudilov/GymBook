@@ -160,6 +160,31 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     }
 
     /// <summary>
+    /// The app's exercise for each of <paramref name="names"/> (another app's exercise names, by their key), matched by
+    /// the AI against the whole library; null for a name it found no match for. Throws when the AI can't be reached.
+    /// </summary>
+    public async Task<Dictionary<string, Exercise?>> MatchExercisesAsync(IReadOnlyList<ImportedName> names, CancellationToken ct = default)
+    {
+        // Every exercise, stretches and custom ones included: an export can have anything.
+        var exercises = store.AllExercises.Where(e => !e.IsDeleted).ToList();
+        var request = new MatchExercisesRequest
+        {
+            Names = [.. names.Take(MatchLimits.MaxNames)],
+            Exercises = [.. exercises.OrderBy(e => e.IsCustom).Take(PlanLimits.MaxCandidates).Select(e => new PlanCandidate
+            {
+                Id = e.Id,
+                Name = e.Name,
+                PrimaryMuscle = e.PrimaryMuscle,
+                Mechanic = e.Mechanic,
+                Equipment = e.Equipment,
+            })],
+        };
+        var response = await api.MatchExercisesAsync(request, ct);
+        var byId = exercises.ToDictionary(e => e.Id);
+        return response.Matches.ToDictionary(m => m.Key, m => byId.GetValueOrDefault(m.ExerciseId));
+    }
+
+    /// <summary>
     /// Sends the conversation about <paramref name="plan"/> to the AI. Returns its reply, and whether it changed the
     /// plan, in which case <paramref name="plan"/> already holds the change (the caller saves it).
     /// </summary>

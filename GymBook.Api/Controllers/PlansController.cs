@@ -71,6 +71,25 @@ public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, Lin
         }, (plan, left) => plan.Quota = left, ct);
     }
 
+    /// <summary>
+    /// Matches exercise names from another app's export (a CSV import) to the app's exercises. Not counted against a
+    /// quota, like the follow-up questions: one call per import file, and the rate limit applies.
+    /// </summary>
+    [HttpPost("match-exercises")]
+    public async Task<ActionResult<MatchExercisesResponse>> MatchExercises(MatchExercisesRequest request, CancellationToken ct)
+    {
+        if (!generator.IsConfigured)
+            return Unavailable();
+        try
+        {
+            return await generator.MatchAsync(request, ct);
+        }
+        catch (PlanGenerationException e)
+        {
+            return Problem(statusCode: StatusCodes.Status502BadGateway, title: e.Message);
+        }
+    }
+
     /// <summary>A message to the plan's AI coach, which may change the plan. Counts against the chat quota.</summary>
     [HttpPost("chat")]
     public Task<ActionResult<PlanChatResponse>> Chat(PlanChatRequest request, CancellationToken ct) =>

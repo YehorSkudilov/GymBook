@@ -136,6 +136,10 @@ public class ApiClient(HttpClient http, AuthSession session)
     public Task<GeneratePlanResponse> ImportPlanAsync(ImportPlanRequest request, CancellationToken ct = default) =>
         SendAuthorizedAsync<ImportPlanRequest, GeneratePlanResponse>("api/plans/import", request, ct, PlanGenerationTimeout);
 
+    /// <summary>The app's exercises for names from another app's export, matched by the AI.</summary>
+    public Task<MatchExercisesResponse> MatchExercisesAsync(MatchExercisesRequest request, CancellationToken ct = default) =>
+        SendAuthorizedAsync<MatchExercisesRequest, MatchExercisesResponse>("api/plans/match-exercises", request, ct, PlanGenerationTimeout);
+
     /// <summary>A message to the AI about a plan; the reply may carry a changed plan.</summary>
     public Task<PlanChatResponse> ChatAboutPlanAsync(PlanChatRequest request, CancellationToken ct = default) =>
         SendAuthorizedAsync<PlanChatRequest, PlanChatResponse>("api/plans/chat", request, ct, PlanGenerationTimeout);

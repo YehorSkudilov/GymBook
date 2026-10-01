@@ -5,11 +5,22 @@ namespace GymBook.Services.Import;
 /// <summary>How sure a match is, which decides what an import does with it by default.</summary>
 public enum MatchConfidence { Sure, Check, None }
 
-public record ExerciseMatch(Exercise? Exercise, double Score)
+/// <summary>
+/// Who decided a match: the word matcher alone, the AI picking an exercise, or the AI finding none (the word matcher's
+/// guess is then kept only as a suggestion).
+/// </summary>
+public enum MatchSource { Words, Ai, AiFoundNone }
+
+public record ExerciseMatch(Exercise? Exercise, double Score, MatchSource Source = MatchSource.Words)
 {
-    public MatchConfidence Confidence => Exercise == null || Score < ExerciseMatcher.CheckScore ? MatchConfidence.None
-        : Score < ExerciseMatcher.SureScore ? MatchConfidence.Check
-        : MatchConfidence.Sure;
+    public MatchConfidence Confidence => Source switch
+    {
+        MatchSource.Ai => Exercise == null ? MatchConfidence.None : MatchConfidence.Sure,
+        MatchSource.AiFoundNone => MatchConfidence.None,
+        _ => Exercise == null || Score < ExerciseMatcher.CheckScore ? MatchConfidence.None
+            : Score < ExerciseMatcher.SureScore ? MatchConfidence.Check
+            : MatchConfidence.Sure,
+    };
 }
 
 /// <summary>

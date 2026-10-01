@@ -182,6 +182,48 @@ public class ImportFile
     public string Base64 { get; set; } = "";
 }
 
+public static class MatchLimits
+{
+    /// <summary>The most exercise names one import asks the AI to match.</summary>
+    public const int MaxNames = 300;
+}
+
+/// <summary>
+/// Exercise names from another app's export, for the AI to match to the app's exercises: the ones the app's own
+/// matcher wasn't sure about.
+/// </summary>
+public class MatchExercisesRequest
+{
+    [Required, MinLength(1), MaxItems(MatchLimits.MaxNames)]
+    public List<ImportedName> Names { get; set; } = [];
+    [Required, MinLength(1), MaxItems(PlanLimits.MaxCandidates)]
+    public List<PlanCandidate> Exercises { get; set; } = [];
+}
+
+/// <summary>An exercise as another app writes it: "Incline Bench Press" with "Dumbbells".</summary>
+public class ImportedName
+{
+    /// <summary>The app's key for it, sent back with its match.</summary>
+    [Required, MaxLength(SyncLimits.NameLength * 2 + 3)]
+    public string Key { get; set; } = "";
+    [Required, MaxLength(SyncLimits.NameLength)]
+    public string Name { get; set; } = "";
+    [MaxLength(SyncLimits.NameLength)]
+    public string Equipment { get; set; } = "";
+}
+
+public class MatchExercisesResponse
+{
+    public List<ExerciseNameMatch> Matches { get; set; } = [];
+}
+
+/// <summary>The app's exercise for one of the names; an empty id when none is the same exercise.</summary>
+public class ExerciseNameMatch
+{
+    public string Key { get; set; } = "";
+    public string ExerciseId { get; set; } = "";
+}
+
 public static class PlanReviewLimits
 {
     public const int MaxExercises = 100;

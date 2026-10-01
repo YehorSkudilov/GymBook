@@ -25,8 +25,11 @@ public class PlanProgress
     /// <summary>The furthest week that can be opened: one past the last week with a finished workout.</summary>
     public int LastUnlockedWeek { get; }
 
-    /// <summary>The week to show by default: the first unlocked week with anything left to do.</summary>
-    public int CurrentWeek => Enumerable.Range(1, LastUnlockedWeek).FirstOrDefault(w => !IsComplete(w), LastUnlockedWeek);
+    /// <summary>
+    /// The week to show by default: the first unlocked week with a workout left, which is where Up next comes from.
+    /// Rest days don't count, so a week whose workouts are all done isn't held open by rest days never marked finished.
+    /// </summary>
+    public int CurrentWeek => Enumerable.Range(1, LastUnlockedWeek).FirstOrDefault(w => NextWorkout(w) != null, LastUnlockedWeek);
 
     /// <summary>The latest session of <paramref name="workout"/> that counts toward <paramref name="week"/>.</summary>
     public WorkoutSession? SessionFor(PlanWorkout workout, int week) =>

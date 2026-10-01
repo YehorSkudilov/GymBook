@@ -105,20 +105,23 @@ public partial class ImportCsvViewModel : ObservableObject
             Error = "Couldn't read that file.";
             return;
         }
-        Load(picked.FileName, text);
+        await LoadAsync(picked.FileName, text);
     }
 
-    void Load(string name, string text)
+    async Task LoadAsync(string name, string text)
     {
         Clear();
+        IEnumerable<ImportedExerciseRef> used;
         try
         {
             if (Kind == CsvImportKind.Plans)
             {
                 _plans = CsvExportFormat.ParsePlans(text);
-                var days = _plans.Sum(p => p.Days.Count);
-                Summary = $"{Count(_plans.Count, "plan")}: {string.Join(", ", _plans.Select(p => p.Name))} · {Count(days, "day")}";
-                _mappings = _importer.Mappings(_plans.SelectMany(p => p.Days).SelectMany(d => d.Exercises).Select(e => e.Exercise));
+                var workouts = _plans.Sum(p => p.Days.Count(d => d.Exercises.Count > 0));
+                var rest = _plans.Sum(p => p.Days.Count(d => d.Exercises.Count == 0));
+                Summary = $"{Count(_plans.Count, "plan")}: {string.Join(", ", _plans.Select(p => p.Name))} · {Count(workouts, "workout")}" +
+                    (rest > 0 ? $", {Count(rest, "rest day")}" : "");
+                used = _plans.SelectMany(p => p.Days).SelectMany(d => d.Exercises).Select(e => e.Exercise).ToList();
             }
             else
             {
@@ -127,7 +130,7 @@ public partial class ImportCsvViewModel : ObservableObject
                 var last = _workouts.Max(w => w.StartedAt);
                 var sets = _workouts.Sum(w => w.Exercises.Sum(e => e.Sets.Count));
                 Summary = $"{Count(_workouts.Count, "workout")} from {first:d MMM yyyy} to {last:d MMM yyyy} · {Count(sets, "set")}";
-                _mappings = _importer.Mappings(_workouts.SelectMany(w => w.Exercises).Select(e => e.Exercise));
+                used = _workouts.SelectMany(w => w.Exercises).Select(e => e.Exercise).ToList();
             }
         }
         catch (FormatException e)
@@ -136,11 +139,29 @@ public partial class ImportCsvViewModel : ObservableObject
             return;
         }
         FileName = name;
+        // The AI matches the names the word matcher isn't sure of; it takes a few seconds.
+        IsMatching = true;
+        try
+        {
+            (_mappings, _aiChecked) = await _importer.MappingsAsync(used);
+        }
+        finally
+        {
+            IsMatching = false;
+        }
+        // Another file was picked, or this one removed, while matching.
+        if (FileName != name)
+            return;
         foreach (var mapping in _mappings)
             Mappings.Add(new MappingItem(mapping, Change));
         UpdateMappingSummary();
         IsReady = true;
     }
+
+    /// <summary>The AI is matching the file's exercises.</summary>
+    [ObservableProperty] bool isMatching;
+
+    bool _aiChecked;
 
     void Clear()
     {
@@ -165,9 +186,12 @@ public partial class ImportCsvViewModel : ObservableObject
         var check = Mappings.Count(m => m.Status == "Check");
         var chosen = Mappings.Count(m => m.IsChosen);
         var created = _mappings.Count - matched;
+        var byAi = _mappings.Count(m => m.Match.Source == MatchSource.Ai && m.Target == m.Match.Exercise);
         MappingSummary = $"{Count(_mappings.Count, "exercise")}: {matched} matched to the app's" +
+            (byAi > 0 ? $" ({byAi} by AI)" : "") +
             (check > 0 ? $" ({check} worth a check)" : "") + (created > 0 ? $", {created} added as new" : "") +
-            (chosen > 0 ? $", {chosen} chosen by you" : "") + ". Tap one to change it.";
+            (chosen > 0 ? $", {chosen} chosen by you" : "") + ". Tap one to change it." +
+            (_aiChecked ? "" : " Sign in and go online for AI matching of the rest.");
     }
 
     /// <summary>
@@ -269,11 +293,12 @@ public partial class MappingItem : ObservableObject
         : Mapping.Target == null ? "New exercise"
         : Mapping.Target != Mapping.Match.Exercise ? "Picked"
         : Mapping.Match.Confidence == MatchConfidence.Check ? "Check"
+        : Mapping.Match.Source == MatchSource.Ai ? "AI match"
         : "Matched";
 
     public Color StatusColor => Status switch
     {
-        "Matched" => Color.FromArgb("#2ED47A"),
+        "Matched" or "AI match" => Color.FromArgb("#2ED47A"),
         "Check" => Color.FromArgb("#FFB020"),
         "Picked" or "Kept as new" => Color.FromArgb("#3F7DFF"),
         _ => Color.FromArgb("#9AA3B5"),
