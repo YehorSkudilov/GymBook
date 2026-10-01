@@ -99,6 +99,49 @@ public static partial class ExerciseLibrary
             ],
             Video = new("QcQCihNGteE"),
         },
+        new("jump_squat", "Jump Squat", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Glutes, Calves, Hamstrings],
+            Category = Plyometric,
+            Summary = "A bodyweight squat to about parallel driven straight into a maximal jump, often done for continuous reps.",
+            Steps =
+            [
+                "Stand with feet about shoulder-width apart, toes turned out slightly, hands behind your head or in front of your chest.",
+                "Squat down with your chest up until your thighs are about parallel.",
+                "Drive through your whole foot and jump straight up as high as you can.",
+                "Land softly on the balls of your feet and sink straight into the next squat.",
+            ],
+            Tips =
+            [
+                "Absorb each landing through your hips and knees; land quietly.",
+                "Keep your knees tracking over your toes on the way down and up.",
+                "Don't let your knees cave in or land stiff-legged.",
+                "Stop the set when the jumps get noticeably lower.",
+            ],
+            Video = new("BRfxI2Es2lE"),
+        },
+        new("trap_bar_jump", "Trap Bar Jump", Quads, Barbell, Compound)
+        {
+            Secondary = [Glutes, Hamstrings, Calves],
+            Category = Plyometric,
+            Level = Intermediate,
+            Summary = "A loaded vertical jump holding a light trap bar, a simple way to train lower-body power without Olympic-lift technique.",
+            Steps =
+            [
+                "Stand inside a lightly loaded trap bar and grip the handles, arms straight.",
+                "Stand tall, then dip quickly into a quarter squat with your back flat.",
+                "Jump straight up as high as you can, keeping your arms long.",
+                "Land softly on the balls of your feet, sinking into your hips and knees.",
+                "Reset to a still stand before the next rep.",
+            ],
+            Tips =
+            [
+                "Keep the load light, about 20–30% of your trap bar deadlift, so the jump stays fast.",
+                "Use the high handles if you have them for a better back position.",
+                "Don't round your back in the dip or let the bar swing on landing.",
+            ],
+            Video = new("qQwvRCIp-fw"),
+        },
         new("broad_jump", "Broad Jump", Glutes, Bodyweight, Compound)
         {
             Secondary = [Quads, Hamstrings, Calves],
@@ -590,6 +633,28 @@ public static partial class ExerciseLibrary
             ],
             Video = new("8KKQTdnxWso"),
         },
+        new("sots_press", "Sots Press", Shoulders, Barbell, Compound)
+        {
+            Secondary = [Triceps, Traps, Quads],
+            Category = Olympic,
+            Level = Advanced,
+            Summary = "A behind-the-neck press done while sitting in the bottom of a squat, building overhead strength and positions for the snatch.",
+            Steps =
+            [
+                "Take a snatch-width or slightly narrower grip with a light bar on your upper back.",
+                "Sit down into a full, upright squat and hold the bottom position.",
+                "Press the bar straight up from behind your neck to locked arms, staying in the squat.",
+                "Lower it under control to your upper back and repeat, then stand up after the set.",
+            ],
+            Tips =
+            [
+                "Keep your chest up and your weight mid-foot throughout.",
+                "Press up and slightly back so the bar finishes over your mid-foot.",
+                "Start with an empty bar or a dowel; mobility, not strength, is usually the limit.",
+                "Don't let your torso fold forward or your heels lift to reach the press.",
+            ],
+            Video = new("eJ9MLnNV6FY"),
+        },
         new("db_snatch", "Dumbbell Snatch", Glutes, Dumbbell, Compound)
         {
             Secondary = [Hamstrings, Shoulders, Traps],
@@ -703,6 +768,29 @@ public static partial class ExerciseLibrary
             ],
             Video = new("efHjodEVf9w"),
         },
+        new("tall_clean", "Tall Clean", Glutes, Barbell, Compound)
+        {
+            Secondary = [Traps, Quads, Shoulders],
+            Category = Olympic,
+            Level = Advanced,
+            Summary = "A clean from a tall standing position with no hip drive, isolating the pull under the bar into a full front squat.",
+            Steps =
+            [
+                "Stand tall with the bar at arm's length in a clean grip, feet in your pulling stance.",
+                "Brace and, in one motion, lift your feet and pull your elbows up and out.",
+                "Pull yourself down under the bar, moving your feet into your squat stance.",
+                "Whip your elbows around to catch the bar on your shoulders as you ride into the bottom of the squat.",
+                "Stand up with the bar in the front rack.",
+            ],
+            Tips =
+            [
+                "Go as soon as you're set; hesitating makes it feel impossible.",
+                "Pull yourself down rather than the bar up.",
+                "Keep it light, rarely more than 30–40% of your clean.",
+                "Don't dip and drive with your legs; that turns it into a hang clean.",
+            ],
+            Video = new("X9ckJS9LSug"),
+        },
         new("clean_pull", "Clean Pull", Glutes, Barbell, Compound)
         {
             Secondary = [Hamstrings, Traps, Quads],
@@ -790,6 +878,29 @@ public static partial class ExerciseLibrary
             ],
             Video = new("Om7vLD6x8W0"),
         },
+        new("power_jerk", "Power Jerk", Shoulders, Barbell, Compound)
+        {
+            Secondary = [Triceps, Quads, Glutes],
+            Category = Olympic,
+            Level = Advanced,
+            Summary = "A jerk where the feet lift and land in your squat stance as you drop into a partial squat, catching the bar locked out overhead.",
+            Steps =
+            [
+                "Stand with the bar in the front rack, heels about hip-width apart.",
+                "Dip straight down at the knees with your torso vertical.",
+                "Drive up hard with your legs and push the bar up and slightly back.",
+                "Lift your feet and move them into your squat stance as you punch under the bar into a partial squat.",
+                "Stabilise the bar with locked arms, stand up, then lower it to your shoulders.",
+            ],
+            Tips =
+            [
+                "Finish the leg drive fully before moving your feet.",
+                "Lock your elbows as your feet land, not after.",
+                "Catch above parallel; deeper than that is a squat jerk.",
+                "Don't let the dip drift forward onto your toes.",
+            ],
+            Video = new("Ir_34nxrk1Q"),
+        },
         new("split_jerk", "Split Jerk", Shoulders, Barbell, Compound)
         {
             Secondary = [Triceps, Quads, Glutes],
@@ -833,6 +944,157 @@ public static partial class ExerciseLibrary
                 "Don't rush the jerk from a poor rack position.",
             ],
             Video = new("bNCXgyosXlc"),
+        },
+
+        // Thrusters and full-body complexes
+        new("thruster", "Barbell Thruster", Quads, Barbell, Compound)
+        {
+            Secondary = [Shoulders, Glutes, Triceps],
+            Level = Intermediate,
+            Summary = "A front squat driven straight into an overhead press in one continuous movement, a staple of conditioning workouts.",
+            Steps =
+            [
+                "Stand with the bar in the front rack, hands just outside your shoulders and elbows up.",
+                "Front squat down to below parallel with your chest up.",
+                "Drive up out of the squat hard and use that momentum to press the bar overhead.",
+                "Finish with arms locked and the bar over your mid-foot.",
+                "Bring the bar back to your shoulders as you descend into the next squat.",
+            ],
+            Tips =
+            [
+                "Let your hips finish extending before you press; the legs drive the bar.",
+                "Keep your elbows high in the squat so your chest stays up.",
+                "Move your head back to let the bar travel straight up.",
+                "Don't press early from the bottom or let your heels lift.",
+            ],
+            Video = new("L219ltL15zk"),
+        },
+        new("db_thruster", "Dumbbell Thruster", Quads, Dumbbell, Compound)
+        {
+            Secondary = [Shoulders, Glutes, Triceps],
+            Summary = "A squat to overhead press with a dumbbell at each shoulder, the dumbbell version of the thruster.",
+            Steps =
+            [
+                "Stand with a dumbbell at each shoulder, palms facing in and elbows forward.",
+                "Squat down to below parallel with your chest up.",
+                "Drive up out of the squat and use the momentum to press both dumbbells overhead.",
+                "Lock out your arms with the dumbbells over your shoulders.",
+                "Lower them back to your shoulders as you descend into the next squat.",
+            ],
+            Tips =
+            [
+                "Rest the dumbbells on your shoulders in the squat so they don't pull you forward.",
+                "Press as your hips finish extending, in one fluid movement.",
+                "Don't let the dumbbells drift forward overhead or your lower back arch.",
+            ],
+            Video = new("u3wKkZjE8QM"),
+        },
+        new("kb_thruster", "Kettlebell Thruster", Quads, Kettlebell, Compound)
+        {
+            Secondary = [Shoulders, Glutes, Triceps],
+            Summary = "A squat to overhead press with a kettlebell held by the horns at your chest, done as one continuous movement.",
+            Steps =
+            [
+                "Stand with feet a little wider than shoulder-width, holding a kettlebell by the horns at your chest.",
+                "Squat down between your knees with your chest up and elbows tucked.",
+                "Drive up out of the squat and press the kettlebell overhead as you stand.",
+                "Lock out your arms with the bell over your head, then bring it back to your chest as you squat again.",
+            ],
+            Tips =
+            [
+                "Keep the bell close to your body in the squat.",
+                "Use your legs to start the press; don't stop and press from a standstill.",
+                "It can also be done with one or two kettlebells in the front rack.",
+                "Don't round your back or let your heels lift in the bottom.",
+            ],
+            Video = new("0-6iaZ-4-Cg"),
+        },
+        new("db_clean_and_press", "Dumbbell Clean and Press", Shoulders, Dumbbell, Compound)
+        {
+            Secondary = [Glutes, Hamstrings, Traps],
+            Category = Olympic,
+            Level = Intermediate,
+            Summary = "Clean a pair of dumbbells from the floor to your shoulders with a hip drive, then press them overhead.",
+            Steps =
+            [
+                "Stand with a dumbbell outside each foot, then hinge and squat to grip them with a flat back.",
+                "Stand up and, as the dumbbells pass your knees, extend your hips explosively.",
+                "Shrug and pull the dumbbells up, dropping into a quarter squat to catch them at your shoulders.",
+                "Stand tall, then press both dumbbells overhead to locked arms.",
+                "Lower them to your shoulders, then to your thighs and the floor.",
+            ],
+            Tips =
+            [
+                "The hips launch the dumbbells to your shoulders; don't curl them up.",
+                "Brace your trunk and squeeze your glutes before the press.",
+                "Don't round your back to pick the dumbbells up.",
+            ],
+            Video = new("4MKfeQDkkNY", 10.8),
+        },
+        new("devil_press", "Devil Press", Shoulders, Dumbbell, Compound)
+        {
+            Secondary = [Glutes, Hamstrings, Chest],
+            Level = Intermediate,
+            Summary = "A dumbbell burpee flowed straight into a double-dumbbell swing snatch to overhead, a punishing full-body conditioning lift.",
+            Steps =
+            [
+                "Place two dumbbells shoulder-width apart and grip them in a push-up position.",
+                "Lower your chest to the floor, push back up and jump your feet outside the dumbbells.",
+                "Hinge with a flat back and swing both dumbbells back between your legs.",
+                "Drive your hips forward and swing the dumbbells up, punching them to locked arms overhead.",
+                "Lower them back between your feet and jump back into the push-up position.",
+            ],
+            Tips =
+            [
+                "The hips power the dumbbells up; the arms only guide them.",
+                "Keep your back flat as you swing the dumbbells back.",
+                "Start light; fatigue breaks your hinge quickly.",
+                "Don't press the dumbbells out slowly from your shoulders.",
+            ],
+            Video = new("ghacPZ9fuFU"),
+        },
+        new("man_maker", "Man Maker", Shoulders, Dumbbell, Compound)
+        {
+            Secondary = [Back, Quads, Chest],
+            Level = Intermediate,
+            Summary = "A dumbbell complex that chains a push-up, renegade rows, a clean and a thruster into one rep.",
+            Steps =
+            [
+                "Hold two dumbbells on the floor and step or jump back into a push-up position, gripping them.",
+                "Do a push-up, then row one dumbbell and then the other while bracing in the plank.",
+                "Jump your feet forward to the dumbbells and clean them up to your shoulders.",
+                "Squat down and drive up, pressing the dumbbells overhead.",
+                "Lower them to your shoulders and then the floor to start the next rep.",
+            ],
+            Tips =
+            [
+                "Widen your feet in the plank to stop your hips twisting on the rows.",
+                "Use hex dumbbells so they don't roll under your hands.",
+                "Pick a weight you can press overhead for the whole set.",
+                "Don't let your hips sag in the push-up and rows.",
+            ],
+            Video = new("2-6EPLtSLwU"),
+        },
+        new("sumo_deadlift_high_pull", "Sumo Deadlift High Pull", Traps, Barbell, Compound)
+        {
+            Secondary = [Glutes, Quads, Shoulders],
+            Level = Intermediate,
+            Summary = "A wide-stance deadlift with a narrow grip that finishes with a fast shrug and high pull to chin height.",
+            Steps =
+            [
+                "Stand with a wide stance and toes out, gripping the bar with hands inside your legs.",
+                "Lift the bar with your legs, keeping your back flat and the bar close.",
+                "As it passes your knees, extend your hips and knees explosively.",
+                "Shrug and pull your elbows high and out, bringing the bar up to just under your chin.",
+                "Lower it under control to your hips and then the floor.",
+            ],
+            Tips =
+            [
+                "Hips first, then shoulders, then arms: in that order.",
+                "Keep your elbows above your hands at the top.",
+                "Don't pull early with your arms or lean back to get the bar up.",
+            ],
+            Video = new("gh55vVlwlQg"),
         },
 
         // Kettlebell
@@ -1215,6 +1477,27 @@ public static partial class ExerciseLibrary
                 "Don't curl the bag up with your arms.",
             ],
             Video = new("bKupJRL22HM"),
+        },
+        new("sandbag_over_shoulder", "Sandbag Over Shoulder", Glutes, Other, Compound)
+        {
+            Secondary = [Hamstrings, LowerBack, Back],
+            Level = Intermediate,
+            Summary = "Lift a sandbag from the floor into your lap, then drive it up and over one shoulder with an explosive hip extension.",
+            Steps =
+            [
+                "Stand over the sandbag with feet wider than shoulder-width and squat down to wrap your arms around it.",
+                "Lift it off the floor and roll it into your lap, staying low.",
+                "Brace and re-grip with your arms over or around the bag.",
+                "Drive your hips forward explosively as if jumping, pulling the bag up and over one shoulder.",
+                "Let it drop behind you, turn and repeat, alternating shoulders.",
+            ],
+            Tips =
+            [
+                "Fully extend your hips; that is what throws the bag over.",
+                "Turn your head away from the shoulder the bag is going over.",
+                "Don't curl the bag up with your arms or reach under it with your forearms.",
+            ],
+            Video = new("jDlyC1SH-Ao"),
         },
         new("tire_flip", "Tire Flip", Glutes, Other, Compound)
         {

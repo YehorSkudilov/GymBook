@@ -117,6 +117,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("nknf16JJTZo"),
         },
+        new("pin_squat", "Pin Squat", Quads, Barbell, Compound)
+        {
+            Secondary = [Glutes, LowerBack],
+            Level = Advanced,
+            Summary = "Also called the Anderson squat: a back squat started from a dead stop with the bar resting on the rack's safety pins at bottom depth, building strength out of the hole without any bounce.",
+            Steps =
+            [
+                "Set the safety pins at your bottom squat depth and rest the bar on them.",
+                "Squat down under the bar and set it on your upper back in your normal squat position.",
+                "Brace hard, grip the bar tightly and press your feet into the floor.",
+                "Drive up to standing, then lower the bar back onto the pins and come to a full stop before the next rep.",
+            ],
+            Tips =
+            [
+                "Build full-body tension before you push; don't jerk the bar off the pins.",
+                "Expect to use noticeably less weight than in your normal squat.",
+                "Don't let your hips shoot up first out of the bottom.",
+            ],
+            Video = new("9UHbrvW_WWM", 55.847, 112.403),
+        },
         new("safety_bar_squat", "Safety Bar Squat", Quads, Barbell, Compound)
         {
             Secondary = [Glutes, LowerBack, Traps],
@@ -137,6 +157,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("b2jmZyptN64", 72.799004, 137.03999),
         },
+        new("hatfield_squat", "Hatfield Squat", Quads, Barbell, Compound)
+        {
+            Secondary = [Glutes, LowerBack],
+            Level = Advanced,
+            Summary = "A safety bar squat done while holding the rack's safety pins or a second bar in front of you, so your arms can steady you and help out of the bottom while your legs handle heavier loads.",
+            Steps =
+            [
+                "Set the rack's safety pins or a second bar at about stomach height in front of where you will squat.",
+                "Unrack the safety bar onto your upper back, step back and set your feet shoulder-width.",
+                "Hold the pins or bar in front of you lightly with both hands.",
+                "Squat down with an upright torso to at least parallel, then drive up with your legs.",
+            ],
+            Tips =
+            [
+                "Let your legs do the work; push with your arms only to get past a sticking point.",
+                "The support lets you stay very upright, so the quads work especially hard.",
+                "Don't haul yourself up with your arms on every rep.",
+            ],
+            Video = new("qwxnNDzaGBE"),
+        },
         new("zercher_squat", "Zercher Squat", Quads, Barbell, Compound)
         {
             Secondary = [Glutes, Abs, LowerBack],
@@ -156,6 +196,25 @@ public static partial class ExerciseLibrary
                 "Don't let your upper back round to cradle the bar.",
             ],
             Video = new("YducYiBtGag"),
+        },
+        new("landmine_squat", "Landmine Squat", Quads, Barbell, Compound)
+        {
+            Secondary = [Glutes],
+            Summary = "A squat holding the end of a landmine-anchored barbell at your chest, whose arc lets you lean into the bar and squat deep with an upright torso.",
+            Steps =
+            [
+                "Wedge one end of a barbell into a landmine or corner and load the other end.",
+                "Lift the free end and hold it at your upper chest with both hands cupped around the sleeve.",
+                "Step back so you lean slightly into the bar and set your feet shoulder-width.",
+                "Squat down between your knees until your thighs are at least parallel, then drive back up.",
+            ],
+            Tips =
+            [
+                "Keep the bar tight to your chest; don't let it drift away from you.",
+                "Find the foot position where you can sit straight down without your heels lifting.",
+                "Don't stand so close that the bar pushes you backward.",
+            ],
+            Video = new("_mfORB47xMs"),
         },
         new("smith_squat", "Smith Machine Squat", Quads, Machine, Compound)
         {
@@ -412,6 +471,65 @@ public static partial class ExerciseLibrary
             ],
             Video = new("IVSrQD9BqSQ"),
         },
+        new("ffe_split_squat", "Front-Foot-Elevated Split Squat", Quads, Dumbbell, Compound)
+        {
+            Secondary = [Glutes],
+            Level = Intermediate,
+            Summary = "A split squat with the front foot raised on a low step or plate, which lets you sink deeper and works the front leg's quads and glutes through a longer range.",
+            Steps =
+            [
+                "Hold a dumbbell in each hand and place your front foot on a low step or weight plate.",
+                "Step the other foot back into a long split stance, back heel raised.",
+                "Lower straight down until your back knee is just above the floor, letting your front knee travel forward.",
+                "Drive through your front foot to stand back up. Finish your reps, then switch legs.",
+            ],
+            Tips =
+            [
+                "A 5–10 cm elevation is plenty.",
+                "Keep most of your weight on the front foot.",
+                "Don't let your front heel lift at the bottom.",
+            ],
+            Video = new("wBahkeIwDyA"),
+        },
+        new("smith_split_squat", "Smith Machine Split Squat", Quads, Machine, Compound)
+        {
+            Secondary = [Glutes],
+            Summary = "A split squat with a Smith machine bar on your upper back, whose fixed path lets you load each leg heavily without having to balance the weight.",
+            Steps =
+            [
+                "Set the bar at shoulder height, step under it and rest it on your upper back.",
+                "Unrack it and set your feet in a long split stance, one forward and one back.",
+                "Lower straight down until your back knee is just above the floor.",
+                "Drive through your front foot to stand back up. Finish your reps, then switch legs.",
+            ],
+            Tips =
+            [
+                "Set your feet so your torso can stay upright as the bar moves straight up and down.",
+                "A longer stance brings in more glute; a shorter one works the quads more.",
+                "Don't push off the back foot.",
+            ],
+            Video = new("j-TJxRRPu64"),
+        },
+        new("atg_split_squat", "ATG Split Squat", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Glutes],
+            Level = Intermediate,
+            Summary = "The Knees Over Toes Guy's full-range split squat: the front knee travels far past the toes until the hamstring covers the calf, while the straight back leg gets a deep hip flexor stretch.",
+            Steps =
+            [
+                "Stand in a long split stance with your front foot on the floor or a low step and your back leg nearly straight.",
+                "Shift forward, driving your front knee well over your toes as you lower.",
+                "Sink until your front hamstring rests on your calf, keeping your front heel down and the back knee off the floor.",
+                "Drive through your whole front foot to come back up. Finish your reps, then switch legs.",
+            ],
+            Tips =
+            [
+                "Hold a rail or a pair of dumbbells for balance, and raise the front foot while you build range.",
+                "Squeeze your back glute at the bottom to deepen the hip flexor stretch.",
+                "Don't force depth; progress gradually if your knee complains.",
+            ],
+            Video = new("LHX34TpJxbQ"),
+        },
         new("pistol_squat", "Pistol Squat", Quads, Bodyweight, Compound)
         {
             Secondary = [Glutes, Abs],
@@ -472,6 +590,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("P-h6BuU3q78"),
         },
+        new("skater_squat", "Skater Squat", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Glutes],
+            Level = Intermediate,
+            Summary = "A single-leg squat with the free leg bent behind you, lowering until the back knee touches down; a little more glute and a little less ankle mobility than the pistol squat.",
+            Steps =
+            [
+                "Stand on one leg with the other knee bent and that foot lifted behind you.",
+                "Reach your arms forward for balance and let your torso lean forward slightly.",
+                "Bend the standing knee and hip to lower until your back knee lightly touches the floor or a pad.",
+                "Drive through the standing foot to stand back up without touching down with the free foot.",
+            ],
+            Tips =
+            [
+                "Put a pad or yoga block under the back knee to shorten the range while you learn it.",
+                "Hold light dumbbells out in front as a counterbalance.",
+                "Don't let your standing knee cave inward.",
+            ],
+            Video = new("YO-247pOeIc"),
+        },
         new("sissy_squat", "Sissy Squat", Quads, Bodyweight, Isolation)
         {
             Level = Advanced,
@@ -531,6 +669,25 @@ public static partial class ExerciseLibrary
         },
 
         // Lunges
+        new("bw_lunge", "Bodyweight Lunge", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Glutes],
+            Summary = "The basic forward lunge with no weight: step forward, drop the back knee toward the floor and push back to standing, one leg at a time.",
+            Steps =
+            [
+                "Stand tall with your feet hip-width apart and your hands on your hips.",
+                "Take a long step forward and lower until your back knee is just above the floor.",
+                "Keep your torso upright and your front knee over your foot.",
+                "Push off the front foot to return to standing, then alternate legs.",
+            ],
+            Tips =
+            [
+                "Land heel first and keep most of your weight on the front leg.",
+                "A longer step works the glutes more; a shorter one works the quads more.",
+                "Don't let your front knee cave inward or your back knee slam into the floor.",
+            ],
+            Video = new("QE_hU8XX48I", 13.92),
+        },
         new("db_lunge", "Dumbbell Lunge", Quads, Dumbbell, Compound)
         {
             Secondary = [Glutes],
@@ -782,6 +939,44 @@ public static partial class ExerciseLibrary
                 "Don't let your hips drop or rotate.",
             ],
             Video = new("6g7LnS8Y7jI"),
+        },
+        new("poliquin_step_up", "Poliquin Step-Up", Quads, Bodyweight, Compound)
+        {
+            Level = Intermediate,
+            Summary = "A short-range, heel-elevated step-down from the side of a low step, popularised by Charles Poliquin, that targets the quads, especially the inner VMO, as the knee travels forward.",
+            Steps =
+            [
+                "Stand side-on on a low step with the working foot on a slant board or wedge, heel raised, and the other foot hanging off the side.",
+                "Keeping your torso upright, bend the working knee forward over your toes to lower the free heel toward the floor.",
+                "Lightly tap the free heel down without putting weight on it.",
+                "Straighten the working knee to rise back up. Finish your reps, then switch legs.",
+            ],
+            Tips =
+            [
+                "Move slowly, especially on the way down.",
+                "Hold light dumbbells once bodyweight is easy.",
+                "Don't let the knee drift inward or push off the floor with the free foot.",
+            ],
+            Video = new("VJWAb94U4SM", 0, 35.433),
+        },
+        new("peterson_step_up", "Peterson Step-Up", Quads, Bodyweight, Compound)
+        {
+            Level = Intermediate,
+            Summary = "A knee-strengthening step-up done on the ball of the foot on a low step, driving the knee forward over the toes to load the quads (especially the VMO) through a short range.",
+            Steps =
+            [
+                "Stand with one foot on a low step and the other foot just off its edge.",
+                "Rise onto the ball of the working foot so its heel is raised.",
+                "Keeping that heel up, bend the knee forward over the toes to lower the free foot toward the floor.",
+                "Straighten the knee to rise back up, lowering the working heel as you reach the top. Finish your reps, then switch legs.",
+            ],
+            Tips =
+            [
+                "Keep the range short and the tempo slow.",
+                "Keep the knee tracking over your second toe.",
+                "Don't hinge at the hips; the knee does the work.",
+            ],
+            Video = new("yuvRE6PsvJw"),
         },
         new("step_down", "Step-Down", Quads, Bodyweight, Compound)
         {

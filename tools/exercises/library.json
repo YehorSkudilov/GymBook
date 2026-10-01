@@ -58,6 +58,44 @@
  },
  {
   "file": "ExerciseLibrary.Arms.cs",
+  "id": "barbell_21s",
+  "name": "Barbell 21s",
+  "primary": "Biceps",
+  "equipment": "Barbell",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Forearms"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "GNO4OtYoCYk",
+   "541",
+   "612"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
+  "id": "cheat_curl",
+  "name": "Cheat Curl",
+  "primary": "Biceps",
+  "equipment": "Barbell",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Forearms"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "GNO4OtYoCYk",
+   "705",
+   "750"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
   "id": "preacher_curl",
   "name": "EZ-Bar Preacher Curl",
   "primary": "Biceps",
@@ -204,6 +242,23 @@
  },
  {
   "file": "ExerciseLibrary.Arms.cs",
+  "id": "waiter_curl",
+  "name": "Waiter Curl",
+  "primary": "Biceps",
+  "equipment": "Dumbbell",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "8dbPdH0pIBI",
+   "0",
+   "65.439"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
   "id": "db_preacher_curl",
   "name": "Dumbbell Preacher Curl",
   "primary": "Biceps",
@@ -253,6 +308,40 @@
   "hold": false,
   "video": [
    "hdXgJwbaIYg",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
+  "id": "cable_preacher_curl",
+  "name": "Cable Preacher Curl",
+  "primary": "Biceps",
+  "equipment": "Cable",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "Iwqi47sPS2M",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
+  "id": "lying_cable_curl",
+  "name": "Lying Cable Curl",
+  "primary": "Biceps",
+  "equipment": "Cable",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "ywfiZIv9_L4",
    null,
    null
   ]
@@ -628,6 +717,26 @@
  },
  {
   "file": "ExerciseLibrary.Arms.cs",
+  "id": "california_press",
+  "name": "California Press",
+  "primary": "Triceps",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Chest",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "46irCNOOB5M",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
   "id": "tate_press",
   "name": "Tate Press",
   "primary": "Triceps",
@@ -772,6 +881,26 @@
    "PPTj-MW2tcs",
    null,
    null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Arms.cs",
+  "id": "close_grip_push_up",
+  "name": "Close-Grip Push-Up",
+  "primary": "Triceps",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Chest",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "OpRMRhr0Ycc",
+   "779",
+   "796"
   ]
  },
  {
@@ -1295,6 +1424,27 @@
  },
  {
   "file": "ExerciseLibrary.Back.cs",
+  "id": "one_arm_pull_up",
+  "name": "One-Arm Pull-Up",
+  "primary": "Back",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Biceps",
+   "Forearms",
+   "Abs"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "qe51lw8OEto",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
   "id": "scap_pull_up",
   "name": "Scapular Pull-Up",
   "primary": "Back",
@@ -1513,6 +1663,47 @@
   "video": [
    "2SOWwPTr4es",
    null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
+  "id": "skin_the_cat",
+  "name": "Skin the Cat",
+  "primary": "Back",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Abs"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "ABSpTs17ObA",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
+  "id": "rope_climb",
+  "name": "Rope Climb",
+  "primary": "Back",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "Biceps",
+   "Forearms",
+   "Abs"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "nI4MijQJ_No",
+   "27.279",
    null
   ]
  },
@@ -1907,6 +2098,27 @@
  },
  {
   "file": "ExerciseLibrary.Back.cs",
+  "id": "helms_row",
+  "name": "Helms Row",
+  "primary": "Back",
+  "equipment": "Dumbbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Traps",
+   "Biceps",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "_6pZhoLgO5o",
+   "33.32",
+   "112.92"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
   "id": "kettlebell_row",
   "name": "Kettlebell Row",
   "primary": "Back",
@@ -1944,6 +2156,27 @@
    "ZuhSSlKBAcI",
    null,
    null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
+  "id": "renegade_row",
+  "name": "Renegade Row",
+  "primary": "Back",
+  "equipment": "Dumbbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Abs",
+   "Shoulders",
+   "Biceps"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "wTqlJ0aoJlM",
+   "12.379",
+   "50.417"
   ]
  },
  {
@@ -2043,6 +2276,48 @@
   "hold": false,
   "video": [
    "zit_EFtojoE",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
+  "id": "chest_supported_t_bar_row",
+  "name": "Chest-Supported T-Bar Row",
+  "primary": "Back",
+  "equipment": "Machine",
+  "mechanic": "Compound",
+  "secondary": [
+   "Traps",
+   "Biceps",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "CRpez9nWVH0",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
+  "id": "smith_machine_row",
+  "name": "Smith Machine Row",
+  "primary": "Back",
+  "equipment": "Machine",
+  "mechanic": "Compound",
+  "secondary": [
+   "Biceps",
+   "Traps",
+   "LowerBack"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "3QcJggd_L24",
    null,
    null
   ]
@@ -2256,6 +2531,25 @@
    "J4wEVDwZsoE",
    null,
    null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
+  "id": "kelso_shrug",
+  "name": "Kelso Shrug",
+  "primary": "Traps",
+  "equipment": "Barbell",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Back"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "gTir3d0t2D8",
+   "171.68",
+   "243.92"
   ]
  },
  {
@@ -2572,6 +2866,27 @@
  },
  {
   "file": "ExerciseLibrary.Cardio.cs",
+  "id": "tempo_run",
+  "name": "Tempo Run",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Hamstrings",
+   "Glutes",
+   "Calves"
+  ],
+  "category": "Cardio",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "k5vqiyry2z8",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Cardio.cs",
   "id": "sprints",
   "name": "Sprints",
   "primary": "Quads",
@@ -2589,6 +2904,27 @@
    "6jxlev8ZlyU",
    null,
    null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Cardio.cs",
+  "id": "interval_run",
+  "name": "Interval Run",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Hamstrings",
+   "Glutes",
+   "Calves"
+  ],
+  "category": "Cardio",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "KWB62FfmpBI",
+   "165",
+   "264"
   ]
  },
  {
@@ -2698,6 +3034,27 @@
  },
  {
   "file": "ExerciseLibrary.Cardio.cs",
+  "id": "hiking",
+  "name": "Hiking",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "Hamstrings",
+   "Calves"
+  ],
+  "category": "Cardio",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "XziSvo_6XV4",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Cardio.cs",
   "id": "freestyle_swim",
   "name": "Freestyle Swim",
   "primary": "Back",
@@ -2714,6 +3071,48 @@
   "video": [
    "NFHanLS9g5k",
    null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Cardio.cs",
+  "id": "breaststroke_swim",
+  "name": "Breaststroke Swim",
+  "primary": "Chest",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "Quads",
+   "Shoulders",
+   "Back"
+  ],
+  "category": "Cardio",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "EElzlIMjk_c",
+   "40.34",
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Cardio.cs",
+  "id": "backstroke_swim",
+  "name": "Backstroke Swim",
+  "primary": "Back",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Triceps",
+   "Abs"
+  ],
+  "category": "Cardio",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "MrFt6JHii8w",
+   "20",
    null
   ]
  },
@@ -3500,6 +3899,106 @@
  },
  {
   "file": "ExerciseLibrary.Chest.cs",
+  "id": "paused_bench_press",
+  "name": "Paused Bench Press",
+  "primary": "Chest",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "i-ylz1zdp5s",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Chest.cs",
+  "id": "larsen_press",
+  "name": "Larsen Press",
+  "primary": "Chest",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "Ilt0GuTwB_Y",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Chest.cs",
+  "id": "spoto_press",
+  "name": "Spoto Press",
+  "primary": "Chest",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "gModkRG2uu4",
+   "64.647",
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Chest.cs",
+  "id": "reverse_grip_bench_press",
+  "name": "Reverse-Grip Bench Press",
+  "primary": "Chest",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "G0uxeMB8_xg",
+   "63.72",
+   "112.6"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Chest.cs",
+  "id": "guillotine_press",
+  "name": "Guillotine Press",
+  "primary": "Chest",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Triceps"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "y90T12sTukg",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Chest.cs",
   "id": "incline_bench_press",
   "name": "Incline Bench Press",
   "primary": "Chest",
@@ -4079,6 +4578,68 @@
  },
  {
   "file": "ExerciseLibrary.Chest.cs",
+  "id": "hindu_push_up",
+  "name": "Hindu Push-Up",
+  "primary": "Chest",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Triceps"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "CdH5dT12axE",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Chest.cs",
+  "id": "spiderman_push_up",
+  "name": "Spiderman Push-Up",
+  "primary": "Chest",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Shoulders",
+   "Abs"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "O4ykWemt47k",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Chest.cs",
+  "id": "pseudo_planche_push_up",
+  "name": "Pseudo Planche Push-Up",
+  "primary": "Shoulders",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Chest",
+   "Triceps",
+   "Abs"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "TZ63httkob4",
+   "22.16",
+   "83.119"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Chest.cs",
   "id": "dips",
   "name": "Chest Dip",
   "primary": "Chest",
@@ -4440,6 +5001,25 @@
  },
  {
   "file": "ExerciseLibrary.Core.cs",
+  "id": "ghd_sit_up",
+  "name": "GHD Sit-Up",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Quads"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "oFwt7WfnPcc",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Core.cs",
   "id": "v_up",
   "name": "V-Up",
   "primary": "Abs",
@@ -4508,6 +5088,23 @@
  },
  {
   "file": "ExerciseLibrary.Core.cs",
+  "id": "scissor_kicks",
+  "name": "Scissor Kicks",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "aqMfWavH2X4",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Core.cs",
   "id": "hanging_knee_raise",
   "name": "Hanging Knee Raise",
   "primary": "Abs",
@@ -4521,6 +5118,25 @@
   "hold": false,
   "video": [
    "IHOFHNWn0_M",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Core.cs",
+  "id": "hanging_oblique_knee_raise",
+  "name": "Hanging Oblique Knee Raise",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Forearms"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "sqDdHFC1KYk",
    null,
    null
   ]
@@ -4640,6 +5256,26 @@
  },
  {
   "file": "ExerciseLibrary.Core.cs",
+  "id": "bear_plank",
+  "name": "Bear Plank",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Shoulders",
+   "Quads"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": true,
+  "video": [
+   "XqH46t5TD98",
+   "57",
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Core.cs",
   "id": "rkc_plank",
   "name": "RKC Plank",
   "primary": "Abs",
@@ -4714,6 +5350,27 @@
  },
  {
   "file": "ExerciseLibrary.Core.cs",
+  "id": "reverse_plank",
+  "name": "Reverse Plank",
+  "primary": "Glutes",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Hamstrings",
+   "LowerBack",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": true,
+  "video": [
+   "PgezBeNqke0",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Core.cs",
   "id": "plank_shoulder_tap",
   "name": "Plank Shoulder Tap",
   "primary": "Abs",
@@ -4728,6 +5385,46 @@
   "video": [
    "NV55raYCP0E",
    null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Core.cs",
+  "id": "plank_up_down",
+  "name": "Plank Up-Down",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "vpH42F2V2ts",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Core.cs",
+  "id": "plank_jacks",
+  "name": "Plank Jacks",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Glutes"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "8hjjYN7uKT8",
+   "37",
    null
   ]
  },
@@ -4826,6 +5523,25 @@
   "video": [
    "80-BtHgkOYo",
    null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Core.cs",
+  "id": "stability_ball_pike",
+  "name": "Stability Ball Pike",
+  "primary": "Abs",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "eFcjeQ9tuEQ",
+   "18.99",
    null
   ]
  },
@@ -5235,6 +5951,26 @@
   ]
  },
  {
+  "file": "ExerciseLibrary.Core.cs",
+  "id": "human_flag",
+  "name": "Human Flag",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Back",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": true,
+  "video": [
+   "y4Vwwz8vV2U",
+   null,
+   null
+  ]
+ },
+ {
   "file": "ExerciseLibrary.Legs.cs",
   "id": "back_squat",
   "name": "Back Squat",
@@ -5338,6 +6074,26 @@
  },
  {
   "file": "ExerciseLibrary.Legs.cs",
+  "id": "pin_squat",
+  "name": "Pin Squat",
+  "primary": "Quads",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "LowerBack"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "9UHbrvW_WWM",
+   "55.847",
+   "112.403"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
   "id": "safety_bar_squat",
   "name": "Safety Bar Squat",
   "primary": "Quads",
@@ -5359,6 +6115,26 @@
  },
  {
   "file": "ExerciseLibrary.Legs.cs",
+  "id": "hatfield_squat",
+  "name": "Hatfield Squat",
+  "primary": "Quads",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "LowerBack"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "qwxnNDzaGBE",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
   "id": "zercher_squat",
   "name": "Zercher Squat",
   "primary": "Quads",
@@ -5374,6 +6150,25 @@
   "hold": false,
   "video": [
    "YducYiBtGag",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
+  "id": "landmine_squat",
+  "name": "Landmine Squat",
+  "primary": "Quads",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "_mfORB47xMs",
    null,
    null
   ]
@@ -5627,6 +6422,63 @@
  },
  {
   "file": "ExerciseLibrary.Legs.cs",
+  "id": "ffe_split_squat",
+  "name": "Front-Foot-Elevated Split Squat",
+  "primary": "Quads",
+  "equipment": "Dumbbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "wBahkeIwDyA",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
+  "id": "smith_split_squat",
+  "name": "Smith Machine Split Squat",
+  "primary": "Quads",
+  "equipment": "Machine",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "j-TJxRRPu64",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
+  "id": "atg_split_squat",
+  "name": "ATG Split Squat",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "LHX34TpJxbQ",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
   "id": "pistol_squat",
   "name": "Pistol Squat",
   "primary": "Quads",
@@ -5685,6 +6537,25 @@
  },
  {
   "file": "ExerciseLibrary.Legs.cs",
+  "id": "skater_squat",
+  "name": "Skater Squat",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "YO-247pOeIc",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
   "id": "sissy_squat",
   "name": "Sissy Squat",
   "primary": "Quads",
@@ -5733,6 +6604,25 @@
   "video": [
    "eb7vLD6V-iU",
    null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
+  "id": "bw_lunge",
+  "name": "Bodyweight Lunge",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "QE_hU8XX48I",
+   "13.92",
    null
   ]
  },
@@ -5979,6 +6869,40 @@
   "hold": false,
   "video": [
    "6g7LnS8Y7jI",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
+  "id": "poliquin_step_up",
+  "name": "Poliquin Step-Up",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "VJWAb94U4SM",
+   "0",
+   "35.433"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Legs.cs",
+  "id": "peterson_step_up",
+  "name": "Peterson Step-Up",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "yuvRE6PsvJw",
    null,
    null
   ]
@@ -6386,6 +7310,26 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "mob_scapular_cars",
+  "name": "Scapular CARs",
+  "primary": "Traps",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Back",
+   "Chest"
+  ],
+  "category": "Mobility",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "wBOqJGxjl60",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "mob_hip_cars",
   "name": "Hip CARs",
   "primary": "Glutes",
@@ -6654,6 +7598,26 @@
   "hold": false,
   "video": [
    "a38ewEsSqGY",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "mob_shin_box_get_up",
+  "name": "Shin Box Get-Up",
+  "primary": "Glutes",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Quads",
+   "Abs"
+  ],
+  "category": "Mobility",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "lpygREjgBjI",
    null,
    null
   ]
@@ -6997,6 +7961,23 @@
   "hold": false,
   "video": [
    "lLswx0vSvtk",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "mob_foam_roll_adductors",
+  "name": "Foam Roll Adductors",
+  "primary": "Quads",
+  "equipment": "Other",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Mobility",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "Nqol0T6rKDg",
    null,
    null
   ]
@@ -7544,6 +8525,25 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "stretch_middle_split",
+  "name": "Middle Split",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Hamstrings"
+  ],
+  "category": "Stretch",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "LiIG5y_LGfc",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "stretch_wall_calf",
   "name": "Wall Calf Stretch",
   "primary": "Calves",
@@ -7772,6 +8772,26 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_reverse_warrior",
+  "name": "Reverse Warrior",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Abs",
+   "Glutes"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": true,
+  "video": [
+   "h_iHFVf-1J4",
+   "7.06",
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "yoga_warrior_3",
   "name": "Warrior III",
   "primary": "Glutes",
@@ -7809,6 +8829,46 @@
    "_1124fj0BeQ",
    null,
    null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_revolved_triangle",
+  "name": "Revolved Triangle",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Abs",
+   "Back"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "sX11hp65x14",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_pyramid",
+  "name": "Pyramid Pose",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Calves",
+   "LowerBack"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "LTe3CO7Vtxs",
+   "323.28",
+   "532.56"
   ]
  },
  {
@@ -7893,6 +8953,27 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_dancer",
+  "name": "Dancer Pose",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "Shoulders",
+   "LowerBack"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": true,
+  "video": [
+   "aAgvS7xDvN0",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "yoga_half_moon",
   "name": "Half Moon Pose",
   "primary": "Glutes",
@@ -7927,6 +9008,46 @@
   "hold": false,
   "video": [
    "jGr-yIl9rtg",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_wide_legged_forward_fold",
+  "name": "Wide-Legged Forward Fold",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Quads",
+   "LowerBack"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "F7you4Sw1o0",
+   "60.039",
+   "631.209"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_goddess",
+  "name": "Goddess Pose",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "Abs"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": true,
+  "video": [
+   "TwmHvDwSofI",
    null,
    null
   ]
@@ -7974,6 +9095,65 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_lizard",
+  "name": "Lizard Pose",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Quads",
+   "Hamstrings"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "-6MGjYmHdYQ",
+   "27.24",
+   "261.919"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_half_split",
+  "name": "Half Split",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Calves"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "_cC8SN44mjY",
+   "38",
+   "238"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_front_split",
+  "name": "Front Split",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Abs",
+   "Quads"
+  ],
+  "category": "Yoga",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "fnd4rvCASWw",
+   "180",
+   "307"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "yoga_pigeon",
   "name": "Pigeon Pose",
   "primary": "Glutes",
@@ -8010,6 +9190,25 @@
    "Rg8L0_ZDick",
    null,
    null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_reclined_bound_angle",
+  "name": "Reclined Bound Angle",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Glutes"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "0_B_Ld_ArzM",
+   "0",
+   "85.76"
   ]
  },
  {
@@ -8074,6 +9273,46 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_seated_spinal_twist",
+  "name": "Seated Spinal Twist",
+  "primary": "LowerBack",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Abs",
+   "Glutes"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "yYy6w8_hLTE",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_cow_face",
+  "name": "Cow Face Pose",
+  "primary": "Glutes",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Triceps"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "5VSNmqtW7uw",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "yoga_legs_up_the_wall",
   "name": "Legs Up the Wall",
   "primary": "Hamstrings",
@@ -8124,6 +9363,25 @@
   "hold": false,
   "video": [
    "zgvolE4NAH0",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_sphinx",
+  "name": "Sphinx Pose",
+  "primary": "LowerBack",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Abs"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "KWi1YgyxDaQ",
    null,
    null
   ]
@@ -8234,6 +9492,26 @@
  },
  {
   "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_fish",
+  "name": "Fish Pose",
+  "primary": "Chest",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Back",
+   "Neck"
+  ],
+  "category": "Yoga",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "vhFdcezAyL8",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
   "id": "yoga_wheel",
   "name": "Wheel Pose",
   "primary": "LowerBack",
@@ -8249,6 +9527,66 @@
   "hold": true,
   "video": [
    "4F4lTh09Z5E",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_plow",
+  "name": "Plow Pose",
+  "primary": "LowerBack",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Hamstrings",
+   "Neck"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "qpuY0jXimtQ",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_supported_shoulder_stand",
+  "name": "Supported Shoulder Stand",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "LowerBack",
+   "Shoulders"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": true,
+  "video": [
+   "cBFUHvQmxfc",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_supported_headstand",
+  "name": "Supported Headstand",
+  "primary": "Shoulders",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Abs",
+   "Back"
+  ],
+  "category": "Yoga",
+  "level": "Advanced",
+  "hold": true,
+  "video": [
+   "iRRoqdw-KIY",
    null,
    null
   ]
@@ -8394,6 +9732,27 @@
    "VT609I8OlCs",
    null,
    null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Mobility.cs",
+  "id": "yoga_sun_salutation_b",
+  "name": "Sun Salutation B",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Triceps",
+   "Hamstrings"
+  ],
+  "category": "Yoga",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "_ENYL8qxKx0",
+   "37",
+   "485"
   ]
  },
  {
@@ -9903,6 +11262,43 @@
  },
  {
   "file": "ExerciseLibrary.Pilates.cs",
+  "id": "pilates_crab",
+  "name": "Pilates Crab",
+  "primary": "Abs",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [],
+  "category": "Pilates",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "1P1KobzASTk",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Pilates.cs",
+  "id": "pilates_rocking",
+  "name": "Pilates Rocking",
+  "primary": "LowerBack",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "Hamstrings"
+  ],
+  "category": "Pilates",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "KQWHWl7yV9g",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Pilates.cs",
   "id": "pilates_control_balance",
   "name": "Control Balance",
   "primary": "Abs",
@@ -10132,6 +11528,26 @@
  },
  {
   "file": "ExerciseLibrary.Pilates.cs",
+  "id": "pilates_reformer_coordination",
+  "name": "Reformer Coordination",
+  "primary": "Abs",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Quads"
+  ],
+  "category": "Pilates",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "awW8b438LY4",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Pilates.cs",
   "id": "pilates_reformer_frog",
   "name": "Reformer Frog",
   "primary": "Quads",
@@ -10186,6 +11602,27 @@
   "hold": false,
   "video": [
    "AOUX2a-in0I",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Pilates.cs",
+  "id": "pilates_reformer_semi_circle",
+  "name": "Reformer Semi-Circle",
+  "primary": "Glutes",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "Hamstrings",
+   "LowerBack",
+   "Quads"
+  ],
+  "category": "Pilates",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "AVEd2T_ForA",
    null,
    null
   ]
@@ -10289,6 +11726,82 @@
    "Wt_horWSoA4",
    null,
    null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Pilates.cs",
+  "id": "pilates_reformer_short_box_round_back",
+  "name": "Reformer Short Box Round Back",
+  "primary": "Abs",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [],
+  "category": "Pilates",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "plY0FcW051E",
+   "22.56",
+   "58.5"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Pilates.cs",
+  "id": "pilates_reformer_short_box_flat_back",
+  "name": "Reformer Short Box Flat Back",
+  "primary": "Abs",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "LowerBack",
+   "Shoulders"
+  ],
+  "category": "Pilates",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "plY0FcW051E",
+   "58.5",
+   "79.32"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Pilates.cs",
+  "id": "pilates_reformer_short_box_twist",
+  "name": "Reformer Short Box Twist",
+  "primary": "Abs",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "LowerBack"
+  ],
+  "category": "Pilates",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "plY0FcW051E",
+   "108.119",
+   "150.12"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Pilates.cs",
+  "id": "pilates_reformer_short_box_tree",
+  "name": "Reformer Short Box Tree",
+  "primary": "Abs",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "Hamstrings",
+   "LowerBack"
+  ],
+  "category": "Pilates",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "plY0FcW051E",
+   "150.12",
+   "250.799"
   ]
  },
  {
@@ -10835,6 +12348,48 @@
  },
  {
   "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "suitcase_deadlift",
+  "name": "Suitcase Deadlift",
+  "primary": "Glutes",
+  "equipment": "Kettlebell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Abs",
+   "Hamstrings",
+   "Quads"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "kgqGBdtG6zU",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "zercher_deadlift",
+  "name": "Zercher Deadlift",
+  "primary": "LowerBack",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "Hamstrings",
+   "Quads"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "g1Fh6CpbLy4",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
   "id": "romanian_deadlift",
   "name": "Romanian Deadlift",
   "primary": "Hamstrings",
@@ -10869,6 +12424,26 @@
   "hold": false,
   "video": [
    "wiekN4aIJ0g",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "kb_romanian_deadlift",
+  "name": "Kettlebell Romanian Deadlift",
+  "primary": "Hamstrings",
+  "equipment": "Kettlebell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "LowerBack"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "mVSgE9S0G4w",
    null,
    null
   ]
@@ -10914,6 +12489,26 @@
  },
  {
   "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "single_leg_kb_rdl",
+  "name": "Single-Leg Kettlebell RDL",
+  "primary": "Hamstrings",
+  "equipment": "Kettlebell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "LowerBack"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "s32cCgmRV3I",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
   "id": "b_stance_rdl",
   "name": "B-Stance Dumbbell RDL",
   "primary": "Hamstrings",
@@ -10948,6 +12543,26 @@
   "hold": false,
   "video": [
    "LHBk19GsUuw",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "smith_rdl",
+  "name": "Smith Machine RDL",
+  "primary": "Hamstrings",
+  "equipment": "Machine",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "LowerBack"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "nmGzbW15qYo",
    null,
    null
   ]
@@ -11077,6 +12692,25 @@
   "hold": false,
   "video": [
    "kkkTfzi2gj4",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "hamstring_walkout",
+  "name": "Hamstring Walkout",
+  "primary": "Hamstrings",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "jQ9BcglfyVo",
    null,
    null
   ]
@@ -11305,6 +12939,25 @@
   "video": [
    "ylpfCk3i-0Y",
    null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "kas_glute_bridge",
+  "name": "Kas Glute Bridge",
+  "primary": "Glutes",
+  "equipment": "Barbell",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Hamstrings"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "gM8N2SQ4Hfk",
+   "25.24",
    null
   ]
  },
@@ -11634,6 +13287,26 @@
  },
  {
   "file": "ExerciseLibrary.PosteriorChain.cs",
+  "id": "single_leg_back_extension",
+  "name": "Single-Leg Back Extension",
+  "primary": "Glutes",
+  "equipment": "Bodyweight",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Hamstrings",
+   "LowerBack"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "GpGvNbmm1vs",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.PosteriorChain.cs",
   "id": "back_extension_machine",
   "name": "Back Extension Machine",
   "primary": "LowerBack",
@@ -11850,6 +13523,48 @@
   "hold": false,
   "video": [
    "QcQCihNGteE",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
+  "id": "jump_squat",
+  "name": "Jump Squat",
+  "primary": "Quads",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "Calves",
+   "Hamstrings"
+  ],
+  "category": "Plyometric",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "BRfxI2Es2lE",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
+  "id": "trap_bar_jump",
+  "name": "Trap Bar Jump",
+  "primary": "Quads",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "Hamstrings",
+   "Calves"
+  ],
+  "category": "Plyometric",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "qQwvRCIp-fw",
    null,
    null
   ]
@@ -12331,6 +14046,27 @@
  },
  {
   "file": "ExerciseLibrary.Power.cs",
+  "id": "sots_press",
+  "name": "Sots Press",
+  "primary": "Shoulders",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Traps",
+   "Quads"
+  ],
+  "category": "Olympic",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "eJ9MLnNV6FY",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
   "id": "db_snatch",
   "name": "Dumbbell Snatch",
   "primary": "Glutes",
@@ -12436,6 +14172,27 @@
  },
  {
   "file": "ExerciseLibrary.Power.cs",
+  "id": "tall_clean",
+  "name": "Tall Clean",
+  "primary": "Glutes",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Traps",
+   "Quads",
+   "Shoulders"
+  ],
+  "category": "Olympic",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "X9ckJS9LSug",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
   "id": "clean_pull",
   "name": "Clean Pull",
   "primary": "Glutes",
@@ -12520,6 +14277,27 @@
  },
  {
   "file": "ExerciseLibrary.Power.cs",
+  "id": "power_jerk",
+  "name": "Power Jerk",
+  "primary": "Shoulders",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Quads",
+   "Glutes"
+  ],
+  "category": "Olympic",
+  "level": "Advanced",
+  "hold": false,
+  "video": [
+   "Ir_34nxrk1Q",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
   "id": "split_jerk",
   "name": "Split Jerk",
   "primary": "Shoulders",
@@ -12556,6 +14334,153 @@
   "hold": false,
   "video": [
    "bNCXgyosXlc",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
+  "id": "thruster",
+  "name": "Barbell Thruster",
+  "primary": "Quads",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Glutes",
+   "Triceps"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "L219ltL15zk",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
+  "id": "db_thruster",
+  "name": "Dumbbell Thruster",
+  "primary": "Quads",
+  "equipment": "Dumbbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Glutes",
+   "Triceps"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "u3wKkZjE8QM",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
+  "id": "kb_thruster",
+  "name": "Kettlebell Thruster",
+  "primary": "Quads",
+  "equipment": "Kettlebell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Shoulders",
+   "Glutes",
+   "Triceps"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "0-6iaZ-4-Cg",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
+  "id": "db_clean_and_press",
+  "name": "Dumbbell Clean and Press",
+  "primary": "Shoulders",
+  "equipment": "Dumbbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "Hamstrings",
+   "Traps"
+  ],
+  "category": "Olympic",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "4MKfeQDkkNY",
+   "10.8",
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
+  "id": "devil_press",
+  "name": "Devil Press",
+  "primary": "Shoulders",
+  "equipment": "Dumbbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "Hamstrings",
+   "Chest"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "ghacPZ9fuFU",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
+  "id": "man_maker",
+  "name": "Man Maker",
+  "primary": "Shoulders",
+  "equipment": "Dumbbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Back",
+   "Quads",
+   "Chest"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "2-6EPLtSLwU",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
+  "id": "sumo_deadlift_high_pull",
+  "name": "Sumo Deadlift High Pull",
+  "primary": "Traps",
+  "equipment": "Barbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Glutes",
+   "Quads",
+   "Shoulders"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "gh55vVlwlQg",
    null,
    null
   ]
@@ -12950,6 +14875,27 @@
   "hold": false,
   "video": [
    "bKupJRL22HM",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Power.cs",
+  "id": "sandbag_over_shoulder",
+  "name": "Sandbag Over Shoulder",
+  "primary": "Glutes",
+  "equipment": "Other",
+  "mechanic": "Compound",
+  "secondary": [
+   "Hamstrings",
+   "LowerBack",
+   "Back"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "jDlyC1SH-Ao",
    null,
    null
   ]
@@ -13478,6 +15424,25 @@
  },
  {
   "file": "ExerciseLibrary.Shoulders.cs",
+  "id": "plate_bus_driver",
+  "name": "Plate Bus Driver",
+  "primary": "Shoulders",
+  "equipment": "Other",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Forearms"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "8iZAbqqWorI",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Shoulders.cs",
   "id": "lateral_raise",
   "name": "Dumbbell Lateral Raise",
   "primary": "Shoulders",
@@ -13563,6 +15528,23 @@
  },
  {
   "file": "ExerciseLibrary.Shoulders.cs",
+  "id": "behind_back_cable_lateral_raise",
+  "name": "Behind-the-Back Cable Lateral Raise",
+  "primary": "Shoulders",
+  "equipment": "Cable",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "y4Djk_G0yEg",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Shoulders.cs",
   "id": "machine_lateral_raise",
   "name": "Machine Lateral Raise",
   "primary": "Shoulders",
@@ -13597,6 +15579,25 @@
  },
  {
   "file": "ExerciseLibrary.Shoulders.cs",
+  "id": "lu_raise",
+  "name": "Lu Raise",
+  "primary": "Shoulders",
+  "equipment": "Dumbbell",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Traps"
+  ],
+  "category": "Strength",
+  "level": "Intermediate",
+  "hold": false,
+  "video": [
+   "crXBkWN8cn8",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Shoulders.cs",
   "id": "cable_y_raise",
   "name": "Cable Y-Raise",
   "primary": "Shoulders",
@@ -13612,6 +15613,25 @@
    "SgyUoY0IZ7A",
    "533",
    "546"
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Shoulders.cs",
+  "id": "incline_db_y_raise",
+  "name": "Incline Dumbbell Y-Raise",
+  "primary": "Shoulders",
+  "equipment": "Dumbbell",
+  "mechanic": "Isolation",
+  "secondary": [
+   "Traps"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "tjCRkXxrDSc",
+   null,
+   null
   ]
  },
  {
@@ -13650,6 +15670,26 @@
   "hold": false,
   "video": [
    "sIQNCJ6Xwsk",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Shoulders.cs",
+  "id": "db_rear_delt_row",
+  "name": "Dumbbell Rear Delt Row",
+  "primary": "Shoulders",
+  "equipment": "Dumbbell",
+  "mechanic": "Compound",
+  "secondary": [
+   "Back",
+   "Traps"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "PDN7-kZrLLc",
    null,
    null
   ]
@@ -13938,6 +15978,23 @@
  },
  {
   "file": "ExerciseLibrary.Shoulders.cs",
+  "id": "db_scaption",
+  "name": "Dumbbell Scaption",
+  "primary": "Shoulders",
+  "equipment": "Dumbbell",
+  "mechanic": "Isolation",
+  "secondary": [],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "v1Tn5yb29Ag",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Shoulders.cs",
   "id": "ytw_raise",
   "name": "Incline Y-T-W Raise",
   "primary": "Shoulders",
@@ -14093,6 +16150,27 @@
   "hold": true,
   "video": [
    "H2KSIMwNOfA",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Shoulders.cs",
+  "id": "freestanding_handstand",
+  "name": "Freestanding Handstand",
+  "primary": "Shoulders",
+  "equipment": "Bodyweight",
+  "mechanic": "Compound",
+  "secondary": [
+   "Triceps",
+   "Traps",
+   "Abs"
+  ],
+  "category": "Strength",
+  "level": "Advanced",
+  "hold": true,
+  "video": [
+   "ctunmnwbbSI",
    null,
    null
   ]

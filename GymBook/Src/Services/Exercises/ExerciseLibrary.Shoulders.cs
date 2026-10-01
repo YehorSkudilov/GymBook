@@ -370,6 +370,25 @@ public static partial class ExerciseLibrary
             ],
             Video = new("HN8HYJTOl8c"),
         },
+        new("plate_bus_driver", "Plate Bus Driver", Shoulders, Other, Isolation)
+        {
+            Secondary = [Forearms],
+            Summary = "Holding a weight plate out at shoulder height and turning it side to side like a steering wheel, keeping the front delts under constant tension.",
+            Steps =
+            [
+                "Hold a weight plate by its sides at the 3 and 9 o'clock positions, arms extended in front of you.",
+                "Raise it to shoulder height with a slight bend in your elbows.",
+                "Rotate the plate as far as you comfortably can to one side, like turning a steering wheel, then to the other.",
+                "Keep alternating for your reps or for time, then lower the plate.",
+            ],
+            Tips =
+            [
+                "Keep the plate at shoulder height the whole set; don't let it drift down.",
+                "Use a light plate (5–10 kg); the long lever makes it hard fast.",
+                "Don't lean back or shrug to hold it up.",
+            ],
+            Video = new("8iZAbqqWorI"),
+        },
 
         // Lateral raises
         new("lateral_raise", "Dumbbell Lateral Raise", Shoulders, Dumbbell, Isolation)
@@ -460,6 +479,25 @@ public static partial class ExerciseLibrary
             ],
             Video = new("lq7eLC30b9w"),
         },
+        new("behind_back_cable_lateral_raise", "Behind-the-Back Cable Lateral Raise", Shoulders, Cable, Isolation)
+        {
+            Level = Intermediate,
+            Summary = "A single-arm cable lateral raise with the cable running behind your back, which keeps tension on the side delt from the very bottom of the raise.",
+            Steps =
+            [
+                "Set a pulley at its lowest point and stand side-on to it, a step away.",
+                "Reach behind your back with the far hand and take the D-handle, so the cable runs behind you.",
+                "With a slight elbow bend, raise your arm out to the side to about shoulder height.",
+                "Lower it slowly until your hand is back behind your hip.",
+            ],
+            Tips =
+            [
+                "Lead with your elbow and keep your hand no higher than it.",
+                "Stand tall; don't lean toward or away from the stack to swing the weight up.",
+                "Don't shrug at the top.",
+            ],
+            Video = new("y4Djk_G0yEg"),
+        },
         new("machine_lateral_raise", "Machine Lateral Raise", Shoulders, Machine, Isolation)
         {
             Summary = "A lateral raise on a dedicated machine with pads on the arms, a stable way to take the side delts close to failure.",
@@ -493,6 +531,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("yfNg5sFndbw"),
         },
+        new("lu_raise", "Lu Raise", Shoulders, Dumbbell, Isolation)
+        {
+            Secondary = [Traps],
+            Level = Intermediate,
+            Summary = "A straight-arm lateral raise taken all the way overhead with the thumbs up, named after weightlifter Lü Xiaojun, for the side delts and upper traps.",
+            Steps =
+            [
+                "Stand tall holding light dumbbells or plates at your sides, palms facing in.",
+                "Turn your thumbs up and, with straight arms, raise them out to the sides.",
+                "Keep going past shoulder height until your hands meet or nearly meet overhead.",
+                "Lower them slowly along the same path back to your sides.",
+            ],
+            Tips =
+            [
+                "Go much lighter than your normal lateral raise; the top half is tough.",
+                "Let your shoulder blades rotate up and your traps shrug slightly at the top.",
+                "Don't arch your lower back to get the weights overhead; brace your abs.",
+            ],
+            Video = new("crXBkWN8cn8"),
+        },
         new("cable_y_raise", "Cable Y-Raise", Shoulders, Cable, Isolation)
         {
             Secondary = [Traps],
@@ -511,6 +569,25 @@ public static partial class ExerciseLibrary
                 "Don't shrug or arch your lower back at the top.",
             ],
             Video = new("SgyUoY0IZ7A", 533, 546),
+        },
+        new("incline_db_y_raise", "Incline Dumbbell Y-Raise", Shoulders, Dumbbell, Isolation)
+        {
+            Secondary = [Traps],
+            Summary = "Lying face down on an incline bench and raising light dumbbells up and out into a Y, working the side delts and lower traps without momentum.",
+            Steps =
+            [
+                "Set a bench to about 30–45° and lie face down with your chest on the pad and light dumbbells hanging below your shoulders.",
+                "Turn your thumbs up and slightly out.",
+                "Raise the dumbbells up and out at about 30° from your head, making a Y, until your arms are in line with your body.",
+                "Lower them slowly back down.",
+            ],
+            Tips =
+            [
+                "Keep your chest on the pad and your arms nearly straight.",
+                "Pull your shoulder blades down as you lift instead of shrugging up.",
+                "Don't swing; light weights and a pause at the top work best.",
+            ],
+            Video = new("tjCRkXxrDSc"),
         },
 
         // Rear delts
@@ -549,6 +626,25 @@ public static partial class ExerciseLibrary
                 "Use light weights; the rear delts are small.",
             ],
             Video = new("sIQNCJ6Xwsk"),
+        },
+        new("db_rear_delt_row", "Dumbbell Rear Delt Row", Shoulders, Dumbbell, Compound)
+        {
+            Secondary = [Back, Traps],
+            Summary = "A bent-over row with the elbows flared out wide and pulled toward the upper chest, shifting the work from the lats to the rear delts.",
+            Steps =
+            [
+                "Hold a dumbbell in each hand and hinge forward until your torso is close to parallel with the floor, back flat.",
+                "Let the dumbbells hang below your shoulders with your palms facing your legs or back.",
+                "Row them up and out, elbows flared to about 75–90° from your body, toward your upper chest.",
+                "Lower them slowly to straight arms.",
+            ],
+            Tips =
+            [
+                "Think of pulling your elbows wide, not back to your hips.",
+                "Stop when your elbows are level with your torso; don't squeeze your shoulder blades all the way together.",
+                "Don't round your back or jerk your torso up to move the weight.",
+            ],
+            Video = new("PDN7-kZrLLc"),
         },
         new("cable_reverse_fly", "Cable Reverse Fly", Shoulders, Cable, Isolation)
         {
@@ -824,6 +920,24 @@ public static partial class ExerciseLibrary
             ],
             Video = new("zD4Vp44roow"),
         },
+        new("db_scaption", "Dumbbell Scaption", Shoulders, Dumbbell, Isolation)
+        {
+            Summary = "Raising light dumbbells with the thumbs up in the scapular plane, about 30° in front of your sides, a staple rotator cuff and delt exercise in shoulder rehab.",
+            Steps =
+            [
+                "Stand tall holding light dumbbells at your sides, thumbs pointing forward.",
+                "Angle your arms about 30° forward from your sides, halfway between a front and a lateral raise.",
+                "With straight arms and thumbs up, raise the dumbbells to shoulder height.",
+                "Lower them slowly back down.",
+            ],
+            Tips =
+            [
+                "Keep your thumbs up (full can); it's gentler on the shoulder than thumbs down.",
+                "Use 1–5 kg; this is about control and a pain-free range.",
+                "Don't shrug or lean back as you raise.",
+            ],
+            Video = new("v1Tn5yb29Ag"),
+        },
 
         // Scapular health
         new("ytw_raise", "Incline Y-T-W Raise", Shoulders, Dumbbell, Isolation)
@@ -983,6 +1097,28 @@ public static partial class ExerciseLibrary
                 "Learn to bail out safely before holding for long.",
             ],
             Video = new("H2KSIMwNOfA"),
+        },
+        new("freestanding_handstand", "Freestanding Handstand", Shoulders, Bodyweight, Compound)
+        {
+            Secondary = [Triceps, Traps, Abs],
+            Level = Advanced,
+            Hold = true,
+            Summary = "Balancing upside down on your hands with no wall, a gymnastics skill that takes strong, stable shoulders, a straight body line and balance through the fingers.",
+            Steps =
+            [
+                "Stand in a lunge with your arms overhead, then place your hands shoulder-width apart on the floor.",
+                "Kick up with your back leg and bring your legs together over your hands.",
+                "Lock your arms, push the floor away and stack your hips and feet over your shoulders.",
+                "Balance with your fingers and the heels of your hands, then step or cartwheel down.",
+            ],
+            Tips =
+            [
+                "Build a solid 60-second chest-to-wall handstand before working on it freestanding.",
+                "Press into your fingertips when you start to fall toward your back, into the heels of your hands when you fall the other way.",
+                "Learn to bail out by turning a hand and cartwheeling out before you kick up hard.",
+                "Don't arch your back into a banana shape; keep your ribs tucked and glutes tight.",
+            ],
+            Video = new("ctunmnwbbSI"),
         },
         new("planche_lean", "Planche Lean", Shoulders, Bodyweight, Compound)
         {

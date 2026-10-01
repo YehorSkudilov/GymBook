@@ -298,6 +298,27 @@ public static partial class ExerciseLibrary
             ],
             Video = new("k2L97eKS5qk"),
         },
+        new("tempo_run", "Tempo Run", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Hamstrings, Glutes, Calves],
+            Category = Cardio,
+            Level = Intermediate,
+            Summary = "A sustained run at a comfortably hard pace, around your lactate threshold, usually 20–40 minutes, to raise the pace you can hold for longer races.",
+            Steps =
+            [
+                "Warm up with 10–15 minutes of easy running.",
+                "Pick up to tempo pace: roughly what you could race for an hour, where you can only speak a few words at a time.",
+                "Hold that pace steadily for 20–40 minutes, or in 2–3 long blocks with short jog breaks.",
+                "Cool down with 10 minutes of easy running or walking.",
+            ],
+            Tips =
+            [
+                "Aim for an even effort; finish feeling you could have gone a little longer.",
+                "Use heart rate or effort as well as pace on hot days and hills.",
+                "Don't turn it into a race; running too fast makes it an interval session.",
+            ],
+            Video = new("k5vqiyry2z8"),
+        },
         new("sprints", "Sprints", Quads, Bodyweight, Compound)
         {
             Secondary = [Hamstrings, Glutes, Calves],
@@ -319,6 +340,28 @@ public static partial class ExerciseLibrary
                 "Don't sprint cold; hamstring strains usually happen without a proper warm-up.",
             ],
             Video = new("6jxlev8ZlyU"),
+        },
+        new("interval_run", "Interval Run", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Hamstrings, Glutes, Calves],
+            Category = Cardio,
+            Level = Intermediate,
+            Summary = "Repeated hard efforts of about 1–5 minutes (e.g. 400 m–1 km on a track or road) at around 5K pace, with jogging recovery between, to build VO2 max and speed endurance.",
+            Steps =
+            [
+                "Warm up with 10–15 minutes of easy running and a few short strides.",
+                "Run the first rep at a hard but controlled pace, about your 5K race pace.",
+                "Jog or walk slowly for 1–3 minutes, or about as long as the rep took.",
+                "Repeat for the planned number of reps, e.g. 6 × 400 m or 5 × 1 km.",
+                "Cool down with 10 minutes of easy running.",
+            ],
+            Tips =
+            [
+                "Run every rep at the same pace; the last should be as fast as the first.",
+                "Keep the recovery active with an easy jog when you can.",
+                "Don't sprint the first reps; these are hard, sustained efforts, not all-out sprints.",
+            ],
+            Video = new("KWB62FfmpBI", 165, 264),
         },
         new("hill_sprints", "Hill Sprints", Glutes, Bodyweight, Compound)
         {
@@ -421,6 +464,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("tBE6_Cixeyc"),
         },
+        new("hiking", "Hiking", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Glutes, Hamstrings, Calves],
+            Category = Cardio,
+            Summary = "Walking on trails and hills, a low-intensity endurance cardio where the climbs work your glutes and quads much harder than flat walking.",
+            Steps =
+            [
+                "Wear supportive footwear and set off at an easy pace for the first 10–15 minutes.",
+                "On climbs, shorten your stride and place your whole foot down under your body.",
+                "Match your breathing to your steps and keep a steady rhythm you can sustain.",
+                "On descents, take short steps with bent knees and keep your weight over your feet.",
+            ],
+            Tips =
+            [
+                "Slow down rather than stopping often; a steady pace tires you less.",
+                "Trekking poles take load off your knees on steep descents.",
+                "Don't take on long or steep routes before building up to them.",
+            ],
+            Video = new("XziSvo_6XV4"),
+        },
         new("freestyle_swim", "Freestyle Swim", Back, Other, Compound)
         {
             Secondary = [Shoulders, Triceps, Abs],
@@ -442,6 +505,49 @@ public static partial class ExerciseLibrary
                 "Don't lift your head forward to breathe; it sinks your hips.",
             ],
             Video = new("NFHanLS9g5k"),
+        },
+        new("breaststroke_swim", "Breaststroke Swim", Chest, Other, Compound)
+        {
+            Secondary = [Quads, Shoulders, Back],
+            Category = Cardio,
+            Level = Intermediate,
+            Summary = "Swimming face down with a sweeping, heart-shaped arm pull and a frog-like whip kick; works the chest, inner thighs and shoulders at a pace you can keep for a long time.",
+            Steps =
+            [
+                "Push off the wall face down with arms straight ahead and legs together.",
+                "Sweep your hands out and back in a heart shape, lifting your head to breathe as they come in under your chest.",
+                "Draw your heels toward your bottom, turn your feet out and whip your legs round and back together.",
+                "Shoot your arms forward and glide in a long, flat line before the next stroke.",
+                "Keep the rhythm pull, breathe, kick, glide.",
+            ],
+            Tips =
+            [
+                "Don't pull your hands back past your shoulders.",
+                "Push with the soles and insides of your feet and kick with your knees no wider than your hips.",
+                "Don't skip the glide; most of the speed comes after the kick.",
+            ],
+            Video = new("EElzlIMjk_c", 40.34),
+        },
+        new("backstroke_swim", "Backstroke Swim", Back, Other, Compound)
+        {
+            Secondary = [Shoulders, Triceps, Abs],
+            Category = Cardio,
+            Level = Intermediate,
+            Summary = "Swimming on your back with alternating overarm strokes and a steady flutter kick; works the lats and shoulders with your face out of the water.",
+            Steps =
+            [
+                "Float on your back with your body long and flat, head still and ears in the water.",
+                "Lift one straight arm over your shoulder and enter the water little finger first above your head.",
+                "Pull it down along your side to your hip while the other arm recovers over the water.",
+                "Kick from your hips with fairly straight legs and rotate your body with each stroke.",
+            ],
+            Tips =
+            [
+                "Look straight up and keep your hips near the surface.",
+                "Count your strokes from the flags to the wall so you don't hit your head.",
+                "Don't let your hands cross the centre line above your head.",
+            ],
+            Video = new("MrFt6JHii8w", 20),
         },
         new("outdoor_cycling", "Outdoor Cycling", Quads, Other, Compound)
         {

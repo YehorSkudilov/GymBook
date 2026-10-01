@@ -221,6 +221,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("mDouY-BcgXU"),
         },
+        new("one_arm_pull_up", "One-Arm Pull-Up", Back, Bodyweight, Compound)
+        {
+            Secondary = [Biceps, Forearms, Abs],
+            Level = Advanced,
+            Summary = "A full pull-up on one arm from a dead hang, one of the hardest bodyweight pulling feats.",
+            Steps =
+            [
+                "Hang from the bar with one hand, arm straight and the other hand by your side or on your chest.",
+                "Set your shoulder down and back and brace your whole body.",
+                "Pull until your chin clears the bar, letting your body turn slightly toward the working arm.",
+                "Lower under control to a full hang.",
+            ],
+            Tips =
+            [
+                "Build up with archer, assisted one-arm and weighted pull-ups first.",
+                "Squeeze your legs together and keep your body tight to stop it spinning.",
+                "Don't drop into the bottom; it loads the elbow and shoulder hard.",
+            ],
+            Video = new("qe51lw8OEto"),
+        },
         new("scap_pull_up", "Scapular Pull-Up", Back, Bodyweight, Isolation)
         {
             Secondary = [Traps],
@@ -443,6 +463,47 @@ public static partial class ExerciseLibrary
                 "Don't pike at the hips or arch the lower back.",
             ],
             Video = new("2SOWwPTr4es"),
+        },
+        new("skin_the_cat", "Skin the Cat", Back, Other, Compound)
+        {
+            Secondary = [Shoulders, Abs],
+            Level = Intermediate,
+            Summary = "A gymnastics drill on rings or a bar: from a hang, tuck and rotate backward through your arms into a German hang, then pull back out, building shoulder extension range and straight-arm strength.",
+            Steps =
+            [
+                "Hang from gymnastic rings (or a bar) with straight arms.",
+                "Tuck your knees to your chest and lift your hips, rolling backward between your arms.",
+                "Keep rotating slowly until you hang upside down behind yourself in a German hang, feet toward the floor.",
+                "Pull back through the same path to the tuck, then lower to the hang.",
+            ],
+            Tips =
+            [
+                "Keep your arms straight and go only as deep as your shoulders allow.",
+                "Move slowly; control matters more than depth.",
+                "Don't drop into the German hang; it strains the shoulders and biceps tendons.",
+            ],
+            Video = new("ABSpTs17ObA"),
+        },
+        new("rope_climb", "Rope Climb", Back, Other, Compound)
+        {
+            Secondary = [Biceps, Forearms, Abs],
+            Level = Intermediate,
+            Summary = "Climbing a hanging rope hand over hand, using a foot lock (J-hook) to rest on the legs, for grip and pulling strength.",
+            Steps =
+            [
+                "Grab the rope high with both hands and pull your knees up toward your chest.",
+                "Wrap the rope around one shin and over that foot, then pin it with the other foot (the J-hook).",
+                "Stand up on the locked rope, then reach your hands up higher.",
+                "Release the feet, pull your knees up again and repeat to the top.",
+                "Come down hand under hand with the feet loosely gripping the rope, never sliding.",
+            ],
+            Tips =
+            [
+                "Let your legs do the lifting; the arms mostly hold and reach.",
+                "Climb only over a mat and only as high as you can control the descent.",
+                "Don't slide down the rope; it burns your hands and legs.",
+            ],
+            Video = new("nI4MijQJ_No", 27.279),
         },
 
         // Pulldowns
@@ -820,6 +881,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("2ByilQ4NaAs"),
         },
+        new("helms_row", "Helms Row", Back, Dumbbell, Compound)
+        {
+            Secondary = [Traps, Biceps, Shoulders],
+            Level = Intermediate,
+            Summary = "A two-dumbbell row standing bent over with your sternum braced on the top of a high incline bench, named after Eric Helms, so the torso stays level without lower back strain.",
+            Steps =
+            [
+                "Set a bench to a steep incline and stand behind it, then hinge until your sternum rests on the top of the pad and your torso is about parallel to the floor.",
+                "Let the dumbbells hang straight down, palms facing each other.",
+                "Row them back toward your hips, keeping your chest lightly on the pad.",
+                "Lower them slowly to straight arms.",
+            ],
+            Tips =
+            [
+                "Row toward your hips for lats, wider and higher for upper back.",
+                "The pad only steadies you; don't lift your chest off it or swing.",
+                "Don't let your lower back round or your head crane forward.",
+            ],
+            Video = new("_6pZhoLgO5o", 33.32, 112.92),
+        },
         new("kettlebell_row", "Kettlebell Row", Back, Kettlebell, Compound)
         {
             Secondary = [Biceps, Traps],
@@ -856,6 +937,26 @@ public static partial class ExerciseLibrary
                 "Brace hard; your trunk is working the whole time.",
             ],
             Video = new("ZuhSSlKBAcI"),
+        },
+        new("renegade_row", "Renegade Row", Back, Dumbbell, Compound)
+        {
+            Secondary = [Abs, Shoulders, Biceps],
+            Level = Intermediate,
+            Summary = "A row from a high plank on two dumbbells, rowing one at a time while resisting rotation, for back and core together.",
+            Steps =
+            [
+                "Get into a high plank gripping two dumbbells on the floor, feet a little wider than hip-width.",
+                "Brace your core and squeeze your glutes.",
+                "Row one dumbbell to your hip while pressing the other into the floor.",
+                "Set it down under control and repeat on the other side.",
+            ],
+            Tips =
+            [
+                "Widen your feet to make it easier to keep your hips square.",
+                "Use hex dumbbells so they don't roll.",
+                "Don't let your hips twist or sag as you row.",
+            ],
+            Video = new("wTqlJ0aoJlM", 12.379, 50.417),
         },
 
         // Cable and machine rows
@@ -948,6 +1049,44 @@ public static partial class ExerciseLibrary
                 "Don't let the weight jerk your arms back up.",
             ],
             Video = new("zit_EFtojoE"),
+        },
+        new("chest_supported_t_bar_row", "Chest-Supported T-Bar Row", Back, Machine, Compound)
+        {
+            Secondary = [Traps, Biceps, Shoulders],
+            Summary = "A plate-loaded T-bar row machine where you lie face down on an inclined pad and row the lever arm, letting you row heavy with no lower back load.",
+            Steps =
+            [
+                "Stand on the foot platform and lie face down with your chest on the pad, top of the pad at your upper chest.",
+                "Grab the handles, neutral or wide overhand, and lift the bar off its rest.",
+                "Row the handles toward your chest, driving your elbows back.",
+                "Lower slowly until your arms are straight and your shoulder blades spread.",
+            ],
+            Tips =
+            [
+                "Neutral grip and tucked elbows bias the lats; a wide grip biases the upper back.",
+                "Keep your chest on the pad the whole time.",
+                "Don't jerk the weight up or cut the stretch short.",
+            ],
+            Video = new("CRpez9nWVH0"),
+        },
+        new("smith_machine_row", "Smith Machine Row", Back, Machine, Compound)
+        {
+            Secondary = [Biceps, Traps, LowerBack],
+            Summary = "A bent-over barbell row on a Smith machine, whose fixed bar path lets you focus on the back and set the bar back on the hooks at any point.",
+            Steps =
+            [
+                "Set the bar at about knee height, stand close to it and grip it overhand just wider than your shoulders.",
+                "Unhook the bar and hinge forward with a flat back until your torso is at about 45° or lower.",
+                "Row the bar to your lower ribs, squeezing your shoulder blades together.",
+                "Lower it to straight arms, keeping the hinge.",
+            ],
+            Tips =
+            [
+                "Stand so the bar runs just in front of your shins and thighs.",
+                "Keep your torso angle the same every rep.",
+                "Don't round your lower back or stand up as you row.",
+            ],
+            Video = new("3QcJggd_L24"),
         },
 
         // Bodyweight and band rows
@@ -1151,6 +1290,26 @@ public static partial class ExerciseLibrary
                 "Keep your chest on the pad.",
             ],
             Video = new("J4wEVDwZsoE"),
+        },
+        new("kelso_shrug", "Kelso Shrug", Traps, Barbell, Isolation)
+        {
+            Secondary = [Back],
+            Level = Intermediate,
+            Summary = "A chest-supported retraction shrug, named after Paul Kelso: lying face down on an incline bench, you squeeze the shoulder blades together without bending the arms, for the mid traps and rhomboids.",
+            Steps =
+            [
+                "Set a bench to about 30–45° and lie face down, holding a barbell (or dumbbells) with straight arms hanging below you.",
+                "Let your shoulder blades spread apart at the bottom.",
+                "Pull your shoulder blades back and together without bending your elbows.",
+                "Hold for a second, then lower slowly.",
+            ],
+            Tips =
+            [
+                "Think of pinching the shoulder blades back, not shrugging toward your ears.",
+                "The range is small; keep your arms straight so it doesn't turn into a row.",
+                "Don't lift your chest off the pad.",
+            ],
+            Video = new("gTir3d0t2D8", 171.68, 243.92),
         },
         new("overhead_shrug", "Overhead Shrug", Traps, Barbell, Isolation)
         {

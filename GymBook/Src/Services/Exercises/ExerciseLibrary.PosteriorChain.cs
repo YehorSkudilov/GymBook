@@ -199,6 +199,45 @@ public static partial class ExerciseLibrary
             ],
             Video = new("eFkeIXvhSFs"),
         },
+        new("suitcase_deadlift", "Suitcase Deadlift", Glutes, Kettlebell, Compound)
+        {
+            Secondary = [Abs, Hamstrings, Quads],
+            Summary = "A deadlift with a single kettlebell beside one foot, training the hip hinge while your obliques fight the pull to the side.",
+            Steps =
+            [
+                "Stand with your feet hip-width apart and a kettlebell beside the outside of one foot.",
+                "Push your hips back and bend your knees to grip the handle with the near hand, chest up and shoulders level.",
+                "Brace and stand up tall without leaning toward the weight.",
+                "Hinge back down to set the bell on the floor. Finish your reps, then switch sides.",
+            ],
+            Tips =
+            [
+                "Keep your shoulders level and your torso square to the front.",
+                "Squeeze the handle hard and keep the arm straight.",
+                "Don't lean or twist toward the weight.",
+            ],
+            Video = new("kgqGBdtG6zU"),
+        },
+        new("zercher_deadlift", "Zercher Deadlift", LowerBack, Barbell, Compound)
+        {
+            Secondary = [Glutes, Hamstrings, Quads],
+            Level = Advanced,
+            Summary = "A strongman-style deadlift from the floor with the bar hooked in the crooks of your elbows, hammering the whole back, the hips and the core.",
+            Steps =
+            [
+                "Stand close to a barbell on the floor or low blocks, feet hip- to shoulder-width apart.",
+                "Squat down deep, slide your forearms under the bar and hook it in the crooks of your elbows, hands clasped.",
+                "Brace hard and stand up, keeping the bar tight to your body as your hips drive through.",
+                "Lower the bar under control the same way.",
+            ],
+            Tips =
+            [
+                "Start from blocks or low pins until you have the mobility to reach the floor.",
+                "Wrap the bar in a pad or wear long sleeves to protect your arms.",
+                "Build up gradually; your upper back will round a little, so don't max out early.",
+            ],
+            Video = new("g1Fh6CpbLy4"),
+        },
 
         // Romanian deadlifts
         new("romanian_deadlift", "Romanian Deadlift", Hamstrings, Barbell, Compound)
@@ -240,6 +279,25 @@ public static partial class ExerciseLibrary
             ],
             Video = new("wiekN4aIJ0g"),
         },
+        new("kb_romanian_deadlift", "Kettlebell Romanian Deadlift", Hamstrings, Kettlebell, Compound)
+        {
+            Secondary = [Glutes, LowerBack],
+            Summary = "The Romanian deadlift with a kettlebell held in both hands, hinging from standing until the hamstrings are fully stretched.",
+            Steps =
+            [
+                "Stand tall with your feet hip-width apart, holding a kettlebell by the handle in front of your thighs.",
+                "Soften your knees and push your hips back, letting the bell travel down close to your legs.",
+                "Lower until you feel a strong hamstring stretch with a flat back.",
+                "Drive your hips forward to stand tall and squeeze your glutes.",
+            ],
+            Tips =
+            [
+                "Keep the bell close to your legs and your arms straight.",
+                "Keep your knee bend the same throughout; the movement is all in the hips.",
+                "Don't round your back to get the bell lower.",
+            ],
+            Video = new("mVSgE9S0G4w"),
+        },
         new("single_leg_rdl", "Single-Leg RDL", Hamstrings, Bodyweight, Compound)
         {
             Secondary = [Glutes],
@@ -279,6 +337,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("_DhDkij1vxY", 25.299999, 48.900002),
         },
+        new("single_leg_kb_rdl", "Single-Leg Kettlebell RDL", Hamstrings, Kettlebell, Compound)
+        {
+            Secondary = [Glutes, LowerBack],
+            Level = Intermediate,
+            Summary = "A single-leg Romanian deadlift holding a kettlebell, loading each hamstring and glute on its own and challenging balance.",
+            Steps =
+            [
+                "Stand on one leg holding a kettlebell in the opposite hand.",
+                "Soften the standing knee and hinge forward as your free leg reaches straight back.",
+                "Lower the bell toward the floor until you feel a strong hamstring stretch.",
+                "Drive your standing hip forward to return to tall standing.",
+            ],
+            Tips =
+            [
+                "Keep your hips level and square; point the back toes down.",
+                "Let the bell hang straight down under your shoulder.",
+                "Don't round your back to reach the floor.",
+            ],
+            Video = new("s32cCgmRV3I"),
+        },
         new("b_stance_rdl", "B-Stance Dumbbell RDL", Hamstrings, Dumbbell, Compound)
         {
             Secondary = [Glutes, LowerBack],
@@ -317,6 +395,25 @@ public static partial class ExerciseLibrary
                 "Don't let your back round at the bottom.",
             ],
             Video = new("LHBk19GsUuw"),
+        },
+        new("smith_rdl", "Smith Machine RDL", Hamstrings, Machine, Compound)
+        {
+            Secondary = [Glutes, LowerBack],
+            Summary = "A Romanian deadlift on the Smith machine, whose fixed bar path lets you focus on the hamstring stretch without balancing the bar.",
+            Steps =
+            [
+                "Set the bar at about mid-thigh height and stand under it, feet hip-width apart.",
+                "Grip it just outside your thighs, unhook it and stand tall.",
+                "Soften your knees and push your hips back, sliding the bar down your thighs.",
+                "Lower until your hamstrings are fully stretched, then drive your hips forward to stand.",
+            ],
+            Tips =
+            [
+                "Set the safety stops just below your lowest point.",
+                "Stand so the bar stays in contact with your legs along its straight path.",
+                "Don't round your back to get the bar lower.",
+            ],
+            Video = new("nmGzbW15qYo"),
         },
 
         // Leg curls
@@ -451,6 +548,25 @@ public static partial class ExerciseLibrary
                 "Don't push through your lower back; tuck your pelvis slightly.",
             ],
             Video = new("kkkTfzi2gj4"),
+        },
+        new("hamstring_walkout", "Hamstring Walkout", Hamstrings, Bodyweight, Compound)
+        {
+            Secondary = [Glutes],
+            Summary = "From a glute bridge, walk your heels away from you in small steps and back in, keeping your hips up so the hamstrings work hard as your legs straighten.",
+            Steps =
+            [
+                "Lie on your back with your knees bent and feet flat, then lift your hips into a glute bridge.",
+                "Keeping your hips high, take small steps with your heels away from your body.",
+                "Walk out until your legs are nearly straight or you can no longer hold your hips up.",
+                "Walk back in the same way, then lower your hips.",
+            ],
+            Tips =
+            [
+                "Take short steps and keep your hips level.",
+                "Squeeze your glutes the whole time.",
+                "Don't let your hips sag as your legs straighten; stop short instead.",
+            ],
+            Video = new("jQ9BcglfyVo"),
         },
         new("nordic_curl", "Nordic Curl", Hamstrings, Bodyweight, Isolation)
         {
@@ -687,6 +803,26 @@ public static partial class ExerciseLibrary
                 "Don't arch your lower back to finish.",
             ],
             Video = new("ylpfCk3i-0Y"),
+        },
+        new("kas_glute_bridge", "Kas Glute Bridge", Glutes, Barbell, Isolation)
+        {
+            Secondary = [Hamstrings],
+            Level = Intermediate,
+            Summary = "A short-range barbell bridge with your upper back on a bench, popularised by Bret Contreras, that keeps constant tension on the glutes by moving only through the top of the hip thrust.",
+            Steps =
+            [
+                "Sit with your upper back against a bench and a padded barbell over your hips, then lift your hips so your shoulders rest on the bench.",
+                "Set your feet so your shins are vertical at the top.",
+                "Keeping your torso and shoulders still, lower your hips only a few inches.",
+                "Drive through your heels to lock out your hips with a hard glute squeeze, then repeat.",
+            ],
+            Tips =
+            [
+                "Tuck your chin and keep your ribs down so your upper body stays fixed.",
+                "Pause briefly at the top of each rep.",
+                "Don't drop your hips toward the floor; that turns it into a hip thrust.",
+            ],
+            Video = new("gM8N2SQ4Hfk", 25.24),
         },
         new("banded_glute_bridge", "Banded Glute Bridge", Glutes, Band, Isolation)
         {
@@ -1026,6 +1162,26 @@ public static partial class ExerciseLibrary
                 "Don't jerk up or arch past a straight line.",
             ],
             Video = new("VH4Bqn1FUhM"),
+        },
+        new("single_leg_back_extension", "Single-Leg Back Extension", Glutes, Bodyweight, Isolation)
+        {
+            Secondary = [Hamstrings, LowerBack],
+            Level = Intermediate,
+            Summary = "A 45° back extension done with only one foot locked under the roller, doubling the load on that leg's glute and hamstring.",
+            Steps =
+            [
+                "Set the pad just below your hip bones and hook one foot under the roller, the other leg free behind you.",
+                "Cross your arms over your chest.",
+                "Hinge at the hips to lower your torso toward the floor.",
+                "Rise until your body is straight from head to working heel. Finish your reps, then switch legs.",
+            ],
+            Tips =
+            [
+                "Drive the working hip into the pad and squeeze that glute to rise.",
+                "Start with bodyweight; it's much harder than the two-leg version.",
+                "Don't arch past straight or twist toward the free leg.",
+            ],
+            Video = new("GpGvNbmm1vs"),
         },
         new("back_extension_machine", "Back Extension Machine", LowerBack, Machine, Isolation)
         {

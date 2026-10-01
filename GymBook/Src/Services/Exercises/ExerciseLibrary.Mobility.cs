@@ -33,6 +33,27 @@ public static partial class ExerciseLibrary
             ],
             Video = new("kI0XzmjYuZU"),
         },
+        new("mob_scapular_cars", "Scapular CARs", Traps, Bodyweight, Isolation)
+        {
+            Secondary = [Back, Chest],
+            Category = Mobility,
+            Summary = "Controlled articular rotations for the shoulder blade: with the arm relaxed, you move the scapula slowly through elevation, protraction, depression and retraction in one smooth circle.",
+            Steps =
+            [
+                "Stand or kneel tall with your arm hanging straight, or rest the hand on your thigh, and brace your trunk.",
+                "Shrug the shoulder up toward your ear as far as it will go.",
+                "Roll it forward, spreading the shoulder blade around the rib cage.",
+                "Pull it down away from your ear, then squeeze it back toward your spine to finish the circle.",
+                "Do 3–5 slow circles each way per side.",
+            ],
+            Tips =
+            [
+                "Keep the arm straight and the elbow still; only the shoulder blade moves.",
+                "Don't let your neck, ribs or torso move to fake extra range.",
+                "Go slowly enough to feel each corner of the circle.",
+            ],
+            Video = new("wBOqJGxjl60"),
+        },
         new("mob_hip_cars", "Hip CARs", Glutes, Bodyweight, Isolation)
         {
             Secondary = [Abs],
@@ -305,6 +326,27 @@ public static partial class ExerciseLibrary
                 "Take small steps with your feet to feel the hamstring stretch.",
             ],
             Video = new("a38ewEsSqGY"),
+        },
+        new("mob_shin_box_get_up", "Shin Box Get-Up", Glutes, Bodyweight, Compound)
+        {
+            Secondary = [Quads, Abs],
+            Category = Mobility,
+            Level = Intermediate,
+            Summary = "From a seated shin box (90/90) position you drive up onto both knees through hip extension, working hip rotation range and glute strength.",
+            Steps =
+            [
+                "Sit in a 90/90 position: front shin across your body, back shin out to the side, both knees bent to about 90°.",
+                "Sit tall and lean slightly forward over the front shin.",
+                "Squeeze the glute of the front leg and drive your hips up and forward until you are kneeling tall on both knees.",
+                "Lower back down to the seat under control, switch sides through the 90/90 if you like, and repeat. Do 5–8 reps per side.",
+            ],
+            Tips =
+            [
+                "Use your hands on the floor to help at first, then progress to hands-free.",
+                "Finish each rep with the hips fully extended and the glute squeezed.",
+                "Pad your knees and stay in a range the hips allow without pinching.",
+            ],
+            Video = new("lpygREjgBjI"),
         },
 
         // Spine
@@ -664,6 +706,25 @@ public static partial class ExerciseLibrary
                 "Don't roll on the back of the knee.",
             ],
             Video = new("lLswx0vSvtk"),
+        },
+        new("mob_foam_roll_adductors", "Foam Roll Adductors", Quads, Other, Isolation)
+        {
+            Category = Mobility,
+            Summary = "Face-down foam rolling of the inner thigh, with the leg out to the side and the roller under the adductors. Needs a foam roller.",
+            Steps =
+            [
+                "Lie face down on your forearms and bring one leg out to the side, knee bent at about 90°.",
+                "Place the foam roller under the inner thigh of that leg, just above the knee.",
+                "Shift your weight sideways to roll slowly from above the knee up toward the groin.",
+                "Pause on tender spots for a few breaths. Roll for 30–60 seconds per side.",
+            ],
+            Tips =
+            [
+                "Control the pressure with your forearms and the other leg.",
+                "Keep your core braced so your lower back doesn't sag.",
+                "Don't roll over the inside of the knee joint.",
+            ],
+            Video = new("Nqol0T6rKDg"),
         },
         new("mob_ball_pec_release", "Lacrosse Ball Pec Release", Chest, Other, Isolation)
         {
@@ -1223,6 +1284,27 @@ public static partial class ExerciseLibrary
             ],
             Video = new("uKg1rqo9YrE"),
         },
+        new("stretch_middle_split", "Middle Split", Quads, Bodyweight, Isolation)
+        {
+            Secondary = [Hamstrings],
+            Category = ExerciseCategory.Stretch,
+            Level = Advanced,
+            Summary = "The side or straddle split: sliding the legs out wide to either side toward the floor for a deep stretch of the adductors and inner hamstrings.",
+            Steps =
+            [
+                "Warm up the hips well, then stand with your feet wide and your hands on the floor or on blocks in front of you.",
+                "Slide your feet apart, keeping the knees and toes pointing forward or up, until you feel a strong stretch in the inner thighs.",
+                "Lower onto your forearms if you can, keeping your hips in line with your feet rather than letting them drift back.",
+                "Hold for 30–60 seconds, breathing slowly, then walk your feet in to come out.",
+            ],
+            Tips =
+            [
+                "Keep your weight in your hands so you control how deep you go.",
+                "Tilt the pelvis forward rather than rounding your back.",
+                "Don't force it; back off at any sharp pain in the groin or inner knee.",
+            ],
+            Video = new("LiIG5y_LGfc"),
+        },
 
         // Calf and shin stretches
         new("stretch_wall_calf", "Wall Calf Stretch", Calves, Bodyweight, Isolation)
@@ -1459,6 +1541,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("7Xl-TNyOJec"),
         },
+        new("yoga_reverse_warrior", "Reverse Warrior", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Abs, Glutes],
+            Category = Yoga,
+            Hold = true,
+            Summary = "Reverse Warrior (Viparita Virabhadrasana): from Warrior II you lean back over the back leg and reach the front arm overhead, stretching the side of the trunk while the front leg stays strong.",
+            Steps =
+            [
+                "Start in Warrior II with the front knee bent over the ankle.",
+                "Turn the front palm up and reach that arm up and back overhead.",
+                "Slide the back hand lightly down the back leg as your torso leans back.",
+                "Keep the front knee bent and hold for 5–8 breaths per side.",
+            ],
+            Tips =
+            [
+                "Lift and lengthen the side body rather than collapsing into the back hand.",
+                "Keep the front knee over the ankle; don't let it straighten as you lean back.",
+            ],
+            Video = new("h_iHFVf-1J4", 7.06),
+        },
         new("yoga_warrior_3", "Warrior III", Glutes, Bodyweight, Compound)
         {
             Secondary = [Hamstrings, LowerBack, Abs],
@@ -1498,6 +1600,47 @@ public static partial class ExerciseLibrary
                 "Keep a micro-bend in the front knee rather than locking it.",
             ],
             Video = new("_1124fj0BeQ"),
+        },
+        new("yoga_revolved_triangle", "Revolved Triangle", Hamstrings, Bodyweight, Compound)
+        {
+            Secondary = [Abs, Back],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Revolved Triangle (Parivrtta Trikonasana): a standing twist with both legs straight, the opposite hand reaching down by the front foot, stretching the hamstrings and rotating the spine.",
+            Steps =
+            [
+                "Stand with your feet about a leg's length apart, front foot forward and back foot turned out about 45°, hips square to the front.",
+                "Reach forward over the front leg with a long spine.",
+                "Place the opposite hand on a block, your shin or the floor beside the front foot.",
+                "Twist your chest open and reach the other arm to the ceiling. Hold for 5 breaths per side.",
+            ],
+            Tips =
+            [
+                "Use a block and a shorter stance until the twist is comfortable.",
+                "Twist from the upper back; keep the hips level and square.",
+                "Don't round your back to get the hand to the floor.",
+            ],
+            Video = new("sX11hp65x14"),
+        },
+        new("yoga_pyramid", "Pyramid Pose", Hamstrings, Bodyweight, Isolation)
+        {
+            Secondary = [Calves, LowerBack],
+            Category = Yoga,
+            Summary = "Pyramid Pose (Parsvottanasana): a short split stance with both legs straight, folding forward over the front leg for an intense hamstring stretch.",
+            Steps =
+            [
+                "Step one foot back about 3 feet, back foot turned out slightly, both legs straight and hips square to the front.",
+                "Lengthen your spine and place your hands on your hips, on blocks or behind your back in reverse prayer.",
+                "Hinge forward from the hips over the front leg, keeping the back long.",
+                "Hold for 5–8 breaths per side.",
+            ],
+            Tips =
+            [
+                "Draw the front hip back so the hips stay level.",
+                "Keep a micro-bend in the front knee rather than locking it.",
+                "Lead with your chest; don't round down toward the knee.",
+            ],
+            Video = new("LTe3CO7Vtxs", 323.28, 532.56),
         },
         new("yoga_extended_side_angle", "Extended Side Angle", Quads, Bodyweight, Compound)
         {
@@ -1579,6 +1722,28 @@ public static partial class ExerciseLibrary
             ],
             Video = new("fC9XQWc6ukk"),
         },
+        new("yoga_dancer", "Dancer Pose", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Glutes, Shoulders, LowerBack],
+            Category = Yoga,
+            Level = Intermediate,
+            Hold = true,
+            Summary = "Dancer Pose (Natarajasana): a one-legged balance holding the back foot and kicking it up behind you while the chest tips forward, stretching the quads, hip flexors and chest.",
+            Steps =
+            [
+                "Stand on one leg, bend the other knee and hold the inside of that foot or ankle with the same-side hand.",
+                "Reach the free arm forward and up.",
+                "Kick the foot back into your hand and let your chest tip forward as the leg lifts behind you.",
+                "Hold for 5 breaths, then switch legs.",
+            ],
+            Tips =
+            [
+                "Keep the lifted knee in line with the hip rather than splaying out.",
+                "Fix your gaze on a still point and keep the standing knee soft but strong.",
+                "Use a strap around the foot if you can't reach it comfortably.",
+            ],
+            Video = new("aAgvS7xDvN0"),
+        },
         new("yoga_half_moon", "Half Moon Pose", Glutes, Bodyweight, Compound)
         {
             Secondary = [Hamstrings, Abs],
@@ -1618,6 +1783,46 @@ public static partial class ExerciseLibrary
                 "Shift your weight slightly toward the balls of your feet.",
             ],
             Video = new("jGr-yIl9rtg"),
+        },
+        new("yoga_wide_legged_forward_fold", "Wide-Legged Forward Fold", Hamstrings, Bodyweight, Isolation)
+        {
+            Secondary = [Quads, LowerBack],
+            Category = Yoga,
+            Summary = "Wide-Legged Forward Fold (Prasarita Padottanasana): standing with the feet wide and folding forward between the legs, stretching the hamstrings and inner thighs.",
+            Steps =
+            [
+                "Stand with your feet about a leg's length apart, toes pointing forward or slightly in.",
+                "Put your hands on your hips, lengthen your spine and hinge forward from the hips.",
+                "Place your hands on the floor or blocks under your shoulders and let your head lower toward the floor.",
+                "Hold for 5–10 breaths, then bring your hands to your hips and rise with a flat back.",
+            ],
+            Tips =
+            [
+                "Keep the weight slightly forward over the balls of the feet.",
+                "Lift your kneecaps to keep the legs active, but don't lock the knees.",
+                "Bend the knees to come up if your lower back feels strained.",
+            ],
+            Video = new("F7you4Sw1o0", 60.039, 631.209),
+        },
+        new("yoga_goddess", "Goddess Pose", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Glutes, Abs],
+            Category = Yoga,
+            Hold = true,
+            Summary = "Goddess Pose (Utkata Konasana): a wide, toes-out squat held with the thighs toward parallel, strengthening the legs and opening the hips and inner thighs.",
+            Steps =
+            [
+                "Stand with your feet wide and turn your toes and knees out about 45°.",
+                "Bend your knees and sink your hips straight down toward knee height.",
+                "Keep your torso upright and bring your arms out with the elbows bent at 90°, or your hands to your chest.",
+                "Hold for 5–8 breaths.",
+            ],
+            Tips =
+            [
+                "Track the knees over the toes; don't let them fall inward.",
+                "Draw the tailbone down so the lower back doesn't arch.",
+            ],
+            Video = new("TwmHvDwSofI"),
         },
         new("yoga_garland", "Garland Pose", Quads, Bodyweight, Compound)
         {
@@ -1659,6 +1864,68 @@ public static partial class ExerciseLibrary
             ],
             Video = new("qMPN9cCDCq8"),
         },
+        new("yoga_lizard", "Lizard Pose", Abs, Bodyweight, Compound)
+        {
+            Secondary = [Quads, Hamstrings],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Lizard Pose (Utthan Pristhasana): a deep low lunge with both hands inside the front foot, opening the hip flexor of the back leg and the inner hip of the front leg.",
+            Steps =
+            [
+                "From Downward-Facing Dog, step one foot to the outside of that hand.",
+                "Lower the back knee to the mat if you like and walk both hands inside the front foot.",
+                "Let your hips sink forward and down, keeping the front knee over the ankle.",
+                "Stay on your hands or lower onto your forearms or a block. Hold for 5–10 breaths per side.",
+            ],
+            Tips =
+            [
+                "Pad the back knee and use blocks under the forearms if the floor is far away.",
+                "Keep your chest long instead of collapsing into the shoulders.",
+                "Let the front knee open out a little to deepen the hip stretch.",
+            ],
+            Video = new("-6MGjYmHdYQ", 27.24, 261.919),
+        },
+        new("yoga_half_split", "Half Split", Hamstrings, Bodyweight, Isolation)
+        {
+            Secondary = [Calves],
+            Category = Yoga,
+            Summary = "Half Split (Ardha Hanumanasana): from a low lunge you shift the hips back over the back knee and straighten the front leg, folding over it to stretch the hamstring.",
+            Steps =
+            [
+                "Kneel in a low lunge with your hands on the floor or blocks either side of the front foot.",
+                "Shift your hips back until they are over the back knee.",
+                "Straighten the front leg, flex the foot and keep the hips square.",
+                "Fold forward with a long spine and hold for 5–10 breaths per side.",
+            ],
+            Tips =
+            [
+                "Keep a slight bend in the front knee if the back of it pulls sharply.",
+                "Lead with your chest; don't round down toward the knee.",
+                "Pad the back knee.",
+            ],
+            Video = new("_cC8SN44mjY", 38, 238),
+        },
+        new("yoga_front_split", "Front Split", Hamstrings, Bodyweight, Compound)
+        {
+            Secondary = [Abs, Quads],
+            Category = Yoga,
+            Level = Advanced,
+            Summary = "Front Split (Hanumanasana): sliding one leg forward and the other back until the legs form a straight line on the floor, a deep stretch of the front hamstring and back hip flexor.",
+            Steps =
+            [
+                "Warm up well, then start in a low lunge with blocks on either side of your hips.",
+                "Shift back into a half split to straighten the front leg.",
+                "Slowly slide the front heel forward and the back knee back, supporting your weight on the blocks.",
+                "Lower only as far as you can with square hips, sitting on a block if needed. Hold for 5–10 breaths per side.",
+            ],
+            Tips =
+            [
+                "Keep the hips square: the back knee points down, the front toes point up.",
+                "Support yourself with your hands and a block under the hips rather than dropping into the floor.",
+                "Never bounce or force the range; build it over weeks.",
+            ],
+            Video = new("fnd4rvCASWw", 180, 307),
+        },
         new("yoga_pigeon", "Pigeon Pose", Glutes, Bodyweight, Compound)
         {
             Secondary = [Abs],
@@ -1697,6 +1964,25 @@ public static partial class ExerciseLibrary
                 "Stack your ankles over your knees.",
             ],
             Video = new("Rg8L0_ZDick"),
+        },
+        new("yoga_reclined_bound_angle", "Reclined Bound Angle", Quads, Bodyweight, Isolation)
+        {
+            Secondary = [Glutes],
+            Category = Yoga,
+            Summary = "Reclined Bound Angle (Supta Baddha Konasana): lying on your back with the soles of the feet together and knees falling open, a restorative stretch for the inner thighs and hips.",
+            Steps =
+            [
+                "Sit with the soles of your feet together and your knees open to the sides.",
+                "Lower yourself onto your back using your forearms.",
+                "Let your knees fall open and rest your arms by your sides, palms up.",
+                "Stay for 1–5 minutes, breathing slowly, then press your knees together to come out.",
+            ],
+            Tips =
+            [
+                "Put blocks or cushions under the thighs if the stretch is too strong.",
+                "A bolster along your spine makes it more restful and opens the chest.",
+            ],
+            Video = new("0_B_Ld_ArzM", 0, 85.76),
         },
 
         // Yoga: seated and resting poses
@@ -1757,6 +2043,47 @@ public static partial class ExerciseLibrary
             ],
             Video = new("1CkumUyO7tE"),
         },
+        new("yoga_seated_spinal_twist", "Seated Spinal Twist", LowerBack, Bodyweight, Compound)
+        {
+            Secondary = [Abs, Glutes],
+            Category = Yoga,
+            Summary = "Seated Spinal Twist (Ardha Matsyendrasana, Half Lord of the Fishes): seated with one foot crossed over the opposite knee, you twist toward the bent knee to rotate the spine and stretch the outer hip.",
+            Steps =
+            [
+                "Sit with your legs straight, then bend your right knee and place the right foot on the floor outside your left knee.",
+                "Bend the left leg so the left heel rests near your right hip, or keep it straight.",
+                "Breathe in and sit tall; breathe out and twist to the right, placing your right hand behind you and hooking your left elbow outside the right knee.",
+                "Hold for 5–8 breaths, then switch sides.",
+            ],
+            Tips =
+            [
+                "Lengthen your spine on each breath in and twist a little further on each breath out.",
+                "Keep both sit bones on the floor.",
+                "Turn from the ribs and upper back; don't crank the neck.",
+            ],
+            Video = new("yYy6w8_hLTE"),
+        },
+        new("yoga_cow_face", "Cow Face Pose", Glutes, Bodyweight, Compound)
+        {
+            Secondary = [Shoulders, Triceps],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Cow Face Pose (Gomukhasana): seated with the knees stacked and the hands clasped behind the back, one elbow up and one down, stretching the outer hips and shoulders together.",
+            Steps =
+            [
+                "From sitting, cross one knee over the other so the knees stack and the feet sit beside the opposite hips.",
+                "Sit evenly on both sit bones.",
+                "Reach the arm on the side of the top knee up, bend the elbow and drop the hand down your back; reach the other hand up behind your back to clasp it.",
+                "Sit tall and hold for 5–8 breaths, then switch sides.",
+            ],
+            Tips =
+            [
+                "Sit on a block or blanket if your hips are tight or the knees don't stack.",
+                "Hold a strap between your hands if they don't meet.",
+                "Don't force the knees; back off at any knee pain.",
+            ],
+            Video = new("5VSNmqtW7uw"),
+        },
         new("yoga_legs_up_the_wall", "Legs Up the Wall", Hamstrings, Bodyweight, Isolation)
         {
             Secondary = [LowerBack],
@@ -1814,6 +2141,25 @@ public static partial class ExerciseLibrary
                 "Keep the back of the neck long; don't crank your head back.",
             ],
             Video = new("zgvolE4NAH0"),
+        },
+        new("yoga_sphinx", "Sphinx Pose", LowerBack, Bodyweight, Isolation)
+        {
+            Secondary = [Abs],
+            Category = Yoga,
+            Summary = "Sphinx Pose (Salamba Bhujangasana): lying face down propped on your forearms, a gentle supported backbend that is easier on the lower back than Cobra.",
+            Steps =
+            [
+                "Lie face down with your legs hip-width apart and the tops of your feet on the mat.",
+                "Place your elbows under your shoulders with your forearms parallel and palms down.",
+                "Press your forearms down and lift your chest, drawing it forward between your arms.",
+                "Hold for 5–10 breaths or up to a minute, then lower down.",
+            ],
+            Tips =
+            [
+                "Keep the shoulders down away from your ears and the neck long.",
+                "Move the elbows forward to soften the backbend if your lower back pinches.",
+            ],
+            Video = new("KWi1YgyxDaQ"),
         },
         new("yoga_upward_dog", "Upward-Facing Dog", LowerBack, Bodyweight, Compound)
         {
@@ -1916,6 +2262,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("vJTnQ6Yq4Fg"),
         },
+        new("yoga_fish", "Fish Pose", Chest, Bodyweight, Compound)
+        {
+            Secondary = [Back, Neck],
+            Category = Yoga,
+            Summary = "Fish Pose (Matsyasana): lying on your back propped on your forearms, you lift and arch the chest and let the head rest back, opening the chest and throat. Often used after Shoulder Stand.",
+            Steps =
+            [
+                "Lie on your back with your legs straight and slide your hands, palms down, under your hips.",
+                "Press your forearms and elbows into the mat and lift your chest toward the ceiling.",
+                "Lower the crown of your head lightly to the mat, keeping most of your weight on your forearms.",
+                "Hold for 3–5 breaths, then lift your head and lower your back down.",
+            ],
+            Tips =
+            [
+                "Keep almost no weight on your head; the arms carry the load.",
+                "Use a block under the upper back for a supported version.",
+                "Skip it with a neck injury.",
+            ],
+            Video = new("vhFdcezAyL8"),
+        },
         new("yoga_wheel", "Wheel Pose", LowerBack, Bodyweight, Compound)
         {
             Secondary = [Shoulders, Glutes, Triceps],
@@ -1937,6 +2303,73 @@ public static partial class ExerciseLibrary
                 "Don't attempt it with a back or shoulder injury.",
             ],
             Video = new("4F4lTh09Z5E"),
+        },
+
+        // Yoga: inversions
+        new("yoga_plow", "Plow Pose", LowerBack, Bodyweight, Compound)
+        {
+            Secondary = [Hamstrings, Neck],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Plow Pose (Halasana): lying on your back, you lift your legs over your head until the toes rest on the floor behind you, stretching the whole back of the body.",
+            Steps =
+            [
+                "Lie on your back with your arms by your sides, palms down, ideally with folded blankets under your shoulders.",
+                "Lift your legs and hips, supporting your back with your hands if needed.",
+                "Lower your toes to the floor behind your head, legs as straight as is comfortable.",
+                "Hold for 5–10 breaths, then roll down slowly one vertebra at a time.",
+            ],
+            Tips =
+            [
+                "Keep your weight on your shoulders, never on your neck, and don't turn your head.",
+                "Rest the toes on a chair or blocks if they don't reach the floor.",
+                "Skip it with neck problems, high blood pressure or glaucoma.",
+            ],
+            Video = new("qpuY0jXimtQ"),
+        },
+        new("yoga_supported_shoulder_stand", "Supported Shoulder Stand", Abs, Bodyweight, Compound)
+        {
+            Secondary = [LowerBack, Shoulders],
+            Category = Yoga,
+            Level = Intermediate,
+            Hold = true,
+            Summary = "Supported Shoulder Stand (Salamba Sarvangasana): an inversion balancing on the shoulders and upper arms with the hands supporting the back and the legs reaching straight up.",
+            Steps =
+            [
+                "Lie with your shoulders on two or three folded blankets and your head on the mat.",
+                "Lift your legs and hips over your head and place your hands on your back, elbows shoulder-width apart.",
+                "Walk your hands toward your shoulder blades and straighten your legs toward the ceiling.",
+                "Hold for 5–20 breaths, then lower your legs over your head and roll down slowly.",
+            ],
+            Tips =
+            [
+                "The blankets protect the neck; keep your weight on the shoulders and don't turn your head.",
+                "Keep your elbows from splaying out.",
+                "Skip it with neck injuries, high blood pressure or glaucoma.",
+            ],
+            Video = new("cBFUHvQmxfc"),
+        },
+        new("yoga_supported_headstand", "Supported Headstand", Shoulders, Bodyweight, Compound)
+        {
+            Secondary = [Abs, Back],
+            Category = Yoga,
+            Level = Advanced,
+            Hold = true,
+            Summary = "Supported Headstand (Salamba Sirsasana): an inversion on the forearms and crown of the head with the fingers interlaced, legs stacked straight above the hips.",
+            Steps =
+            [
+                "Kneel and place your forearms on the mat, elbows shoulder-width apart and fingers interlaced.",
+                "Set the crown of your head on the mat with the back of the head cupped in your hands.",
+                "Straighten your legs and walk your feet in until your hips are over your shoulders.",
+                "Lift one knee then the other toward your chest, then straighten the legs up. Hold for 5–10 breaths and come down the same way.",
+            ],
+            Tips =
+            [
+                "Press the forearms down so most of the weight stays off your head and neck.",
+                "Learn it against a wall and lift with control, never by kicking up.",
+                "Skip it with neck injuries, high blood pressure or glaucoma.",
+            ],
+            Video = new("iRRoqdw-KIY"),
         },
 
         // Yoga: arm balances and core
@@ -2083,6 +2516,27 @@ public static partial class ExerciseLibrary
                 "Lower to your knees in Chaturanga and use Cobra until you're strong enough for the full version.",
             ],
             Video = new("VT609I8OlCs"),
+        },
+        new("yoga_sun_salutation_b", "Sun Salutation B", Quads, Bodyweight, Compound)
+        {
+            Secondary = [Shoulders, Triceps, Hamstrings],
+            Category = Yoga,
+            Level = Intermediate,
+            Summary = "Sun Salutation B (Surya Namaskar B): the longer flowing sequence that adds Chair Pose and Warrior I to Sun Salutation A, linking each movement with the breath.",
+            Steps =
+            [
+                "From Mountain Pose, breathe in to Chair Pose with arms overhead; breathe out and fold forward.",
+                "Breathe in to a half lift; breathe out, step back to Plank and lower through Chaturanga, then breathe in to Upward-Facing Dog.",
+                "Breathe out to Downward-Facing Dog; breathe in, step the right foot forward into Warrior I; breathe out through Chaturanga, breathe in to Upward Dog, breathe out to Downward Dog.",
+                "Repeat Warrior I with the left foot and flow back to Downward Dog, holding it for 5 breaths.",
+                "Step or jump to your hands, half lift, fold, and rise into Chair Pose before standing in Mountain. Repeat 3–5 rounds.",
+            ],
+            Tips =
+            [
+                "One movement per breath; let the breath set the pace.",
+                "Lower to your knees in Chaturanga and use Cobra until you're strong enough for the full version.",
+            ],
+            Video = new("_ENYL8qxKx0", 37, 485),
         },
     ];
 }

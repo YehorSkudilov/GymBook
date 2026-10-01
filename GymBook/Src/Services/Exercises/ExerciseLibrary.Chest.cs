@@ -244,6 +244,109 @@ public static partial class ExerciseLibrary
             ],
             Video = new("6sH6vyWduNU"),
         },
+        new("paused_bench_press", "Paused Bench Press", Chest, Barbell, Compound)
+        {
+            Secondary = [Triceps, Shoulders],
+            Level = Intermediate,
+            Summary = "A bench press with a dead-still pause on the chest each rep, as in powerlifting, which builds strength off the chest and removes any bounce.",
+            Steps =
+            [
+                "Set up as for a normal bench press: eyes under the bar, shoulder blades back and down, feet planted.",
+                "Unrack the bar and lower it under control to your lower chest.",
+                "Hold it motionless on your chest for 1–3 seconds while staying tight.",
+                "Press it back up and slightly back to straight arms.",
+            ],
+            Tips =
+            [
+                "Keep pressure on the bar during the pause; don't relax and let it sink into your chest.",
+                "Expect to use about 5–10% less than your touch-and-go bench.",
+                "Don't lift your hips or heave the bar to start the press.",
+            ],
+            Video = new("i-ylz1zdp5s"),
+        },
+        new("larsen_press", "Larsen Press", Chest, Barbell, Compound)
+        {
+            Secondary = [Triceps, Shoulders],
+            Level = Intermediate,
+            Summary = "A bench press with your legs straight out and feet off the floor, so there is no leg drive and your upper body must stay stable on its own.",
+            Steps =
+            [
+                "Lie on the bench with shoulder blades pulled back, then straighten your legs and lift your feet just off the floor.",
+                "Unrack the bar and steady it over your shoulders.",
+                "Lower it under control to your lower chest without letting your body tip.",
+                "Press it back up to straight arms, keeping your legs still.",
+            ],
+            Tips =
+            [
+                "Use lighter weight than your normal bench; balance is the limiter.",
+                "Keep your glutes on the bench and a small, controlled arch.",
+                "Don't let the bar drift unevenly or your hips twist.",
+                "Use a spotter or safety arms; you can't use your legs to bail.",
+            ],
+            Video = new("Ilt0GuTwB_Y"),
+        },
+        new("spoto_press", "Spoto Press", Chest, Barbell, Compound)
+        {
+            Secondary = [Triceps, Shoulders],
+            Level = Intermediate,
+            Summary = "A bench press paused 2–5 cm above the chest without touching it, named after Eric Spoto, to build control and strength just off the chest.",
+            Steps =
+            [
+                "Set up as for a normal bench press and unrack the bar.",
+                "Lower it under control toward your chest.",
+                "Stop it an inch or two above your chest and hold it still for a second.",
+                "Press it back up to straight arms.",
+            ],
+            Tips =
+            [
+                "Pause in the same spot every rep, just above where the bar would touch.",
+                "Stay tight and keep your elbows tucked during the pause.",
+                "Don't let the bar drift toward your face or touch your chest.",
+            ],
+            Video = new("gModkRG2uu4", 64.647),
+        },
+        new("reverse_grip_bench_press", "Reverse-Grip Bench Press", Chest, Barbell, Compound)
+        {
+            Secondary = [Triceps, Shoulders],
+            Level = Intermediate,
+            Summary = "A barbell bench press with an underhand grip, which tucks the elbows and shifts more work onto the upper chest and triceps with less shoulder stress.",
+            Steps =
+            [
+                "Lie on the bench and grip the bar underhand, palms facing your head, about shoulder width.",
+                "Have a spotter help you unrack it and steady it over your shoulders.",
+                "Lower it with tucked elbows to your lower chest, just below the nipples.",
+                "Press it back up and slightly back toward your face to straight arms.",
+            ],
+            Tips =
+            [
+                "Squeeze the bar hard and keep your wrists stacked over your forearms.",
+                "Start light; the grip feels unstable at first.",
+                "Use a spotter for the lift-off and heavy sets; the bar can roll out of an underhand grip.",
+                "Don't use a thumbless grip.",
+            ],
+            Video = new("G0uxeMB8_xg", 63.72, 112.6),
+        },
+        new("guillotine_press", "Guillotine Press", Chest, Barbell, Compound)
+        {
+            Secondary = [Shoulders, Triceps],
+            Level = Advanced,
+            Summary = "Vince Gironda's neck press: a wide-grip bench press with flared elbows, lowering the bar toward your neck to stretch the upper chest. Light weight only.",
+            Steps =
+            [
+                "Lie on a flat bench and take a grip a little wider than for a normal bench press.",
+                "Unrack the bar and hold it over your upper chest, elbows pointing out.",
+                "Lower it slowly toward the base of your neck, stopping just above it.",
+                "Press it back up over your upper chest to straight arms.",
+            ],
+            Tips =
+            [
+                "Use light weight, a controlled tempo and a spotter or safety arms set just above your neck.",
+                "Stop short of touching your neck and keep your upper back tight.",
+                "Don't go heavy or chase failure; the flared position is hard on the shoulders.",
+                "Skip it if you have shoulder pain.",
+            ],
+            Video = new("y90T12sTukg"),
+        },
 
         // Incline pressing
         new("incline_bench_press", "Incline Bench Press", Chest, Barbell, Compound)
@@ -814,6 +917,67 @@ public static partial class ExerciseLibrary
                 "Build up with archer and incline one-arm push-ups first.",
             ],
             Video = new("IlWN4SNqaEM"),
+        },
+        new("hindu_push_up", "Hindu Push-Up", Chest, Bodyweight, Compound)
+        {
+            Secondary = [Shoulders, Triceps],
+            Level = Intermediate,
+            Summary = "A flowing push-up (the wrestler's dand) that swoops from a pike down through the hands and up into a back arch, working the chest, shoulders and triceps while mobilising the spine.",
+            Steps =
+            [
+                "Start in a pike with your hands shoulder-width apart, feet a bit wider and hips high.",
+                "Bend your elbows and swoop your chest down close to the floor between your hands.",
+                "Keep sliding forward and press up into straight arms with your hips low and chest lifted.",
+                "Push your hips back up and return to the pike, then repeat.",
+            ],
+            Tips =
+            [
+                "Move smoothly and breathe out as you rise into the arch.",
+                "Keep your elbows close to your body on the swoop.",
+                "Don't crank your lower back; only arch as far as is comfortable.",
+            ],
+            Video = new("CdH5dT12axE"),
+        },
+        new("spiderman_push_up", "Spiderman Push-Up", Chest, Bodyweight, Compound)
+        {
+            Secondary = [Triceps, Shoulders, Abs],
+            Level = Intermediate,
+            Summary = "A push-up where you bring one knee out toward the elbow on the same side as you lower, adding core and hip work.",
+            Steps =
+            [
+                "Start in a high plank with your hands just wider than your shoulders.",
+                "As you lower your chest, lift one foot and bring that knee out to the side toward your elbow.",
+                "Push back up and return the foot to the floor.",
+                "Repeat on the other side, alternating each rep.",
+            ],
+            Tips =
+            [
+                "Keep your hips level and your body in one line as the knee travels.",
+                "Lower all the way; don't shorten the push-up to make room for the knee.",
+                "Don't let your hips sag or twist.",
+            ],
+            Video = new("O4ykWemt47k"),
+        },
+        new("pseudo_planche_push_up", "Pseudo Planche Push-Up", Shoulders, Bodyweight, Compound)
+        {
+            Secondary = [Chest, Triceps, Abs],
+            Level = Advanced,
+            Summary = "A push-up with your hands turned out by your hips and your body leaned forward past them, loading the front delts heavily as a planche progression.",
+            Steps =
+            [
+                "Get into a push-up position with your hands by your lower ribs or hips, fingers turned out or back.",
+                "Lean forward until your shoulders are well in front of your hands, arms straight and shoulder blades pushed apart.",
+                "Keeping the lean, bend your elbows and lower your chest toward the floor, elbows tight to your sides.",
+                "Press back to straight arms without losing the forward lean.",
+            ],
+            Tips =
+            [
+                "The further you lean, the harder it gets; keep the lean the same through the rep.",
+                "Keep your body hollow and your glutes squeezed.",
+                "Build wrist strength first and warm the wrists up well.",
+                "Don't shift your shoulders back over your hands as you press.",
+            ],
+            Video = new("TZ63httkob4", 22.16, 83.119),
         },
 
         // Dips

@@ -206,6 +206,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("pTZL-Hirhwg"),
         },
+        new("ghd_sit_up", "GHD Sit-Up", Abs, Bodyweight, Compound)
+        {
+            Summary = "A sit-up on a glute-ham developer with your feet locked and hips on the pad, lowering back past parallel for a long range for the abs and hip flexors.",
+            Secondary = [Quads],
+            Level = Advanced,
+            Steps =
+            [
+                "Set the GHD so your hips sit just behind the front pad and lock your feet under the rollers with knees slightly bent.",
+                "Sit up tall with your arms crossed on your chest or reaching forward.",
+                "Lean back under control until your torso is about parallel to the floor, or a little below once you're used to it.",
+                "Kick your knees straight to drive yourself back up and reach toward your feet.",
+            ],
+            Tips =
+            [
+                "Start with a small range and low volume; GHD sit-ups cause severe soreness and, in rare cases, muscle damage when overdone.",
+                "Keep your neck neutral and don't throw your head back at the bottom.",
+                "Don't go below parallel until you can control the way down.",
+            ],
+            Video = new("oFwt7WfnPcc"),
+        },
         new("v_up", "V-Up", Abs, Bodyweight, Compound)
         {
             Summary = "Lifting your straight legs and torso at the same time to meet in a V, a hard full-range ab exercise.",
@@ -279,6 +299,24 @@ public static partial class ExerciseLibrary
             ],
             Video = new("ZEjloSZwXqI"),
         },
+        new("scissor_kicks", "Scissor Kicks", Abs, Bodyweight, Isolation)
+        {
+            Summary = "Lying on your back with straight legs just off the floor and crossing them over and under each other side to side, an endurance drill for the lower abs and hip flexors.",
+            Steps =
+            [
+                "Lie on your back with legs straight and hands under your hips or flat by your sides.",
+                "Press your lower back into the floor and lift your legs a few inches off the floor.",
+                "Open your legs a little, then cross one over the other.",
+                "Open them again and cross with the other leg on top, alternating for the set time or count.",
+            ],
+            Tips =
+            [
+                "Keep the movement side to side; up-and-down kicks are flutter kicks.",
+                "Lift your legs higher if your lower back starts to arch.",
+                "Don't hold your breath; breathe steadily through the set.",
+            ],
+            Video = new("aqMfWavH2X4"),
+        },
         new("hanging_knee_raise", "Hanging Knee Raise", Abs, Bodyweight, Isolation)
         {
             Summary = "Hanging from a bar and drawing your knees up toward your chest, the entry point to hanging ab work.",
@@ -296,6 +334,26 @@ public static partial class ExerciseLibrary
                 "Don't just lift your knees to 90°; the abs work most when the pelvis curls.",
             ],
             Video = new("IHOFHNWn0_M"),
+        },
+        new("hanging_oblique_knee_raise", "Hanging Oblique Knee Raise", Abs, Bodyweight, Isolation)
+        {
+            Summary = "A hanging knee raise that brings both knees up and across toward one side, working the obliques along with the lower abs.",
+            Secondary = [Forearms],
+            Level = Intermediate,
+            Steps =
+            [
+                "Hang from a pull-up bar with an overhand grip, arms straight and shoulders engaged.",
+                "Brace your abs and draw both knees up and across toward one armpit.",
+                "Curl your pelvis up at the top and squeeze your side.",
+                "Lower your legs slowly to the centre, then raise them to the other side.",
+            ],
+            Tips =
+            [
+                "Lead with your hips and pelvis, not just your knees.",
+                "Kill any swing before the next rep.",
+                "Don't use a kick or momentum to get your knees up.",
+            ],
+            Video = new("sqDdHFC1KYk"),
         },
         new("hanging_leg_raise", "Hanging Leg Raise", Abs, Bodyweight, Isolation)
         {
@@ -415,6 +473,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("EKZfeoVuPbE"),
         },
+        new("bear_plank", "Bear Plank", Abs, Bodyweight, Isolation)
+        {
+            Summary = "Holding a tabletop on hands and toes with your knees hovering an inch off the floor, a core hold that also works the shoulders and quads.",
+            Secondary = [Shoulders, Quads],
+            Hold = true,
+            Steps =
+            [
+                "Get on all fours with hands under your shoulders and knees under your hips, toes tucked.",
+                "Brace your abs and flatten your back.",
+                "Press into the floor and lift your knees about an inch.",
+                "Hold for 20–45 seconds, breathing steadily, then lower your knees.",
+            ],
+            Tips =
+            [
+                "Keep your back flat and level like a table; don't let your hips rise.",
+                "Push the floor away so your upper back doesn't sag between your shoulder blades.",
+                "Don't hold your breath.",
+            ],
+            Video = new("XqH46t5TD98", 57),
+        },
         new("rkc_plank", "RKC Plank", Abs, Bodyweight, Isolation)
         {
             Summary = "A short, maximal-tension plank where you squeeze everything and pull your elbows toward your feet.",
@@ -493,6 +571,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("ynrKPaorg-Q"),
         },
+        new("reverse_plank", "Reverse Plank", Glutes, Bodyweight, Compound)
+        {
+            Summary = "Holding a straight body face up on your hands and heels, which works the glutes, hamstrings and back extensors, plus the shoulders.",
+            Secondary = [Hamstrings, LowerBack, Shoulders],
+            Hold = true,
+            Steps =
+            [
+                "Sit with your legs straight and your hands on the floor just behind your hips, fingers pointing toward your feet.",
+                "Press through your hands and heels and lift your hips.",
+                "Keep lifting until your body forms a straight line from shoulders to heels.",
+                "Hold for 15–45 seconds, then lower your hips back down.",
+            ],
+            Tips =
+            [
+                "Squeeze your glutes to keep your hips up.",
+                "Keep your neck neutral rather than dropping your head back.",
+                "Bend your knees to 90° (a tabletop) if your hips sag or your shoulders feel strained.",
+            ],
+            Video = new("PgezBeNqke0"),
+        },
         new("plank_shoulder_tap", "Plank Shoulder Tap", Abs, Bodyweight, Compound)
         {
             Summary = "In a high plank, tapping each hand to the opposite shoulder while keeping your hips still, an anti-rotation drill.",
@@ -510,6 +608,44 @@ public static partial class ExerciseLibrary
                 "Widen your feet to make it easier.",
             ],
             Video = new("NV55raYCP0E"),
+        },
+        new("plank_up_down", "Plank Up-Down", Abs, Bodyweight, Compound)
+        {
+            Summary = "Moving from a forearm plank up to a high plank one arm at a time and back down, keeping the hips still; works the abs, triceps and shoulders.",
+            Secondary = [Triceps, Shoulders],
+            Steps =
+            [
+                "Start in a forearm plank with elbows under your shoulders and feet a little wider than hip-width.",
+                "Place one hand on the floor, then the other, and press up into a high plank.",
+                "Lower back to one forearm, then the other.",
+                "Alternate the arm that leads each rep.",
+            ],
+            Tips =
+            [
+                "Keep your hips square and level; don't rock side to side.",
+                "Widen your feet to make it more stable.",
+                "Don't pike your hips up to make the switch easier.",
+            ],
+            Video = new("vpH42F2V2ts"),
+        },
+        new("plank_jacks", "Plank Jacks", Abs, Bodyweight, Compound)
+        {
+            Summary = "Jumping your feet out and in while holding a high plank, a core exercise that also raises your heart rate.",
+            Secondary = [Shoulders, Glutes],
+            Steps =
+            [
+                "Start in a high plank with hands under your shoulders and feet together.",
+                "Brace your abs and keep your body straight from head to heels.",
+                "Jump both feet out wide, landing softly on the balls of your feet.",
+                "Jump them back together and repeat for the set time or count.",
+            ],
+            Tips =
+            [
+                "Keep your hips level; don't let them bounce up and down.",
+                "Step the feet out one at a time for a low-impact version.",
+                "Don't let your lower back sag as you tire.",
+            ],
+            Video = new("8hjjYN7uKT8", 37),
         },
         new("body_saw", "Body Saw", Abs, Other, Compound)
         {
@@ -605,6 +741,26 @@ public static partial class ExerciseLibrary
                 "Don't bend at the hips; the movement comes from your shoulders.",
             ],
             Video = new("80-BtHgkOYo"),
+        },
+        new("stability_ball_pike", "Stability Ball Pike", Abs, Other, Compound)
+        {
+            Summary = "From a high plank with your shins on a stability ball, lifting your hips into a pike so the ball rolls toward your hands; hard on the abs and shoulders.",
+            Secondary = [Shoulders],
+            Level = Advanced,
+            Steps =
+            [
+                "Get into a high plank with your hands under your shoulders and your shins or feet on a stability ball.",
+                "Brace your abs so your body is straight from head to feet.",
+                "Keeping your legs straight, lift your hips toward the ceiling and roll the ball toward your hands until you're in a pike.",
+                "Lower your hips slowly back to the plank.",
+            ],
+            Tips =
+            [
+                "Keep your shoulders stacked over your hands as your hips rise.",
+                "Start with the ball under your shins; the further it is toward your toes, the harder it gets.",
+                "Don't let your lower back sag when you return to the plank.",
+            ],
+            Video = new("eFcjeQ9tuEQ", 18.99),
         },
         new("stir_the_pot", "Stir the Pot", Abs, Other, Compound)
         {
@@ -1020,6 +1176,27 @@ public static partial class ExerciseLibrary
                 "Bend from your side, not by reaching with your arm.",
             ],
             Video = new("w2Um9ULrcBI"),
+        },
+        new("human_flag", "Human Flag", Abs, Bodyweight, Compound)
+        {
+            Summary = "Gripping a vertical pole with both hands and holding your body straight out to the side, parallel to the floor; an elite calisthenics hold for the obliques, lats and shoulders.",
+            Secondary = [Back, Shoulders],
+            Level = Advanced,
+            Hold = true,
+            Steps =
+            [
+                "Grip a sturdy vertical pole with your top hand overhand above your head and your bottom hand about shoulder-width lower.",
+                "Lock your arms straight: pull with the top arm and push hard with the bottom arm.",
+                "Kick or lift your legs up and sideways, then bring your body down until it's horizontal.",
+                "Squeeze your legs together and hold for a few seconds before lowering your feet with control.",
+            ],
+            Tips =
+            [
+                "Build up through vertical flags, tuck flags and straddle flags first.",
+                "Keep both elbows locked; the push from the bottom arm is what holds you up.",
+                "Don't attempt it on a pole that isn't anchored securely.",
+            ],
+            Video = new("y4Vwwz8vV2U"),
         },
     ];
 }

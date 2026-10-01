@@ -69,6 +69,46 @@ public static partial class ExerciseLibrary
             ],
             Video = new("LMdNTHH6G8I"),
         },
+        new("barbell_21s", "Barbell 21s", Biceps, Barbell, Isolation)
+        {
+            Secondary = [Forearms],
+            Level = Intermediate,
+            Summary = "A barbell curl set of 21 reps: 7 partials in the bottom half, 7 in the top half, then 7 full reps, for a big biceps pump.",
+            Steps =
+            [
+                "Stand holding a barbell with an underhand, shoulder-width grip, arms straight.",
+                "Do 7 reps curling from the bottom to halfway, forearms parallel to the floor.",
+                "Without resting, do 7 reps from halfway to the top.",
+                "Finish with 7 full-range curls, then lower the bar.",
+            ],
+            Tips =
+            [
+                "Use about 60–70% of your normal curl weight.",
+                "Keep your elbows pinned at your sides through all 21 reps.",
+                "Don't swing your hips to finish the last full reps.",
+            ],
+            Video = new("GNO4OtYoCYk", 541, 612),
+        },
+        new("cheat_curl", "Cheat Curl", Biceps, Barbell, Isolation)
+        {
+            Secondary = [Forearms],
+            Level = Intermediate,
+            Summary = "A heavy barbell curl that uses a controlled hip and torso swing to get the bar up, then fights the lowering slowly to overload the biceps.",
+            Steps =
+            [
+                "Stand holding a barbell with an underhand, shoulder-width grip, heavier than you can curl strictly.",
+                "Hinge slightly forward, then drive your hips through and lean back a little to start the bar moving.",
+                "Curl the bar the rest of the way to your shoulders.",
+                "Lower it slowly, taking 2–3 seconds, with your torso upright and elbows at your sides.",
+            ],
+            Tips =
+            [
+                "Use just enough body English to get past the sticking point; the biceps should still do most of the work.",
+                "The slow lowering is the point; don't let the bar drop.",
+                "Keep your back neutral and your abs braced; skip it if your lower back is sore.",
+            ],
+            Video = new("GNO4OtYoCYk", 705, 750),
+        },
         new("preacher_curl", "EZ-Bar Preacher Curl", Biceps, EzBar, Isolation)
         {
             Summary = "A strict curl with your upper arms braced on a preacher bench, which stops any swinging and works the biceps hard in the stretched position.",
@@ -215,6 +255,24 @@ public static partial class ExerciseLibrary
             ],
             Video = new("kc-LGcbozhI"),
         },
+        new("waiter_curl", "Waiter Curl", Biceps, Dumbbell, Isolation)
+        {
+            Summary = "Curling one dumbbell held vertically with both palms flat under the top plate, like a waiter carrying a tray, to keep the biceps under tension.",
+            Steps =
+            [
+                "Stand holding a dumbbell upright in front of your thighs, both palms flat under the top head, fingers interlaced or overlapping.",
+                "Keep your elbows at your sides and your wrists flat.",
+                "Curl the dumbbell up toward your chin, keeping the handle vertical.",
+                "Lower it slowly to straight arms.",
+            ],
+            Tips =
+            [
+                "Keep the dumbbell level so it doesn't tip toward you.",
+                "Don't let your elbows drift forward to finish the rep.",
+                "Use a moderate weight; the open-hand grip limits how much you can hold safely.",
+            ],
+            Video = new("8dbPdH0pIBI", 0, 65.439),
+        },
         new("db_preacher_curl", "Dumbbell Preacher Curl", Biceps, Dumbbell, Isolation)
         {
             Summary = "A one-arm preacher curl with a dumbbell, letting you train each arm on its own with the upper arm braced.",
@@ -269,6 +327,42 @@ public static partial class ExerciseLibrary
                 "Don't rock your body to start the rep.",
             ],
             Video = new("hdXgJwbaIYg"),
+        },
+        new("cable_preacher_curl", "Cable Preacher Curl", Biceps, Cable, Isolation)
+        {
+            Summary = "A preacher curl done with a low cable instead of free weights, so the biceps stay loaded at the bottom and top of the curl.",
+            Steps =
+            [
+                "Place a preacher bench in front of a low pulley with a straight or EZ bar attached.",
+                "Sit with your armpits over the top of the pad and the backs of your arms flat on it, holding the bar with an underhand grip.",
+                "Curl the bar up until your forearms are close to vertical.",
+                "Lower it slowly until your arms are almost straight.",
+            ],
+            Tips =
+            [
+                "Keep your upper arms on the pad the whole time.",
+                "Don't lift your hips or lean back to finish the rep.",
+                "Control the bottom; don't let the cable snap your elbows straight.",
+            ],
+            Video = new("Iwqi47sPS2M"),
+        },
+        new("lying_cable_curl", "Lying Cable Curl", Biceps, Cable, Isolation)
+        {
+            Summary = "A cable curl done lying on your back on the floor or a bench with your feet toward the pulley, which locks your body in place and stops any swinging.",
+            Steps =
+            [
+                "Attach a straight or EZ bar to a low pulley and lie on your back with your feet toward the stack.",
+                "Hold the bar with an underhand grip, arms straight and upper arms by your sides, pointing at the pulley.",
+                "Curl the bar toward your chest, keeping your upper arms still.",
+                "Lower it slowly until your arms are straight.",
+            ],
+            Tips =
+            [
+                "Keep your elbows on or just off the floor; don't let them drift up toward your face.",
+                "Squeeze at the top for a second.",
+                "Don't lift your head or shoulders to help the bar up.",
+            ],
+            Video = new("ywfiZIv9_L4"),
         },
         new("bayesian_curl", "Bayesian Cable Curl", Biceps, Cable, Isolation)
         {
@@ -651,6 +745,26 @@ public static partial class ExerciseLibrary
             ],
             Video = new("xvSYujmY_EY"),
         },
+        new("california_press", "California Press", Triceps, Barbell, Compound)
+        {
+            Secondary = [Chest, Shoulders],
+            Level = Advanced,
+            Summary = "An old-school bench hybrid that starts as a skull crusher and finishes as a close-grip press, loading the triceps through elbow and shoulder movement.",
+            Steps =
+            [
+                "Lie on a flat bench holding the bar with a close, shoulder-width grip, arms straight over your chest.",
+                "Bend your elbows to lower the bar toward your neck, keeping your elbows pointed up like a skull crusher.",
+                "About halfway down, let your elbows drop toward your sides and lower the bar to your upper chest.",
+                "Press the bar back up to straight arms in one smooth movement.",
+            ],
+            Tips =
+            [
+                "Start light; it takes a few sessions to find the groove.",
+                "Keep your elbows tucked, not flared, as the bar nears your chest.",
+                "Use safety arms or a spotter.",
+            ],
+            Video = new("46irCNOOB5M"),
+        },
         new("tate_press", "Tate Press", Triceps, Dumbbell, Isolation)
         {
             Level = Intermediate,
@@ -798,6 +912,25 @@ public static partial class ExerciseLibrary
                 "Don't let your elbows flare wide; keep them close to your ribs.",
             ],
             Video = new("PPTj-MW2tcs"),
+        },
+        new("close_grip_push_up", "Close-Grip Push-Up", Triceps, Bodyweight, Compound)
+        {
+            Secondary = [Chest, Shoulders],
+            Summary = "A push-up with your hands about shoulder-width apart and elbows tucked to your sides, shifting more of the work to the triceps.",
+            Steps =
+            [
+                "Get into a push-up position with your hands directly under your shoulders, fingers pointing forward.",
+                "Keep your body straight from head to heels.",
+                "Lower your chest toward the floor, elbows brushing your ribs.",
+                "Press back up to straight arms.",
+            ],
+            Tips =
+            [
+                "Drop to your knees if you can't keep your hips in line.",
+                "Keep your elbows tight to your body; flaring them turns it back into a regular push-up.",
+                "It's easier on the wrists than a Diamond Push-Up while still hitting the triceps hard.",
+            ],
+            Video = new("OpRMRhr0Ycc", 779, 796),
         },
 
         // Forearms: wrist curls

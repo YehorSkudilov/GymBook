@@ -1,6 +1,7 @@
 // Validates the hand-written exercise library: ids, names, enum values, required ids.
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
-const dir = "C:/GitHub/GymBook/GymBook/Src/Services/Exercises/";
+import { fileURLToPath } from "node:url";
+const dir = fileURLToPath(new URL("../../GymBook/Src/Services/Exercises/", import.meta.url));
 const M = new Set("Chest Back Traps Shoulders Biceps Triceps Forearms Abs LowerBack Glutes Quads Hamstrings Calves Neck".split(" "));
 const E = new Set("Barbell Dumbbell Machine Cable Bodyweight Kettlebell EzBar Band Other".split(" "));
 const K = new Set(["Compound", "Isolation"]);

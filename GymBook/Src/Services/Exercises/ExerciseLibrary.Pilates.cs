@@ -706,6 +706,48 @@ public static partial class ExerciseLibrary
             ],
             Video = new("l0PHCLIo1Kg"),
         },
+        new("pilates_crab", "Pilates Crab", Abs, Bodyweight, Compound)
+        {
+            Category = Pilates,
+            Level = Advanced,
+            Summary = "A harder cousin of the Seal: holding crossed feet in a tight ball, roll back to switch the cross of the legs, then roll forward onto the knees and the top of the head.",
+            Steps =
+            [
+                "Sit with legs crossed, draw the knees toward your shoulders and hold the tops of the feet, balancing in a tight C-curve.",
+                "Inhale as you roll back to the shoulder blades, hips over the shoulders.",
+                "Let go, switch the cross of the legs and take hold of the feet again.",
+                "Exhale as you roll forward through balance onto the knees until the top of the head lightly touches the mat.",
+                "Roll back up to balance and repeat 4–6 times.",
+            ],
+            Tips =
+            [
+                "Keep the same rounded shape and deep abdominal scoop the whole time.",
+                "Only touch the head down lightly; no real weight goes through the neck.",
+                "Skip it with any neck or spine injury, and learn Rolling Like a Ball and Seal first.",
+            ],
+            Video = new("1P1KobzASTk"),
+        },
+        new("pilates_rocking", "Pilates Rocking", LowerBack, Bodyweight, Compound)
+        {
+            Secondary = [Glutes, Hamstrings],
+            Category = Pilates,
+            Level = Advanced,
+            Summary = "Lying face down holding your ankles, lift the chest and knees into a bow and rock forward and back, strengthening the back extensors and stretching the front of the body.",
+            Steps =
+            [
+                "Lie face down, bend both knees and hold the fronts of your ankles with your hands.",
+                "Press the ankles back into your hands to lift the chest and knees off the mat.",
+                "Keeping that arched shape, inhale as you rock back onto the thighs and exhale as you rock forward onto the chest.",
+                "Rock 5 times, then release and rest back in child's pose.",
+            ],
+            Tips =
+            [
+                "The lift comes from the legs pressing into the hands and the back working, not from pulling with the arms.",
+                "Keep the abdominals drawn in and the arch long through the whole spine, not pinched in the lower back.",
+                "Skip it with back or knee pain; master Swan Dive first.",
+            ],
+            Video = new("KQWHWl7yV9g"),
+        },
         new("pilates_control_balance", "Control Balance", Abs, Bodyweight, Compound)
         {
             Secondary = [Glutes, Hamstrings],
@@ -940,6 +982,27 @@ public static partial class ExerciseLibrary
             ],
             Video = new("vx4DdBWY6kQ", 166, 302),
         },
+        new("pilates_reformer_coordination", "Reformer Coordination", Abs, Other, Compound)
+        {
+            Secondary = [Triceps, Quads],
+            Category = Pilates,
+            Level = Intermediate,
+            Summary = "Lying on the carriage in a chest curl holding the straps, press the arms down as the legs shoot out, open and close the legs, then fold back in: a test of breath, timing and abdominal control.",
+            Steps =
+            [
+                "Lie on the carriage holding the straps, knees drawn to your chest, elbows bent with the upper arms on the carriage, and curl your head and chest up.",
+                "Inhale as you press the arms straight down by your hips and extend the legs to about 45°.",
+                "Hold the breath as you open and close the legs quickly.",
+                "Exhale as you bend the knees back in, then bend the elbows to the start, keeping the curl; repeat 3–5 times.",
+            ],
+            Tips =
+            [
+                "Keep the head and chest lifted throughout; the trunk stays still while the limbs move.",
+                "Open the legs no wider than the reformer frame and resist the springs as you close them.",
+                "Lower the legs only as far as the lower back stays steady.",
+            ],
+            Video = new("awW8b438LY4"),
+        },
         new("pilates_reformer_frog", "Reformer Frog", Quads, Other, Compound)
         {
             Secondary = [Glutes, Hamstrings],
@@ -998,6 +1061,28 @@ public static partial class ExerciseLibrary
                 "Skip with neck or disc problems.",
             ],
             Video = new("AOUX2a-in0I"),
+        },
+        new("pilates_reformer_semi_circle", "Reformer Semi-Circle", Glutes, Other, Compound)
+        {
+            Secondary = [Hamstrings, LowerBack, Quads],
+            Category = Pilates,
+            Level = Intermediate,
+            Summary = "From a bridge with feet on the footbar, press the carriage out, roll the spine down, then draw the carriage in through an arch and lift back up, articulating the spine in a full circle.",
+            Steps =
+            [
+                "Lie on the carriage with the balls of your feet on the footbar, hands holding the shoulder blocks, and lift your hips into a high bridge.",
+                "Inhale as you straighten the legs to press the carriage out, hips lifted.",
+                "Exhale as you roll the spine down onto the carriage one vertebra at a time, keeping the carriage still.",
+                "Bend the knees to draw the carriage in, lifting the chest and arching through the back, then lift the hips up into the bridge again.",
+                "Repeat 3 times, then reverse the direction for 3.",
+            ],
+            Tips =
+            [
+                "Keep the carriage still while the spine moves; only the legs move the carriage.",
+                "Keep the knees in line with the hips and feet and the arch long rather than pinched in the lower back.",
+                "Modify or skip with knee or shoulder problems.",
+            ],
+            Video = new("AVEd2T_ForA"),
         },
         new("pilates_reformer_long_stretch", "Reformer Long Stretch", Abs, Other, Compound)
         {
@@ -1098,6 +1183,86 @@ public static partial class ExerciseLibrary
                 "Draw the abdominals in deeply in the rounded version.",
             ],
             Video = new("Wt_horWSoA4"),
+        },
+        new("pilates_reformer_short_box_round_back", "Reformer Short Box Round Back", Abs, Other, Compound)
+        {
+            Category = Pilates,
+            Summary = "Sitting on the short box with the feet under the foot strap, roll back in a deep C-curve and curl back up, strengthening the abdominals through spinal flexion.",
+            Steps =
+            [
+                "Place the box across the carriage, sit tall about a hand-width from its back edge with feet flexed under the strap and arms crossed in front of the chest or around the waist.",
+                "Exhale as you tuck the pelvis, scoop the abdominals and roll back into a C-curve until you're about halfway down.",
+                "Inhale to hold the curve.",
+                "Exhale as you curl forward and stack back up to sitting tall; repeat 3–5 times.",
+            ],
+            Tips =
+            [
+                "Keep the curve of the spine even; don't lead with the head or let the back flatten.",
+                "Press the feet lightly into the strap, but don't pull up with the legs.",
+                "Lock the carriage with all springs on before you sit on the box.",
+            ],
+            Video = new("plY0FcW051E", 22.56, 58.5),
+        },
+        new("pilates_reformer_short_box_flat_back", "Reformer Short Box Flat Back", Abs, Other, Compound)
+        {
+            Secondary = [LowerBack, Shoulders],
+            Category = Pilates,
+            Level = Intermediate,
+            Summary = "On the short box with a pole or arms overhead, hinge back on a long, straight spine and return, working the abdominals and back extensors together.",
+            Steps =
+            [
+                "Sit tall on the box with feet flexed under the strap, holding a pole overhead with straight arms, hands shoulder width.",
+                "Inhale to lengthen up through the crown of the head.",
+                "Hinge back from the hips as one straight line, only as far as you can keep the spine long.",
+                "Exhale as you hinge back up to sitting tall; repeat 3–5 times.",
+            ],
+            Tips =
+            [
+                "Keep the ribs closed and the back flat; don't arch or round.",
+                "Keep the arms in line with the ears and the shoulders down.",
+            ],
+            Video = new("plY0FcW051E", 58.5, 79.32),
+        },
+        new("pilates_reformer_short_box_twist", "Reformer Short Box Twist", Abs, Other, Compound)
+        {
+            Secondary = [LowerBack],
+            Category = Pilates,
+            Level = Intermediate,
+            Summary = "On the short box with a pole overhead or behind the shoulders, rotate the torso and hinge back on the diagonal, working the obliques with a long spine.",
+            Steps =
+            [
+                "Sit tall on the box with feet flexed under the strap and a pole held overhead or across the shoulders.",
+                "Exhale as you rotate the torso to one side, keeping both hips pressing down.",
+                "Inhale as you hinge back on a high diagonal, keeping the twist and a long spine.",
+                "Exhale to hinge up, untwist to centre and repeat to the other side; do 3–5 each way.",
+            ],
+            Tips =
+            [
+                "Rotate from the waist; the pelvis and legs stay still.",
+                "Grow taller as you twist rather than leaning or collapsing.",
+            ],
+            Video = new("plY0FcW051E", 108.119, 150.12),
+        },
+        new("pilates_reformer_short_box_tree", "Reformer Short Box Tree", Abs, Other, Compound)
+        {
+            Secondary = [Hamstrings, LowerBack],
+            Category = Pilates,
+            Level = Intermediate,
+            Summary = "Also called Climb a Tree: on the short box with one leg lifted, walk the hands up the leg and roll the spine back and up, combining a hamstring stretch with abdominal control.",
+            Steps =
+            [
+                "Sit on the box with one foot under the strap and hold the other leg behind the thigh, lifting it toward the ceiling.",
+                "Walk the hands up the lifted leg toward the ankle, growing tall.",
+                "Inhale as you walk the hands back down the leg and roll the spine back into a C-curve as far as you can control.",
+                "Exhale as you walk the hands back up the leg and roll up to sitting tall; repeat 3 times, then switch legs.",
+            ],
+            Tips =
+            [
+                "Keep the lifted leg still and as straight as you can; the spine does the moving.",
+                "Keep the bottom foot anchored under the strap and the pelvis square.",
+                "Bend the lifted knee if your hamstrings are tight.",
+            ],
+            Video = new("plY0FcW051E", 150.12, 250.799),
         },
         new("pilates_reformer_side_splits", "Reformer Side Splits", Quads, Other, Isolation)
         {
