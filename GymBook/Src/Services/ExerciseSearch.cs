@@ -7,7 +7,8 @@ namespace GymBook.Services;
 /// <summary>
 /// Ranked exercise search: every word of the query has to match something about an exercise (its name first, then its
 /// muscles, equipment, kind of training and description), with gym shorthand ("db", "rdl", "ohp", "pecs") understood,
-/// small typos forgiven and word starts matched as you type. Also how alike two exercises are, for swapping one out.
+/// small typos forgiven and word starts matched as you type, plus related exercises the words don't name (the rest of
+/// a movement pattern: "reverse flys" also finds the Reverse Pec Deck). Also how alike two exercises are, for swapping.
 /// </summary>
 public static class ExerciseSearch
 {
@@ -70,19 +71,113 @@ public static class ExerciseSearch
     }
 
     /// <summary>The exercises that match every word of <paramref name="query"/>, best first; all of them for an empty query.</summary>
-    public static List<Exercise> Search(IEnumerable<Exercise> exercises, string query)
+    public static List<Exercise> Search(IEnumerable<Exercise> exercises, string query) => Find(exercises, query).Matches;
+
+    /// <summary>What a search found: the exercises matching every word, and others like them.</summary>
+    /// <param name="Related">
+    /// Exercises the words didn't name but that do the same job: the rest of a movement pattern the query names
+    /// ("reverse flys" also brings the Reverse Pec Deck and the Face Pull), or, when nothing matches every word, the
+    /// closest ones (most words) and those like them. Best first, none of them in <paramref name="Matches"/>.
+    /// </param>
+    public sealed record Result(List<Exercise> Matches, List<Exercise> Related);
+
+    /// <summary>Searches for <paramref name="query"/>: matches first, then related exercises (see <see cref="Result"/>).</summary>
+    public static Result Find(IEnumerable<Exercise> exercises, string query)
     {
+        var all = exercises as IList<Exercise> ?? [.. exercises];
         var words = Words(query).Where(w => !StopWords.Contains(w)).ToArray();
         if (words.Length == 0)
-            return [.. exercises.OrderBy(e => e.Name)];
+            return new([.. all.OrderBy(e => e.Name)], []);
         var phrase = string.Join(' ', words);
-        return [.. exercises
+        var matches = all
             .Select(e => (e, score: Score(e, words, phrase)))
             .Where(x => x.score > 0)
             .OrderByDescending(x => x.score)
             .ThenBy(x => x.e.Name.Length)
             .ThenBy(x => x.e.Name)
-            .Select(x => x.e)];
+            .Select(x => x.e)
+            .ToList();
+        var found = matches.ToHashSet();
+
+        // The movement patterns the query names, by their most specific alias: "reverse pec deck" is the rear delt
+        // pattern, not the chest fly one that "pec deck" alone would be.
+        var named = new List<MovementPattern>();
+        var longest = 0;
+        foreach (var pattern in ExercisePatterns.All)
+            foreach (var alias in pattern.Aliases)
+            {
+                var aliasWords = alias.Split(' ');
+                if (aliasWords.Length < longest || !aliasWords.All(a => words.Any(w => Names(a, w))))
+                    continue;
+                if (aliasWords.Length > longest)
+                {
+                    named.Clear();
+                    longest = aliasWords.Length;
+                }
+                if (!named.Contains(pattern))
+                    named.Add(pattern);
+            }
+
+        IEnumerable<(Exercise e, double score)> related;
+        if (named.Count > 0)
+        {
+            // Matches of the named movement first: "rear delt" is the rear delt exercises before a Bear Crawl (a typo
+            // of "rear" that works the delts), "chest fly" the flyes before a chest-supported reverse fly.
+            matches = [.. matches.OrderBy(e => named.Contains(ExercisePatterns.Of(e)) ? 0 : 1)];
+            // The pattern's other exercises, the ones matching more of the query's other words ("cable", "seated") first.
+            related = all
+                .Where(e => !found.Contains(e) && named.Contains(ExercisePatterns.Of(e)))
+                .Select(e => (e, score: 100 + Partial(e, words) + (matches.Count > 0 ? Similarity(matches[0], e) / 10 : 0)));
+        }
+        else if (matches.Count == 0)
+        {
+            // Nothing has every word: the exercises with most of them, and others like the best of those.
+            var closest = all
+                .Select(e => (e, score: Partial(e, words)))
+                .Where(x => x.score >= 0.5 * 10 * words.Length)
+                .OrderByDescending(x => x.score)
+                .Take(15)
+                .ToList();
+            related = closest.Concat(Alike(all, closest.Take(2).Select(x => x.e), closest.Select(x => x.e).ToHashSet()));
+        }
+        else if (matches.Count < 6)
+        {
+            // Only a few: others like the best of them.
+            related = Alike(all, matches.Take(2), found);
+        }
+        else
+            related = [];
+
+        return new(matches, [.. related
+            .GroupBy(x => x.e)
+            .Select(g => (e: g.Key, score: g.Max(x => x.score)))
+            .OrderByDescending(x => x.score)
+            .ThenBy(x => x.e.Name)
+            .Select(x => x.e)
+            .Take(30)]);
+    }
+
+    // Exercises like the given ones (the best swaps for them), skipping those already shown.
+    static IEnumerable<(Exercise e, double score)> Alike(IList<Exercise> all, IEnumerable<Exercise> like, HashSet<Exercise> skip) =>
+        like.SelectMany(original => all
+            .Where(e => !skip.Contains(e))
+            .Select(e => (e, score: Similarity(original, e)))
+            .Where(x => x.score > 0)
+            .OrderByDescending(x => x.score)
+            .Take(10));
+
+    // Whether a query word names an alias word: the same word, a plural, the start of it being typed, or a typo.
+    static bool Names(string aliasWord, string queryWord) =>
+        aliasWord == queryWord || Stem(aliasWord) == Stem(queryWord)
+        || queryWord.Length >= 3 && aliasWord.StartsWith(queryWord, StringComparison.Ordinal)
+        || queryWord.Length >= 5 && Math.Abs(aliasWord.Length - queryWord.Length) <= 1 && Distance(aliasWord, queryWord) <= 1
+        || Synonyms.GetValueOrDefault(queryWord, []).Contains(aliasWord);
+
+    // How many of the words an exercise matches, weighted like Score, without needing all of them.
+    static double Partial(Exercise e, string[] words)
+    {
+        var entry = Index(e);
+        return words.Sum(word => Math.Max(Match(entry, word), Synonyms.GetValueOrDefault(word, []).Select(alt => 0.9 * Match(entry, alt)).DefaultIfEmpty().Max()));
     }
 
     static double Score(Exercise e, string[] words, string phrase)
@@ -130,7 +225,8 @@ public static class ExerciseSearch
 
     /// <summary>
     /// How good a swap <paramref name="candidate"/> is for <paramref name="original"/>, 0 when it isn't one: the same
-    /// main muscle above all, then the same kind of movement (by name: press, row, curl...), equipment and training.
+    /// movement pattern (<see cref="ExercisePatterns"/>) and main muscle above all, then shared words in the names,
+    /// the same mechanics, equipment and kind of training.
     /// </summary>
     public static double Similarity(Exercise original, Exercise candidate)
     {
@@ -139,6 +235,10 @@ public static class ExerciseSearch
         var a = Index(original);
         var b = Index(candidate);
         double score = 0;
+        // The same kind of movement (a press for a press, a hinge for a hinge) matters most, then the same muscle.
+        var pattern = ExercisePatterns.Of(original);
+        if (pattern == ExercisePatterns.Of(candidate) && pattern.Id != "other")
+            score += 12;
         if (candidate.PrimaryMuscle == original.PrimaryMuscle)
             score += 10;
         else if (original.SecondaryMuscles.Contains(candidate.PrimaryMuscle) || candidate.SecondaryMuscles.Contains(original.PrimaryMuscle))
@@ -156,7 +256,7 @@ public static class ExerciseSearch
         var dc = ExerciseLibrary.Details(candidate.Id);
         if (da != null && dc != null)
             score += da.Category == dc.Category ? 3 : -6;
-        return score >= 10 ? score : 0;
+        return score >= 12 ? score : 0;
     }
 
     /// <summary>Lowercase words without accents or punctuation: "Push-Up (Wide)" → push, up, wide.</summary>

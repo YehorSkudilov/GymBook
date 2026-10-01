@@ -31,7 +31,10 @@
                                             <Border.GestureRecognizers>
                                                 <TapGestureRecognizer Tapped="OnOptionTapped" />
                                             </Border.GestureRecognizers>
-                                            <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+                                            <HorizontalStackLayout Spacing="6">
+                                                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+                                                <Label Text="{Binding Count}" IsVisible="{Binding HasCount}" TextColor="{Binding TextColor}" Opacity="0.6" FontSize="12" VerticalOptions="Center" />
+                                            </HorizontalStackLayout>
                                         </Border>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>

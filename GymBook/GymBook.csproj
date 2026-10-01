@@ -101,6 +101,8 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<!-- Live sync with the API's SyncHub (Src/Services/Sync/LiveSync.cs). -->
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
+		<!-- Plays the exercises' offline animations (Resources/Raw/exercise-animations/*.mp4) on the exercise page. -->
+		<PackageReference Include="CommunityToolkit.Maui.MediaElement" Version="10.0.0" />
 	</ItemGroup>
 
 	<!-- Google sign-in on Android (Platforms/Android/GoogleSignInService.cs). -->

@@ -58,11 +58,11 @@ public static partial class ExerciseLibrary
 
     /// <summary>
     /// A looping demonstration of a built-in exercise in its picture's style, shown instead of the video offline:
-    /// shipped in the app as Resources/Raw/exercise-animations/&lt;id&gt;.gif (made by tools/exercises/anims.mjs).
-    /// Null when this build has none.
+    /// a short silent video shipped in the app as Resources/Raw/exercise-animations/&lt;id&gt;.mp4 (made by
+    /// tools/exercises/anims.mjs). Null when this build has none.
     /// </summary>
     public static string? Animation(string id) => ById.ContainsKey(Canonical(id)) && ExerciseAnimationAssets.Exists(Canonical(id))
-        ? $"exercise-animations/{Canonical(id)}.gif"
+        ? $"exercise-animations/{Canonical(id)}.mp4"
         : null;
 
     /// <summary>One exercise as it's written in the library files.</summary>

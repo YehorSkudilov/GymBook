@@ -1,4 +1,6 @@
 using AppSkeleton;
+using CommunityToolkit.Maui;
+using CommunityToolkit.Maui.Core;
 using GymBook.Services;
 using GymBook.Services.Sync;
 using GymBook.ViewModels;
@@ -15,6 +17,9 @@ public static class MauiProgram
         builder
             .UseMauiApp<App>()
             .UseAppSkeleton()
+            // The exercise animations: no background playback (no foreground service or its permissions), and
+            // TextureView on Android, which scrolls with the page.
+            .UseMauiCommunityToolkitMediaElement(false, options => options.SetDefaultAndroidViewType(AndroidViewType.TextureView))
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

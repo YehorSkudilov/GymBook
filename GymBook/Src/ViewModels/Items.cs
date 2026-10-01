@@ -120,6 +120,9 @@ public partial class ChipItem(string title, object? value, Action<ChipItem> onSe
     public string Title { get; } = title;
     public object? Value { get; } = value;
 
+    /// <summary>Hidden when picking it would show nothing.</summary>
+    [ObservableProperty] bool isVisible = true;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Background), nameof(TextColor))]
     bool isSelected;
@@ -159,6 +162,10 @@ public partial class ExerciseItem(Exercise exercise, Action<ExerciseItem> onTap)
     public Color MuscleSoft => Exercise.PrimaryMuscle.Color().WithAlpha(0.16f);
     public string? Thumbnail { get; } = ExerciseLibrary.Thumbnail(exercise.Id);
     public bool HasThumbnail => Thumbnail != null;
+
+    /// <summary>A heading shown above this row: where a search's similar exercises start after its matches.</summary>
+    public string? SectionTitle { get; set; }
+    public bool HasSection => SectionTitle != null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CheckBackground))]

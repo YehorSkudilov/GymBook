@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using CommunityToolkit.Maui.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Controls;
@@ -8,8 +9,9 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>
-/// The exercise list shared by the library tab and the picker: ranked search (<see cref="ExerciseSearch"/>), quick
-/// muscle and kind chips, and the full filters (<see cref="ExerciseFilter"/>) behind the filter button.
+/// The exercise list shared by the library tab and the picker: ranked search (<see cref="ExerciseSearch"/>) with
+/// similar exercises after the matches, quick muscle chips, and the full filters (<see cref="ExerciseFilter"/>) behind
+/// the filter button.
 /// </summary>
 public abstract partial class ExerciseListViewModel : BaseViewModel
 {
@@ -20,9 +22,7 @@ public abstract partial class ExerciseListViewModel : BaseViewModel
         Store = store;
         Chips.Add(new ChipItem("All", null, SelectChip) { IsSelected = true });
         foreach (var m in Enum.GetValues<MuscleGroup>())
-            Chips.Add(new ChipItem(m.Display(), m, SelectChip));
-        foreach (var kind in ExerciseFilter.Kinds)
-            Chips.Add(new ChipItem(kind.Title, kind.Categories, SelectChip));
+            Chips.Add(new ChipItem(m.Display(), m.ToString(), SelectChip));
         Filters.Changed += (_, _) => Filter();
     }
 
@@ -41,26 +41,17 @@ public abstract partial class ExerciseListViewModel : BaseViewModel
 
     partial void OnSearchTextChanged(string value) => Filter();
 
-    // A chip toggles its muscle or kind in the filter, so several can be on; "All" clears them.
+    // A chip toggles its muscle in the filter, so several can be on; "All" clears them.
     void SelectChip(ChipItem chip)
     {
-        switch (chip.Value)
+        var muscles = Filters.Muscle.Selected;
+        if (chip.Value is string m)
         {
-            case MuscleGroup m:
-                if (!Filters.Muscles.Remove(m))
-                    Filters.Muscles.Add(m);
-                break;
-            case ExerciseCategory[] kinds:
-                if (kinds.All(Filters.Categories.Contains))
-                    Filters.Categories.ExceptWith(kinds);
-                else
-                    Filters.Categories.UnionWith(kinds);
-                break;
-            default:
-                Filters.Muscles.Clear();
-                Filters.Categories.Clear();
-                break;
+            if (!muscles.Remove(m))
+                muscles.Add(m);
         }
+        else
+            muscles.Clear();
         Filters.Notify();
     }
 
@@ -72,22 +63,38 @@ public abstract partial class ExerciseListViewModel : BaseViewModel
 
     protected void Filter()
     {
-        foreach (var c in Chips)
-            c.IsSelected = c.Value switch
-            {
-                MuscleGroup m => Filters.Muscles.Contains(m),
-                ExerciseCategory[] kinds => kinds.All(Filters.Categories.Contains),
-                _ => Filters.Muscles.Count == 0 && Filters.Categories.Count == 0,
-            };
-
+        // Matches first, then the similar exercises the search adds (the rest of a movement pattern it names, or the
+        // closest ones when nothing matches), under their own heading while they're in that order.
         var query = SearchText.Trim();
-        var list = Source;
-        if (query.Length > 0)
-            list = ExerciseSearch.Search(list, query);
-        Items = Filters.Apply(list, Store, searching: query.Length > 0 || IsRanked)
-            .Select(e => new ExerciseItem(e, OnTap) { IsSelected = IsSelected(e) })
-            .ToList();
-        CountText = Items.Count == 1 ? "1 exercise" : $"{Items.Count} exercises";
+        var search = query.Length > 0 ? ExerciseSearch.Find(Source, query) : new ExerciseSearch.Result([.. Source], []);
+        var related = search.Related.ToHashSet();
+        var shown = Filters.Apply(search.Matches.Concat(search.Related), Store, searching: query.Length > 0 || IsRanked);
+        var sectioned = Filters.Sort == ExerciseSort.BestMatch;
+        var items = new List<ExerciseItem>();
+        var headed = false;
+        foreach (var e in shown)
+        {
+            var item = new ExerciseItem(e, OnTap) { IsSelected = IsSelected(e) };
+            if (sectioned && !headed && related.Contains(e))
+            {
+                item.SectionTitle = items.Count == 0 ? "No exact matches. Similar exercises" : "Similar exercises";
+                headed = true;
+            }
+            items.Add(item);
+        }
+        Items = items;
+        var matchCount = sectioned ? items.Count(i => !related.Contains(i.Exercise)) : items.Count;
+        CountText = (matchCount == 1 ? "1 exercise" : $"{matchCount} exercises")
+            + (sectioned && matchCount < items.Count ? $" · {items.Count - matchCount} similar" : "");
+
+        // Muscle chips: only the muscles left after the type of training above them in the filters (and the search),
+        // plus any already picked so they can be unpicked.
+        var muscles = Filters.Muscle;
+        foreach (var c in Chips)
+        {
+            c.IsSelected = c.Value is string m ? muscles.Selected.Contains(m) : muscles.Selected.Count == 0;
+            c.IsVisible = c.Value is not string key || muscles.Available.ContainsKey(key) || muscles.Selected.Contains(key);
+        }
         FilterBadge = Filters.ActiveCount.ToString();
         HasFilterBadge = Filters.ActiveCount > 0;
         CanClearFilters = !Filters.IsEmpty;
@@ -188,7 +195,10 @@ public partial class ExercisePickerViewModel(DataStore store) : ExerciseListView
         _similarTo = similarTo;
         CanFocus = similarTo != null;
         IsFocused = CanFocus;
-        FocusHint = similarTo == null ? "" : $"Same muscles and movement as {similarTo.Name}, closest first";
+        FocusHint = similarTo == null ? ""
+            : ExercisePatterns.Of(similarTo) is { Id: not "other" } pattern
+                ? $"{pattern.Title} and other {similarTo.PrimaryMuscle.Display().ToLowerInvariant()} exercises, closest to {similarTo.Name} first"
+                : $"Same muscles and movement as {similarTo.Name}, closest first";
         _selected.Clear();
         SearchText = "";
         Filters.Clear();
@@ -196,10 +206,13 @@ public partial class ExercisePickerViewModel(DataStore store) : ExerciseListView
         Filter();
     }
 
+    // Replacing: the same movement pattern and muscle first (ExerciseSearch.Similarity), and among equally good swaps
+    // the ones the user's equipment allows.
     protected override IEnumerable<Exercise> Source => IsFocused && _similarTo is { } original
         ? base.Source
             .Select(e => (e, score: ExerciseSearch.Similarity(original, e)))
             .Where(x => x.score > 0)
+            .Select(x => (x.e, score: x.score + (Store.Profile.EquipmentAccess.Allows(x.e.Equipment) ? 3 : 0)))
             .OrderByDescending(x => x.score)
             .ThenBy(x => x.e.Name)
             .Select(x => x.e)
@@ -283,13 +296,17 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     public string WatchText => HasVideo ? "Open in YouTube" : "Search form videos";
     ExerciseVideo? _video;
 
-    // The demonstration: a looping animation shipped in the app (or the exercise's picture until it has one), and
+    // The demonstration: a looping animation video shipped in the app (or the exercise's picture until it has one), and
     // the YouTube video. The animation shows first every time the page opens; the video only with a connection,
     // so the web view never gets to show a connection error.
     [ObservableProperty] bool hasMedia;
     [ObservableProperty] bool hasMediaChoice;
     [ObservableProperty] bool hasAnimation;
-    [ObservableProperty] ImageSource? animation;
+    /// <summary>The animation video while it's on screen (null otherwise, which stops it).</summary>
+    [ObservableProperty] MediaSource? animation;
+    [ObservableProperty] bool hasAnimationVideo;
+    /// <summary>The exercise's picture: under the animation while it starts, or in its place when there's none.</summary>
+    [ObservableProperty] ImageSource? picture;
     [ObservableProperty] bool showVideo;
     [ObservableProperty] bool canShowVideo;
     [ObservableProperty] bool showsVideo;
@@ -297,7 +314,7 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     [ObservableProperty] bool videoOffline;
     /// <summary>The player's embed URL; null whenever the video isn't on screen (offline, the animation chosen, the page left).</summary>
     [ObservableProperty] string? videoUrl;
-    string? _animationFor;
+    string? _animation;
     bool _visible, _videoFailed;
     [ObservableProperty] string tags = "";
     [ObservableProperty] bool hasTags;
@@ -337,13 +354,12 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         var details = ExerciseLibrary.Details(ex.Id);
         _video = details?.Video;
         HasVideo = _video != null;
-        HasAnimation = ExerciseLibrary.Animation(ex.Id) != null || ExerciseLibrary.Thumbnail(ex.Id) != null;
-        if (_animationFor != ex.Id)
-        {
-            _animationFor = ex.Id;
-            Animation = null;
-            _ = LoadAnimationAsync(ex.Id);
-        }
+        _animation = ExerciseLibrary.Animation(ex.Id);
+        Picture = ExerciseLibrary.Thumbnail(ex.Id) is { } thumbnail
+            ? ImageSource.FromStream(async _ => await FileSystem.OpenAppPackageFileAsync(thumbnail))
+            : null;
+        HasAnimationVideo = _animation != null;
+        HasAnimation = HasAnimationVideo || Picture != null;
         UpdateMedia();
         Tags = details == null ? "" : $"{details.Category} · {details.Level}";
         HasTags = details != null;
@@ -425,49 +441,9 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         ShowsAnimation = HasAnimation && !ShowsVideo;
         VideoOffline = ShowsVideo && !CanShowVideo;
         VideoUrl = _visible && ShowsVideo && CanShowVideo ? _video?.EmbedUrl : null;
-    }
-
-    async Task LoadAnimationAsync(string id)
-    {
-        var source = await AnimationSourceAsync(id);
-        if (_animationFor == id)
-            Animation = source;
-    }
-
-    /// <summary>The exercise's animation, or its picture while this build has no animation for it.</summary>
-    static async Task<ImageSource?> AnimationSourceAsync(string id)
-    {
-        if (ExerciseLibrary.Animation(id) is { } gif && await UnpackAsync(gif) is { } file)
-            return ImageSource.FromFile(file);
-        return ExerciseLibrary.Thumbnail(id) is { } picture
-            ? ImageSource.FromStream(async _ => await FileSystem.OpenAppPackageFileAsync(picture))
-            : null;
-    }
-
-    /// <summary>
-    /// A packaged animation as a file of its own, which animates on every platform (a stream may not): copied out of
-    /// the app package once per build.
-    /// </summary>
-    static async Task<string?> UnpackAsync(string asset)
-    {
-        var file = Path.Combine(FileSystem.CacheDirectory, "exercise-animations", AppInfo.BuildString, Path.GetFileName(asset));
-        if (File.Exists(file))
-            return file;
-        try
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-            var temp = file + ".tmp";
-            await using (var source = await FileSystem.OpenAppPackageFileAsync(asset))
-            await using (var target = File.Create(temp))
-                await source.CopyToAsync(target);
-            File.Move(temp, file, true);
-            return file;
-        }
-        catch (Exception)
-        {
-            // Not in this build or no room to copy it: the picture shows instead.
-            return null;
-        }
+        var animation = _visible && ShowsAnimation ? _animation : null;
+        if (animation != (Animation as ResourceMediaSource)?.Path)
+            Animation = animation == null ? null : MediaSource.FromResource(animation);
     }
 
     /// <summary>The demonstration in the YouTube app; without one, a search for form videos.</summary>

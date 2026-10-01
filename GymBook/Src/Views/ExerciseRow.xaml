@@ -5,6 +5,13 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:ExerciseItem">
+    <VerticalStackLayout>
+    <!--  Where a search's similar exercises start, after its matches  -->
+    <Label
+        Margin="0,14,0,4"
+        IsVisible="{Binding HasSection}"
+        Style="{StaticResource Overline}"
+        Text="{Binding SectionTitle}" />
     <Grid
         Padding="0,6"
         BackgroundColor="Transparent"
@@ -51,4 +58,5 @@
             Grid.Column="2"
             VerticalOptions="Center" />
     </Grid>
+    </VerticalStackLayout>
 </ContentView>

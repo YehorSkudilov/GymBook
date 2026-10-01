@@ -48,9 +48,10 @@ outdoor_cycling kept (no closer match exists on YouTube).
   `GymBook/Resources/Raw/exercises/<id>.webp`; needs OPENAI_API_KEY and sharp. Re-running skips existing files;
   project keys are paced individually with `--per-minute`, and concurrent workers must have disjoint `--only` sets.
 
-- `anims.mjs`: the offline exercise animations (GIFs drawn from each thumbnail by OpenAI's image edit API, 2×2
-  storyboard → looping GIF) into `GymBook/Resources/Raw/exercise-animations/<id>.gif`; storyboards kept in
-  `anim-sheets/`. Takes several comma-separated keys in OPENAI_API_KEY, each paced with `--per-minute`.
+- `anims.mjs`: the offline exercise animations (6-pose storyboard by gpt-image-2, checked by a vision model, motion
+  interpolated with ffmpeg into a looping MP4) into `GymBook/Resources/Raw/exercise-animations/<id>.mp4`; storyboards
+  kept in `anim-sheets/`. Needs ffmpeg. Takes several comma-separated keys in OPENAI_API_KEY, each paced with
+  `--per-minute`; in a cloud session Node's fetch needs NODE_USE_ENV_PROXY=1 to use the proxy.
   `sync-thumbnail-manifest.mjs` refreshes both `ExerciseThumbnailAssets.cs` and `ExerciseAnimationAssets.cs`.
 
 - `node check.mjs` — validates every region file (ids, names, enums, required ids), writes `library.json`, prints

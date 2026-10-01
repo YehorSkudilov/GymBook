@@ -1,4 +1,4 @@
-// Keep the app's compile-time lists of bundled exercise pictures (WebP) and offline animations (GIF) aligned with
+// Keep the app's compile-time lists of bundled exercise pictures (WebP) and offline animations (MP4) aligned with
 // the files in Resources/Raw: the app falls back (initials, the picture) for exercises without one.
 //   node sync-thumbnail-manifest.mjs
 import { existsSync, readdirSync, writeFileSync } from "node:fs";
@@ -33,7 +33,7 @@ function write(folder, extension, className) {
 
 export function syncManifests() {
   write("exercises", ".webp", "ExerciseThumbnailAssets");
-  write("exercise-animations", ".gif", "ExerciseAnimationAssets");
+  write("exercise-animations", ".mp4", "ExerciseAnimationAssets");
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1])
