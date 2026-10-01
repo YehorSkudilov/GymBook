@@ -1,0 +1,62 @@
+[
+  {
+    "id": "hang_power_snatch",
+    "videoId": "SpDPcj0W3Yw",
+    "start": null,
+    "end": null,
+    "channel": "Catalyst Athletics",
+    "title": "Hang Power Snatch | Olympic Weightlifting Exercise Library",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced unknown gym channel with Catalyst Athletics 1:23 hang power snatch library demo",
+    "verdict": "fixed"
+  },
+  {
+    "id": "muscle_snatch",
+    "videoId": "nJmtGVutszE",
+    "start": null,
+    "end": null,
+    "channel": "Catalyst Athletics",
+    "title": "Muscle Snatch | Olympic Weightlifting Exercise Library",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced CrossFit with Catalyst Athletics 1:31 muscle snatch library demo",
+    "verdict": "fixed"
+  },
+  {
+    "id": "snatch_pull",
+    "videoId": "G1QygZ3Kd3w",
+    "start": null,
+    "end": null,
+    "channel": "Catalyst Athletics",
+    "title": "Snatch Pull | Olympic Weightlifting Exercise Library",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Catalyst Athletics 1:51 snatch pull library demo",
+    "verdict": "ok"
+  },
+  {
+    "id": "overhead_squat",
+    "videoId": "mGvEruE-0rc",
+    "start": null,
+    "end": null,
+    "channel": "Squat University",
+    "title": "How To Overhead Squat (Beginner’s Guide)",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Squat University 55s overhead squat tutorial",
+    "verdict": "ok"
+  },
+  {
+    "id": "snatch_balance",
+    "videoId": "8KKQTdnxWso",
+    "start": null,
+    "end": null,
+    "channel": "Catalyst Athletics",
+    "title": "Snatch Balance | Olympic Weightlifting Exercise Library",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Catalyst Athletics 1:12 snatch balance library demo",
+    "verdict": "ok"
+  }
+]

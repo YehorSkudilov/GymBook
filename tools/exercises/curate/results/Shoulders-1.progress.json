@@ -1,0 +1,38 @@
+[
+  {
+    "id": "overhead_press",
+    "videoId": "_RlRDWO2jfg",
+    "start": 206.48,
+    "end": 272.63901,
+    "channel": "Jeff Nippard",
+    "title": "Build Bigger Shoulders With Perfect Training Technique (The Overhead Press)",
+    "timeSource": "chapter",
+    "chapter": "Execution of the press",
+    "note": "Jeff Nippard barbell OHP; chapter Execution of the press 206.48 to next chapter 272.63901",
+    "verdict": "ok"
+  },
+  {
+    "id": "seated_barbell_press",
+    "videoId": "YNK3eQVevIs",
+    "start": null,
+    "end": null,
+    "channel": "Buff Dudes Workouts",
+    "title": "How-To Perform Seated Barbell Shoulder Press | Shoulders Exercise Tutorial",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced low-reach Pure Motion Fitness pick with Buff Dudes focused 1:51 seated barbell press tutorial",
+    "verdict": "fixed"
+  },
+  {
+    "id": "behind_neck_press",
+    "videoId": "uD9kYAi7lHs",
+    "start": 11.759,
+    "end": null,
+    "channel": "Mind Pump TV",
+    "title": "How To Behind The Neck Press Properly! (ADVANCED LIFTERS ONLY!)",
+    "timeSource": "chapter",
+    "chapter": "Setup and Execution",
+    "note": "Replaced Alex Leonidas short with Mind Pump TV 4:01 tutorial whose chapters are all on this press; start skips intro chapter",
+    "verdict": "fixed"
+  }
+]

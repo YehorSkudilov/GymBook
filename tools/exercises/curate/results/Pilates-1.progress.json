@@ -1,0 +1,110 @@
+[
+ {
+  "id": "pilates_hundred",
+  "videoId": "tYJJyYUrK4c",
+  "start": 43,
+  "end": 77,
+  "channel": "Well+Good",
+  "title": "How to do the Pilates Hundreds | The Right Way | Well+Good",
+  "timeSource": "chapter",
+  "chapter": "Executing the right way",
+  "note": "Well+Good; chapter 0:43 (43.8s) to Benefits and conclusion (77.8s)",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_roll_up",
+  "videoId": "H_-JE2yN1W0",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: The Roll Up | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Pilates Anytime 2:18 tutorial solely on the roll up",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_single_leg_circles",
+  "videoId": "bVmm1XVgHfU",
+  "start": null,
+  "end": null,
+  "channel": "Openfit on BODi",
+  "title": "How to Do Single Leg Circles With Andrea Rogers",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Openfit/BODi, Xtend Barre creator, 27s exact demo",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_single_leg_stretch",
+  "videoId": "Ad4lgW4ieAM",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: Single Leg Stretch | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Pilates Anytime 1:27 single leg stretch tutorial",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_roll_over",
+  "videoId": "Y5YdoRMCCKM",
+  "start": 28,
+  "end": 135,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: The Roll Over | Pilates Anytime",
+  "timeSource": "chapter",
+  "chapter": "Standard rollover technique",
+  "note": "Replaced unknown-channel Short with Pilates Anytime; chapter 0:28 (28.7s) to Reverse rollover (135.96s)",
+  "verdict": "fixed"
+ },
+ {
+  "id": "pilates_rolling_like_a_ball",
+  "videoId": "elkcXFPyaW8",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: Rolling Like A Ball | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Replaced 2007 video with Pilates Anytime 1:28 focused tutorial",
+  "verdict": "fixed"
+ },
+ {
+  "id": "pilates_double_leg_stretch",
+  "videoId": "qD58bbjzcm0",
+  "start": null,
+  "end": null,
+  "channel": "PILATESOLOGY",
+  "title": "Pilates Double Leg Stretch with Alisa Wyatt",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Pilatesology 41s demonstration",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_single_straight_leg_stretch",
+  "videoId": "6D0loyquu1g",
+  "start": null,
+  "end": null,
+  "channel": "PILATESOLOGY",
+  "title": "Pilates Single Straight Leg Stretch with Alisa Wyatt",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Pilatesology 34s demonstration",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_criss_cross",
+  "videoId": "fQiCxMwfjX0",
+  "start": 26,
+  "end": 54,
+  "channel": "Openfit on BODi",
+  "title": "How to Do The Pilates Criss Cross | Pilates for Beginners",
+  "timeSource": "chapter",
+  "chapter": "Executing the movement",
+  "note": "Openfit/BODi with Pilates instructor Andrea Rogers; chapter 0:26 (26.34s) to Finishing (54.6s)",
+  "verdict": "ok"
+ }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "plate_front_raise",
+    "videoId": "HN8HYJTOl8c",
+    "start": null,
+    "end": null,
+    "channel": "PureGym",
+    "title": "How To Do Front Plate Raises",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "15s PureGym demo; replaces Rehab My Patient",
+    "verdict": null
+  },
+  {
+    "id": "muscle_snatch",
+    "videoId": "nJmtGVutszE",
+    "start": null,
+    "end": null,
+    "channel": "Catalyst Athletics",
+    "title": "Muscle Snatch | Olympic Weightlifting Exercise Library",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced CrossFit with Catalyst Athletics 1:31 muscle snatch library demo",
+    "verdict": null
+  },
+  {
+    "id": "snatch_pull",
+    "videoId": "G1QygZ3Kd3w",
+    "start": null,
+    "end": null,
+    "channel": "Catalyst Athletics",
+    "title": "Snatch Pull | Olympic Weightlifting Exercise Library",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Catalyst Athletics 1:51 snatch pull library demo",
+    "verdict": null
+  },
+  {
+    "id": "lateral_raise",
+    "videoId": "OuG1smZTsQQ",
+    "start": null,
+    "end": null,
+    "channel": "Renaissance Periodization",
+    "title": "Lateral Raise",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "11s RP demo; replaces DeltaBolic short",
+    "verdict": null
+  }
+]

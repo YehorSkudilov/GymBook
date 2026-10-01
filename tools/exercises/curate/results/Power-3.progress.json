@@ -1,0 +1,98 @@
+[
+  {
+    "id": "kb_windmill",
+    "videoId": "q8K_Wg8OuV4",
+    "start": null,
+    "end": null,
+    "channel": "Nuffield Health",
+    "title": "How to Perform a Kettlebell Windmill | Nuffield Health",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: Nuffield Health 36s kettlebell windmill tutorial",
+    "verdict": "ok"
+  },
+  {
+    "id": "farmers_walk",
+    "videoId": "NH7Xv-7NQNQ",
+    "start": 20,
+    "end": 43,
+    "channel": "Buff Dudes Workouts",
+    "title": "How To Perform Farmer Walks Exercise Tutorial",
+    "timeSource": "chapter",
+    "chapter": "How To Perform",
+    "note": "Buff Dudes chapter at 0:20 to 0:43 demonstrates farmer walks",
+    "verdict": "ok"
+  },
+  {
+    "id": "kb_front_squat",
+    "videoId": "6XghYOzny8U",
+    "start": null,
+    "end": null,
+    "channel": "Champion Physical Therapy and Performance",
+    "title": "HOW TO PERFORM THE DOUBLE KETTLEBELL FRONT SQUAT",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Physical therapy clinic, focused 52s double KB front squat tutorial, embeds",
+    "verdict": "ok"
+  },
+  {
+    "id": "kb_halo",
+    "videoId": "LEjVh4scVy4",
+    "start": null,
+    "end": null,
+    "channel": "Kettlebell Emma",
+    "title": "Kettlebell Halo Tutorial",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kettlebell coach channel, focused 55s halo tutorial (all chapters are the halo), embeds; Men's Health alt mixes squat/lunge variations",
+    "verdict": "ok"
+  },
+  {
+    "id": "suitcase_carry",
+    "videoId": "y-hn_Ha1-RE",
+    "start": null,
+    "end": null,
+    "channel": "Dr. Carl Baird",
+    "title": "How To Perform The Suitcase Carry",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Chiropractor/strength clinician channel, focused 57s suitcase carry tutorial, embeds",
+    "verdict": "ok"
+  },
+  {
+    "id": "overhead_carry",
+    "videoId": "54POVWkWjEs",
+    "start": null,
+    "end": null,
+    "channel": "[P]rehab",
+    "title": "Kettlebell Overhead Carry",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "[P]rehab 23s kettlebell overhead carry demo, embeds",
+    "verdict": "ok"
+  },
+  {
+    "id": "front_rack_carry",
+    "videoId": "CJ-F_Xg9fJY",
+    "start": null,
+    "end": null,
+    "channel": "Prototype Training Systems",
+    "title": "How to perform the Kettlebell Front Rack Carry",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Replaced low-view unknown channel with strength coaching channel focused 82s KB front rack carry how-to, embeds",
+    "verdict": "fixed"
+  },
+  {
+    "id": "keg_carry",
+    "videoId": "y4i69xtGsak",
+    "start": null,
+    "end": null,
+    "channel": "Kalle Beck",
+    "title": "How To Carry a Keg For Strongman",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Strongman coach Kalle Beck, focused 92s keg carry tutorial, embeds",
+    "verdict": "ok"
+  }
+]

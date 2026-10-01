@@ -1,0 +1,86 @@
+[
+ {
+  "id": "pilates_side_kick_circles",
+  "videoId": "J1aGomkLcS0",
+  "start": null,
+  "end": null,
+  "channel": "In & Up Pilates",
+  "title": "Pilates Side Kick with Small Circles",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: Pilates instructor focused 45s side kick circles demo",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_teaser",
+  "videoId": "9WFOlfrqWo8",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: The Teaser | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: Pilates Anytime tutorial solely about teaser",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_hip_circles",
+  "videoId": "dN1elhfKzYo",
+  "start": null,
+  "end": null,
+  "channel": "Howcast",
+  "title": "How to Do Hip Circles | Pilates Workout",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: focused 1:16 Pilates hip circles tutorial",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_swimming",
+  "videoId": "bY6ZyiO_7ek",
+  "start": null,
+  "end": null,
+  "channel": "Howcast",
+  "title": "How to Do Swimming | Pilates Workout",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: focused 1:18 Pilates swimming tutorial",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_leg_pull_front",
+  "videoId": "wOldVi15tGs",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Encyclopedia",
+  "title": "Leg Pull Front on the Mat ⎮Pilates Encyclopedia",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: NCPT-created Pilates Encyclopedia focused 44s tutorial",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_leg_pull_back",
+  "videoId": "f_gzE5tOPQw",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: Leg Pull Back | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: Pilates Anytime tutorial solely about leg pull back",
+  "verdict": "ok"
+ },
+ {
+  "id": "pilates_kneeling_side_kick",
+  "videoId": "hgLDMHCcw4k",
+  "start": null,
+  "end": null,
+  "channel": "Pilates Anytime",
+  "title": "Pilates Exercise: Side Kick Kneeling | Pilates Anytime",
+  "timeSource": "whole",
+  "chapter": "",
+  "note": "Kept current: Pilates Anytime tutorial solely about kneeling side kick",
+  "verdict": "ok"
+ }
+]

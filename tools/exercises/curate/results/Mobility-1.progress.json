@@ -1,0 +1,109 @@
+[
+  {
+    "id": "mob_shoulder_cars",
+    "videoId": "kI0XzmjYuZU",
+    "start": null,
+    "end": null,
+    "channel": "Tom Morrison",
+    "title": "Shoulder CARs - Simple Shoulder Mobility Exercise",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Tom Morrison (listed mobility source) focused 2:10 shoulder CARs demo, replaces chiropractic clinic",
+    "verdict": "fixed"
+  },
+  {
+    "id": "mob_hip_cars",
+    "videoId": "hRMrq6G81p8",
+    "start": 27,
+    "end": null,
+    "channel": "Cleveland Clinic",
+    "title": "Controlled Articular Rotations (CARs) for Your Hips",
+    "timeSource": "chapter",
+    "chapter": "Opening the Doors",
+    "note": "Cleveland Clinic 1:23 hip CARs tutorial; all chapters are hip CARs, starts after Intro chapter",
+    "verdict": "fixed"
+  },
+  {
+    "id": "behind_neck_press",
+    "videoId": "uD9kYAi7lHs",
+    "start": 11.759,
+    "end": null,
+    "channel": "Mind Pump TV",
+    "title": "How To Behind The Neck Press Properly! (ADVANCED LIFTERS ONLY!)",
+    "timeSource": "chapter",
+    "chapter": "Setup and Execution",
+    "note": "Replaced Alex Leonidas short with Mind Pump TV 4:01 tutorial whose chapters are all on this press; start skips intro chapter",
+    "verdict": "fixed"
+  },
+  {
+    "id": "lateral_raise",
+    "videoId": "OuG1smZTsQQ",
+    "start": null,
+    "end": null,
+    "channel": "Renaissance Periodization",
+    "title": "Lateral Raise",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "11s RP demo; replaces DeltaBolic short"
+  },
+  {
+    "id": "mob_ankle_cars",
+    "videoId": "vIDJiMShg4o",
+    "start": null,
+    "end": null,
+    "channel": "Dr. Beau Beard",
+    "title": "Ankle CAR (Controlled Articular Rotation)",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: FRC chiropractor, focused 1:09 ankle CAR demo",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_90_90",
+    "videoId": "Lx07WIkllbA",
+    "start": null,
+    "end": null,
+    "channel": "E3 Rehab Exercise Library",
+    "title": "90/90 Hip Transitions (Hands Supported)",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "E3 Rehab (listed rehab source) 20s 90/90 hip switch demo, replaces unlisted coach channel",
+    "verdict": "fixed"
+  },
+  {
+    "id": "mob_hip_airplane",
+    "videoId": "9svtEV4vkp0",
+    "start": null,
+    "end": null,
+    "channel": "Dr. Carl Baird",
+    "title": "Hip Airplane Exercise For Improved Balance, Mobility, And Glute Med Strength",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: physical therapist, focused 1:23 hip airplane tutorial",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_quadruped_rock_back",
+    "videoId": "GImwCsuBLyo",
+    "start": null,
+    "end": null,
+    "channel": "Mike Reinold",
+    "title": "Quadruped Rock Back - Hip Mobility Drill",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: Mike Reinold (well-known physical therapist), focused 1:01 drill",
+    "verdict": "ok"
+  },
+  {
+    "id": "mob_frog_rock_back",
+    "videoId": "eSHUKW7eK2M",
+    "start": null,
+    "end": null,
+    "channel": "Chicago Chiropractic & Sports Medicine",
+    "title": "Frog Rocks",
+    "timeSource": "whole",
+    "chapter": "",
+    "note": "Kept current: sports medicine clinic, focused 1:52 frog rocks demo; no more reputable frog (both-knees-wide) version found",
+    "verdict": "ok"
+  }
+]

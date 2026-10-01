@@ -1,0 +1,38 @@
+[
+  {
+    "id": "cuban_press",
+    "videoId": "zD4Vp44roow",
+    "start": null,
+    "end": null,
+    "channel": "Nuffield Health",
+    "title": "Cuban Press | Nuffield Health",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Kept current: Nuffield Health PT demo, 35s.",
+    "verdict": null
+  },
+  {
+    "id": "prone_iyt",
+    "videoId": "aFtzZl4ySMo",
+    "start": null,
+    "end": null,
+    "channel": "[P]rehab",
+    "title": "Prone Y's, T's, & I's",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Kept current: [P]rehab, 11s.",
+    "verdict": null
+  },
+  {
+    "id": "wall_slide",
+    "videoId": "Eaj_NG5_hIo",
+    "start": null,
+    "end": null,
+    "channel": "BESS - British Elbow & Shoulder Society",
+    "title": "Exercises for Shoulder Pain: Wall Slides",
+    "timeSource": "whole",
+    "chapter": null,
+    "note": "Kept current: British Elbow & Shoulder Society, 48s; chapters all about this exercise.",
+    "verdict": null
+  }
+]
