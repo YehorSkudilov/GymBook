@@ -327,7 +327,8 @@ public partial class WorkoutViewModel(
                 : last.RestEndedAt is { } restEnded && restEnded > last.CompletedAt ? restEnded : last.CompletedAt ?? _session.StartedAt;
             status = new WorkoutStatus(Name, ProgressText, WorkoutPhase.InSet, NextSetText(), since, null, 0);
         }
-        notifier.Show(status);
+        var working = Exercises.SelectMany(e => e.Sets).Where(s => !s.Model.IsWarmup && !s.IsSkipped).ToList();
+        notifier.Show(status with { SetsDone = working.Count(s => s.IsCompleted), SetsTotal = working.Count });
     }
 
     /// <summary>

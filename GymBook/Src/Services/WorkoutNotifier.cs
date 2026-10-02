@@ -15,9 +15,10 @@ public enum WorkoutPhase
 
 /// <summary>
 /// What the workout notification shows: the workout and its progress, what's being done or comes next (exercise, set,
-/// weight × reps), and the timer that goes with it.
+/// weight × reps), the timer that goes with it, and how many of the workout's sets are done (its bar when not resting).
 /// </summary>
-public record WorkoutStatus(string Name, string Progress, WorkoutPhase Phase, string Next, DateTime Since, DateTime? RestDueAt, int RestSeconds);
+public record WorkoutStatus(string Name, string Progress, WorkoutPhase Phase, string Next, DateTime Since, DateTime? RestDueAt, int RestSeconds,
+    int SetsDone = 0, int SetsTotal = 0);
 
 /// <summary>
 /// The notification of the workout in progress (Android: Platforms/Android/WorkoutNotifier.cs), with the rest timer
@@ -28,7 +29,10 @@ public interface IWorkoutNotifier
     /// <summary>Shows or updates it. Cheap to call every second: it only redraws when something visible changed.</summary>
     void Show(WorkoutStatus status);
 
-    /// <summary>Rest ran out: an alert when the app isn't on screen (when it is, the workout page buzzes itself).</summary>
+    /// <summary>
+    /// Rest ran out: the notification says so with a sound and buzz when the app isn't on screen (when it is, the workout
+    /// page buzzes itself). The same notification, not a second one.
+    /// </summary>
     void RestOver(string next);
 
     void Clear();
