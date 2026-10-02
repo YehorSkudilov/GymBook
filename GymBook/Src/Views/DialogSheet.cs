@@ -21,11 +21,11 @@ public class DialogSheet : SheetPage
         Shell.SetNavBarIsVisible(this, false);
 
         var header = new VerticalStackLayout { Spacing = 6 };
-        header.Add(new Label { Text = title, Style = Resource<Style>("H2"), FontSize = 20 });
+        header.Add(new Label { Text = title, Style = Resource<Style>("H2"), FontSize = 19 });
         if (!string.IsNullOrWhiteSpace(message))
             header.Add(new Label { Text = message, Style = Resource<Style>("Caption"), FontSize = 15 });
 
-        var stack = new VerticalStackLayout { Padding = new Thickness(20, 22, 20, 18), Spacing = 16 };
+        var stack = new VerticalStackLayout { Padding = new Thickness(20, 18, 20, 16), Spacing = 12 };
         if (closeButton)
         {
             var top = new Grid { ColumnSpacing = 12, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Auto)] };
@@ -57,7 +57,8 @@ public class DialogSheet : SheetPage
             StrokeThickness = 0,
             Padding = 0,
             VerticalOptions = LayoutOptions.End,
-            Content = new ScrollView { Content = stack },
+            // Only as tall as what's in it (a long one scrolls).
+            Content = new ScrollView { Content = stack, VerticalOptions = LayoutOptions.End },
         };
         // Swallows taps, so only the dimmed area above closes the sheet.
         sheet.GestureRecognizers.Add(new TapGestureRecognizer());
@@ -140,12 +141,23 @@ public class DialogSheet : SheetPage
     public static async Task<bool> Confirm(string title, string message, string accept, string cancel) =>
         await Show(new DialogSheet(title, message, s =>
         {
-            var buttons = new VerticalStackLayout { Spacing = 8 };
             var main = s.Button(accept, "PrimaryButton", accept);
             if (DestructiveWords.Any(w => accept.StartsWith(w, StringComparison.OrdinalIgnoreCase)))
                 main.BackgroundColor = Resource<Color>("Danger");
+            var other = s.Button(cancel, "SecondaryButton", null);
+            // Side by side (Cancel, then the main one) when both fit, so the sheet is only as tall as it needs; long
+            // labels stack instead of being cut off.
+            if (accept.Length <= 16 && cancel.Length <= 16)
+            {
+                main.HeightRequest = other.HeightRequest = 48;
+                var row = new Grid { ColumnSpacing = 10, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
+                row.Add(other, 0);
+                row.Add(main, 1);
+                return row;
+            }
+            var buttons = new VerticalStackLayout { Spacing = 8 };
             buttons.Add(main);
-            buttons.Add(s.Button(cancel, "SecondaryButton", null));
+            buttons.Add(other);
             return buttons;
         })) != null;
 
