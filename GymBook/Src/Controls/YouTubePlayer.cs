@@ -22,8 +22,47 @@ public class YouTubePlayer : WebView
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
+#if ANDROID
+        if (Handler?.PlatformView is Android.Webkit.WebView web)
+        {
+            web.Touch -= OnTouch;
+            web.Touch += OnTouch;
+        }
+#endif
         Load();
     }
+
+#if ANDROID
+    float _downX, _downY;
+    bool _pageScrolls;
+
+    // The player takes every touch that lands on it, so a swipe over it wouldn't scroll the page. Once a drag is mostly
+    // up or down, the player lets go of it (and doesn't see its moves, so it can't take it back), and the page's scroll
+    // view takes over from there, fling and all. Taps and sideways drags (seeking) still go to the player.
+    void OnTouch(object? sender, Android.Views.View.TouchEventArgs e)
+    {
+        e.Handled = false;
+        if (sender is not Android.Webkit.WebView web || e.Event is not { } ev)
+            return;
+        switch (ev.ActionMasked)
+        {
+            case Android.Views.MotionEventActions.Down:
+                (_downX, _downY, _pageScrolls) = (ev.GetX(), ev.GetY(), false);
+                break;
+            case Android.Views.MotionEventActions.Move:
+                var dx = Math.Abs(ev.GetX() - _downX);
+                var dy = Math.Abs(ev.GetY() - _downY);
+                var slop = Android.Views.ViewConfiguration.Get(web.Context)?.ScaledTouchSlop ?? 16;
+                if (_pageScrolls || (dy > slop && dy > dx))
+                {
+                    _pageScrolls = true;
+                    web.Parent?.RequestDisallowInterceptTouchEvent(false);
+                    e.Handled = true;
+                }
+                break;
+        }
+    }
+#endif
 
     void Load()
     {
