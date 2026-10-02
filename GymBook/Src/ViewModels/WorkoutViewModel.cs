@@ -852,7 +852,8 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     void ToggleWarmups() => ShowWarmups = !ShowWarmups;
 
     [RelayCommand]
-    Task Select() => _parent.SelectExercise(this);
+    /// <summary>Its photo in the strip tapped: shows it, or, already showing, opens its details (how to do it, video).</summary>
+    Task Select() => IsSelected ? Help() : _parent.SelectExercise(this);
 
     [RelayCommand]
     Task Help() => Shell.Current.GoToAsync($"{Routes.Exercise}?id={Exercise.Id}&tab=instructions");
