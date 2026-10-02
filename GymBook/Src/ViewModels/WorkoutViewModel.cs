@@ -514,9 +514,8 @@ public partial class WorkoutViewModel(
         if (_session == null || SetTimes.RunningRest(_session) is not { RestDueAt: { } due } rest)
             return;
         var now = DateTime.Now;
-        // From where it is now: past zero, adding time counts from now, not from when it ran out.
-        var from = due < now && int.Parse(delta) > 0 ? now : due;
-        SetTimes.MoveRestDue(rest, from.AddSeconds(int.Parse(delta)));
+        // Always from when it's due: below zero, +15 takes 15 seconds off what's over (−0:40 becomes −0:25).
+        SetTimes.MoveRestDue(rest, due.AddSeconds(int.Parse(delta)));
         _restCounting = rest.RestDueAt > now;
         workouts.Save();
         Tick();
