@@ -218,9 +218,13 @@ public class HealthConnectPlatform : IHealthPlatform
             if (types.Count == 0)
                 return [];
 
+            // Up to now, not the end of today: where an app keeps no total of its own, Health Connect works the total
+            // out as active plus resting calories over the time asked for, and resting calories for hours still to
+            // come aren't burned yet (they made today's total far too high).
+            var now = DateTime.Now;
             var request = new AggregateRecordsRequest.Builder(new LocalTimeRangeFilter.Builder()
                 .SetStartTime(Local(from))
-                .SetEndTime(Local(to))
+                .SetEndTime(Local(to > now ? now : to))
                 .Build());
             foreach (var type in types)
                 request.AddAggregationType(type);
