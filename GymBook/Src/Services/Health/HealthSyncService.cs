@@ -40,9 +40,31 @@ public class HealthSyncService(DataStore store, IHealthPlatform platform)
         if (!await platform.RequestPermissionsAsync())
             return false;
         store.Profile.HealthSource = source;
+        // A fresh choice: Samsung Health alone, or every app (pick some with ChooseApps).
+        store.Profile.HealthApps = null;
         store.Save();
         await SyncAsync(force: true);
         return true;
+    }
+
+    /// <summary>The apps read from: the ones picked, Samsung Health with that source, or null for every app.</summary>
+    public IReadOnlyList<string>? Apps =>
+        store.Profile.HealthApps is { Count: > 0 } picked ? picked
+        : store.Profile.HealthSource == HealthSource.SamsungHealth ? [HealthApp.SamsungHealth]
+        : null;
+
+    /// <summary>"Samsung Health", "Samsung Health, Withings", or "Health Connect" (every app): what's read from.</summary>
+    public string SourceName => Apps is { } apps
+        ? apps.Count <= 2 ? string.Join(", ", apps.Select(HealthApp.NameOf)) : $"{HealthApp.NameOf(apps[0])} + {apps.Count - 1} more"
+        : HealthSource.HealthConnect.Display();
+
+    /// <summary>Reads only from <paramref name="packages"/> from now on (null or empty: every app), and reads again.</summary>
+    public async Task ChooseAppsAsync(IReadOnlyCollection<string>? packages)
+    {
+        store.Profile.HealthSource = HealthSource.HealthConnect;
+        store.Profile.HealthApps = packages is { Count: > 0 } ? [.. packages] : null;
+        store.Save();
+        await SyncAsync(force: true);
     }
 
     /// <summary>Stops reading. What was already read stays.</summary>
@@ -68,12 +90,12 @@ public class HealthSyncService(DataStore store, IHealthPlatform platform)
             return false;
         try
         {
-            var source = store.Profile.HealthSource;
+            var name = SourceName;
             var today = DateTime.Today;
-            var result = await platform.ReadAsync(today.AddDays(1 - Days), today.AddDays(1), source);
+            var result = await platform.ReadAsync(today.AddDays(1 - Days), today.AddDays(1), Apps);
             LastSyncedAt = DateTimeOffset.Now;
             LastError = null;
-            return await MainThread.InvokeOnMainThreadAsync(() => Apply(result, source.Display()));
+            return await MainThread.InvokeOnMainThreadAsync(() => Apply(result, name));
         }
         catch (Exception e)
         {

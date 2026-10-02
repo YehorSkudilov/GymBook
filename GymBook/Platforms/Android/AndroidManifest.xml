@@ -19,4 +19,15 @@
 	<uses-permission android:name="android.permission.health.READ_BONE_MASS" />
 	<uses-permission android:name="android.permission.health.READ_BODY_WATER_MASS" />
 	<uses-permission android:name="android.permission.health.READ_HEIGHT" />
+	<!-- To show the names of the apps that share health data (Health connect apps declare these), when choosing which to read. -->
+	<queries>
+		<intent>
+			<action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+			<category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+		</intent>
+		<intent>
+			<action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+		</intent>
+		<package android:name="com.sec.android.app.shealth" />
+	</queries>
 </manifest>

@@ -26,6 +26,33 @@ public record BodyReading(
 
 public record HealthReadResult(IReadOnlyList<HealthDayReading> Days, IReadOnlyList<BodyReading> Body, double? HeightCm);
 
+/// <summary>An app that shares health data (through Health Connect): its Android package and its name.</summary>
+public record HealthApp(string Package, string Name)
+{
+    public const string SamsungHealth = "com.sec.android.app.shealth";
+
+    /// <summary>Names of common health apps, for when Android won't say (another app's name can be hidden from us).</summary>
+    public static string NameOf(string package) => package switch
+    {
+        SamsungHealth => "Samsung Health",
+        "com.google.android.apps.fitness" => "Google Fit",
+        "com.fitbit.FitbitMobile" => "Fitbit",
+        "com.withings.wiscale2" => "Withings",
+        "com.garmin.android.apps.connectmobile" => "Garmin Connect",
+        "com.huawei.health" => "Huawei Health",
+        "com.mi.health" or "com.xiaomi.hm.health" => "Mi Fitness",
+        "com.myfitnesspal.android" => "MyFitnessPal",
+        "com.ouraring.oura" => "Oura",
+        "com.whoop.android" => "WHOOP",
+        "com.strava" => "Strava",
+        "com.renpho.health" => "Renpho",
+        "com.eufylife.smarthome" => "eufyLife",
+        "com.cronometer.android.gold" or "com.cronometer.android" => "Cronometer",
+        "com.google.android.apps.healthdata" => "Health Connect",
+        _ => package,
+    };
+}
+
 public enum HealthAvailability
 {
     Available,
@@ -50,10 +77,13 @@ public interface IHealthPlatform
     Task<bool> RequestPermissionsAsync();
 
     /// <summary>
-    /// Days from <paramref name="from"/> up to (not including) <paramref name="to"/>, both local midnights. With
-    /// <see cref="HealthSource.SamsungHealth"/>, only what Samsung Health recorded; otherwise every app's data.
+    /// Days from <paramref name="from"/> up to (not including) <paramref name="to"/>, both local midnights: only what
+    /// <paramref name="apps"/> recorded (Android package names), or every app's when that's null or empty.
     /// </summary>
-    Task<HealthReadResult> ReadAsync(DateTime from, DateTime to, HealthSource source, CancellationToken ct = default);
+    Task<HealthReadResult> ReadAsync(DateTime from, DateTime to, IReadOnlyCollection<string>? apps, CancellationToken ct = default);
+
+    /// <summary>The apps that shared any of the data Gym Book reads over the last 30 days, by name.</summary>
+    Task<IReadOnlyList<HealthApp>> FindAppsAsync(CancellationToken ct = default);
 
     /// <summary>Opens Health Connect's own settings, where access can be changed.</summary>
     void OpenSettings();
@@ -67,8 +97,10 @@ public class NoHealthPlatform : IHealthPlatform
 
     public Task<bool> RequestPermissionsAsync() => Task.FromResult(false);
 
-    public Task<HealthReadResult> ReadAsync(DateTime from, DateTime to, HealthSource source, CancellationToken ct = default) =>
+    public Task<HealthReadResult> ReadAsync(DateTime from, DateTime to, IReadOnlyCollection<string>? apps, CancellationToken ct = default) =>
         Task.FromResult(new HealthReadResult([], [], null));
+
+    public Task<IReadOnlyList<HealthApp>> FindAppsAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<HealthApp>>([]);
 
     public void OpenSettings()
     {

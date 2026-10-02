@@ -343,6 +343,12 @@ public class UserProfile
     public int? EnergyBalanceGoal { get; set; }
     /// <summary>Where calories burned, steps and body measurements are read from.</summary>
     public HealthSource HealthSource { get; set; }
+    /// <summary>
+    /// The apps whose health data is read (their Android package names), picked by the user; null or empty: every app's
+    /// (or only Samsung Health's with <see cref="HealthSource.SamsungHealth"/>).
+    /// </summary>
+    [MaxItems(30)]
+    public List<string>? HealthApps { get; set; }
     /// <summary>Food logged in the health app is counted with what's logged in Gym Book.</summary>
     public bool ImportHealthFood { get; set; } = true;
     /// <summary>When the user started training consistently.</summary>

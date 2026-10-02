@@ -6,6 +6,7 @@ using GymBook.Controls;
 using GymBook.Models;
 using GymBook.Services;
 using GymBook.Services.Health;
+using GymBook.Views;
 
 namespace GymBook.ViewModels;
 
@@ -364,7 +365,7 @@ public partial class NutritionViewModel(
         switch (platform.Availability)
         {
             case HealthAvailability.NotSupported:
-                HealthTitle = source == HealthSource.None ? "Health data" : source.Display();
+                HealthTitle = source == HealthSource.None ? "Health data" : health.SourceName;
                 HealthStatus = source == HealthSource.None
                     ? "Connect Samsung Health or Health Connect in Gym Book on your Android phone: calories burned, steps and body measurements read there sync here."
                     : $"Read on your Android phone and synced here.";
@@ -386,13 +387,13 @@ public partial class NutritionViewModel(
         }
         else if (!platform.HasAnyPermission)
         {
-            HealthTitle = source.Display();
+            HealthTitle = health.SourceName;
             HealthStatus = "Gym Book isn't allowed to read health data on this phone. Connect to allow it.";
             HealthAction = "Connect";
         }
         else
         {
-            HealthTitle = source.Display();
+            HealthTitle = health.SourceName;
             HealthStatus = IsSyncingHealth ? "Reading…"
                 : health.LastError is { } error ? $"Couldn't read: {error}"
                 : health.LastSyncedAt is { } at ? $"Up to date · read {Ago(at)}"
@@ -416,19 +417,16 @@ public partial class NutritionViewModel(
             await ConnectAsync();
             return;
         }
-        var other = source == HealthSource.SamsungHealth ? HealthSource.HealthConnect : HealthSource.SamsungHealth;
-        const string sync = "Read now", permissions = "Change what Gym Book can read";
-        var switchTo = $"Switch to {other.Display()}";
-        var choice = await dialogs.ActionSheet(source.Display(), "Disconnect", sync, switchTo, permissions);
+        const string sync = "Read now", apps = "Choose apps", permissions = "Change what Gym Book can read";
+        var choice = await dialogs.ActionSheet(health.SourceName, "Disconnect", sync, apps, permissions);
         if (choice == sync)
         {
             await SyncHealthAsync(force: true);
             Refresh();
         }
-        else if (choice == switchTo)
+        else if (choice == apps)
         {
-            await health.ConnectAsync(other);
-            Refresh();
+            await ChooseAppsAsync();
         }
         else if (choice == permissions)
         {
@@ -438,6 +436,68 @@ public partial class NutritionViewModel(
             && await dialogs.Confirm("Disconnect?", "Gym Book stops reading your health data. What was already read stays.", "Disconnect"))
         {
             health.Disconnect();
+            Refresh();
+        }
+    }
+
+    /// <summary>
+    /// Which apps' health data to read: a switch for each app that shared any in the last 30 days (plus any picked before),
+    /// all on meaning every app, including ones added later.
+    /// </summary>
+    async Task ChooseAppsAsync()
+    {
+        HealthStatus = "Finding your health apps…";
+        IReadOnlyList<HealthApp> found;
+        try
+        {
+            found = await health.Platform.FindAppsAsync();
+        }
+        catch (Exception e)
+        {
+            ShowHealth();
+            await dialogs.Alert("Couldn't look", $"Health Connect didn't answer: {e.Message}");
+            return;
+        }
+        ShowHealth();
+        var current = health.Apps;
+        var apps = found.ToList();
+        foreach (var package in current ?? [])
+            if (apps.All(a => a.Package != package))
+                apps.Add(new HealthApp(package, HealthApp.NameOf(package)));
+        if (apps.Count == 0)
+        {
+            await dialogs.Alert("No apps found",
+                "No app has shared calories, steps, food or body measurements with Health Connect in the last 30 days. Turn on sharing in your health app (Samsung Health › Settings › Health Connect) and try again.");
+            return;
+        }
+
+        var picked = new HashSet<string>(current ?? apps.Select(a => a.Package));
+        var switches = apps.Select(a => new MenuSwitch(a.Name, null, picked.Contains(a.Package), on =>
+        {
+            if (on)
+                picked.Add(a.Package);
+            else
+                picked.Remove(a.Package);
+        })).ToList();
+        const string save = "Save", every = "Every app";
+        var choice = await dialogs.ActionSheet("Read health data from", null, switches, save, every);
+        if (choice == null)
+            return;
+        if (choice == save && picked.Count == 0)
+        {
+            await dialogs.Alert("Pick an app", "Choose at least one app to read from, or Every app.");
+            return;
+        }
+        IsSyncingHealth = true;
+        ShowHealth();
+        try
+        {
+            // Every one picked is the same as every app, which also takes in apps added later.
+            await health.ChooseAppsAsync(choice == every || apps.All(a => picked.Contains(a.Package)) ? null : [.. picked]);
+        }
+        finally
+        {
+            IsSyncingHealth = false;
             Refresh();
         }
     }

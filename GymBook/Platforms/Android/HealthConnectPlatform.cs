@@ -16,13 +16,12 @@ namespace GymBook;
 /// <summary>
 /// Health data through Android's Health Connect, built into Android 14 and later (its framework API, so no extra library).
 /// Samsung Health shares weight, body composition, calories burned, steps and its food diary there (Samsung Health ›
-/// Settings › Health Connect); with <see cref="HealthSource.SamsungHealth"/> only Samsung Health's records are read,
-/// with <see cref="HealthSource.HealthConnect"/> every app's (Google Fit, Fitbit, Withings, Garmin, scales, ...).
+/// Settings › Health Connect). Reads every app's records (Google Fit, Fitbit, Withings, Garmin, scales, ...), or only
+/// those of the apps picked (Samsung Health alone, for instance).
 /// Read only: Gym Book doesn't write anything back.
 /// </summary>
 public class HealthConnectPlatform : IHealthPlatform
 {
-    const string SamsungHealthPackage = "com.sec.android.app.shealth";
 
     /// <summary>
     /// Everything the Nutrition tab reads (HealthPermissions' values, spelled out so they can be listed on older Android
@@ -62,11 +61,35 @@ public class HealthConnectPlatform : IHealthPlatform
         return HasAnyPermission;
     }
 
-    public Task<HealthReadResult> ReadAsync(DateTime from, DateTime to, HealthSource source, CancellationToken ct = default)
+    public Task<HealthReadResult> ReadAsync(DateTime from, DateTime to, IReadOnlyCollection<string>? apps, CancellationToken ct = default)
     {
-        if (!OperatingSystem.IsAndroidVersionAtLeast(34) || source == HealthSource.None)
+        if (!OperatingSystem.IsAndroidVersionAtLeast(34))
             return Task.FromResult(new HealthReadResult([], [], null));
-        return new Reader(source == HealthSource.SamsungHealth ? SamsungHealthPackage : null).ReadAsync(from, to, ct);
+        return new Reader(apps).ReadAsync(from, to, ct);
+    }
+
+    public async Task<IReadOnlyList<HealthApp>> FindAppsAsync(CancellationToken ct = default)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(34))
+            return [];
+        var packages = await new Reader(null).FindAppsAsync(DateTime.Today.AddDays(-30), DateTime.Today.AddDays(1), ct);
+        return [.. packages.Where(p => p != Context.PackageName).Select(p => new HealthApp(p, AppName(p))).OrderBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase)];
+    }
+
+    /// <summary>The app's name as Android shows it, or a known one (another app can be hidden from us), or its package.</summary>
+    static string AppName(string package)
+    {
+        try
+        {
+            var pm = Context.PackageManager!;
+            var label = pm.GetApplicationLabel(pm.GetApplicationInfo(package, 0));
+            if (!string.IsNullOrWhiteSpace(label))
+                return label;
+        }
+        catch (PackageManager.NameNotFoundException)
+        {
+        }
+        return HealthApp.NameOf(package);
     }
 
     public void OpenSettings()
@@ -94,12 +117,71 @@ public class HealthConnectPlatform : IHealthPlatform
     }
 
     [SupportedOSPlatform("android34.0")]
-    sealed class Reader(string? package)
+    sealed class Reader(IReadOnlyCollection<string>? packages)
     {
         readonly HealthConnectManager _manager = Context.GetSystemService(Context.HealthconnectService).JavaCast<HealthConnectManager>()
             ?? throw new InvalidOperationException("Health Connect isn't available on this phone.");
 
-        DataOrigin? Origin => package == null ? null : new DataOrigin.Builder().SetPackageName(package).Build();
+        /// <summary>The apps to read from; none: every app.</summary>
+        IEnumerable<DataOrigin> Origins => (packages ?? []).Select(p => new DataOrigin.Builder().SetPackageName(p).Build()!);
+
+        /// <summary>
+        /// Every app that recorded something Gym Book reads between the two times: from the day totals (Health Connect
+        /// says whose data went into them) and from each measurement.
+        /// </summary>
+        public async Task<HashSet<string>> FindAppsAsync(DateTime from, DateTime to, CancellationToken ct)
+        {
+            var found = new HashSet<string>();
+            var types = new List<AggregationType>();
+            if (Granted(HealthPermissions.ReadTotalCaloriesBurned)) types.Add(TotalCaloriesBurnedRecord.EnergyTotal!);
+            if (Granted(HealthPermissions.ReadActiveCaloriesBurned)) types.Add(ActiveCaloriesBurnedRecord.ActiveCaloriesTotal!);
+            if (Granted(HealthPermissions.ReadSteps)) types.Add(StepsRecord.StepsCountTotal!);
+            if (Granted(HealthPermissions.ReadNutrition)) types.Add(NutritionRecord.EnergyTotal!);
+            foreach (var type in types)
+            {
+                // One at a time: a type nobody recorded mustn't hide the others.
+                try
+                {
+                    var request = new AggregateRecordsRequest.Builder(new TimeInstantRangeFilter.Builder()
+                        .SetStartTime(Instant(from)).SetEndTime(Instant(to)).Build()).AddAggregationType(type)!.Build()!;
+                    var result = await Call(receiver => _manager.Aggregate(request, Context.MainExecutor!, receiver));
+                    foreach (var origin in result.JavaCast<AggregateRecordsResponse>()!.GetDataOrigins(type))
+                        if (origin.PackageName is { } name)
+                            found.Add(name);
+                }
+                catch (InvalidOperationException)
+                {
+                }
+                ct.ThrowIfCancellationRequested();
+            }
+            async Task Measurements<T>(string permission) where T : InstantRecord
+            {
+                if (!Granted(permission))
+                    return;
+                foreach (var name in await OriginsOf<T>(from, to))
+                    found.Add(name);
+            }
+            await Measurements<WeightRecord>(HealthPermissions.ReadWeight);
+            await Measurements<BodyFatRecord>(HealthPermissions.ReadBodyFat);
+            await Measurements<BasalMetabolicRateRecord>(HealthPermissions.ReadBasalMetabolicRate);
+            await Measurements<LeanBodyMassRecord>(HealthPermissions.ReadLeanBodyMass);
+            return found;
+        }
+
+        /// <summary>The apps that wrote any record of one kind between the two times.</summary>
+        async Task<HashSet<string>> OriginsOf<T>(DateTime from, DateTime to) where T : InstantRecord
+        {
+            var names = new HashSet<string>();
+            var request = new ReadRecordsRequestUsingFilters.Builder(Java.Lang.Class.FromType(typeof(T)))
+                .SetTimeRangeFilter(new TimeInstantRangeFilter.Builder().SetStartTime(Instant(from)).SetEndTime(Instant(to)).Build())!
+                .SetPageSize(1000)!
+                .Build()!;
+            var result = await Call(receiver => _manager.ReadRecords(request, Context.MainExecutor!, receiver));
+            foreach (var record in result.JavaCast<ReadRecordsResponse>()!.Records)
+                if (record is Java.Lang.Object o && o.JavaCast<T>()?.Metadata?.DataOrigin?.PackageName is { } name)
+                    names.Add(name);
+            return names;
+        }
 
         public async Task<HealthReadResult> ReadAsync(DateTime from, DateTime to, CancellationToken ct)
         {
@@ -139,7 +221,7 @@ public class HealthConnectPlatform : IHealthPlatform
                 .Build());
             foreach (var type in types)
                 request.AddAggregationType(type);
-            if (Origin is { } origin)
+            foreach (var origin in Origins)
                 request.AddDataOriginsFilter(origin);
 
             var result = await Call(receiver => _manager.AggregateGroupByPeriod(request.Build(), Period.OfDays(1)!, Context.MainExecutor!, receiver));
@@ -208,7 +290,7 @@ public class HealthConnectPlatform : IHealthPlatform
                         .SetEndTime(Instant(to))
                         .Build())!
                     .SetPageSize(1000)!;
-                if (Origin is { } origin)
+                foreach (var origin in Origins)
                     builder.AddDataOrigins(origin);
                 if (page is { } token)
                     builder.SetPageToken(token);
