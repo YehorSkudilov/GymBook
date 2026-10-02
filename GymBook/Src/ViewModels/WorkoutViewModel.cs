@@ -90,15 +90,15 @@ public partial class WorkoutViewModel(
         return Task.CompletedTask;
     }
 
-    /// <summary>The next exercise after <paramref name="index"/> with sets still to do, wrapping round to earlier ones; null when all are done.</summary>
+    /// <summary>
+    /// Where to go after <paramref name="index"/> is finished: the first exercise from the top with sets still to do
+    /// (an earlier one left unfinished comes before the ones after it); null when all are done.
+    /// </summary>
     int? NextOpen(int index)
     {
-        for (var step = 1; step < Exercises.Count; step++)
-        {
-            var i = (index + step) % Exercises.Count;
-            if (!Exercises[i].IsDone)
+        for (var i = 0; i < Exercises.Count; i++)
+            if (i != index && !Exercises[i].IsDone)
                 return i;
-        }
         return null;
     }
 
@@ -394,12 +394,13 @@ public partial class WorkoutViewModel(
     }
 
     /// <summary>
-    /// The next set to do: the first one not done or skipped in the exercise on screen, else in the exercises after it,
-    /// then before it. Null when every set is done or skipped.
+    /// The next set to do: the first one not done or skipped in the exercise on screen, else in the first exercise from
+    /// the top with any left. Null when every set is done or skipped.
     /// </summary>
     (WorkoutExerciseViewModel Exercise, SetEntry Set)? NextSet()
     {
-        var order = Exercises.Skip(CurrentIndex).Concat(Exercises.Take(CurrentIndex));
+        // The exercise on screen first, then from the top, as moving on after an exercise goes (see NextOpen).
+        var order = Exercises.Skip(CurrentIndex).Take(1).Concat(Exercises.Where((_, i) => i != CurrentIndex));
         foreach (var exercise in order)
             if (exercise.Model.Sets.FirstOrDefault(s => !s.IsCompleted && !s.IsSkipped) is { } set)
                 return (exercise, set);
