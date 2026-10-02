@@ -750,14 +750,10 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             if (next != null && next.Model.WeightKg <= 0 && row.Model.WeightKg > 0)
                 next.WeightText = row.WeightText;
 
-            // Out of the rep range: say so, and adjust the next set unless its weight was already changed by hand.
+            // Out of the rep range: say so. Only advice: the working sets keep the weights and reps from history (or as
+            // typed), and the user changes them.
             if (!row.Model.IsWarmup)
-            {
-                var advice = _parent.Engine.AfterSet(Exercise, row.Model, Model.RepMin, Model.RepMax, Model.TargetRir);
-                LiveAdvice = advice?.Advice ?? "";
-                if (advice?.NextKg is { } kg && next != null && Math.Abs(next.Model.WeightKg - row.Model.WeightKg) < 0.01)
-                    next.WeightText = Units.Format(kg);
-            }
+                LiveAdvice = _parent.Engine.AfterSet(Exercise, row.Model, Model.RepMin, Model.RepMax, Model.TargetRir)?.Advice ?? "";
             // Warm-ups done: fold them away and move on to the working sets.
             if (row.Model.IsWarmup && Model.Sets.Where(s => s.IsWarmup).All(s => s.IsCompleted))
                 ShowWarmups = false;

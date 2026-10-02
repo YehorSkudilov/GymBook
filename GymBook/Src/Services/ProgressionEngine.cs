@@ -93,8 +93,8 @@ public class ProgressionEngine(DataStore store, Units units)
     }
 
     /// <summary>
-    /// Advice after a working set, and the weight for the next one: lower it after falling short of the minimum,
-    /// raise it after going past the maximum with reps to spare. Null when the set was in range.
+    /// Advice after a working set, with the weight it suggests for the next one: lower after falling short of the minimum,
+    /// higher after going past the maximum with reps to spare. Null when the set was in range.
     /// </summary>
     public (string Advice, double? NextKg)? AfterSet(Exercise ex, SetEntry set, int repMin, int repMax, int targetRir)
     {
@@ -106,7 +106,7 @@ public class ProgressionEngine(DataStore store, Units units)
             if (!loaded)
                 return ($"{set.Reps} reps is under your {repMin} minimum. Rest a little longer, or use an easier variation.", null);
             var next = Math.Min(WeightFor(E1Rm(set.WeightKg, set.Reps, set.Rir ?? 0), repMin, targetRir, ex), units.Step(set.WeightKg, ex, -1));
-            return ($"{set.Reps} reps is under your {repMin} minimum. Next set lowered to {units.FormatWithUnit(next)}.", next);
+            return ($"{set.Reps} reps is under your {repMin} minimum. Consider {units.FormatWithUnit(next)} for the next set.", next);
         }
         if (set.Reps > repMax && (set.Rir ?? targetRir) >= targetRir)
         {
@@ -114,7 +114,7 @@ public class ProgressionEngine(DataStore store, Units units)
                 return ($"{set.Reps} reps is over your {repMax} maximum. Add weight or a harder variation next time.", null);
             var mid = (repMin + repMax) / 2;
             var next = Math.Max(WeightFor(E1Rm(set.WeightKg, set.Reps, set.Rir ?? targetRir), mid, targetRir, ex), units.Step(set.WeightKg, ex, 1));
-            return ($"{set.Reps} reps is over your {repMax} maximum. Next set raised to {units.FormatWithUnit(next)}.", next);
+            return ($"{set.Reps} reps is over your {repMax} maximum. Consider {units.FormatWithUnit(next)} for the next set.", next);
         }
         return null;
     }
