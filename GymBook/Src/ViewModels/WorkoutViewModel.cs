@@ -377,6 +377,13 @@ public partial class WorkoutViewModel(
     /// <summary>The rest timer reached zero: the page says it's time for the next set.</summary>
     public event Action? RestFinished;
 
+    /// <summary>A set ticked along with another (an earlier open one): its times, nothing more.</summary>
+    internal void MarkDone(SetEntry set, DateTime now)
+    {
+        if (_session != null)
+            SetTimes.Complete(_session, set, now);
+    }
+
     internal void OnSetToggled(WorkoutExerciseViewModel exercise, SetRowViewModel set)
     {
         // When it began and ended (the rest before it, if still going, ends now), and the rest after it starts: every set
@@ -857,6 +864,42 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             s.IsCurrent = s == current;
     }
 
+    /// <summary>
+    /// A set's check tapped. Ticking a working set also ticks the working sets before it still open (with reps, not
+    /// skipped); unticking one also unticks the working sets ticked after it, after asking when that's more than one.
+    /// Warm-ups only ever change one at a time. Then the usual: rest after the tapped set, advice, moving on.
+    /// </summary>
+    internal async Task ToggleAsync(SetRowViewModel row)
+    {
+        var now = DateTime.Now;
+        if (!row.IsCompleted)
+        {
+            if (row.Model.Reps <= 0)
+                return;
+            if (!row.Model.IsWarmup)
+                foreach (var earlier in Sets.TakeWhile(s => s != row).Where(s => !s.Model.IsWarmup && !s.IsCompleted && !s.IsSkipped && s.Model.Reps > 0).ToList())
+                {
+                    earlier.Mark(true, now);
+                    _parent.MarkDone(earlier.Model, now);
+                }
+            row.Mark(true, now);
+        }
+        else
+        {
+            var later = row.Model.IsWarmup ? [] : Sets.SkipWhile(s => s != row).Skip(1).Where(s => !s.Model.IsWarmup && s.IsCompleted).ToList();
+            if (later.Count > 0 && !await _parent.Dialogs.Confirm($"Untick {later.Count + 1} sets?",
+                    $"Set {row.Label} and the {(later.Count == 1 ? "set" : $"{later.Count} sets")} ticked after it will be unticked.", "Untick"))
+                return;
+            foreach (var s in later)
+            {
+                s.Mark(false, now);
+                SetTimes.Uncomplete(s.Model);
+            }
+            row.Mark(false, now);
+        }
+        OnToggled(row);
+    }
+
     internal void OnToggled(SetRowViewModel row)
     {
         // Carry the completed values into the next open set, as a starting point.
@@ -1289,16 +1332,17 @@ public partial class SetRowViewModel : ObservableObject
         _parent.SaveSoon();
     }
 
+    /// <summary>Its check: ticks it, or unticks it (working sets carry the others along: see WorkoutExerciseViewModel.ToggleAsync).</summary>
     [RelayCommand]
-    void Toggle()
+    Task Toggle() => _parent.ToggleAsync(this);
+
+    /// <summary>Marks it done or not, without anything that follows a tap (rest, advice, moving on).</summary>
+    internal void Mark(bool done, DateTime now)
     {
-        if (!IsCompleted && Model.Reps <= 0)
-            return;
         IsSkipped = false;
-        IsCompleted = !IsCompleted;
-        Model.IsCompleted = IsCompleted;
-        Model.CompletedAt = IsCompleted ? DateTime.Now : null;
-        _parent.OnToggled(this);
+        IsCompleted = done;
+        Model.IsCompleted = done;
+        Model.CompletedAt = done ? now : null;
     }
 
     /// <summary>Tapping a row other than the current one opens it for editing.</summary>
