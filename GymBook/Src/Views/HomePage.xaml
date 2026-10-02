@@ -136,16 +136,16 @@
                         <Label Text="{Binding NextWorkoutMeta}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
                         <!-- Skips this workout for its week; Up next moves on. Not while a workout is running. -->
                         <!-- A quiet partner to Start: same height and shape, see-through so the glow shows, with a skip icon. It sits
-                             on frosted glass (the nav bar's acrylic, lightly tinted), which blurs the card's glow behind it; the
+                             on frosted glass (the nav bar's acrylic), which blurs the card's glow behind it; the
                              button's own faint fill and edge are unchanged on top. -->
                         <skeleton:AcrylicView Grid.Column="1" HeightRequest="44" CornerRadius="14" BorderColor="Transparent"
-                                              EffectStyle="Custom" TintColor="#272C39" TintOpacity="0.2" VerticalOptions="Center"
+                                              EffectStyle="Custom" TintColor="#272C39" TintOpacity="0.45" VerticalOptions="Center"
                                               IsVisible="{Binding IsWorkoutRunning, Converter={StaticResource Not}}">
                             <Button Text="Skip" HeightRequest="44" Padding="14,0" CornerRadius="14" FontSize="14"
-                                    BackgroundColor="#14FFFFFF" BorderColor="#2EFFFFFF" BorderWidth="1" TextColor="{StaticResource TextSecondary}"
+                                    BackgroundColor="#24FFFFFF" BorderColor="#59FFFFFF" BorderWidth="1" TextColor="{StaticResource TextPrimary}" FontFamily="OpenSansSemibold"
                                     ContentLayout="Left,4" Command="{Binding SkipNextCommand}">
                                 <Button.ImageSource>
-                                    <FontImageSource FontFamily="OutlinedIcons" Glyph="skip_next" Color="{StaticResource TextSecondary}" Size="18" />
+                                    <FontImageSource FontFamily="OutlinedIcons" Glyph="skip_next" Color="{StaticResource TextPrimary}" Size="18" />
                                 </Button.ImageSource>
                             </Button>
                         </skeleton:AcrylicView>
