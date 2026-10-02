@@ -59,8 +59,14 @@ public partial class WorkoutViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsTimingSet))]
     bool isEmpty;
+    /// <summary>Every set done or skipped (at least one done): no rest and no set timer, only finishing is left.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTimingSet))]
+    bool allSetsDone;
+    /// <summary>The "finish now?" popup was offered for this run of all sets done; it comes again only after they're all done again.</summary>
+    bool _offeredFinish;
 
-    public bool IsTimingSet => !IsResting && !IsEmpty;
+    public bool IsTimingSet => !IsResting && !IsEmpty && !AllSetsDone;
 
     /// <summary>The exercise on screen; the page and the photo strip both follow it.</summary>
     [ObservableProperty] int currentIndex;
@@ -200,6 +206,8 @@ public partial class WorkoutViewModel(
             CurrentIndex = Math.Max(0, open);
             OnCurrentIndexChanged(CurrentIndex);
             _pace = estimator.HistoryPace(active.Id);
+            AllSetsDone = !IsEmpty && NextSet() == null && Exercises.Any(e => e.Sets.Any(s => s.IsCompleted));
+            _offeredFinish = AllSetsDone;
             // A rest still going when the app closed carries on; one already over doesn't announce itself again.
             _restCounting = SetTimes.RunningRest(active)?.RestDueAt > DateTime.Now;
         }
@@ -316,6 +324,31 @@ public partial class WorkoutViewModel(
         CanGoBackToRest = last is { RestStartedAt: not null, RestEndedAt: not null };
     }
 
+    /// <summary>
+    /// Every set done or skipped (at least one done): asks once whether to finish the workout now, a moment after the
+    /// last one so the page's celebration plays first. Not now leaves it open; it asks again only after a set is unticked,
+    /// added or brought back and they're all done again.
+    /// </summary>
+    async void OfferFinishWhenDone()
+    {
+        var done = !IsEmpty && NextSet() == null && Exercises.Any(e => e.Sets.Any(s => s.IsCompleted));
+        AllSetsDone = done;
+        if (!done)
+        {
+            _offeredFinish = false;
+            return;
+        }
+        if (_offeredFinish)
+            return;
+        _offeredFinish = true;
+        var session = _session;
+        await Task.Delay(1500);
+        if (_session != session || workouts.Active != session || NextSet() != null)
+            return;
+        if (await dialogs.Confirm("All sets done", "Finish the workout now?", "Finish", "Not yet") && _session == session)
+            await FinishCommand.ExecuteAsync(null);
+    }
+
     /// <summary>The rest ran out: the page says it's time for the next set, with a buzz, and a notification when the app is away.</summary>
     void RestOver()
     {
@@ -421,9 +454,13 @@ public partial class WorkoutViewModel(
         {
             var now = set.Model.CompletedAt ?? DateTime.Now;
             SetTimes.Complete(_session, set.Model, now);
-            var seconds = set.Model.IsWarmup ? Warmups.RestSeconds : exercise.Model.RestSeconds;
-            SetTimes.StartRest(_session, set.Model, now, now.AddSeconds(Math.Max(0, seconds)));
-            _restCounting = seconds > 0;
+            // The last set: no rest after it, the workout's done.
+            if (NextSet() != null)
+            {
+                var seconds = set.Model.IsWarmup ? Warmups.RestSeconds : exercise.Model.RestSeconds;
+                SetTimes.StartRest(_session, set.Model, now, now.AddSeconds(Math.Max(0, seconds)));
+                _restCounting = seconds > 0;
+            }
         }
         else
         {
@@ -432,6 +469,7 @@ public partial class WorkoutViewModel(
         workouts.Save();
         UpdateProgress();
         Tick();
+        OfferFinishWhenDone();
         if (set.IsCompleted && !set.Model.IsWarmup && exercise.IsDone)
             ExerciseFinished?.Invoke(exercise, CanFinish);
         // Its last set done: move straight on to the next exercise (the rest timer keeps running over it).
@@ -444,6 +482,11 @@ public partial class WorkoutViewModel(
     {
         workouts.Save();
         UpdateProgress();
+        // Skipping what was left can finish the workout too.
+        if (_session != null && NextSet() == null)
+            SetTimes.EndRest(_session, DateTime.Now);
+        Tick();
+        OfferFinishWhenDone();
         if (exercise.IsDone && Exercises.IndexOf(exercise) == CurrentIndex && NextOpen(CurrentIndex) is { } next)
             CurrentIndex = next;
     }
@@ -453,6 +496,8 @@ public partial class WorkoutViewModel(
         workouts.Save();
         UpdateProgress();
         IsEmpty = Exercises.Count == 0;
+        // A set added (or the last open one removed) changes whether everything's done.
+        OfferFinishWhenDone();
     }
 
     /// <summary>
