@@ -127,6 +127,29 @@ public partial class WorkoutViewModel(
 
     internal void Save() => workouts.Save();
 
+    IDispatcherTimer? _saveTimer;
+
+    /// <summary>
+    /// A weight, reps, RIR or note was typed: saved a moment after the typing stops, so it survives the app being closed
+    /// (or a sync) without writing on every keystroke.
+    /// </summary>
+    internal void SaveSoon()
+    {
+        if (_saveTimer == null)
+        {
+            _saveTimer = Application.Current!.Dispatcher.CreateTimer();
+            _saveTimer.Interval = TimeSpan.FromMilliseconds(700);
+            _saveTimer.IsRepeating = false;
+            _saveTimer.Tick += (_, _) =>
+            {
+                if (_session != null && workouts.Active == _session)
+                    workouts.Save();
+            };
+        }
+        _saveTimer.Stop();
+        _saveTimer.Start();
+    }
+
     public override async Task OnAppearingAsync()
     {
         // For the workout notification with the rest timer (Android 13+ asks); once per run of the app.
@@ -656,7 +679,13 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     }
     public bool HasPinStatus => PinStatus.Length > 0;
 
-    partial void OnNoteChanged(string value) => Model.Note = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    partial void OnNoteChanged(string value)
+    {
+        Model.Note = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        _parent.SaveSoon();
+    }
+
+    internal void SaveSoon() => _parent.SaveSoon();
 
     [RelayCommand]
     async Task TogglePin()
@@ -1192,22 +1221,28 @@ public partial class SetRowViewModel : ObservableObject
 
     internal void RefreshVisibility() => IsVisible = !Model.IsWarmup || _parent.ShowWarmups;
 
+    // Each edit is kept straight away (see WorkoutViewModel.SaveSoon), not only when the set is ticked.
     partial void OnWeightTextChanged(string value)
     {
         if (_parent.Units.TryParse(value, out var kg))
             Model.WeightKg = kg;
         else if (string.IsNullOrWhiteSpace(value))
             Model.WeightKg = 0;
+        _parent.SaveSoon();
     }
 
     partial void OnRepsTextChanged(string value)
     {
         if (int.TryParse(value, out var reps) && reps >= 0)
             Model.Reps = reps;
+        _parent.SaveSoon();
     }
 
-    partial void OnRirTextChanged(string value) =>
+    partial void OnRirTextChanged(string value)
+    {
         Model.Rir = int.TryParse(value, out var rir) && rir >= 0 ? rir : null;
+        _parent.SaveSoon();
+    }
 
     [RelayCommand]
     void Toggle()

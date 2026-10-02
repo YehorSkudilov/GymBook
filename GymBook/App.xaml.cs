@@ -53,7 +53,12 @@ public partial class App : Application
             _ = _services.GetRequiredService<AiPlanService>().CheckActivePlanAsync();
         };
         // In the background the live connection goes (the battery); coming back reconnects and catches up.
-        window.Stopped += (_, _) => _ = _services.GetRequiredService<LiveSync>().StopAsync();
+        window.Stopped += (_, _) =>
+        {
+            // Anything typed and not saved yet (a weight mid-workout) is kept before the app can be closed.
+            _services.GetRequiredService<DataStore>().Save();
+            _ = _services.GetRequiredService<LiveSync>().StopAsync();
+        };
         window.Resumed += (_, _) =>
         {
             _sync.Schedule(TimeSpan.Zero);
