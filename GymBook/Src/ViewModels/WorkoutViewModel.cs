@@ -1135,12 +1135,13 @@ public partial class SetRowViewModel : ObservableObject
     string rirText;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CheckBackground), nameof(CheckIcon), nameof(ValueColor), nameof(ShowDoneTick), nameof(ShowE1Rm), nameof(IsSettled))]
+    [NotifyPropertyChangedFor(nameof(CheckBackground), nameof(CheckIcon), nameof(CheckStroke), nameof(ValueColor), nameof(ShowDoneTick), nameof(ShowE1Rm),
+        nameof(IsSettled), nameof(RowBackground), nameof(RowStroke), nameof(NumberBackground), nameof(LabelColor), nameof(NumberOpacity))]
     bool isCompleted;
 
     /// <summary>Won't be done this time: dimmed, not counted, and left out of the workout when it's finished. Not a plan change.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(RowOpacity), nameof(ShowE1Rm), nameof(ShowSkipped), nameof(IsSettled))]
+    [NotifyPropertyChangedFor(nameof(RowOpacity), nameof(ShowE1Rm), nameof(ShowSkipped), nameof(IsSettled), nameof(RowBackground), nameof(RowStroke))]
     bool isSkipped;
 
     /// <summary>Nothing left to do on it: done or skipped.</summary>
@@ -1149,13 +1150,14 @@ public partial class SetRowViewModel : ObservableObject
     public bool ShowSkipped => IsSkipped && !IsCurrent;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsNotCurrent), nameof(ShowRirInput), nameof(ShowRirValue), nameof(ShowDoneTick), nameof(NumberOpacity), nameof(ShowE1Rm), nameof(ShowSkipped))]
+    [NotifyPropertyChangedFor(nameof(IsNotCurrent), nameof(ShowRirInput), nameof(ShowRirValue), nameof(ShowDoneTick), nameof(NumberOpacity), nameof(ShowE1Rm), nameof(ShowSkipped),
+        nameof(RowBackground), nameof(RowStroke), nameof(NumberBackground), nameof(ValueColor))]
     bool isCurrent;
     public bool IsNotCurrent => !IsCurrent;
     public bool ShowRirInput => IsCurrent && TrackRir;
     public bool ShowRirValue => !IsCurrent && TrackRir;
     public bool ShowDoneTick => !IsCurrent && IsCompleted;
-    public double NumberOpacity => IsCurrent ? 1 : 0.6;
+    public double NumberOpacity => IsCurrent || IsCompleted ? 1 : 0.6;
     /// <summary>A skipped set says "Skipped" where its tick would be, and N/A for its E1RM. (Skipping is in the set number's menu.)</summary>
     public bool ShowE1Rm => !ShowSkipped;
 
@@ -1165,11 +1167,20 @@ public partial class SetRowViewModel : ObservableObject
     public string RepsDisplay => string.IsNullOrWhiteSpace(RepsText) ? "–" : RepsText;
     public string RirDisplay => string.IsNullOrWhiteSpace(RirText) ? "–" : RirText;
     public string E1Rm => _parent.E1RmText(Model);
-    public Color CheckBackground => IsCompleted ? Color.FromArgb("#2ED47A") : Color.FromArgb("#272C39");
-    public ImageSource CheckIcon => (ImageSource)Application.Current!.Resources[IsCompleted ? "IconCheck" : "IconCheckMuted"];
-    public Color LabelColor => Model.IsWarmup ? Color.FromArgb("#FFB020") : Color.FromArgb("#9AA3B5");
-    // Done sets stand out in green; the ones still to do are dimmed.
-    public Color ValueColor => IsCompleted ? Color.FromArgb("#2ED47A") : Color.FromArgb("#9AA3B5");
+    // Each set's state at a glance: done rows are tinted green with a green number and tick; the one being logged is
+    // outlined in blue with a solid green button to tick it; the ones still to do are dimmed; skipped ones fade out.
+    static readonly Color Green = Color.FromArgb("#2ED47A"), GreenSoft = Color.FromArgb("#133526"), GreenTint = Color.FromArgb("#0F2ED47A"),
+        Blue = Color.FromArgb("#3F7DFF"), Pending = Color.FromArgb("#626B7E");
+
+    /// <summary>The current set's button: solid green to tick it; once done, a quiet green tick (tap to undo).</summary>
+    public Color CheckBackground => IsCompleted ? GreenSoft : Green;
+    public Color CheckStroke => IsCompleted ? Green : Colors.Transparent;
+    public ImageSource CheckIcon => (ImageSource)Application.Current!.Resources[IsCompleted ? "IconCheckGreen" : "IconCheck"];
+    public Color RowBackground => IsCompleted && !IsCurrent ? GreenTint : IsCurrent ? Color.FromArgb("#151821") : Colors.Transparent;
+    public Color RowStroke => IsCurrent ? Blue : Colors.Transparent;
+    public Color NumberBackground => IsCompleted ? GreenSoft : IsCurrent ? Color.FromArgb("#1A2A4F") : Color.FromArgb("#1D212C");
+    public Color LabelColor => IsCompleted ? Green : Model.IsWarmup ? Color.FromArgb("#FFB020") : IsCurrent ? Color.FromArgb("#F4F6FB") : Color.FromArgb("#9AA3B5");
+    public Color ValueColor => IsCompleted ? Green : Pending;
     public bool TrackRir => _parent.TrackRir;
 
     internal void RefreshSettings()

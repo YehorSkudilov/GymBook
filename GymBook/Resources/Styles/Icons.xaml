@@ -11,6 +11,7 @@
     <FontImageSource x:Key="IconChevronRight" FontFamily="OutlinedIcons" Glyph="chevron_right" Color="{StaticResource TextSecondary}" Size="32" />
     <FontImageSource x:Key="IconChevronDown" FontFamily="OutlinedIcons" Glyph="expand_more" Color="{StaticResource TextPrimary}" Size="32" />
     <FontImageSource x:Key="IconCheck" FontFamily="OutlinedIcons" Glyph="check" Color="White" Size="32" />
+    <FontImageSource x:Key="IconCheckGreen" FontFamily="OutlinedIcons" Glyph="check" Color="{StaticResource Success}" Size="32" />
     <FontImageSource x:Key="IconCheckMuted" FontFamily="OutlinedIcons" Glyph="check" Color="{StaticResource TextSecondary}" Size="32" />
     <FontImageSource x:Key="IconClose" FontFamily="OutlinedIcons" Glyph="close" Color="{StaticResource TextSecondary}" Size="32" />
     <FontImageSource x:Key="IconSearch" FontFamily="OutlinedIcons" Glyph="search" Color="{StaticResource TextSecondary}" Size="32" />
