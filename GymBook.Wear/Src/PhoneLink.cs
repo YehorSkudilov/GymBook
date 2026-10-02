@@ -98,6 +98,28 @@ public class PhoneLink : Java.Lang.Object, DataClient.IOnDataChangedListener, Me
             });
     }
 
+    DateTime _heartRateSent;
+
+    /// <summary>
+    /// Passes the heart rate on to the phone, which shows it while the workout's going: at most every 2 seconds, and
+    /// quietly not at all when no phone can be reached.
+    /// </summary>
+    public async void SendHeartRate(int bpm)
+    {
+        var now = DateTime.UtcNow;
+        if (now - _heartRateSent < TimeSpan.FromSeconds(2))
+            return;
+        _heartRateSent = now;
+        try
+        {
+            await SendToPhonesAsync(WearPaths.HeartRate, System.Text.Encoding.ASCII.GetBytes(bpm.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        }
+        catch (Exception)
+        {
+            // Out of range or the phone app isn't installed: the phone just shows no heart rate.
+        }
+    }
+
     /// <summary>Asks the phone to tick a set. False when no phone could be reached.</summary>
     public Task<bool> CompleteSetAsync(WearCompleteSet request) =>
         SendToPhonesAsync(WearPaths.CompleteSet, JsonSerializer.SerializeToUtf8Bytes(request, CompleteSetJson));

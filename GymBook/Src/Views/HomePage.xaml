@@ -13,9 +13,11 @@
 
             <!-- Header: the date with the connection at the end, then the greeting with a little scene for the time of day -->
             <VerticalStackLayout Spacing="2">
-                <Grid ColumnDefinitions="*,Auto">
+                <!-- The heart rate from the watch (when there is one) beside the connection -->
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
                     <Label Text="{Binding DateText}" Style="{StaticResource Caption}" VerticalOptions="Center" />
-                    <Border Grid.Column="1" Style="{StaticResource Pill}" BackgroundColor="{StaticResource Surface2}" Padding="8,3" VerticalOptions="Center">
+                    <controls:HeartRatePill Grid.Column="1" />
+                    <Border Grid.Column="2" Style="{StaticResource Pill}" BackgroundColor="{StaticResource Surface2}" Padding="8,3" VerticalOptions="Center">
                         <HorizontalStackLayout Spacing="5">
                             <Ellipse Fill="{Binding ConnectionColor}" WidthRequest="7" HeightRequest="7" VerticalOptions="Center" />
                             <Label Text="{Binding ConnectionText}" TextColor="{StaticResource TextSecondary}" FontSize="11"

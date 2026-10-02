@@ -23,6 +23,9 @@ public static class WearPaths
 
     /// <summary>Message to the watch, the phone's answer to <see cref="RequestSession"/>: a <see cref="WearSession"/>.</summary>
     public const string Session = "/gymbook/session";
+
+    /// <summary>Message to the phone: the heart rate the watch just read, in beats per minute, as text ("128").</summary>
+    public const string HeartRate = "/gymbook/heart-rate";
 }
 
 /// <summary>

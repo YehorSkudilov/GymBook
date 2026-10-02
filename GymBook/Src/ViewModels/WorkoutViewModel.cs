@@ -739,11 +739,9 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     string liveAdvice = "";
     public bool HasLiveAdvice => LiveAdvice.Length > 0;
 
-    /// <summary>Whether this is the exercise on screen; its photo is highlighted in the strip.</summary>
+    /// <summary>Whether this is the exercise on screen.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ThumbStroke))]
     bool isSelected;
-    public Color ThumbStroke => IsSelected ? Color.FromArgb("#3F7DFF") : Colors.Transparent;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WarmupText))]

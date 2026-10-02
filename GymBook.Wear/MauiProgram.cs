@@ -50,6 +50,10 @@ public static class MauiProgram
         // The crown or rotating bezel scrolls every page.
         RotaryScroll.Register();
 
-        return builder.Build();
+        var app = builder.Build();
+        // Every heart rate read (while a workout is on screen) goes to the phone too, to show there.
+        var phone = app.Services.GetRequiredService<PhoneLink>();
+        app.Services.GetRequiredService<HeartRateMonitor>().Changed += phone.SendHeartRate;
+        return app;
     }
 }

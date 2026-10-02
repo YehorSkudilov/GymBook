@@ -15,6 +15,28 @@ public class WatchLink(DataStore store, WorkoutService workouts, Units units)
     /// </summary>
     public Func<SetEntry, bool>? LiveCompleteSet { get; set; }
 
+    /// <summary>How long a heart rate from the watch counts as current: after that the watch is off or not reading.</summary>
+    public static readonly TimeSpan HeartRateTimeout = TimeSpan.FromSeconds(15);
+
+    int _heartRate;
+    DateTime _heartRateAt;
+
+    /// <summary>The heart rate the watch last sent, while it's recent; otherwise null.</summary>
+    public int? HeartRate => DateTime.UtcNow - _heartRateAt < HeartRateTimeout ? _heartRate : null;
+
+    /// <summary>A new heart rate arrived from the watch. Raised on the main thread.</summary>
+    public event Action? HeartRateChanged;
+
+    /// <summary>The watch read a heart rate. Call on the main thread.</summary>
+    public void ReportHeartRate(int bpm)
+    {
+        if (bpm is < 25 or > 250)
+            return;
+        _heartRate = bpm;
+        _heartRateAt = DateTime.UtcNow;
+        HeartRateChanged?.Invoke();
+    }
+
     /// <summary>The workout as the watch shows it. Call on the main thread, where the workout is changed.</summary>
     public WearWorkout Snapshot()
     {

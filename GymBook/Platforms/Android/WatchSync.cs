@@ -96,6 +96,11 @@ public class WatchListenerService : WearableListenerService
             case WearPaths.RequestSession when message.SourceNodeId is { } watch:
                 _ = SendSessionAsync(watch);
                 break;
+            case WearPaths.HeartRate when message.GetData() is { } data
+                && int.TryParse(System.Text.Encoding.ASCII.GetString(data), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var bpm):
+                if (IPlatformApplication.Current?.Services.GetService<WatchLink>() is { } link)
+                    MainThread.BeginInvokeOnMainThread(() => link.ReportHeartRate(bpm));
+                break;
         }
     }
 
