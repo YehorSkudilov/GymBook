@@ -200,6 +200,11 @@ public class SetEntry
     public int? Rir { get; set; }
     public bool IsWarmup { get; set; }
     public bool IsCompleted { get; set; }
+    /// <summary>
+    /// Skipped in the workout in progress: won't be done this time. Kept so it stays skipped when the app reopens; on
+    /// finishing, skipped sets are left out and counted (SessionExercise.SkippedSets, SkippedWarmups).
+    /// </summary>
+    public bool IsSkipped { get; set; }
     // Times are stored as moments (wall-clock, like the workout's), never as counted seconds: how long a set, a warm-up
     // or a rest took is the difference between two of them. Set by SetTimes.
     /// <summary>When work on the set began: the end of whatever came before it in the workout (a rest, a set, the start).</summary>

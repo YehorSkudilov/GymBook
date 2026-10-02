@@ -590,9 +590,12 @@ public partial class WorkoutViewModel(
             return;
         IsResting = false;
         foreach (var set in _session.Exercises.SelectMany(e => e.Sets))
+        {
             SetTimes.Uncomplete(set);
+            set.IsSkipped = false;
+        }
         _restSet = null;
-        // Skipped sets come back too (skipping is only on the rows, rebuilt below).
+        // Skipped sets come back too.
         foreach (var e in _session.Exercises)
             (e.SkippedWarmups, e.SkippedSets) = (0, 0);
         _session.StartedAt = DateTime.Now;
@@ -1143,6 +1146,7 @@ public partial class SetRowViewModel : ObservableObject
         repsText = model.Reps > 0 ? model.Reps.ToString() : "";
         rirText = model.Rir?.ToString() ?? "";
         isCompleted = model.IsCompleted;
+        isSkipped = model.IsSkipped;
     }
 
     public SetEntry Model { get; }
@@ -1220,6 +1224,13 @@ public partial class SetRowViewModel : ObservableObject
     }
 
     internal void RefreshVisibility() => IsVisible = !Model.IsWarmup || _parent.ShowWarmups;
+
+    // Skipping is kept on the set itself, so it stays skipped when the workout is reopened.
+    partial void OnIsSkippedChanged(bool value)
+    {
+        Model.IsSkipped = value;
+        _parent.SaveSoon();
+    }
 
     // Each edit is kept straight away (see WorkoutViewModel.SaveSoon), not only when the set is ticked.
     partial void OnWeightTextChanged(string value)

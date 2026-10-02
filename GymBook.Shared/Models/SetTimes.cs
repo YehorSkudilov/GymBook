@@ -10,6 +10,7 @@ public static class SetTimes
     public static void Complete(WorkoutSession session, SetEntry set, DateTime now)
     {
         EndRest(session, now);
+        set.IsSkipped = false;
         set.IsCompleted = true;
         set.CompletedAt = now;
         set.StartedAt = StartOf(session, set, now);
