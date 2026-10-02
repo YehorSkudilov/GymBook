@@ -37,6 +37,11 @@ public partial class WorkoutViewModel(
     bool isResting;
     [ObservableProperty] string restText = "";
     [ObservableProperty] double restProgress;
+    /// <summary>The rest ended (ran out or skipped) and the next set isn't done yet: how long since, counting up.</summary>
+    [ObservableProperty] bool isOverRest;
+    [ObservableProperty] string overRestText = "";
+    /// <summary>The set whose time since rest was hidden; it shows again after the next rest.</summary>
+    SetEntry? _overRestHidden;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowRestButton))]
     bool isEmpty;
@@ -213,12 +218,14 @@ public partial class WorkoutViewModel(
         if (_session != null)
             Elapsed = Units.Clock(DateTime.Now - _session.StartedAt);
         UpdateNotification();
+        UpdateOverRest();
         if (!IsResting)
             return;
         var left = _restEndsAt - DateTime.Now;
         if (left <= TimeSpan.Zero)
         {
             IsResting = false;
+            UpdateOverRest();
             RestFinished?.Invoke();
             notifier.RestOver(NextSetText());
             UpdateNotification();
@@ -292,6 +299,7 @@ public partial class WorkoutViewModel(
             StartRest(set.Model.IsWarmup ? Warmups.RestSeconds : exercise.Model.RestSeconds, set.Model);
         workouts.Save();
         UpdateProgress();
+        UpdateOverRest();
         if (set.IsCompleted && !set.Model.IsWarmup && exercise.IsDone)
             ExerciseFinished?.Invoke(exercise, CanFinish);
         // Its last set done: move straight on to the next exercise (the rest timer keeps running over it).
@@ -408,6 +416,32 @@ public partial class WorkoutViewModel(
             SetTimes.EndRest(_session, DateTime.Now);
             workouts.Save();
         }
+        UpdateOverRest();
+    }
+
+    /// <summary>
+    /// Time since the last rest ended, while the next set isn't done: from the times logged (the last set done and when
+    /// its rest ended), so it carries on after the app was closed. Not while resting, or once hidden.
+    /// </summary>
+    void UpdateOverRest()
+    {
+        var now = DateTime.Now;
+        var last = _session?.Exercises.SelectMany(e => e.Sets).Where(s => s.IsCompleted && s.CompletedAt != null).MaxBy(s => s.CompletedAt);
+        if (IsResting || last is not { RestStartedAt: not null, RestEndedAt: { } ended } || ended > now || last == _overRestHidden)
+        {
+            IsOverRest = false;
+            return;
+        }
+        OverRestText = "+" + Units.Clock(now - ended);
+        IsOverRest = true;
+    }
+
+    /// <summary>The ✕ on the time since rest: hides it until the next rest.</summary>
+    [RelayCommand]
+    void HideOverRest()
+    {
+        _overRestHidden = _session?.Exercises.SelectMany(e => e.Sets).Where(s => s.IsCompleted && s.CompletedAt != null).MaxBy(s => s.CompletedAt);
+        IsOverRest = false;
     }
 
     /// <summary>The round timer button: rests for the current exercise's rest time, after the last set done.</summary>
