@@ -151,6 +151,10 @@
         <controls:ConfettiView x:Name="Confetti" Grid.RowSpan="5" IsVisible="False" IsRunning="False" InputTransparent="True" />
         <Border x:Name="Banner" Grid.RowSpan="5" VerticalOptions="Start" HorizontalOptions="Center" Margin="16,72,16,0" Opacity="0"
                 InputTransparent="True" StrokeShape="RoundRectangle 22" StrokeThickness="0" Padding="18,12" BackgroundColor="{StaticResource Surface3}">
+            <!-- Swipe it up or sideways to put it away (it only takes touches while it's showing) -->
+            <Border.GestureRecognizers>
+                <PanGestureRecognizer PanUpdated="OnBannerPanned" />
+            </Border.GestureRecognizers>
             <Border.Shadow>
                 <Shadow Brush="Black" Opacity="0.4" Radius="18" Offset="0,6" />
             </Border.Shadow>

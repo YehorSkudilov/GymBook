@@ -18,7 +18,9 @@ public partial class WorkoutPage : SheetPage
         BindingContext = viewModel;
         HorizontalMouseScroll.Attach(Strip);
         viewModel.ExerciseFinished += (exercise, all) => Dispatcher.Dispatch(() => _ = CelebrateAsync(exercise.Name, all));
-        viewModel.RestFinished += () => Dispatcher.Dispatch(() => _ = ShowBannerAsync("timer", "#3F7DFF", "Rest over", "Time for your next set"));
+        // Rest over: the banner stays until it's swiped away, or the rest isn't over any more (the next set started or
+        // ticked, or more rest added).
+        viewModel.RestFinished += () => Dispatcher.Dispatch(() => _ = ShowBannerAsync("timer", "#3F7DFF", "Rest over", "Time for your next set", stay: true));
 
         ExercisePager.CNavIconItems = _pages;
         // Swiped to an exercise: the pager is already showing it, so it just becomes the current one.
@@ -32,6 +34,8 @@ public partial class WorkoutPage : SheetPage
         {
             if (e.PropertyName == nameof(WorkoutViewModel.CurrentIndex))
                 QueueShowCurrent(viewModel);
+            if (e.PropertyName == nameof(WorkoutViewModel.IsRestOver) && !viewModel.IsRestOver && _bannerStays)
+                _ = HideBannerAsync(_bannerId);
         };
         SyncPages(viewModel);
         QueueShowCurrent(viewModel);
@@ -98,15 +102,19 @@ public partial class WorkoutPage : SheetPage
     }
 
     int _bannerId;
+    /// <summary>The banner showing stays until it's swiped away (rest over), rather than going by itself.</summary>
+    bool _bannerStays;
 
-    // Drops in from the top with a little bounce, stays a moment, then floats back up and fades.
-    async Task ShowBannerAsync(string glyph, string color, string title, string text)
+    // Drops in from the top with a little bounce, stays a moment (or until swiped away), then floats back up and fades.
+    async Task ShowBannerAsync(string glyph, string color, string title, string text, bool stay = false)
     {
         var id = ++_bannerId;
+        _bannerStays = stay;
         BannerIcon.Source = new FontImageSource { FontFamily = "OutlinedIcons", Glyph = glyph, Color = Color.FromArgb(color), Size = 48 };
         BannerTitle.Text = title;
         BannerText.Text = text;
         Banner.AbortAnimation("banner");
+        Banner.TranslationX = 0;
         Banner.TranslationY = -40;
         Banner.Scale = 0.9;
         Banner.Opacity = 0;
@@ -118,15 +126,57 @@ public partial class WorkoutPage : SheetPage
         {
             // Not every device has haptics.
         }
+        // Takes touches (the swipe) only while it's up.
+        Banner.InputTransparent = false;
         await Task.WhenAll(
             Banner.FadeTo(1, 220, Easing.CubicOut),
             Banner.TranslateTo(0, 0, 420, Easing.SpringOut),
             Banner.ScaleTo(1, 420, Easing.SpringOut));
+        if (stay)
+            return;
         await Task.Delay(1800);
-        // A newer banner took over meanwhile: leave it be.
+        await HideBannerAsync(id);
+    }
+
+    /// <summary>Floats banner <paramref name="id"/> back up and away, unless a newer one took over meanwhile.</summary>
+    async Task HideBannerAsync(int id)
+    {
         if (id != _bannerId)
             return;
-        await Task.WhenAll(Banner.FadeTo(0, 260, Easing.CubicIn), Banner.TranslateTo(0, -24, 260, Easing.CubicIn));
+        _bannerStays = false;
+        Banner.InputTransparent = true;
+        await Task.WhenAll(Banner.FadeTo(0, 260, Easing.CubicIn), Banner.TranslateTo(Banner.TranslationX, -24, 260, Easing.CubicIn));
+    }
+
+    // Follows the finger up or sideways; let go far enough and it's gone, otherwise it springs back.
+    async void OnBannerPanned(object? sender, PanUpdatedEventArgs e)
+    {
+        switch (e.StatusType)
+        {
+            case GestureStatus.Running:
+                Banner.TranslationX = e.TotalX;
+                Banner.TranslationY = Math.Min(0, e.TotalY);
+                Banner.Opacity = Math.Clamp(1 - Math.Max(Math.Abs(e.TotalX) / 220, -Math.Min(0, e.TotalY) / 120), 0.2, 1);
+                break;
+            case GestureStatus.Completed or GestureStatus.Canceled:
+                var id = _bannerId;
+                if (Math.Abs(Banner.TranslationX) > 70 || Banner.TranslationY < -30)
+                {
+                    _bannerStays = false;
+                    Banner.InputTransparent = true;
+                    var sideways = Math.Abs(Banner.TranslationX) > -Banner.TranslationY;
+                    await Task.WhenAll(
+                        Banner.FadeTo(0, 180, Easing.CubicIn),
+                        Banner.TranslateTo(sideways ? Math.Sign(Banner.TranslationX) * 400 : Banner.TranslationX, sideways ? Banner.TranslationY : -120, 180, Easing.CubicIn));
+                    if (id == _bannerId)
+                        Banner.TranslationX = 0;
+                }
+                else
+                {
+                    await Task.WhenAll(Banner.TranslateTo(0, 0, 250, Easing.SpringOut), Banner.FadeTo(1, 150));
+                }
+                break;
+        }
     }
 
     // Keeps the current exercise's photo in view as you swipe through the workout.
