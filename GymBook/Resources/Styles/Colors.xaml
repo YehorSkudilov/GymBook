@@ -31,4 +31,13 @@
         <GradientStop Color="#3F7DFF" Offset="0" />
         <GradientStop Color="#7C5CFF" Offset="1" />
     </LinearGradientBrush>
+
+    <!-- Shared glass look (AppSkeleton's AcrylicView) for the nav bar, the workout pill and Up next's Skip. App-wide, not on
+         MainPage: a tab's XAML looks up StaticResources before it's placed in the page, so a page-level one isn't found. -->
+    <!-- The app's lightest surface colour, so the glass matches the cards; a notch lighter than the page so it stands apart. -->
+    <Color x:Key="GlassTint">#272C39</Color>
+    <!-- How much of the tint colour covers the blur: lower is more see-through. -->
+    <x:Double x:Key="GlassTintOpacity">0.5</x:Double>
+    <!-- A clear edge, so the glass doesn't melt into what's behind it. -->
+    <Color x:Key="GlassBorder">#3DFFFFFF</Color>
 </ResourceDictionary>

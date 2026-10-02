@@ -6,15 +6,7 @@
     xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton"
     Shell.NavBarIsVisible="False">
 
-    <!--  Shared glass look for the nav bar and the workout pill.  -->
-    <ContentPage.Resources>
-        <!--  The app's lightest surface colour, so the glass matches the cards; a notch lighter than the page so it stands apart.  -->
-        <Color x:Key="GlassTint">#272C39</Color>
-        <!--  How much of the tint colour covers the blur: lower is more see-through.  -->
-        <x:Double x:Key="GlassTintOpacity">0.5</x:Double>
-        <!--  A clear edge, so the glass doesn't melt into what's behind it.  -->
-        <Color x:Key="GlassBorder">#3DFFFFFF</Color>
-    </ContentPage.Resources>
+    <!--  The glass look (GlassTint, GlassTintOpacity) is app-wide, in Resources/Styles/Colors.xaml: the tabs use it too.  -->
 
     <!--  The last two rows are the nav bar's (less its margins): 34 + 34 makes it 54 tall.  -->
     <Grid RowDefinitions="*,34,34">
