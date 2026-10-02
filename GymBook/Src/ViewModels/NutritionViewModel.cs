@@ -59,6 +59,13 @@ public partial class NutritionViewModel(
     [ObservableProperty] string importedFoodText = "";
     [ObservableProperty] string importedFoodCalories = "";
 
+    // Creatine on the day
+    [ObservableProperty] bool creatineTaken;
+    [ObservableProperty] string creatineText = "";
+    [ObservableProperty] string creatineCaption = "";
+    [ObservableProperty] string takeCreatineText = "";
+    [ObservableProperty] List<DoseDay> creatineWeek = [];
+
     // Over time
     [ObservableProperty] IDrawable? balanceChart;
     [ObservableProperty] string periodTotalText = "";
@@ -126,6 +133,7 @@ public partial class NutritionViewModel(
             _date = DateTime.Today;
         var day = nutrition.Day(_date);
         ShowDay(day);
+        ShowCreatine();
         ShowPeriod();
         ShowActivity(day);
         ShowBody();
@@ -320,6 +328,83 @@ public partial class NutritionViewModel(
         return $"{inches / 12}′ {inches % 12}″";
     }
 
+    IEnumerable<SupplementDose> Creatine(DateTime date) =>
+        store.Data.Supplements.Where(d => d.Name == SupplementDose.Creatine && d.Date.Date == date.Date);
+
+    void ShowCreatine()
+    {
+        var dose = store.Profile.CreatineDoseG;
+        var taken = Creatine(_date).OrderBy(d => d.TakenAt).ToList();
+        CreatineTaken = taken.Count > 0;
+        TakeCreatineText = $"Took {Grams(dose)}";
+        CreatineText = CreatineTaken
+            ? $"{Grams(taken.Sum(d => d.Grams))} at {taken[^1].TakenAt.ToString("t", CultureInfo.CurrentCulture)}"
+            : _date == DateTime.Today ? "Not taken yet today" : "Not taken";
+
+        // The streak: days in a row with a dose, up to today (today not counting against it until it's over).
+        var days = store.Data.Supplements.Where(d => d.Name == SupplementDose.Creatine).Select(d => d.Date.Date).ToHashSet();
+        var day = days.Contains(DateTime.Today) ? DateTime.Today : DateTime.Today.AddDays(-1);
+        var streak = 0;
+        while (days.Contains(day))
+        {
+            streak++;
+            day = day.AddDays(-1);
+        }
+        CreatineCaption = $"{Grams(dose)} a day" + (streak > 1 ? $" · {streak}-day streak" : "");
+
+        // The week up to the day shown.
+        CreatineWeek = [.. Enumerable.Range(0, 7).Select(i => _date.AddDays(i - 6)).Select(d => new DoseDay(
+            d.ToString("ddd", CultureInfo.CurrentCulture)[..1],
+            days.Contains(d.Date) ? Green : Color.FromArgb("#262B38"),
+            d == _date))];
+    }
+
+    static string Grams(double g) => $"{g.ToString("0.#", CultureInfo.CurrentCulture)} g";
+
+    /// <summary>Logs the usual dose on the day shown (now, for today).</summary>
+    [RelayCommand]
+    void TakeCreatine()
+    {
+        var takenAt = _date == DateTime.Today ? DateTime.Now : _date.Date + DateTime.Now.TimeOfDay;
+        store.Data.Supplements.Add(new SupplementDose { Date = _date.Date, Grams = store.Profile.CreatineDoseG, TakenAt = takenAt });
+        store.Save();
+        try
+        {
+            HapticFeedback.Default.Perform(HapticFeedbackType.Click);
+        }
+        catch
+        {
+            // Not every device has haptics.
+        }
+        ShowCreatine();
+    }
+
+    /// <summary>Takes back the day's last dose.</summary>
+    [RelayCommand]
+    async Task UndoCreatine()
+    {
+        if (Creatine(_date).OrderBy(d => d.TakenAt).LastOrDefault() is not { } last)
+            return;
+        if (!await dialogs.Confirm("Remove creatine?", $"Remove the {Grams(last.Grams)} logged at {last.TakenAt:t}?", "Remove", "Cancel"))
+            return;
+        store.Data.Supplements.Remove(last);
+        store.Save();
+        ShowCreatine();
+    }
+
+    /// <summary>The usual dose, picked on the number pad.</summary>
+    [RelayCommand]
+    async Task ChangeCreatineDose()
+    {
+        var current = store.Profile.CreatineDoseG;
+        var picked = await Views.NumberPadSheet.Show(current.ToString("0.#", CultureInfo.InvariantCulture), current, 0.5, 1, 20, "g", decimals: true);
+        if (picked is not { } g || double.IsNaN(g) || g < 0.5 || g > 50 || g == current)
+            return;
+        store.Profile.CreatineDoseG = Math.Round(g, 1);
+        store.Save();
+        ShowCreatine();
+    }
+
     [RelayCommand]
     void PreviousDay()
     {
@@ -388,3 +473,9 @@ public class FoodItem
 }
 
 public record StatItem(string Label, string Value);
+
+/// <summary>A day in the creatine week: its letter, filled when taken, the day shown outlined.</summary>
+public record DoseDay(string Letter, Color Fill, bool IsSelected)
+{
+    public Color Stroke => IsSelected ? Color.FromArgb("#9AA3B5") : Colors.Transparent;
+}

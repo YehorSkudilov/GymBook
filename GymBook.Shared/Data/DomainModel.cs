@@ -44,6 +44,7 @@ public static class DomainModel
         });
 
         model.Entity<FoodEntry>().ToTable("food_entries");
+        model.Entity<SupplementDose>().ToTable("supplement_doses");
 
         model.Entity<HealthDay>(b =>
         {

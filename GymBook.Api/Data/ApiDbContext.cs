@@ -66,6 +66,7 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
     public DbSet<BodyWeightEntry> BodyWeights => Set<BodyWeightEntry>();
     public DbSet<FoodEntry> FoodEntries => Set<FoodEntry>();
     public DbSet<HealthDay> HealthDays => Set<HealthDay>();
+    public DbSet<SupplementDose> Supplements => Set<SupplementDose>();
     public DbSet<UserProfile> Profiles => Set<UserProfile>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PlanGeneration> PlanGenerations => Set<PlanGeneration>();
@@ -84,6 +85,7 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
         OwnedByUser<BodyWeightEntry>(model).HasKey(UserIdColumn, nameof(BodyWeightEntry.Id));
         OwnedByUser<FoodEntry>(model).HasKey(UserIdColumn, nameof(FoodEntry.Id));
         OwnedByUser<HealthDay>(model).HasKey(UserIdColumn, nameof(HealthDay.Id));
+        OwnedByUser<SupplementDose>(model).HasKey(UserIdColumn, nameof(SupplementDose.Id));
         OwnedByUser<UserProfile>(model).HasKey(UserIdColumn);
 
         // Workout times are wall-clock local times (see WallClockDateTimeConverter), so they carry no zone.
@@ -95,6 +97,8 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
         model.Entity<FoodEntry>().Property(f => f.Date).HasColumnType(wallClock);
         model.Entity<FoodEntry>().Property(f => f.LoggedAt).HasColumnType(wallClock);
         model.Entity<HealthDay>().Property(h => h.Date).HasColumnType(wallClock);
+        model.Entity<SupplementDose>().Property(d => d.Date).HasColumnType(wallClock);
+        model.Entity<SupplementDose>().Property(d => d.TakenAt).HasColumnType(wallClock);
         // Inside jsonb, Npgsql only writes UTC-kind DateTimes. Label the wall-clock value UTC on the way in and
         // drop the label on the way out; the stored digits are the same.
         var jsonWallClock = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(

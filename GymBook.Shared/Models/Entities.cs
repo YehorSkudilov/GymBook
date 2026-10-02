@@ -275,6 +275,27 @@ public class FoodEntry : ISyncEntity
 }
 
 /// <summary>
+/// A supplement taken (creatine): how much, on which day and when. Logged with one tap on the Nutrition tab.
+/// </summary>
+public class SupplementDose : ISyncEntity
+{
+    public const string Creatine = "Creatine";
+
+    [MaxLength(SyncLimits.IdLength)]
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    /// <summary>The day it counts toward (midnight, wall-clock).</summary>
+    public DateTime Date { get; set; } = DateTime.Today;
+    [MaxLength(SyncLimits.NameLength)]
+    public string Name { get; set; } = Creatine;
+    [Range(0, 100)]
+    public double Grams { get; set; }
+    /// <summary>When it was taken (wall-clock).</summary>
+    public DateTime TakenAt { get; set; } = DateTime.Now;
+    public DateTimeOffset UpdatedAt { get; set; }
+    public bool IsDeleted { get; set; }
+}
+
+/// <summary>
 /// A day's totals read from the phone's health data (Samsung Health or Health Connect): energy burned, steps, and food
 /// logged in other apps. One per calendar day, so the day is the identity, like <see cref="BodyWeightEntry"/>.
 /// </summary>
@@ -351,6 +372,9 @@ public class UserProfile
     public List<string>? HealthApps { get; set; }
     /// <summary>Food logged in the health app is counted with what's logged in Gym Book.</summary>
     public bool ImportHealthFood { get; set; } = true;
+    /// <summary>The usual creatine dose, logged with one tap.</summary>
+    [Range(0.5, 50)]
+    public double CreatineDoseG { get; set; } = 5;
     /// <summary>When the user started training consistently.</summary>
     public DateTime? TrainingSince { get; set; }
     /// <summary>Whether generated plans include neck work.</summary>

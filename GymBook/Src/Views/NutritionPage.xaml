@@ -117,6 +117,43 @@
             </VerticalStackLayout>
         </Border>
 
+        <!-- Creatine: one tap to log the usual dose, the week at a glance and the streak -->
+        <Border Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="12">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <controls:StatIconView Icon="Streak" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="Creatine" Style="{StaticResource H3}" />
+                        <Label Text="{Binding CreatineCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Button Grid.Column="2" Text="Dose" Style="{StaticResource SmallButton}" Command="{Binding ChangeCreatineDoseCommand}" VerticalOptions="Center" />
+                </Grid>
+                <FlexLayout Direction="Row" JustifyContent="SpaceBetween" BindableLayout.ItemsSource="{Binding CreatineWeek}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DoseDay">
+                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                <Border WidthRequest="28" HeightRequest="28" StrokeShape="RoundRectangle 14" StrokeThickness="1.5"
+                                        BackgroundColor="{Binding Fill}" Stroke="{Binding Stroke}" />
+                                <Label Text="{Binding Letter}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding CreatineTaken}">
+                    <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                        <Image Source="{StaticResource IconCheckGreen}" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
+                        <Label Text="{Binding CreatineText}" FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Button Grid.Column="1" Text="Undo" Style="{StaticResource SmallButton}" Command="{Binding UndoCreatineCommand}" VerticalOptions="Center" />
+                </Grid>
+                <VerticalStackLayout Spacing="8" IsVisible="{Binding CreatineTaken, Converter={StaticResource Not}}">
+                    <Label Text="{Binding CreatineText}" Style="{StaticResource Caption}" FontSize="13" />
+                    <Button Text="{Binding TakeCreatineText}" Style="{StaticResource PrimaryButton}" BackgroundColor="#2ED47A"
+                            Command="{Binding TakeCreatineCommand}" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </Border>
+
         <!-- Food, by meal -->
         <Border Style="{StaticResource Card}">
             <VerticalStackLayout Spacing="12">

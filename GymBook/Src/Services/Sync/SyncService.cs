@@ -103,7 +103,8 @@ public class SyncService
 
                 var morePending = pending.Plans.Count == PushBatch || pending.Sessions.Count == PushBatch
                     || pending.CustomExercises.Count == PushBatch || pending.BodyWeights.Count == PushBatch
-                    || pending.FoodEntries.Count == PushBatch || pending.HealthDays.Count == PushBatch;
+                    || pending.FoodEntries.Count == PushBatch || pending.HealthDays.Count == PushBatch
+                    || pending.Supplements.Count == PushBatch;
                 if (!response.HasMore && !morePending)
                     break;
             }
@@ -149,6 +150,7 @@ public class SyncService
         items.AddRange(pending.BodyWeights.Select(b => Item("Body weight", $"{b.Date:d MMM yyyy}", b, b.IsDeleted)));
         items.AddRange(pending.FoodEntries.Select(f => Item("Food", $"{f.Name} · {f.Date:d MMM yyyy}", f, f.IsDeleted)));
         items.AddRange(pending.HealthDays.Select(h => Item("Health data", $"{h.Date:d MMM yyyy}", h, h.IsDeleted)));
+        items.AddRange(pending.Supplements.Select(d => Item(d.Name, $"{d.Grams:0.#} g · {d.Date:d MMM yyyy}", d, d.IsDeleted)));
         return items;
 
         static SyncPendingItem Item(string kind, string name, object record, bool deleted) =>
@@ -166,7 +168,8 @@ public class SyncService
             + changes.CustomExercises.RemoveAll(e => !ModelValidator.IsValid(e))
             + changes.BodyWeights.RemoveAll(b => !ModelValidator.IsValid(b))
             + changes.FoodEntries.RemoveAll(f => !ModelValidator.IsValid(f))
-            + changes.HealthDays.RemoveAll(h => !ModelValidator.IsValid(h));
+            + changes.HealthDays.RemoveAll(h => !ModelValidator.IsValid(h))
+            + changes.Supplements.RemoveAll(d => !ModelValidator.IsValid(d));
         if (changes.Profile != null && !ModelValidator.IsValid(changes.Profile))
         {
             changes.Profile = null;

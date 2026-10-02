@@ -28,6 +28,7 @@ public sealed class LocalStore
     readonly Table<BodyWeightEntry> _weights = new();
     readonly Table<FoodEntry> _foods = new();
     readonly Table<HealthDay> _healthDays = new();
+    readonly Table<SupplementDose> _supplements = new();
     readonly Dictionary<string, string> _settings = [];
     string? _profileJson;
     DateTimeOffset _profileStamp;
@@ -59,7 +60,7 @@ public sealed class LocalStore
         {
             lock (_gate)
                 return _profileDirty || _plans.Dirty.Count + _sessions.Dirty.Count + _exercises.Dirty.Count + _weights.Dirty.Count
-                    + _foods.Dirty.Count + _healthDays.Dirty.Count > 0;
+                    + _foods.Dirty.Count + _healthDays.Dirty.Count + _supplements.Dirty.Count > 0;
         }
     }
 
@@ -84,6 +85,7 @@ public sealed class LocalStore
             StageTable(db, _weights, Data.BodyWeights, now, commit);
             StageTable(db, _foods, Data.FoodEntries, now, commit);
             StageTable(db, _healthDays, Data.HealthDays, now, commit);
+            StageTable(db, _supplements, Data.Supplements, now, commit);
             StageSetting(db, LegacyActiveSessionKey, null, commit);
 
             db.SaveChanges();
@@ -112,11 +114,12 @@ public sealed class LocalStore
                 db.BodyWeights.ExecuteDelete();
                 db.FoodEntries.ExecuteDelete();
                 db.HealthDays.ExecuteDelete();
+                db.Supplements.ExecuteDelete();
                 db.Profiles.ExecuteDelete();
                 db.Settings.ExecuteDelete();
                 tx.Commit();
             }
-            foreach (var t in new ITable[] { _plans, _sessions, _exercises, _weights, _foods, _healthDays })
+            foreach (var t in new ITable[] { _plans, _sessions, _exercises, _weights, _foods, _healthDays, _supplements })
                 t.Clear();
             _settings.Clear();
             _profileJson = null;
@@ -139,6 +142,7 @@ public sealed class LocalStore
                 db.BodyWeights.ExecuteUpdate(s => s.SetProperty(e => EF.Property<bool>(e, LocalDbContext.Dirty), true));
                 db.FoodEntries.ExecuteUpdate(s => s.SetProperty(e => EF.Property<bool>(e, LocalDbContext.Dirty), true));
                 db.HealthDays.ExecuteUpdate(s => s.SetProperty(e => EF.Property<bool>(e, LocalDbContext.Dirty), true));
+                db.Supplements.ExecuteUpdate(s => s.SetProperty(e => EF.Property<bool>(e, LocalDbContext.Dirty), true));
                 db.Profiles.ExecuteUpdate(s => s.SetProperty(e => EF.Property<bool>(e, LocalDbContext.Dirty), true));
                 var commit = new List<Action>();
                 StageSetting(db, AccountKey, accountId, commit);
@@ -147,7 +151,7 @@ public sealed class LocalStore
                 tx.Commit();
                 commit.ForEach(a => a());
             }
-            foreach (var t in new ITable[] { _plans, _sessions, _exercises, _weights, _foods, _healthDays })
+            foreach (var t in new ITable[] { _plans, _sessions, _exercises, _weights, _foods, _healthDays, _supplements })
                 t.MarkAllDirty();
             _profileDirty = _profileJson != null;
         }
@@ -168,6 +172,7 @@ public sealed class LocalStore
                 BodyWeights = Pending(db.BodyWeights),
                 FoodEntries = Pending(db.FoodEntries),
                 HealthDays = Pending(db.HealthDays),
+                Supplements = Pending(db.Supplements),
             };
         }
 
@@ -199,6 +204,7 @@ public sealed class LocalStore
             changed |= Merge(db, _weights, Data.BodyWeights, pushed.BodyWeights, response.Changes.BodyWeights, commit);
             changed |= Merge(db, _foods, Data.FoodEntries, pushed.FoodEntries, response.Changes.FoodEntries, commit);
             changed |= Merge(db, _healthDays, Data.HealthDays, pushed.HealthDays, response.Changes.HealthDays, commit);
+            changed |= Merge(db, _supplements, Data.Supplements, pushed.Supplements, response.Changes.Supplements, commit);
 
             var profileClean = pushed.Profile != null && pushed.Profile.UpdatedAt == _profileStamp;
             if (profileClean)
@@ -240,6 +246,7 @@ public sealed class LocalStore
         LoadTable(db.BodyWeights, _weights, data.BodyWeights);
         LoadTable(db.FoodEntries, _foods, data.FoodEntries);
         LoadTable(db.HealthDays, _healthDays, data.HealthDays);
+        LoadTable(db.Supplements, _supplements, data.Supplements);
 
         if (db.Profiles.AsNoTracking().FirstOrDefault() is { } profile)
         {
