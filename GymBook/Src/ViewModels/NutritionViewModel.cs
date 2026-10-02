@@ -147,13 +147,10 @@ public partial class NutritionViewModel(
         EatenText = NutritionService.Kcal(day.EatenKcal);
         GoalText = goal is { } goalKcal ? NutritionService.Kcal(goalKcal) : "Not set";
 
-        BurnedText = day.BurnedKcal is { } burned ? NutritionService.Kcal(burned) : "–";
-        BurnedCaption = day.BurnSource switch
-        {
-            BurnSource.Measured => day.IsToday ? $"So far · {day.Health?.Source ?? "health data"}" : day.Health?.Source ?? "Health data",
-            BurnSource.Estimated => "Estimated",
-            _ => "Unknown",
-        };
+        BurnedText = day.BurnedKcal is { } burned ? NutritionService.Kcal(burned) : "N/A";
+        BurnedCaption = day.BurnSource == BurnSource.Measured
+            ? day.IsToday ? $"So far · {day.Health?.Source ?? "health data"}" : day.Health?.Source ?? "Health data"
+            : "No health data";
 
         if (day.Balance is { } balance)
         {
@@ -163,9 +160,9 @@ public partial class NutritionViewModel(
         }
         else
         {
-            BalanceText = "–";
+            BalanceText = "N/A";
             BalanceColor = Secondary;
-            BalanceCaption = !day.HasFood ? "Log food to see it" : "Needs calories burned";
+            BalanceCaption = !day.HasFood ? "Log food to see it" : "Needs calories burned from health data";
         }
 
         HasBalanceTarget = p.EnergyBalanceGoal is not null && day.Balance is not null;
@@ -187,9 +184,7 @@ public partial class NutritionViewModel(
         }
 
         HasNoGoals = p.CalorieGoal is null && p.ProteinGoalG is null;
-        NoGoalsHint = day.BurnSource == BurnSource.None
-            ? "Set your goals, and your height, age and sex so calories burned can be estimated."
-            : "Set calorie and protein goals to see how each day measures up.";
+        NoGoalsHint = "Set calorie and protein goals to see how each day measures up.";
 
         Macros =
         [
@@ -268,56 +263,47 @@ public partial class NutritionViewModel(
 
     void ShowActivity(DayNutrition day)
     {
+        // Always all four, from the health apps; N/A for what they haven't recorded.
         var h = day.Health;
-        var items = new List<StatItem>();
-        if (h?.TotalBurnedKcal is { } total)
-            items.Add(new("Total burned", $"{NutritionService.Kcal(total)} kcal"));
-        if (h?.ActiveBurnedKcal is { } active)
-            items.Add(new("Active", $"{NutritionService.Kcal(active)} kcal"));
-        if (h?.BasalBurnedKcal is { } basal)
-            items.Add(new("Resting", $"{NutritionService.Kcal(basal)} kcal"));
-        if (h?.Steps is { } steps)
-            items.Add(new("Steps", steps.ToString("#,0", CultureInfo.CurrentCulture)));
-        Activity = items;
-        HasActivity = items.Count > 0;
+        static string Kcal(double? v) => v is { } k ? $"{NutritionService.Kcal(k)} kcal" : "N/A";
+        Activity =
+        [
+            new("Total burned", Kcal(day.BurnSource == BurnSource.Measured ? day.BurnedKcal : null)),
+            new("Active", Kcal(h?.ActiveBurnedKcal)),
+            new("Resting", Kcal(h?.BasalBurnedKcal)),
+            new("Steps", h?.Steps is { } steps ? steps.ToString("#,0", CultureInfo.CurrentCulture) : "N/A"),
+        ];
+        HasActivity = true;
     }
 
     void ShowBody()
     {
-        var p = store.Profile;
-        var entries = store.Data.BodyWeights.OrderBy(b => b.Date).ToList();
+        // Only measurements read from the health apps (not weights logged by hand, nothing estimated); N/A for what
+        // they haven't measured. Fat mass and BMI are worked out from measured values only.
+        var entries = store.Data.BodyWeights.Where(b => b.Source != null).OrderBy(b => b.Date).ToList();
         var latest = entries.LastOrDefault();
-        var weight = latest?.WeightKg ?? p.BodyWeightKg;
-        // Each measurement from the latest entry that has it.
         double? Latest(Func<BodyWeightEntry, double?> pick) => entries.Select(pick).LastOrDefault(v => v != null);
-        var fat = Latest(b => b.BodyFatPercent) ?? p.BodyFatPercent;
+        var weight = latest?.WeightKg;
+        var fat = Latest(b => b.BodyFatPercent);
+        var height = store.Profile.HeightCm;
+        string Mass(double? kg) => kg is { } v ? units.FormatWithUnit(v) : "N/A";
 
-        var items = new List<StatItem> { new("Weight", units.FormatWithUnit(weight)) };
-        if (fat is { } f)
-        {
-            items.Add(new("Body fat", $"{f:0.#}%"));
-            items.Add(new("Fat mass", units.FormatWithUnit(weight * f / 100)));
-        }
-        if (Latest(b => b.LeanMassKg) is { } lean)
-            items.Add(new("Lean mass", units.FormatWithUnit(lean)));
-        else if (fat is { } f2)
-            items.Add(new("Lean mass", units.FormatWithUnit(weight * (1 - f2 / 100))));
-        if (Latest(b => b.BoneMassKg) is { } bone)
-            items.Add(new("Bone mass", units.FormatWithUnit(bone)));
-        if (Latest(b => b.BodyWaterKg) is { } water)
-            items.Add(new("Body water", units.FormatWithUnit(water)));
-        if (nutrition.Bmr() is { } bmr)
-            items.Add(new(Latest(b => b.BmrKcal) != null ? "BMR" : "BMR (est.)", $"{NutritionService.Kcal(bmr)} kcal"));
-        if (p.HeightCm is { } height)
-        {
-            items.Add(new("Height", Height(height)));
-            items.Add(new("BMI", $"{weight / Math.Pow(height / 100, 2):0.0}"));
-        }
-        Body = items;
+        Body =
+        [
+            new("Weight", Mass(weight)),
+            new("Body fat", fat is { } f ? $"{f:0.#}%" : "N/A"),
+            new("Fat mass", Mass(weight * fat / 100)),
+            new("Lean mass", Mass(Latest(b => b.LeanMassKg))),
+            new("Bone mass", Mass(Latest(b => b.BoneMassKg))),
+            new("Body water", Mass(Latest(b => b.BodyWaterKg))),
+            new("BMR", Latest(b => b.BmrKcal) is { } bmr ? $"{NutritionService.Kcal(bmr)} kcal" : "N/A"),
+            new("Height", height is { } cm ? Height(cm) : "N/A"),
+            new("BMI", weight is { } w && height is { } h ? $"{w / Math.Pow(h / 100, 2):0.0}" : "N/A"),
+        ];
 
         BodyCaption = latest == null
-            ? "Log your weight, or connect your health data in the Profile tab to bring in your scale's measurements."
-            : $"Last measured {latest.Date:d MMM}{(latest.Source != null ? $" · {latest.Source}" : "")}";
+            ? "No measurements from your health apps yet. Connect your health data in the Profile tab to bring in your scale's and watch's."
+            : $"Last measured {latest.Date:d MMM} · {latest.Source}";
 
         var fats = entries.Where(b => b.BodyFatPercent != null).TakeLast(12).ToList();
         HasBodyFatChart = fats.Count >= 2;
@@ -371,32 +357,6 @@ public partial class NutritionViewModel(
 
     [RelayCommand]
     Task OpenGoals() => GoTo(Routes.NutritionGoals);
-
-    [RelayCommand]
-    async Task LogWeight()
-    {
-        var value = await dialogs.Prompt("Log body weight", $"Today's weight in {units.Label}", units.Format(nutrition.LatestWeightKg()), Keyboard.Numeric);
-        if (value == null)
-            return;
-        if (!units.TryParse(value, out var kg) || kg is < 20 or > 400)
-        {
-            await dialogs.Alert("Invalid weight", "Please enter a number.");
-            return;
-        }
-        var today = store.Data.BodyWeights.FirstOrDefault(b => b.Date == DateTime.Today);
-        if (today != null)
-        {
-            // Logged by hand: it's the user's own now, and the health app's next reading won't replace it.
-            today.WeightKg = kg;
-            today.Source = null;
-        }
-        else
-        {
-            store.Data.BodyWeights.Add(new BodyWeightEntry { Date = DateTime.Today, WeightKg = kg });
-        }
-        store.Profile.BodyWeightKg = kg;
-        store.Save();
-    }
 }
 
 public class MacroItem

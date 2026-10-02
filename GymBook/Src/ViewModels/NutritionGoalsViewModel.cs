@@ -7,15 +7,12 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>
-/// Daily nutrition goals (calories, protein, carbs, fat and the surplus or deficit to aim for), what calories burned are
-/// estimated from when there's no health data (height, birth year, sex, activity level). Suggests goals from the usual
-/// daily burn. (Whether food from health apps counts is in the Profile tab's Health data.)
+/// Daily nutrition goals (calories, protein, carbs, fat and the surplus or deficit to aim for). Suggests them from the
+/// daily burn measured by the health apps. (Connecting those, and whether their food counts, is in the Profile tab.)
 /// </summary>
 public partial class NutritionGoalsViewModel(DataStore store, NutritionService nutrition, Units units, DialogService dialogs) : BaseViewModel
 {
     bool _loaded;
-    Sex? _sex;
-    ActivityLevel _activity;
     BalanceKind _balanceKind;
 
     enum BalanceKind { None, Deficit, Maintain, Surplus }
@@ -26,20 +23,13 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(MacroCheck))] string fatGoal = "";
     [ObservableProperty] string balanceAmount = "";
     [ObservableProperty] bool hasBalanceAmount;
-    [ObservableProperty] string height = "";
-    [ObservableProperty] string heightLabel = "HEIGHT (CM)";
-    [ObservableProperty] string birthYear = "";
     [ObservableProperty] string burnText = "";
     [ObservableProperty] string suggestionText = "";
     [ObservableProperty] bool hasSuggestion;
 
     public System.Collections.ObjectModel.ObservableCollection<ChipItem> BalanceChips { get; } = [];
-    public System.Collections.ObjectModel.ObservableCollection<ChipItem> SexChips { get; } = [];
-    public System.Collections.ObjectModel.ObservableCollection<OptionItem> ActivityOptions { get; } = [];
 
     UserProfile P => store.Profile;
-
-    bool Imperial => units.Unit == WeightUnit.Lbs;
 
     public override Task OnAppearingAsync()
     {
@@ -53,23 +43,12 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
         FatGoal = P.FatGoalG?.ToString(CultureInfo.CurrentCulture) ?? "";
         _balanceKind = P.EnergyBalanceGoal switch { null => BalanceKind.None, < 0 => BalanceKind.Deficit, > 0 => BalanceKind.Surplus, _ => BalanceKind.Maintain };
         BalanceAmount = P.EnergyBalanceGoal is { } b and not 0 ? Math.Abs(b).ToString(CultureInfo.CurrentCulture) : "";
-        HeightLabel = Imperial ? "HEIGHT (INCHES)" : "HEIGHT (CM)";
-        Height = P.HeightCm is { } cm ? (Imperial ? Math.Round(cm / 2.54) : Math.Round(cm)).ToString(CultureInfo.CurrentCulture) : "";
-        BirthYear = P.BirthYear?.ToString(CultureInfo.InvariantCulture) ?? "";
-        _sex = P.Sex;
-        _activity = P.ActivityLevel;
 
         BalanceChips.Clear();
         BalanceChips.Add(new ChipItem("None", BalanceKind.None, SelectBalance));
         BalanceChips.Add(new ChipItem("Deficit", BalanceKind.Deficit, SelectBalance));
         BalanceChips.Add(new ChipItem("Maintain", BalanceKind.Maintain, SelectBalance));
         BalanceChips.Add(new ChipItem("Surplus", BalanceKind.Surplus, SelectBalance));
-        SexChips.Clear();
-        SexChips.Add(new ChipItem("Male", Sex.Male, SelectSex));
-        SexChips.Add(new ChipItem("Female", Sex.Female, SelectSex));
-        ActivityOptions.Clear();
-        foreach (var level in Enum.GetValues<ActivityLevel>())
-            ActivityOptions.Add(new OptionItem(level.Display(), level.Description(), level, SelectActivity));
         UpdateChoices();
         ShowBurn();
         return Task.CompletedTask;
@@ -80,10 +59,6 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
         foreach (var c in BalanceChips)
             c.IsSelected = (BalanceKind)c.Value! == _balanceKind;
         HasBalanceAmount = _balanceKind is BalanceKind.Deficit or BalanceKind.Surplus;
-        foreach (var c in SexChips)
-            c.IsSelected = (Sex)c.Value! == _sex;
-        foreach (var o in ActivityOptions)
-            o.IsSelected = (ActivityLevel)o.Value == _activity;
     }
 
     void SelectBalance(ChipItem chip)
@@ -94,24 +69,10 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
         UpdateChoices();
     }
 
-    void SelectSex(ChipItem chip)
-    {
-        _sex = (Sex)chip.Value!;
-        UpdateChoices();
-    }
-
-    void SelectActivity(OptionItem option)
-    {
-        _activity = (ActivityLevel)option.Value;
-        UpdateChoices();
-    }
-
-    /// <summary>The usual daily burn the goals are suggested from: measured if there's enough health data, else estimated.</summary>
+    /// <summary>The daily burn the goals are suggested from, measured by the health apps over the last two weeks.</summary>
     string ShowBurn() => BurnText = nutrition.MeasuredDailyBurn() is { } measured
         ? $"You burn about {NutritionService.Kcal(measured)} kcal a day, going by your health data from the last two weeks."
-        : nutrition.EstimatedDailyBurn() is { } estimate
-            ? $"You burn about {NutritionService.Kcal(estimate)} kcal a day, estimated from your body and activity level. Connect Samsung Health or Health Connect to measure it instead."
-            : "Fill in your height, birth year and sex below (or connect your health data) so your daily burn can be worked out.";
+        : "Your daily burn: N/A. Connect your health data in the Profile tab; once it has a few days of calories burned, goals can be suggested from it.";
 
     /// <summary>What the macro goals add up to, against the calorie goal.</summary>
     public string MacroCheck
@@ -143,18 +104,12 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
         var choice = await dialogs.ActionSheet("What's your aim?", null, lose, maintain, gain);
         if (choice == null)
             return;
-        // Estimated from what's typed below so far; the profile only keeps it on saving.
-        var before = (P.HeightCm, P.BirthYear, P.Sex, P.ActivityLevel);
-        if (!await ApplyBodyAsync())
-            return;
         var aim = choice == lose ? NutritionAim.LoseFat : choice == gain ? NutritionAim.GainMuscle : NutritionAim.Maintain;
         var goals = nutrition.Suggest(aim);
-        var burnText = ShowBurn();
-        (P.HeightCm, P.BirthYear, P.Sex, P.ActivityLevel) = before;
-        BurnText = burnText;
+        ShowBurn();
         if (goals == null)
         {
-            await dialogs.Alert("Not enough to go on", "Fill in your height, birth year and sex, or connect Samsung Health or Health Connect, so your daily burn can be worked out.");
+            await dialogs.Alert("No health data yet", "Goals are suggested from the calories you burn, measured by your health apps. Connect them in the Profile tab; after a few days of data, try again.");
             return;
         }
         CalorieGoal = goals.Calories.ToString(CultureInfo.CurrentCulture);
@@ -164,7 +119,7 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
         _balanceKind = goals.Balance switch { < 0 => BalanceKind.Deficit, > 0 => BalanceKind.Surplus, _ => BalanceKind.Maintain };
         BalanceAmount = goals.Balance != 0 ? Math.Abs(goals.Balance).ToString(CultureInfo.CurrentCulture) : "";
         UpdateChoices();
-        var burn = $"{NutritionService.Kcal(goals.DailyBurn)} kcal {(goals.BurnMeasured ? "measured" : "estimated")} daily burn";
+        var burn = $"{NutritionService.Kcal(goals.DailyBurn)} kcal measured daily burn";
         SuggestionText = goals.Balance switch
         {
             < 0 => $"From your {burn}, minus {-goals.Balance} kcal: about {units.FormatWithUnit(-goals.Balance * 7 / NutritionService.KcalPerKg)} a week. High protein keeps your muscle while you lose fat. Save to use these.",
@@ -172,35 +127,6 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
             _ => $"Your {burn}, with plenty of protein for training. Save to use these.",
         };
         HasSuggestion = true;
-    }
-
-    /// <summary>Checks and applies height and birth year (sex and activity apply as picked). False after telling the user what's wrong.</summary>
-    async Task<bool> ApplyBodyAsync()
-    {
-        double? heightCm = null;
-        if (!string.IsNullOrWhiteSpace(Height))
-        {
-            if (Int(Height) is not { } h || (heightCm = Imperial ? h * 2.54 : h) is < 50 or > 272)
-            {
-                await dialogs.Alert("Check your height", Imperial ? "Enter your height in inches, like 70." : "Enter your height in centimetres, like 178.");
-                return false;
-            }
-        }
-        int? year = null;
-        if (!string.IsNullOrWhiteSpace(BirthYear))
-        {
-            if (Int(BirthYear) is not { } y || y < DateTime.Today.Year - 100 || y > DateTime.Today.Year - 10)
-            {
-                await dialogs.Alert("Check your birth year", "Enter the year you were born, like 1995.");
-                return false;
-            }
-            year = y;
-        }
-        P.HeightCm = heightCm is { } cm ? Math.Round(cm, 1) : null;
-        P.BirthYear = year;
-        P.Sex = _sex;
-        P.ActivityLevel = _activity;
-        return true;
     }
 
     [RelayCommand]
@@ -218,9 +144,6 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
                 "Calories can be 500–10,000 a day, protein up to 1,000 g, carbs up to 1,500 g, fat up to 600 g, and the deficit or surplus up to 2,000 kcal. Leave one empty for no goal.");
             return;
         }
-        if (!await ApplyBodyAsync())
-            return;
-
         P.CalorieGoal = calories;
         P.ProteinGoalG = protein;
         P.CarbsGoalG = carbs;

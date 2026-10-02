@@ -252,7 +252,7 @@
             </VerticalStackLayout>
         </Border>
 
-        <!-- Body composition: the latest of each measurement -->
+        <!-- Body composition: the latest of each measurement from the health apps, N/A for the rest -->
         <Border Style="{StaticResource Card}">
             <VerticalStackLayout Spacing="10">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
@@ -261,7 +261,6 @@
                         <Label Text="Body" Style="{StaticResource H3}" />
                         <Label Text="{Binding BodyCaption}" Style="{StaticResource Caption}" FontSize="12" />
                     </VerticalStackLayout>
-                    <Button Grid.Column="2" Text="Log" Style="{StaticResource SmallButton}" Command="{Binding LogWeightCommand}" VerticalOptions="Start" />
                 </Grid>
                 <FlexLayout BindableLayout.ItemsSource="{Binding Body}" Wrap="Wrap" JustifyContent="Start">
                     <BindableLayout.ItemTemplate>

@@ -6,12 +6,10 @@ namespace GymBook.Services;
 /// <summary>Where a day's calories burned came from.</summary>
 public enum BurnSource
 {
-    /// <summary>Not known: no health data and not enough about the user to estimate it.</summary>
+    /// <summary>Not known: the health apps have nothing for the day (shown as N/A; nothing is estimated).</summary>
     None,
     /// <summary>Measured by the phone or watch (Samsung Health, Health Connect). For today it's what's burned so far.</summary>
     Measured,
-    /// <summary>Estimated from body size, age and activity level (see <see cref="NutritionService.EstimatedDailyBurn"/>).</summary>
-    Estimated,
 }
 
 /// <summary>One day of eating against burning.</summary>
@@ -67,9 +65,9 @@ public class NutritionService(DataStore store)
         var health = store.Data.HealthDays.FirstOrDefault(h => h.Date.Date == date);
         var import = Profile.ImportHealthFood && health != null;
 
+        // Only what the health apps measured: no estimate in its place (shown as N/A until there's data).
         var (burned, source) = health?.TotalBurnedKcal is { } total ? (total, BurnSource.Measured)
             : health is { BasalBurnedKcal: { } basal, ActiveBurnedKcal: { } active } ? (basal + active, BurnSource.Measured)
-            : EstimatedDailyBurn() is { } estimate ? (estimate, BurnSource.Estimated)
             : ((double?)null, BurnSource.None);
 
         return new DayNutrition(
@@ -107,36 +105,6 @@ public class NutritionService(DataStore store)
         [.. Enumerable.Range(0, days).Reverse().Select(i => Day(DateTime.Today.AddDays(-i)))
             .Select(d => new ChartPoint(d.Date.ToString(days > 7 ? "d/M" : "ddd", CultureInfo.CurrentCulture), d.EatenKcal))];
 
-    /// <summary>
-    /// Calories burned at complete rest: the last measured value (a smart scale's or watch's, within two months), else from
-    /// lean mass (Katch–McArdle) when body fat is known, else from weight, height, age and sex (Mifflin–St Jeor).
-    /// </summary>
-    public double? Bmr()
-    {
-        var since = DateTime.Today.AddDays(-60);
-        if (store.Data.BodyWeights.Where(b => b.Date >= since && b.BmrKcal is > 500).MaxBy(b => b.Date)?.BmrKcal is { } measured)
-            return measured;
-
-        var weight = LatestWeightKg();
-        if (Profile.BodyFatPercent is { } fat and >= 3 and <= 60)
-            return 370 + 21.6 * weight * (1 - fat / 100);
-        if (Profile.HeightCm is { } height && Profile.BirthYear is { } year && Profile.Sex is { } sex)
-        {
-            var age = Math.Clamp(DateTime.Today.Year - year, 10, 100);
-            return 10 * weight + 6.25 * height - 5 * age + (sex == Sex.Male ? 5 : -161);
-        }
-        return null;
-    }
-
-    /// <summary>A whole day's burn estimated from <see cref="Bmr"/> and the activity level, for days without health data.</summary>
-    public double? EstimatedDailyBurn() => Bmr() * (Profile.ActivityLevel switch
-    {
-        ActivityLevel.Sedentary => 1.2,
-        ActivityLevel.Light => 1.375,
-        ActivityLevel.Moderate => 1.55,
-        _ => 1.725,
-    });
-
     /// <summary>The average measured burn over the last two finished weeks, if at least 4 days have one.</summary>
     public double? MeasuredDailyBurn()
     {
@@ -150,14 +118,14 @@ public class NutritionService(DataStore store)
     public double LatestWeightKg() => store.Data.BodyWeights.MaxBy(b => b.Date)?.WeightKg ?? Profile.BodyWeightKg;
 
     /// <summary>
-    /// Daily goals for <paramref name="aim"/>: calories from the usual daily burn (measured if there's enough health data,
-    /// estimated otherwise) and a balance of −500 kcal (about 0.5 kg a week) to lose fat or +300 to gain; protein 1.8–2.2 g
+    /// Daily goals for <paramref name="aim"/>: calories from the usual daily burn measured by the health apps and a balance of −500 kcal (about 0.5 kg a week) to lose fat or +300 to gain; protein 1.8–2.2 g
     /// per kg of body weight, fat a quarter of the calories, carbs the rest. Null when the burn isn't known.
     /// </summary>
     public NutritionGoals? Suggest(NutritionAim aim)
     {
+        // Only from what the health apps measured: no estimate.
         var measured = MeasuredDailyBurn();
-        if ((measured ?? EstimatedDailyBurn()) is not { } burn)
+        if (measured is not { } burn)
             return null;
         var balance = aim switch
         {
