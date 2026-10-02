@@ -8,8 +8,8 @@ namespace GymBook.ViewModels;
 
 /// <summary>
 /// Daily nutrition goals (calories, protein, carbs, fat and the surplus or deficit to aim for), what calories burned are
-/// estimated from when there's no health data (height, birth year, sex, activity level), and whether food logged in the
-/// health app counts. Suggests goals from the usual daily burn.
+/// estimated from when there's no health data (height, birth year, sex, activity level). Suggests goals from the usual
+/// daily burn. (Whether food from health apps counts is in the Profile tab's Health data.)
 /// </summary>
 public partial class NutritionGoalsViewModel(DataStore store, NutritionService nutrition, Units units, DialogService dialogs) : BaseViewModel
 {
@@ -29,7 +29,6 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
     [ObservableProperty] string height = "";
     [ObservableProperty] string heightLabel = "HEIGHT (CM)";
     [ObservableProperty] string birthYear = "";
-    [ObservableProperty] bool importHealthFood;
     [ObservableProperty] string burnText = "";
     [ObservableProperty] string suggestionText = "";
     [ObservableProperty] bool hasSuggestion;
@@ -59,7 +58,6 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
         BirthYear = P.BirthYear?.ToString(CultureInfo.InvariantCulture) ?? "";
         _sex = P.Sex;
         _activity = P.ActivityLevel;
-        ImportHealthFood = P.ImportHealthFood;
 
         BalanceChips.Clear();
         BalanceChips.Add(new ChipItem("None", BalanceKind.None, SelectBalance));
@@ -234,7 +232,6 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
             BalanceKind.Deficit => -amount,
             _ => amount,
         };
-        P.ImportHealthFood = ImportHealthFood;
         store.Save();
         await GoBack();
     }

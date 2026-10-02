@@ -29,28 +29,8 @@ public record HealthReadResult(IReadOnlyList<HealthDayReading> Days, IReadOnlyLi
 /// <summary>An app that shares health data (through Health Connect): its Android package and its name.</summary>
 public record HealthApp(string Package, string Name)
 {
+    /// <summary>Samsung Health's package: "Samsung Health only" was a choice of its own in earlier versions.</summary>
     public const string SamsungHealth = "com.sec.android.app.shealth";
-
-    /// <summary>Names of common health apps, for when Android won't say (another app's name can be hidden from us).</summary>
-    public static string NameOf(string package) => package switch
-    {
-        SamsungHealth => "Samsung Health",
-        "com.google.android.apps.fitness" => "Google Fit",
-        "com.fitbit.FitbitMobile" => "Fitbit",
-        "com.withings.wiscale2" => "Withings",
-        "com.garmin.android.apps.connectmobile" => "Garmin Connect",
-        "com.huawei.health" => "Huawei Health",
-        "com.mi.health" or "com.xiaomi.hm.health" => "Mi Fitness",
-        "com.myfitnesspal.android" => "MyFitnessPal",
-        "com.ouraring.oura" => "Oura",
-        "com.whoop.android" => "WHOOP",
-        "com.strava" => "Strava",
-        "com.renpho.health" => "Renpho",
-        "com.eufylife.smarthome" => "eufyLife",
-        "com.cronometer.android.gold" or "com.cronometer.android" => "Cronometer",
-        "com.google.android.apps.healthdata" => "Health Connect",
-        _ => package,
-    };
 }
 
 public enum HealthAvailability
@@ -85,6 +65,9 @@ public interface IHealthPlatform
     /// <summary>The apps that shared any of the data Gym Book reads over the last 30 days, by name.</summary>
     Task<IReadOnlyList<HealthApp>> FindAppsAsync(CancellationToken ct = default);
 
+    /// <summary>An app's name as the phone knows it, or its package when it can't say.</summary>
+    string AppName(string package);
+
     /// <summary>Opens Health Connect's own settings, where access can be changed.</summary>
     void OpenSettings();
 }
@@ -101,6 +84,8 @@ public class NoHealthPlatform : IHealthPlatform
         Task.FromResult(new HealthReadResult([], [], null));
 
     public Task<IReadOnlyList<HealthApp>> FindAppsAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<HealthApp>>([]);
+
+    public string AppName(string package) => package;
 
     public void OpenSettings()
     {

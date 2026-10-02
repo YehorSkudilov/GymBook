@@ -28,6 +28,5 @@
 		<intent>
 			<action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
 		</intent>
-		<package android:name="com.sec.android.app.shealth" />
 	</queries>
 </manifest>

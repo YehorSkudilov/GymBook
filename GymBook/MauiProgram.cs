@@ -58,6 +58,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<GymBook.Services.Health.IHealthPlatform, GymBook.Services.Health.NoHealthPlatform>();
 #endif
         builder.Services.AddSingleton<GymBook.Services.Health.HealthSyncService>();
+        builder.Services.AddTransient<HealthSettingsViewModel>();
 
         builder.Services.AddTransient<MainPage>();
         AddPage<HomePage, HomeViewModel>(builder.Services);

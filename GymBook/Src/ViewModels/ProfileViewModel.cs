@@ -13,8 +13,12 @@ public partial class ProfileViewModel(
     DialogService dialogs,
     AccountService account,
     SyncService sync,
-    IServiceProvider services) : BaseViewModel
+    IServiceProvider services,
+    HealthSettingsViewModel health) : BaseViewModel
 {
+    /// <summary>The Health data section: connecting health apps, which to read from, and so on.</summary>
+    public HealthSettingsViewModel Health => health;
+
     bool _loading;
 
     [ObservableProperty] string name = "";
@@ -75,6 +79,7 @@ public partial class ProfileViewModel(
 
     void Refresh()
     {
+        Health.Refresh();
         IsSignedIn = account.IsSignedIn;
         AccountEmail = account.Email ?? "";
         PasswordRowText = account.HasPassword ? "Change password" : "Set a password";

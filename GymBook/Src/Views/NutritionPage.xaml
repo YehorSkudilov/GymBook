@@ -9,7 +9,7 @@
     x:DataType="vm:NutritionViewModel">
 
     <!-- A day's food against its goals and what was burned, the surplus or deficit over time, activity and body
-         measurements, and the link to Samsung Health or Health Connect. Charts play in each time the tab comes into view. -->
+         measurements (health data is connected in the Profile tab). Charts play in each time the tab comes into view. -->
     <ContentView.Resources>
         <Style x:Key="HeaderIcon" TargetType="controls:StatIconView">
             <Setter Property="WidthRequest" Value="26" />
@@ -279,16 +279,5 @@
             </VerticalStackLayout>
         </Border>
 
-        <!-- Samsung Health / Health Connect -->
-        <Border Style="{StaticResource Card}">
-            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
-                <VerticalStackLayout Spacing="2" VerticalOptions="Center">
-                    <Label Text="{Binding HealthTitle}" Style="{StaticResource H3}" />
-                    <Label Text="{Binding HealthStatus}" Style="{StaticResource Caption}" FontSize="12" />
-                </VerticalStackLayout>
-                <Button Grid.Column="1" Text="{Binding HealthAction}" Style="{StaticResource SmallButton}" Command="{Binding HealthTappedCommand}"
-                        IsVisible="{Binding HasHealthAction}" VerticalOptions="Center" />
-            </Grid>
-        </Border>
     </VerticalStackLayout>
 </views:TabView>

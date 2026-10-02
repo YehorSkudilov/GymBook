@@ -76,8 +76,11 @@ public class HealthConnectPlatform : IHealthPlatform
         return [.. packages.Where(p => p != Context.PackageName).Select(p => new HealthApp(p, AppName(p))).OrderBy(a => a.Name, StringComparer.CurrentCultureIgnoreCase)];
     }
 
-    /// <summary>The app's name as Android shows it, or a known one (another app can be hidden from us), or its package.</summary>
-    static string AppName(string package)
+    /// <summary>
+    /// The app's name as Android shows it. Apps that share with Health Connect are visible to us (see the queries in
+    /// AndroidManifest.xml); anything else shows its package.
+    /// </summary>
+    public string AppName(string package)
     {
         try
         {
@@ -89,7 +92,7 @@ public class HealthConnectPlatform : IHealthPlatform
         catch (PackageManager.NameNotFoundException)
         {
         }
-        return HealthApp.NameOf(package);
+        return package;
     }
 
     public void OpenSettings()

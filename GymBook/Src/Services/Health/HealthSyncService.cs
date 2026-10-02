@@ -53,10 +53,17 @@ public class HealthSyncService(DataStore store, IHealthPlatform platform)
         : store.Profile.HealthSource == HealthSource.SamsungHealth ? [HealthApp.SamsungHealth]
         : null;
 
-    /// <summary>"Samsung Health", "Samsung Health, Withings", or "Health Connect" (every app): what's read from.</summary>
-    public string SourceName => Apps is { } apps
-        ? apps.Count <= 2 ? string.Join(", ", apps.Select(HealthApp.NameOf)) : $"{HealthApp.NameOf(apps[0])} + {apps.Count - 1} more"
-        : HealthSource.HealthConnect.Display();
+    /// <summary>
+    /// What's read from: "Samsung Health", "Samsung Health, Withings", "Samsung Health + 2 more", or "every app" (names as
+    /// the phone knows them; elsewhere, just how many).
+    /// </summary>
+    public string SourceName => Apps switch
+    {
+        null => "every app",
+        { Count: var n } when platform.Availability != HealthAvailability.Available => n == 1 ? "1 app" : $"{n} apps",
+        { Count: <= 2 } apps => string.Join(", ", apps.Select(platform.AppName)),
+        var apps => $"{platform.AppName(apps[0])} + {apps.Count - 1} more",
+    };
 
     /// <summary>Reads only from <paramref name="packages"/> from now on (null or empty: every app), and reads again.</summary>
     public async Task ChooseAppsAsync(IReadOnlyCollection<string>? packages)
