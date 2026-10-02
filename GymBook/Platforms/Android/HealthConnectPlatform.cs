@@ -196,7 +196,55 @@ public class HealthConnectPlatform : IHealthPlatform
             var heights = Granted(HealthPermissions.ReadHeight)
                 ? await ReadAsync<HeightRecord>(to.AddYears(-10), to, r => r.Height.InMeters * 100)
                 : [];
-            return new HealthReadResult(days, body, heights.Count > 0 ? heights.MaxBy(h => h.Time).Value : null);
+            ct.ThrowIfCancellationRequested();
+            var foods = Granted(HealthPermissions.ReadNutrition) ? await ReadFoodsAsync(from, to) : null;
+            return new HealthReadResult(days, body, heights.Count > 0 ? heights.MaxBy(h => h.Time).Value : null, foods);
+        }
+
+        /// <summary>Each food logged between the two local times, with the meal it was logged under.</summary>
+        async Task<List<FoodReading>> ReadFoodsAsync(DateTime from, DateTime to)
+        {
+            var foods = new List<FoodReading>();
+            long? page = null;
+            for (var i = 0; i < 20; i++)
+            {
+                var builder = new ReadRecordsRequestUsingFilters.Builder(Java.Lang.Class.FromType(typeof(NutritionRecord)))
+                    .SetTimeRangeFilter(new TimeInstantRangeFilter.Builder()
+                        .SetStartTime(Instant(from))
+                        .SetEndTime(Instant(to))
+                        .Build())!
+                    .SetPageSize(1000)!;
+                foreach (var origin in Origins)
+                    builder.AddDataOrigins(origin);
+                if (page is { } token)
+                    builder.SetPageToken(token);
+
+                var result = await Call(receiver => _manager.ReadRecords(builder.Build()!, Context.MainExecutor!, receiver));
+                var response = result.JavaCast<ReadRecordsResponse>()!;
+                foreach (var record in response.Records)
+                {
+                    if (record is not Java.Lang.Object o || o.JavaCast<NutritionRecord>() is not { } r || r.Metadata?.Id is not { Length: > 0 } id)
+                        continue;
+                    var time = DateTimeOffset.FromUnixTimeMilliseconds(r.StartTime.ToEpochMilli()).LocalDateTime;
+                    // Health Connect's meal types: 1 breakfast, 2 lunch, 3 dinner, 4 snack, 0 not said.
+                    Models.MealType? meal = (int)r.MealType switch
+                    {
+                        1 => Models.MealType.Breakfast,
+                        2 => Models.MealType.Lunch,
+                        3 => Models.MealType.Dinner,
+                        4 => Models.MealType.Snack,
+                        _ => null,
+                    };
+                    foods.Add(new FoodReading(id, time, meal, r.MealName,
+                        r.Energy is { } energy ? energy.InCalories / 1000 : null,
+                        r.Protein?.InGrams, r.TotalCarbohydrate?.InGrams, r.TotalFat?.InGrams,
+                        r.Metadata.DataOrigin?.PackageName));
+                }
+                if (response.NextPageToken == -1)
+                    break;
+                page = response.NextPageToken;
+            }
+            return foods;
         }
 
         /// <summary>Each day's totals, added up by Health Connect itself (which also avoids counting overlapping apps twice).</summary>

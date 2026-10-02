@@ -46,14 +46,18 @@ public static class PrivacyPolicy
         <h2>Health data from Samsung Health and Health Connect</h2>
         <p>On Android, you can choose to let GymBook read health data through Health Connect, either Samsung Health's data or every
         app's. Only with your permission, given in Health Connect and changeable there at any time, GymBook reads: calories burned
-        (total, active and resting), steps, food logged in other apps (calories, protein, carbohydrates and fat), weight, body fat,
+        (total, active and resting), steps, food logged in other apps (each food's name, meal, time, calories, protein, carbohydrates and fat), weight, body fat,
         lean body mass, bone mass, body water mass, basal metabolic rate and height. GymBook only reads; it never writes to or
         changes your health data.</p>
         <p>This data is used only to show your nutrition, energy balance (calories eaten against burned), activity and body
-        composition in the app, and to estimate and suggest your nutrition goals. Daily totals and body measurements are saved in
+        composition in the app, and to estimate and suggest your nutrition goals. Daily totals, foods and body measurements are saved in
         the app like the rest of your data and, if you have an account, synced to it so they appear on your other devices. Health data
         is never used for advertising, never sold, and never shared with anyone, including the AI features. Disconnecting stops
         further reading; deleting your account deletes what was synced.</p>
+        <h2>Food search</h2>
+        <p>When you search for a food to log, the words you type are sent to Open Food Facts (openfoodfacts.org), the free, open food
+        database, to find matching foods and their nutrition. Nothing else is sent with them: no account, health data or other
+        personal information.</p>
 
         <h2>Data we collect when you create an account</h2>
         <ul>

@@ -24,7 +24,26 @@ public record BodyReading(
     double? BodyWaterKg,
     double? BmrKcal);
 
-public record HealthReadResult(IReadOnlyList<HealthDayReading> Days, IReadOnlyList<BodyReading> Body, double? HeightCm);
+/// <summary>
+/// One food logged in a health app (a Health Connect nutrition record): its record id, when it was eaten, the meal it
+/// was logged under (null when the app didn't say), its name and amounts, and the app's package.
+/// </summary>
+public record FoodReading(
+    string Id,
+    DateTime Time,
+    MealType? Meal,
+    string? Name,
+    double? Kcal,
+    double? ProteinG,
+    double? CarbsG,
+    double? FatG,
+    string? Package);
+
+/// <summary>
+/// What was read. <paramref name="Foods"/> is null when food wasn't read (not allowed), as opposed to none logged.
+/// </summary>
+public record HealthReadResult(IReadOnlyList<HealthDayReading> Days, IReadOnlyList<BodyReading> Body, double? HeightCm,
+    IReadOnlyList<FoodReading>? Foods = null);
 
 /// <summary>An app that shares health data (through Health Connect): its Android package and its name.</summary>
 public record HealthApp(string Package, string Name)

@@ -24,7 +24,8 @@ public record DayNutrition(
     double? BurnedKcal,
     BurnSource BurnSource,
     HealthDay? Health,
-    bool StepsCounted = false)
+    bool StepsCounted = false,
+    bool ImportedAsTotal = false)
 {
     public double EatenKcal => LoggedKcal + ImportedKcal;
 
@@ -62,24 +63,29 @@ public class NutritionService(DataStore store)
     public DayNutrition Day(DateTime date)
     {
         date = date.Date;
-        var foods = store.Data.FoodEntries.Where(f => f.Date.Date == date).OrderBy(f => f.Meal).ThenBy(f => f.LoggedAt).ToList();
+        // Foods logged in the health apps are in their meals with the rest (unless they're turned off in the Profile tab).
+        var foods = store.Data.FoodEntries
+            .Where(f => f.Date.Date == date && (f.Source == null || Profile.ImportHealthFood))
+            .OrderBy(f => f.Meal).ThenBy(f => f.LoggedAt).ToList();
         var health = store.Data.HealthDays.FirstOrDefault(h => h.Date.Date == date);
-        var import = Profile.ImportHealthFood && health != null;
+        // Read before foods were read one by one: only the day's total from the health app, counted on its own.
+        var asTotal = Profile.ImportHealthFood && health is { FoodKcal: > 0 } && !foods.Any(f => f.Source != null);
 
         var (burned, source, stepsCounted) = Burned(health, date);
 
         return new DayNutrition(
             date,
             foods,
-            foods.Sum(f => f.Calories),
-            import ? health!.FoodKcal ?? 0 : 0,
-            foods.Sum(f => f.ProteinG) + (import ? health!.FoodProteinG ?? 0 : 0),
-            foods.Sum(f => f.CarbsG) + (import ? health!.FoodCarbsG ?? 0 : 0),
-            foods.Sum(f => f.FatG) + (import ? health!.FoodFatG ?? 0 : 0),
+            foods.Where(f => f.Source == null).Sum(f => f.Calories),
+            asTotal ? health!.FoodKcal ?? 0 : foods.Where(f => f.Source != null).Sum(f => f.Calories),
+            foods.Sum(f => f.ProteinG) + (asTotal ? health!.FoodProteinG ?? 0 : 0),
+            foods.Sum(f => f.CarbsG) + (asTotal ? health!.FoodCarbsG ?? 0 : 0),
+            foods.Sum(f => f.FatG) + (asTotal ? health!.FoodFatG ?? 0 : 0),
             burned,
             source,
             health,
-            stepsCounted);
+            stepsCounted,
+            asTotal);
     }
 
     /// <summary>

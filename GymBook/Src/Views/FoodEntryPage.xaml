@@ -15,6 +15,35 @@
         <VerticalStackLayout Padding="16,8,16,30" Spacing="10">
             <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
 
+            <!-- Search: foods with their nutrition filled in; pick one and say how much -->
+            <VerticalStackLayout Spacing="8" IsVisible="{Binding IsEditing, Converter={StaticResource Not}}">
+                <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <Entry Text="{Binding SearchText}" Placeholder="Search foods (chicken breast, oats, a brand…)" ReturnType="Search" />
+                        <ActivityIndicator Grid.Column="1" IsRunning="{Binding IsSearching}" IsVisible="{Binding IsSearching}"
+                                           WidthRequest="20" HeightRequest="20" Color="{StaticResource Accent}" />
+                    </Grid>
+                </Border>
+                <Label Text="{Binding SearchMessage}" Style="{StaticResource Caption}" FontSize="12" IsVisible="{Binding HasSearchMessage}" />
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding SearchResults}" Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FoodMatchItem">
+                            <Border Style="{StaticResource InnerCard}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                </Border.GestureRecognizers>
+                                <VerticalStackLayout>
+                                    <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="14" LineBreakMode="TailTruncation" />
+                                    <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+                <Label Text="{Binding PickedText}" TextColor="{StaticResource Success}" FontSize="13" FontFamily="OpenSansSemibold"
+                       IsVisible="{Binding HasPicked}" />
+            </VerticalStackLayout>
+
             <Label Text="MEAL" Style="{StaticResource Overline}" Margin="0,6,0,0" />
             <FlexLayout BindableLayout.ItemsSource="{Binding MealChips}" Wrap="Wrap">
                 <BindableLayout.ItemTemplate>

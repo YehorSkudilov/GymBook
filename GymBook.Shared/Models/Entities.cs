@@ -270,6 +270,12 @@ public class FoodEntry : ISyncEntity
     public double FatG { get; set; }
     /// <summary>When it was logged, to keep a meal's foods in order.</summary>
     public DateTime LoggedAt { get; set; } = DateTime.Now;
+    /// <summary>
+    /// The health app it was logged in (Samsung Health, say), read through Health Connect, its Id "hc-" and the record's;
+    /// null when logged in Gym Book. Read ones follow the health app: changed or deleted there, they change here.
+    /// </summary>
+    [MaxLength(SyncLimits.NameLength)]
+    public string? Source { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
 }

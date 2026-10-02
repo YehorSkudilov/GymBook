@@ -29,6 +29,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<RecoveryService>();
         builder.Services.AddSingleton<StatsService>();
         builder.Services.AddSingleton<NutritionService>();
+        builder.Services.AddSingleton<FoodSearchService>();
         builder.Services.AddSingleton<WorkoutService>();
         builder.Services.AddSingleton<DialogService>();
         builder.Services.AddSingleton<ExercisePickerService>();

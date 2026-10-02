@@ -211,15 +211,20 @@ public partial class NutritionViewModel(
                 Foods = [.. foods.Select(f => new FoodItem
                 {
                     Name = string.IsNullOrWhiteSpace(f.Name) ? "Food" : f.Name,
-                    Detail = $"P {f.ProteinG:0} · C {f.CarbsG:0} · F {f.FatG:0}",
+                    Detail = (f.Source != null ? $"{f.Source} · " : "") + $"P {f.ProteinG:0} · C {f.CarbsG:0} · F {f.FatG:0}",
                     Calories = NutritionService.Kcal(f.Calories),
-                    OpenCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Food}?id={f.Id}")),
+                    // Read from a health app: changed there, not here (the next read would put it back).
+                    OpenCommand = f.Source == null
+                        ? new AsyncRelayCommand(() => GoTo($"{Routes.Food}?id={f.Id}"))
+                        : new AsyncRelayCommand(() => dialogs.Alert(string.IsNullOrWhiteSpace(f.Name) ? "Food" : f.Name,
+                            $"{NutritionService.Kcal(f.Calories)} kcal · protein {f.ProteinG:0.#} g · carbs {f.CarbsG:0.#} g · fat {f.FatG:0.#} g\n\n"
+                            + $"Logged in {f.Source} at {f.LoggedAt.ToString("t", CultureInfo.CurrentCulture)}. Change or delete it there; it updates here.")),
                 })],
                 AddCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Food}?date={_date:yyyy-MM-dd}&meal={meal}")),
             };
         })];
 
-        HasImportedFood = day.ImportedKcal > 0;
+        HasImportedFood = day.ImportedAsTotal;
         if (HasImportedFood && day.Health is { } h)
         {
             ImportedFoodTitle = $"Logged in {h.Source ?? "your health app"}";

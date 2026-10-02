@@ -99,10 +99,12 @@ public class HealthSyncService(DataStore store, IHealthPlatform platform)
         {
             var name = SourceName;
             var today = DateTime.Today;
-            var result = await platform.ReadAsync(today.AddDays(1 - Days), today.AddDays(1), Apps);
+            var from = today.AddDays(1 - Days);
+            var to = today.AddDays(1);
+            var result = await platform.ReadAsync(from, to, Apps);
             LastSyncedAt = DateTimeOffset.Now;
             LastError = null;
-            return await MainThread.InvokeOnMainThreadAsync(() => Apply(result, name));
+            return await MainThread.InvokeOnMainThreadAsync(() => Apply(result, name) | ApplyFoods(result.Foods, from, to));
         }
         catch (Exception e)
         {
@@ -201,6 +203,77 @@ public class HealthSyncService(DataStore store, IHealthPlatform platform)
             store.Save();
         return changed;
     }
+
+    /// <summary>
+    /// Each food logged in the health apps between the two days, as a food in its meal: added, changed to match, and
+    /// those no longer there (deleted in the app, or from an app no longer read) taken out. Foods logged in Gym Book
+    /// aren't touched.
+    /// </summary>
+    bool ApplyFoods(IReadOnlyList<FoodReading>? foods, DateTime from, DateTime to)
+    {
+        if (foods == null)
+            return false;
+        var data = store.Data;
+        var changed = false;
+        var read = new HashSet<string>();
+        foreach (var food in foods)
+        {
+            var kcal = InRange(food.Kcal, 0, 20000, 1) ?? 0;
+            var protein = InRange(food.ProteinG, 0, 2000, 1) ?? 0;
+            var carbs = InRange(food.CarbsG, 0, 2000, 1) ?? 0;
+            var fat = InRange(food.FatG, 0, 2000, 1) ?? 0;
+            if (kcal <= 0 && protein + carbs + fat <= 0)
+                continue;
+            var id = $"hc-{food.Id}";
+            if (id.Length > SyncLimits.IdLength)
+                id = id[..SyncLimits.IdLength];
+            if (!read.Add(id))
+                continue;
+            var meal = food.Meal ?? MealAt(food.Time);
+            var name = string.IsNullOrWhiteSpace(food.Name) ? $"{meal} food" : food.Name.Trim();
+            if (name.Length > SyncLimits.NameLength)
+                name = name[..SyncLimits.NameLength];
+            var source = food.Package is { } package ? platform.AppName(package) : "Health Connect";
+            if (source.Length > SyncLimits.NameLength)
+                source = source[..SyncLimits.NameLength];
+
+            var entry = data.FoodEntries.FirstOrDefault(f => f.Id == id);
+            if (entry == null)
+            {
+                entry = new FoodEntry { Id = id };
+                data.FoodEntries.Add(entry);
+                changed = true;
+            }
+            if (entry.Date != food.Time.Date || entry.Meal != meal || entry.Name != name || entry.Calories != kcal
+                || entry.ProteinG != protein || entry.CarbsG != carbs || entry.FatG != fat || entry.LoggedAt != food.Time
+                || entry.Source != source)
+            {
+                entry.Date = food.Time.Date;
+                entry.Meal = meal;
+                entry.Name = name;
+                entry.Calories = kcal;
+                entry.ProteinG = protein;
+                entry.CarbsG = carbs;
+                entry.FatG = fat;
+                entry.LoggedAt = food.Time;
+                entry.Source = source;
+                changed = true;
+            }
+        }
+        changed |= data.FoodEntries.RemoveAll(f => f.Source != null && f.Date >= from && f.Date < to && !read.Contains(f.Id)) > 0;
+        if (changed)
+            store.Save();
+        return changed;
+    }
+
+    /// <summary>The meal for a food the app didn't put in one, by the time it was eaten.</summary>
+    static MealType MealAt(DateTime time) => time.Hour switch
+    {
+        >= 4 and < 11 => MealType.Breakfast,
+        >= 11 and < 15 => MealType.Lunch,
+        >= 17 and < 22 => MealType.Dinner,
+        _ => MealType.Snack,
+    };
 
     static double? Kcal(double? v) => InRange(v, 0, 50000, 0) is { } k && k > 0 ? k : null;
 

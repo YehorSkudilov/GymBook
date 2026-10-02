@@ -11,8 +11,11 @@ namespace GymBook.ViewModels;
 /// Logs something eaten, or edits or deletes it: <c>food?id=…</c> edits, <c>food?date=yyyy-MM-dd&amp;meal=Lunch</c> adds.
 /// Amounts are per serving, times the servings eaten; calories left empty are worked out from the macros.
 /// </summary>
-public partial class FoodEntryViewModel(DataStore store, NutritionService nutrition, DialogService dialogs) : BaseViewModel, IQueryAttributable
+public partial class FoodEntryViewModel(DataStore store, NutritionService nutrition, FoodSearchService search, DialogService dialogs)
+    : BaseViewModel, IQueryAttributable
 {
+    CancellationTokenSource? _search;
+
     FoodEntry? _editing;
     DateTime _date = DateTime.Today;
     MealType _meal;
@@ -29,6 +32,16 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
     [ObservableProperty] string dateText = "";
     [ObservableProperty] List<RecentFoodItem> recent = [];
     [ObservableProperty] bool hasRecent;
+
+    // Searching for a food with its nutrition filled in
+    [ObservableProperty] string searchText = "";
+    [ObservableProperty] List<FoodMatchItem> searchResults = [];
+    [ObservableProperty] bool isSearching;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasSearchMessage))] string searchMessage = "";
+    /// <summary>What was picked from the search and how much: "150 g of Chicken breast, cooked".</summary>
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasPicked))] string pickedText = "";
+    public bool HasSearchMessage => SearchMessage.Length > 0;
+    public bool HasPicked => PickedText.Length > 0;
 
     public System.Collections.ObjectModel.ObservableCollection<ChipItem> MealChips { get; } = [];
 
@@ -63,6 +76,10 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         foreach (var meal in Enum.GetValues<MealType>())
             MealChips.Add(new ChipItem(meal.ToString(), meal, SelectMeal) { IsSelected = meal == _meal });
 
+        SearchText = "";
+        SearchResults = [];
+        SearchMessage = "";
+        PickedText = "";
         Recent = IsEditing ? [] : [.. nutrition.RecentFoods(12).Select(f => new RecentFoodItem
         {
             Name = f.Name,
@@ -71,6 +88,66 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         })];
         HasRecent = Recent.Count > 0;
         return Task.CompletedTask;
+    }
+
+    partial void OnSearchTextChanged(string value) => _ = SearchSoon(value);
+
+    /// <summary>Searches once typing pauses; a newer search replaces one still going.</summary>
+    async Task SearchSoon(string text)
+    {
+        _search?.Cancel();
+        var cts = _search = new CancellationTokenSource();
+        if (text.Trim().Length < 2)
+        {
+            SearchResults = [];
+            SearchMessage = "";
+            IsSearching = false;
+            return;
+        }
+        try
+        {
+            await Task.Delay(400, cts.Token);
+            IsSearching = true;
+            SearchMessage = "";
+            var found = await search.SearchAsync(text, cts.Token);
+            if (cts.IsCancellationRequested)
+                return;
+            SearchResults = [.. found.Select(f => new FoodMatchItem(f, new AsyncRelayCommand(() => Pick(f))))];
+            SearchMessage = found.Count == 0 ? "Nothing found. Try other words, or fill it in below." : "";
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (Exception)
+        {
+            SearchResults = [];
+            SearchMessage = "Couldn't search: check your connection.";
+        }
+        if (_search == cts)
+            IsSearching = false;
+    }
+
+    /// <summary>A food from the search: how much was eaten (a serving, or in grams), then its amounts fill the form.</summary>
+    async Task Pick(FoodMatch food)
+    {
+        var start = food.ServingG ?? 100;
+        var grams = await Views.NumberPadSheet.Show(start.ToString("0.#", CultureInfo.InvariantCulture), start, 5, 5, 1000, "g", decimals: true);
+        if (grams is not { } g || double.IsNaN(g) || g <= 0)
+            return;
+        var (kcal, protein, carbs, fat) = food.For(g);
+        Name = food.Title.Length > SyncLimits.NameLength ? food.Title[..SyncLimits.NameLength] : food.Title;
+        Calories = Number(kcal);
+        Protein = Number(protein);
+        Carbs = Number(carbs);
+        Fat = Number(fat);
+        Servings = "1";
+        PickedText = $"{g.ToString("0.#", CultureInfo.CurrentCulture)} g of {food.Title}";
+        _search?.Cancel();
+        SearchText = "";
+        SearchResults = [];
+        SearchMessage = "";
+        IsSearching = false;
     }
 
     void Fill(FoodEntry f)
@@ -159,6 +236,16 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         store.Save();
         await GoBack();
     }
+}
+
+/// <summary>A search result: name, the usual serving and its amounts per 100 g.</summary>
+public class FoodMatchItem(FoodMatch food, ICommand select)
+{
+    public string Title => food.Title;
+    public string Detail =>
+        $"{NutritionService.Kcal(food.Kcal100)} kcal · P {food.Protein100:0.#} · C {food.Carbs100:0.#} · F {food.Fat100:0.#} per 100 g"
+        + (food.ServingG is { } g ? $" · {food.ServingText ?? "serving"}{(food.ServingText?.Contains('g') == true ? "" : $" {g:0} g")}" : "");
+    public ICommand SelectCommand => select;
 }
 
 public class RecentFoodItem
