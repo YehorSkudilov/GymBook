@@ -14,7 +14,6 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     DateTime? _selected = DateTime.Today;
     ILookup<DateTime, WorkoutSession> _byDay = Enumerable.Empty<WorkoutSession>().ToLookup(s => s.StartedAt.Date);
 
-    [ObservableProperty] string monthTitle = "";
     [ObservableProperty] string monthSummary = "";
     [ObservableProperty] string avgPerWeek = "";
     [ObservableProperty] string weeklyTarget = "";
@@ -22,6 +21,8 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     [ObservableProperty] bool canGoNext;
     [ObservableProperty] List<string> weekdayLetters = [];
     [ObservableProperty] List<CalendarDayItem> days = [];
+    /// <summary>The month shown; tapping it picks another, a year and then its month (<see cref="PickMonth"/>).</summary>
+    [ObservableProperty] string monthTitle = "";
     [ObservableProperty] string selectedTitle = "";
     [ObservableProperty] bool hasSelection;
     [ObservableProperty] List<SessionItem> selectedSessions = [];
@@ -31,7 +32,8 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     [ObservableProperty] IDrawable recoveryMap = MuscleMapDrawable.Empty;
     [ObservableProperty] string recoveryTitle = "";
     [ObservableProperty] string recoverySummary = "";
-    [ObservableProperty] bool canOpenRecovery = true;
+    [ObservableProperty] List<MuscleRecoveryItem> majorMuscles = [];
+    [ObservableProperty] List<MuscleRecoveryItem> supportingMuscles = [];
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(BeforeBackground), nameof(AfterBackground), nameof(BeforeText), nameof(AfterText))]
@@ -62,9 +64,9 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
 
     void Refresh()
     {
-        MonthTitle = _month.ToString("MMMM yyyy");
         CanGoNext = _month < FirstOfMonth(DateTime.Today);
 
+        MonthTitle = _month.ToString("MMMM yyyy");
         var monthEnd = _month.AddMonths(1);
         var monthSessions = _byDay.Where(g => g.Key >= _month && g.Key < monthEnd).SelectMany(g => g).ToList();
         var activeDays = monthSessions.Select(s => s.StartedAt.Date).Distinct().Count();
@@ -146,8 +148,10 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     void ShowRecovery()
     {
         var at = RecoveryAt;
-        var rec = recovery.Compute(at);
+        var details = recovery.Details(at);
+        var rec = details.ToDictionary(d => d.Muscle, d => d.Recovery);
         RecoveryMap = MuscleMapDrawable.ForRecovery(rec);
+        (MajorMuscles, SupportingMuscles) = RecoveryViewModel.Lists(details, at);
         RecoveryTitle = !IsAfterDay ? "Muscle recovery going into the day"
             : LastWorkoutEnd is { } end ? $"Muscle recovery after the last workout ({end:HH:mm})"
             : _recoveryDay == DateTime.Today ? "Muscle recovery right now" : "Muscle recovery at the end of the day";
@@ -197,20 +201,47 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
         Refresh();
     }
 
+    /// <summary>
+    /// The month title: pick a year (back to the first workout's, and at least two), then a month of it (up to this one).
+    /// </summary>
     [RelayCommand]
-    void PreviousMonth()
+    async Task PickMonth()
     {
-        _month = _month.AddMonths(-1);
+        var thisMonth = FirstOfMonth(DateTime.Today);
+        var firstYear = new[] { thisMonth.Year - 2, _month.Year }.Concat(_byDay.Select(g => g.Key.Year)).Min();
+        var years = Enumerable.Range(firstYear, thisMonth.Year - firstYear + 1).Reverse()
+            .Select(y => y == _month.Year ? $"{y} ✓" : $"{y}").ToList();
+        var pickedYear = await dialogs.ActionSheet("Year", null, [.. years]);
+        var y = pickedYear == null ? -1 : years.IndexOf(pickedYear);
+        if (y < 0)
+            return;
+        var year = thisMonth.Year - y;
+        var months = Enumerable.Range(1, year == thisMonth.Year ? thisMonth.Month : 12).Select(m => new DateTime(year, m, 1)).ToList();
+        var labels = months.Select(m => m == _month ? $"{m:MMMM} ✓" : m.ToString("MMMM")).ToList();
+        var pickedMonth = await dialogs.ActionSheet($"{year}", null, [.. labels]);
+        var m = pickedMonth == null ? -1 : labels.IndexOf(pickedMonth);
+        if (m < 0)
+            return;
+        ShowMonth(months[m]);
+    }
+
+    /// <summary>Another month, with its first day selected: a day is always selected.</summary>
+    void ShowMonth(DateTime month)
+    {
+        _month = month;
+        _selected = month;
         Refresh();
     }
+
+    [RelayCommand]
+    void PreviousMonth() => ShowMonth(_month.AddMonths(-1));
 
     [RelayCommand]
     void NextMonth()
     {
         if (!CanGoNext)
             return;
-        _month = _month.AddMonths(1);
-        Refresh();
+        ShowMonth(_month.AddMonths(1));
     }
 
     [RelayCommand]

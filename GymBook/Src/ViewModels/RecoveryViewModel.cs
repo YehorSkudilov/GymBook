@@ -61,9 +61,13 @@ public partial class RecoveryViewModel : BaseViewModel, IQueryAttributable
 
         var tired = details.Count(d => d.Recovery < 0.9);
         Summary = tired == 0 ? "Every muscle is fresh." : $"{tired} of {details.Count} muscle groups still recovering.";
-        MajorMuscles = [.. details.Where(d => Major.Contains(d.Muscle)).OrderBy(d => d.Recovery).Select(d => Item(d, at))];
-        SupportingMuscles = [.. details.Where(d => !Major.Contains(d.Muscle)).OrderBy(d => d.Recovery).Select(d => Item(d, at))];
+        (MajorMuscles, SupportingMuscles) = Lists(details, at);
     }
+
+    /// <summary>The major and the supporting muscles, most tired first. Also under the calendar's recovery map.</summary>
+    internal static (List<MuscleRecoveryItem> Major, List<MuscleRecoveryItem> Supporting) Lists(IReadOnlyCollection<MuscleRecovery> details, DateTime at) =>
+        ([.. details.Where(d => Major.Contains(d.Muscle)).OrderBy(d => d.Recovery).Select(d => Item(d, at))],
+         [.. details.Where(d => !Major.Contains(d.Muscle)).OrderBy(d => d.Recovery).Select(d => Item(d, at))]);
 
     static MuscleRecoveryItem Item(MuscleRecovery r, DateTime at) => new()
     {

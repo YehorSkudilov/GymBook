@@ -119,47 +119,21 @@ public class ReadinessGlowView : AnimatedDrawingView
             DrawCardGlow(canvas, rect, t, ready);
     }
 
-    // Two soft blobs of light drifting slowly across the card; faint when tired, rich when fresh.
+    // Two discs of light drifting slowly across the card; faint when tired, rich when fresh.
     void DrawCardGlow(ICanvas canvas, RectF rect, float t, float ready)
     {
         var strength = 0.06f + 0.16f * ready;
         var speed = 0.25f + 0.35f * ready;
+        canvas.FillColor = Tint.WithAlpha(strength);
         for (var i = 0; i < 2; i++)
         {
             var phase = t * speed + i * 2.4f;
             var x = rect.Left + rect.Width * (0.3f + 0.4f * (0.5f + 0.5f * MathF.Sin(phase)));
             var y = rect.Top + rect.Height * (0.35f + 0.3f * (0.5f + 0.5f * MathF.Cos(phase * 0.8f)));
             var r = Math.Max(rect.Width, rect.Height) * (0.45f - i * 0.1f);
-#if WINDOWS
-            if (FillGlowWin2D(canvas, x, y, r, strength))
-                continue;
-#endif
-            var paint = new RadialGradientPaint([new PaintGradientStop(0, Tint.WithAlpha(strength)), new PaintGradientStop(1, Tint.WithAlpha(0))]);
-            canvas.SetFillPaint(paint, new RectF(x - r, y - r, r * 2, r * 2));
             canvas.FillCircle(x, y, r);
         }
     }
-
-#if WINDOWS
-    // MAUI's radial gradient fill doesn't show in a GraphicsView on Windows, so the same gradient (the tint at the given
-    // strength in the centre, fading to nothing at the edge) is drawn with Win2D directly. False if the canvas isn't Win2D.
-    bool FillGlowWin2D(ICanvas canvas, float x, float y, float r, float strength)
-    {
-        if (canvas is not Microsoft.Maui.Graphics.Win2D.W2DCanvas { Session: { } session })
-            return false;
-        using var brush = new Microsoft.Graphics.Canvas.Brushes.CanvasRadialGradientBrush(session, ToWin(Tint.WithAlpha(strength)), ToWin(Tint.WithAlpha(0)))
-        {
-            Center = new System.Numerics.Vector2(x, y),
-            RadiusX = r,
-            RadiusY = r,
-        };
-        session.FillCircle(x, y, r, brush);
-        return true;
-    }
-
-    static Windows.UI.Color ToWin(Color c) =>
-        Windows.UI.Color.FromArgb((byte)Math.Round(c.Alpha * 255), (byte)Math.Round(c.Red * 255), (byte)Math.Round(c.Green * 255), (byte)Math.Round(c.Blue * 255));
-#endif
 
     // A glow pulsing out around the button: nothing when tired, a strong, quick beat when fresh.
     void DrawButtonGlow(ICanvas canvas, RectF rect, float t, float ready)

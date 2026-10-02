@@ -136,6 +136,9 @@ public class PlanExercise
     public bool? Deloads { get; set; }
     /// <summary>Whether this exercise builds over each 4-week block; null: as the plan does.</summary>
     public bool? Periodization { get; set; }
+    /// <summary>A note pinned to the exercise in this plan: each workout of it starts with it.</summary>
+    [MaxLength(SyncLimits.TextLength)]
+    public string? Note { get; set; }
 }
 
 public class WorkoutSession : ISyncEntity
@@ -174,6 +177,18 @@ public class SessionExercise
     public int RestSeconds { get; set; } = 120;
     [MaxLength(SyncLimits.TextLength)]
     public string? Recommendation { get; set; }
+    /// <summary>The user's own note on the exercise in this workout, typed in while doing it.</summary>
+    [MaxLength(SyncLimits.TextLength)]
+    public string? Note { get; set; }
+    /// <summary>
+    /// The note is pinned: on finishing, it's offered as the exercise's note in the plan (and unpinning one that came from
+    /// the plan offers to take it off). Only the plan update applies it.
+    /// </summary>
+    public bool NotePinned { get; set; }
+    /// <summary>Warm-up sets it had that were skipped (or not done by the end); the done ones are in <see cref="Sets"/>.</summary>
+    public int SkippedWarmups { get; set; }
+    /// <summary>Working sets it had that were skipped (or not done by the end); the done ones are in <see cref="Sets"/>.</summary>
+    public int SkippedSets { get; set; }
     [MaxItems(100)]
     public List<SetEntry> Sets { get; set; } = [];
 }

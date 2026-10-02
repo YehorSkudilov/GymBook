@@ -18,7 +18,8 @@ public class MuscleRow
 
 /// <summary>
 /// Which muscles a plan day (or the whole plan, one pass through its workouts) trains and with how many sets.
-/// Direct sets count toward an exercise's primary muscle; auxiliary sets toward its secondary muscles.
+/// Direct sets count toward an exercise's primary muscle; auxiliary sets toward its secondary muscles. The lists split
+/// the groups into their parts (front, side and rear delts, …; see <see cref="SubMuscles"/>), the map shows whole groups.
 /// The map uses the app's usual weighting: a direct set counts 1, an auxiliary set ½.
 /// </summary>
 public partial class MuscleBreakdownViewModel : ObservableObject
@@ -90,35 +91,36 @@ public partial class MuscleBreakdownViewModel : ObservableObject
             .Select(x => (x.pe.Sets, Exercise: x.ex!))
             .ToList();
 
-        var direct = new Dictionary<MuscleGroup, (double Sets, HashSet<string> Names)>();
-        var indirect = new Dictionary<MuscleGroup, (double Sets, HashSet<string> Names)>();
+        var direct = new Dictionary<SubMuscle, (double Sets, HashSet<string> Names)>();
+        var indirect = new Dictionary<SubMuscle, (double Sets, HashSet<string> Names)>();
         foreach (var (sets, ex) in entries)
         {
-            Add(direct, ex.PrimaryMuscle, sets, ex.Name);
+            Add(direct, SubMuscles.For(ex, ex.PrimaryMuscle), sets, ex.Name);
             foreach (var m in ex.SecondaryMuscles.Where(m => m != ex.PrimaryMuscle))
-                Add(indirect, m, sets, ex.Name);
+                Add(indirect, SubMuscles.For(ex, m), sets, ex.Name);
         }
 
-        var load = Enum.GetValues<MuscleGroup>().ToDictionary(
-            m => m, m => direct.GetValueOrDefault(m).Sets + indirect.GetValueOrDefault(m).Sets * 0.5);
+        double Sets(Dictionary<SubMuscle, (double Sets, HashSet<string> Names)> of, MuscleGroup m) =>
+            of.Where(kv => kv.Key.Group() == m).Sum(kv => kv.Value.Sets);
+        var load = Enum.GetValues<MuscleGroup>().ToDictionary(m => m, m => Sets(direct, m) + Sets(indirect, m) * 0.5);
         Map = MuscleMapDrawable.ForLoad(load);
 
         TotalExercises = entries.Select(e => e.Exercise.Id).Distinct().Count().ToString();
         TotalSets = entries.Sum(e => e.Sets).ToString();
-        TotalMuscles = load.Count(kv => kv.Value > 0).ToString();
+        TotalMuscles = direct.Keys.Union(indirect.Keys).Count().ToString();
         Primary = Rows(direct);
         Auxiliary = Rows(indirect);
         HasAuxiliary = Auxiliary.Count > 0;
     }
 
-    static void Add(Dictionary<MuscleGroup, (double Sets, HashSet<string> Names)> into, MuscleGroup m, int sets, string name)
+    static void Add(Dictionary<SubMuscle, (double Sets, HashSet<string> Names)> into, SubMuscle m, int sets, string name)
     {
         var current = into.GetValueOrDefault(m, (0, []));
         current.Names.Add(name);
         into[m] = (current.Sets + sets, current.Names);
     }
 
-    static List<MuscleRow> Rows(Dictionary<MuscleGroup, (double Sets, HashSet<string> Names)> sets)
+    static List<MuscleRow> Rows(Dictionary<SubMuscle, (double Sets, HashSet<string> Names)> sets)
     {
         var max = sets.Values.Select(v => v.Sets).DefaultIfEmpty(0).Max();
         return sets.OrderByDescending(kv => kv.Value.Sets).Select(kv => new MuscleRow
@@ -126,7 +128,7 @@ public partial class MuscleBreakdownViewModel : ObservableObject
             Name = kv.Key.Display(),
             Sets = kv.Value.Sets == 1 ? "1 set" : $"{kv.Value.Sets:0} sets",
             Fraction = max > 0 ? kv.Value.Sets / max : 0,
-            Color = kv.Key.Color(),
+            Color = kv.Key.Group().Color(),
             Exercises = string.Join(", ", kv.Value.Names),
         }).ToList();
     }

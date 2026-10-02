@@ -6,7 +6,7 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>
-/// A plan's settings, from its ··· menu: its rest times, warm-ups and training. Each part either uses the profile's
+/// A plan's settings, from its ··· menu: its training goal, rest times, warm-ups and training. Each of the last three uses the profile's
 /// defaults, following them as they change, or is the plan's own, starting from them. And for each, a way to put every
 /// exercise that has its own back on the plan's. Edits go into the Edit plan page's draft, like any other edit there.
 /// </summary>
@@ -27,6 +27,10 @@ public partial class PlanSettingsViewModel : ObservableObject
 
     UserProfile P => _store.Profile;
     List<PlanExercise> Exercises => [.. _plan.Workouts.SelectMany(w => w.Exercises)];
+
+    // ---- Goal ----
+    public List<string> Goals { get; } = [.. TrainingGoals.All.Select(g => g.Display())];
+    [ObservableProperty] int goalIndex = -1;
 
     // ---- Rest ----
     [ObservableProperty]
@@ -69,6 +73,8 @@ public partial class PlanSettingsViewModel : ObservableObject
         _loading = true;
         var exercises = Exercises;
 
+        GoalIndex = TrainingGoals.All.ToList().IndexOf(_plan.Goal);
+
         OwnRest = _plan.OwnRest;
         string Rest(Mechanic m) => Units.Rest(_plan.OwnRest && (m == Mechanic.Compound ? _plan.CompoundRestSeconds : _plan.IsolationRestSeconds) is { } own
             ? own : PlanRest.Typical(_plan.Goal, P, m));
@@ -108,6 +114,36 @@ public partial class PlanSettingsViewModel : ObservableObject
     {
         _edited();
         Refresh();
+    }
+
+    // ---- Goal ----
+
+    /// <summary>A new goal from the dropdown, and if wanted, every exercise's sets, reps, RIR and rest to suit it. The exercises stay.</summary>
+    partial void OnGoalIndexChanged(int value)
+    {
+        if (!_loading && value >= 0 && TrainingGoals.All[value] != _plan.Goal)
+            _ = ChangeGoal(TrainingGoals.All[value]);
+    }
+
+    async Task ChangeGoal(Goal goal)
+    {
+        var apply = await _dialogs.Confirm($"Use {goal.Display()} for every exercise?",
+            $"{goal.Description()}. This resets each exercise's rep range, sets, reps in reserve and rest to suit it.", "Apply to all", "Only change the goal");
+        _plan.Goal = goal;
+        if (apply)
+        {
+            foreach (var pe in Exercises)
+            {
+                if (_store.GetExercise(pe.ExerciseId) is not { } ex)
+                    continue;
+                var p = TrainingGoals.Prescription(goal, P.Experience, ex, P);
+                (pe.Sets, pe.RepMin, pe.RepMax) = (p.Sets, p.RepMin, p.RepMax);
+                // The target RIR and rest follow the plan's again: its own, or the new goal's.
+                (pe.TargetRir, pe.CustomRir) = (PlanTraining.RirFor(_plan, P, ex), false);
+                (pe.RestSeconds, pe.CustomRest) = (PlanRest.DefaultFor(_plan, P, ex), false);
+            }
+        }
+        Changed();
     }
 
     // ---- Rest ----

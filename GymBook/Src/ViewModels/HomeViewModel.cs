@@ -415,6 +415,8 @@ public partial class HomeViewModel(
     [ObservableProperty] double recoveryHours;
     [ObservableProperty] string recoveryWhen = "Now";
     [ObservableProperty] bool isRecoveryPreview;
+    [ObservableProperty] List<MuscleRecoveryItem> majorMuscles = [];
+    [ObservableProperty] List<MuscleRecoveryItem> supportingMuscles = [];
 
     partial void OnRecoveryHoursChanged(double value)
     {
@@ -431,8 +433,10 @@ public partial class HomeViewModel(
     void UpdateRecovery()
     {
         var at = DateTime.Now.AddHours(RecoveryHours);
-        var rec = recovery.Compute(at);
+        var details = recovery.Details(at);
+        var rec = details.ToDictionary(d => d.Muscle, d => d.Recovery);
         MuscleMap = MuscleMapDrawable.ForRecovery(rec);
+        (MajorMuscles, SupportingMuscles) = RecoveryViewModel.Lists(details, at);
         RecoveryWhen = RecoveryService.PreviewLabel(RecoveryHours);
         IsRecoveryPreview = RecoveryHours != 0;
         var tired = rec.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
@@ -442,7 +446,4 @@ public partial class HomeViewModel(
 
     [RelayCommand]
     void RecoveryNow() => RecoveryHours = 0;
-
-    [RelayCommand]
-    Task OpenRecovery() => GoTo($"{Routes.Recovery}?hours={RecoveryHours}");
 }

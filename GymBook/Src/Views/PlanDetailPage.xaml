@@ -54,7 +54,7 @@
                                  Command="{Binding MoreCommand}" />
                 </Grid>
 
-                <!-- Only when the weekly AI check found something to improve in this (active) plan. Otherwise it's in the ··· menu. -->
+                <!-- Only when the weekly AI check found something to improve in this (active) plan. Otherwise it's under AI in the ··· menu. -->
                 <Border BackgroundColor="{StaticResource AccentSoft}" StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="14,12" Margin="10,0"
                         IsVisible="{Binding HasSuggestions}">
                     <VerticalStackLayout Spacing="10">

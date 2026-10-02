@@ -77,6 +77,48 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
     /// <summary>Bodyweight moves get no warm-up sets, so there's nothing to set.</summary>
     public bool ShowWarmups => exercise is { IsBodyweight: false };
 
+    /// <summary>
+    /// The note pinned to it: each workout of the day starts with it (pinned there, or written here). Goes into the draft
+    /// as it's typed; the page only shows the change once the field is left, so typing isn't interrupted.
+    /// </summary>
+    public string Note
+    {
+        get => Model.Note ?? "";
+        set
+        {
+            Model.Note = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            OnPropertyChanged(nameof(HasNote));
+        }
+    }
+
+    /// <summary>It has a note pinned: the pin beside it unpins it.</summary>
+    public bool HasNote => Model.Note != null;
+
+    internal void NoteDone() => changed();
+
+    /// <summary>The pin: takes the note off the exercise in the plan. Workouts already done keep theirs.</summary>
+    [RelayCommand]
+    async Task Unpin()
+    {
+        if (Model.Note == null || !await dialogs.Confirm("Unpin the note?",
+                $"\u201c{Model.Note}\u201d comes off {Name} in this plan, so workouts of this day no longer start with it. Workouts you've done keep it.", "Unpin"))
+            return;
+        Model.Note = null;
+        changed();
+    }
+
+    // Where the opened row's cards go, two to a row: Rest, then RIR and Warm-ups when shown, then Week to week, which
+    // takes the whole row when it's left on its own.
+    int WarmupsIndex => ShowRir ? 2 : 1;
+    int WeeksIndex => 1 + (ShowRir ? 1 : 0) + (ShowWarmups ? 1 : 0);
+    public int WarmupsRow => WarmupsIndex / 2;
+    public int WarmupsColumn => WarmupsIndex % 2;
+    public int WeeksRow => WeeksIndex / 2;
+    public int WeeksColumn => WeeksIndex % 2;
+    public int WeeksSpan => WeeksIndex % 2 == 0 ? 2 : 1;
+    /// <summary>No gap under the first row when there's no second.</summary>
+    public double CardsRowSpacing => WeeksRow == 0 ? 0 : 10;
+
     // What the plan gives it, when it has none of its own.
     int PlanRest => exercise == null ? Model.RestSeconds : Services.PlanRest.DefaultFor(plan, profile, exercise);
     int PlanRir => exercise == null ? Model.TargetRir : PlanTraining.RirFor(plan, profile, exercise);
@@ -865,38 +907,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         Refresh();
     }
 
-    /// <summary>
-    /// Switches the plan's goal and offers to re-apply it to every exercise, so rep ranges, sets, effort and rest
-    /// don't have to be set up one by one.
-    /// </summary>
-    async Task ChangeGoal(WorkoutPlan plan)
-    {
-        var labels = TrainingGoals.All.Select(g => g == plan.Goal ? $"{g.Display()} ✓" : g.Display()).ToList();
-        var pick = await dialogs.ActionSheet("Training goal", null, [.. labels]);
-        var index = pick == null ? -1 : labels.IndexOf(pick);
-        if (index < 0)
-            return;
-        var goal = TrainingGoals.All[index];
-        var apply = await dialogs.Confirm($"Use {goal.Display()} for every exercise?",
-            $"{goal.Description()}. This resets each exercise's rep range, sets, reps in reserve and rest to suit it.", "Apply to all", "Only change the goal");
-        plan.Goal = goal;
-        if (apply)
-        {
-            foreach (var pe in plan.Workouts.SelectMany(w => w.Exercises))
-            {
-                if (store.GetExercise(pe.ExerciseId) is not { } ex)
-                    continue;
-                var p = TrainingGoals.Prescription(goal, store.Profile.Experience, ex, store.Profile);
-                (pe.Sets, pe.RepMin, pe.RepMax) = (p.Sets, p.RepMin, p.RepMax);
-                // The target RIR and rest follow the plan's again: its own, or the new goal's.
-                (pe.TargetRir, pe.CustomRir) = (PlanTraining.RirFor(plan, store.Profile, ex), false);
-                (pe.RestSeconds, pe.CustomRest) = (PlanRest.DefaultFor(plan, store.Profile, ex), false);
-            }
-        }
-        Edited();
-    }
-
-    /// <summary>The plan's rest times, warm-ups and training on a sheet; part of the draft like any edit.</summary>
+    /// <summary>The plan's goal, rest times, warm-ups and training on a sheet; part of the draft like any edit.</summary>
     Task PlanSettings(WorkoutPlan plan) =>
         Shell.Current.Navigation.PushModalAsync(new Views.PlanSettingsPage(new PlanSettingsViewModel(plan, store, dialogs, units, Edited)), false);
 
@@ -917,6 +928,35 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         await PlanReviewViewModel.OpenAsync(plan);
     }
 
+    /// <summary>"AI" in the ··· menu: the AI's suggestions for the plan, or changing it in a chat.</summary>
+    async Task Ai()
+    {
+        if (store.GetPlan(_id) is not { } saved)
+            return;
+        var count = ai.PendingSuggestions(saved);
+        var suggestions = count > 0 ? $"AI suggestions ({count})" : "AI suggestions";
+        var choice = await dialogs.ActionSheet("AI", null, suggestions, "Change with AI");
+        if (choice == suggestions)
+            await ImproveWithAi();
+        else if (choice == "Change with AI")
+            await ChangeWithAi();
+    }
+
+    async Task ChangeWithAi()
+    {
+        if (store.GetPlan(_id) is not { } saved)
+            return;
+        if (!ai.IsAvailable)
+        {
+            await dialogs.Alert("Sign in to use AI", "Changing a plan with AI needs an account. Sign in from the Profile tab.");
+            return;
+        }
+        if (!await SettleChangesAsync("Save your changes first?"))
+            return;
+        // Changes are saved as the AI makes them; this page reloads when the chat closes.
+        await PlanChatViewModel.OpenAsync(saved, ai.AnswersFor(saved), save: true);
+    }
+
     [RelayCommand]
     async Task More()
     {
@@ -925,7 +965,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         var options = new List<string>();
         if (HasChanges)
             options.AddRange(["Save changes", "Discard changes"]);
-        options.AddRange(["Plan settings", "AI suggestions", "Change with AI", "Regenerate plan", "Training goal", "Rename plan", "Duplicate plan"]);
+        options.AddRange(["Plan settings", "AI", "Regenerate plan", "Rename plan", "Duplicate plan"]);
         switch (await dialogs.ActionSheet(plan.Name, "Delete plan", [.. options]))
         {
             case "Save changes":
@@ -938,28 +978,14 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
             case "Plan settings":
                 await PlanSettings(plan);
                 break;
-            case "AI suggestions":
-                await ImproveWithAi();
-                break;
-            case "Change with AI":
-                if (!ai.IsAvailable)
-                {
-                    await dialogs.Alert("Sign in to use AI", "Changing a plan with AI needs an account. Sign in from the Profile tab.");
-                    break;
-                }
-                if (!await SettleChangesAsync("Save your changes first?"))
-                    break;
-                // Changes are saved as the AI makes them; this page reloads when the chat closes.
-                await PlanChatViewModel.OpenAsync(saved, ai.AnswersFor(saved), save: true);
+            case "AI":
+                await Ai();
                 break;
             case "Regenerate plan":
                 if (!await SettleChangesAsync("Save your changes first?"))
                     break;
                 // The questionnaire, filled in from this plan; saving replaces its workouts.
                 await GoTo($"{Routes.Wizard}?regenerate={saved.Id}");
-                break;
-            case "Training goal":
-                await ChangeGoal(plan);
                 break;
             case "Rename plan":
                 var name = await dialogs.Prompt("Rename plan", "Plan name", plan.Name);

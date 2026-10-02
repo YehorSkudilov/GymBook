@@ -15,6 +15,16 @@ public static class AnimatedVisibility
 
     static double OwnMinimum(View view) => (double)Minimums.GetValue(view, v => v.MinimumHeightRequest);
 
+    // Likewise its own opacity (a dimmed row stays dimmed once it's open again), taken while no animation is changing it.
+    static readonly System.Runtime.CompilerServices.ConditionalWeakTable<View, object> Opacities = new();
+
+    static double OwnOpacity(View view)
+    {
+        if (!view.AnimationIsRunning(Name))
+            Opacities.AddOrUpdate(view, view.Opacity);
+        return Opacities.TryGetValue(view, out var o) ? (double)o : 1;
+    }
+
     public static readonly BindableProperty IsShownProperty = BindableProperty.CreateAttached(
         "IsShown", typeof(bool), typeof(AnimatedVisibility), true, propertyChanged: OnIsShownChanged);
 
@@ -42,6 +52,7 @@ public static class AnimatedVisibility
     static void Expand(View view, double width)
     {
         var minimum = OwnMinimum(view);
+        var opacity = OwnOpacity(view);
         view.AbortAnimation(Name);
         // Measured once visible (a hidden view measures as nothing), while still transparent.
         view.Opacity = 0;
@@ -54,32 +65,33 @@ public static class AnimatedVisibility
 
         var animation = new Animation();
         animation.Add(0, 1, new Animation(v => view.HeightRequest = v, 0, target, Easing.CubicOut));
-        animation.Add(0.3, 1, new Animation(v => view.Opacity = v, 0, 1));
-        animation.Commit(view, Name, length: Length, finished: (_, _) => Restore(view, minimum));
+        animation.Add(0.3, 1, new Animation(v => view.Opacity = v, 0, opacity));
+        animation.Commit(view, Name, length: Length, finished: (_, _) => Restore(view, minimum, opacity));
     }
 
     static void Collapse(View view)
     {
         var minimum = OwnMinimum(view);
+        var opacity = OwnOpacity(view);
         view.AbortAnimation(Name);
         view.MinimumHeightRequest = 0;
 
         var animation = new Animation();
         animation.Add(0, 1, new Animation(v => view.HeightRequest = v, view.Height, 0, Easing.CubicIn));
-        animation.Add(0, 0.7, new Animation(v => view.Opacity = v, 1, 0));
+        animation.Add(0, 0.7, new Animation(v => view.Opacity = v, opacity, 0));
         animation.Commit(view, Name, length: Length, finished: (_, _) =>
         {
             // Only hide if nothing asked for it to show again meanwhile.
             if (!GetIsShown(view))
                 view.IsVisible = false;
-            Restore(view, minimum);
+            Restore(view, minimum, opacity);
         });
     }
 
-    static void Restore(View view, double minimum)
+    static void Restore(View view, double minimum, double opacity)
     {
         view.HeightRequest = -1;
         view.MinimumHeightRequest = minimum;
-        view.Opacity = 1;
+        view.Opacity = opacity;
     }
 }

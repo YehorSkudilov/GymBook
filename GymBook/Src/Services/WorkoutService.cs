@@ -55,6 +55,9 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             TargetRir = rir,
             RestSeconds = rest,
             Recommendation = suggestion.Note,
+            // The plan's note on it, pinned: unpinning it offers to take it off the plan.
+            Note = planned?.Note,
+            NotePinned = planned?.Note != null,
         };
         var steps = warmups.StepsFor(planned, ex, alreadyWarm);
         if (steps.Count > 0 && suggestion.Sets.Count > 0)
@@ -89,7 +92,12 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
 
         session.EndedAt = DateTime.Now;
         foreach (var e in session.Exercises)
+        {
+            // Sets not done by the end count as skipped, for the finished workout and the exercise's history.
+            e.SkippedWarmups += e.Sets.Count(s => s.IsWarmup && !s.IsCompleted);
+            e.SkippedSets += e.Sets.Count(s => !s.IsWarmup && !s.IsCompleted);
             e.Sets.RemoveAll(s => !s.IsCompleted);
+        }
         session.Exercises.RemoveAll(e => e.Sets.Count == 0);
 
         store.Data.ActiveSession = null;
@@ -146,27 +154,31 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             var planned = unused.FirstOrDefault(pe => pe.ExerciseId == se.ExerciseId);
             if (planned == null)
             {
-                proposed.Add(new PlanExercise { ExerciseId = se.ExerciseId, Sets = sets, RepMin = se.RepMin, RepMax = se.RepMax, TargetRir = se.TargetRir, RestSeconds = se.RestSeconds });
+                var note = se.NotePinned ? se.Note : null;
+                proposed.Add(new PlanExercise { ExerciseId = se.ExerciseId, Sets = sets, RepMin = se.RepMin, RepMax = se.RepMax, TargetRir = se.TargetRir, RestSeconds = se.RestSeconds, Note = note });
                 changes.Add($"Add {Name(se.ExerciseId)} ({sets} sets)");
+                if (note != null)
+                    changes.Add($"{Name(se.ExerciseId)}: pin the note “{note}”");
                 continue;
             }
             unused.Remove(planned);
             var expected = PlanCycle.ForWeek(plan, planned, week).Sets;
-            var updated = new PlanExercise
-            {
-                ExerciseId = planned.ExerciseId,
-                Sets = Math.Clamp(planned.Sets + sets - expected, 1, 10),
-                RepMin = planned.RepMin,
-                RepMax = planned.RepMax,
-                TargetRir = planned.TargetRir,
-                RestSeconds = se.RestSeconds,
-                // Rest changed during the workout: this exercise's own from now on.
-                CustomRest = planned.CustomRest || se.RestSeconds != planned.RestSeconds,
-            };
+            // Everything else about it (warm-ups, deloads, its own RIR, ...) stays as the plan has it.
+            var updated = LocalJson.Clone(planned);
+            updated.Sets = Math.Clamp(planned.Sets + sets - expected, 1, 10);
+            updated.RestSeconds = se.RestSeconds;
+            // Rest changed during the workout: this exercise's own from now on.
+            updated.CustomRest = planned.CustomRest || se.RestSeconds != planned.RestSeconds;
+            // A pinned note becomes the plan's; unpinning the plan's takes it off.
+            updated.Note = se.NotePinned ? se.Note : null;
             if (updated.Sets != planned.Sets)
                 changes.Add($"{Name(planned.ExerciseId)}: {planned.Sets} → {updated.Sets} sets");
             if (updated.RestSeconds != planned.RestSeconds)
                 changes.Add($"{Name(planned.ExerciseId)}: rest {Units.Rest(planned.RestSeconds)} → {Units.Rest(updated.RestSeconds)}");
+            if (updated.Note != planned.Note)
+                changes.Add(updated.Note == null ? $"{Name(planned.ExerciseId)}: remove the pinned note “{planned.Note}”"
+                    : planned.Note == null ? $"{Name(planned.ExerciseId)}: pin the note “{updated.Note}”"
+                    : $"{Name(planned.ExerciseId)}: change the pinned note to “{updated.Note}”");
             proposed.Add(updated);
         }
         // Planned exercises the workout ended up without: removed from it, or all their sets were.

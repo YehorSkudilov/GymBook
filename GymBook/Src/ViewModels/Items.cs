@@ -105,6 +105,11 @@ public class LineItem
     public string Detail { get; init; } = "";
     public string Value { get; init; } = "";
     public ICommand? OpenCommand { get; init; }
+    public string Note { get; init; } = "";
+    public bool HasNote => Note.Length > 0;
+    /// <summary>A workout's warm-ups in an exercise's history: the ones done, and how many were skipped.</summary>
+    public string Warmups { get; init; } = "";
+    public bool HasWarmups => Warmups.Length > 0;
 }
 
 public class MuscleBarItem

@@ -128,7 +128,11 @@
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate x:DataType="vm:PlanDaySheetExercise">
                                         <VerticalStackLayout Spacing="10">
+                                            <!-- Tap the exercise for its info -->
                                             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                                                <Grid.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                                                </Grid.GestureRecognizers>
                                                 <Grid WidthRequest="92" HeightRequest="68">
                                                     <Border StrokeShape="RoundRectangle 14" StrokeThickness="0" BackgroundColor="{Binding Thumb.Soft}">
                                                         <Grid>
@@ -148,6 +152,9 @@
                                                     <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="15" />
                                                 </VerticalStackLayout>
                                             </Grid>
+                                            <!-- The note from the workout -->
+                                            <Label Text="{Binding Note}" IsVisible="{Binding HasNote}" FontSize="14" FontAttributes="Italic"
+                                                   TextColor="{StaticResource TextSecondary}" />
 
                                             <Border Style="{StaticResource InnerCard}" Padding="12,10">
                                                 <VerticalStackLayout Spacing="6">
@@ -160,7 +167,7 @@
                                                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Rows}" Spacing="6">
                                                         <BindableLayout.ItemTemplate>
                                                             <DataTemplate x:DataType="vm:PlanDaySetRow">
-                                                                <Grid ColumnDefinitions="0.6*,*,*,*">
+                                                                <Grid ColumnDefinitions="0.6*,*,*,*" Opacity="{Binding RowOpacity}">
                                                                     <Label Text="{Binding Number}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" />
                                                                     <Label Grid.Column="1" Text="{Binding First}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" />
                                                                     <Label Grid.Column="2" Text="{Binding Second}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" />

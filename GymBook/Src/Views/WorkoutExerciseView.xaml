@@ -34,7 +34,25 @@
                 <Label Text="{Binding LiveAdvice}" FontSize="13" TextColor="{StaticResource Warning}" />
             </Border>
 
-            <!-- Warm-ups fold away behind this; the ones left can be skipped all at once. -->
+            <!-- A note on the exercise in this workout: the seat height, how it felt… The pin offers it for the plan when the
+                 workout's finished (Update plan), so the next workouts of this day start with it; the line under it says so. -->
+            <VerticalStackLayout Spacing="4">
+            <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 14" StrokeThickness="0" Padding="12,2,4,2">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                    <Editor Text="{Binding Note}" Placeholder="Add a note" AutoSize="TextChanges" FontSize="15"
+                            TextColor="{StaticResource TextPrimary}" PlaceholderColor="{StaticResource TextTertiary}" BackgroundColor="Transparent" />
+                    <ImageButton Grid.Column="1" WidthRequest="40" HeightRequest="40" Padding="9" BackgroundColor="Transparent" VerticalOptions="Start"
+                                 IsVisible="{Binding CanPin}" Command="{Binding TogglePinCommand}">
+                        <ImageButton.Source>
+                            <FontImageSource FontFamily="OutlinedIcons" Glyph="push_pin" Color="{Binding PinColor}" Size="22" />
+                        </ImageButton.Source>
+                    </ImageButton>
+                </Grid>
+            </Border>
+            <Label Text="{Binding PinStatus}" IsVisible="{Binding HasPinStatus}" Style="{StaticResource Caption}" FontSize="12" Margin="4,0" />
+            </VerticalStackLayout>
+
+            <!-- Warm-ups fold away behind this; the ones left can be skipped all at once (they stay, marked skipped), and brought back. -->
             <HorizontalStackLayout IsVisible="{Binding HasWarmups}" Spacing="8">
                 <Border Style="{StaticResource Pill}" Padding="16,9" VerticalOptions="Center">
                     <Border.GestureRecognizers>
@@ -42,8 +60,8 @@
                     </Border.GestureRecognizers>
                     <Label Text="{Binding WarmupText}" FontFamily="OpenSansSemibold" FontSize="15" TextColor="{StaticResource TextSecondary}" />
                 </Border>
-                <Button Text="Skip warm-ups" Style="{StaticResource GhostButton}" VerticalOptions="Center"
-                        IsVisible="{Binding HasOpenWarmups}" Command="{Binding SkipWarmupsCommand}" />
+                <Button Text="{Binding SkipWarmupsText}" Style="{StaticResource GhostButton}" VerticalOptions="Center"
+                        IsVisible="{Binding HasUndoneWarmups}" Command="{Binding SkipWarmupsCommand}" />
             </HorizontalStackLayout>
 
             <!-- Set table -->
@@ -122,9 +140,6 @@
 
                                 <Label Grid.Column="4" Text="{Binding E1Rm}" TextColor="{StaticResource TextSecondary}" FontSize="18"
                                        HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowE1Rm}" />
-                                <!-- Skipped: left out when the workout is finished; tap the row and its check to do it after all -->
-                                <Label Grid.Column="4" Text="Skipped" TextColor="{StaticResource TextSecondary}" FontSize="14" FontFamily="OpenSansSemibold"
-                                       HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowSkipped}" />
 
                                 <!-- Check: big on the current set, a small tick on finished ones -->
                                 <Border Grid.Column="5" BackgroundColor="{Binding CheckBackground}" StrokeShape="RoundRectangle 14" HeightRequest="46"
@@ -136,6 +151,11 @@
                                 </Border>
                                 <Image Grid.Column="5" Source="{StaticResource IconCheck}" WidthRequest="18" HeightRequest="18" Opacity="0.8" IsVisible="{Binding ShowDoneTick}"
                                        controls:Pop.When="{Binding IsCompleted}" controls:Pop.Amount="1.6" />
+                                <Label Grid.Column="4" Text="N/A" TextColor="{StaticResource TextSecondary}" FontSize="18"
+                                       HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowSkipped}" />
+                                <!-- Skipped, where its tick would be: left out when the workout is finished; tap the row and its check to do it after all -->
+                                <Label Grid.Column="5" Text="Skipped" TextColor="{StaticResource TextSecondary}" FontSize="12" FontFamily="OpenSansSemibold"
+                                       HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowSkipped}" />
                             </Grid>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
@@ -159,7 +179,7 @@
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding PreviousRows}" Spacing="4">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="vm:PlanDaySetRow">
-                                <Grid ColumnDefinitions="0.6*,*,*,*">
+                                <Grid ColumnDefinitions="0.6*,*,*,*" Opacity="{Binding RowOpacity}">
                                     <Label Text="{Binding Number}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />
                                     <Label Grid.Column="1" Text="{Binding First}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />
                                     <Label Grid.Column="2" Text="{Binding Second}" TextColor="{StaticResource TextSecondary}" FontSize="16" HorizontalOptions="Center" />

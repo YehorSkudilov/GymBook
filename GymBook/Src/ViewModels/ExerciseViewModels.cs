@@ -227,9 +227,38 @@ public partial class ExercisePickerViewModel(DataStore store) : ExerciseListView
     public void Cancel() => Completed?.Invoke([]);
 }
 
+/// <summary>
+/// An exercise's info sheet, wherever it's opened from: a small picture and its name, then its History (bests, the
+/// estimated 1RM over time, each session) and its Instructions (video, muscles, steps, tips, how to train it) on two
+/// tabs. Opens on History once it's been done, otherwise on Instructions, unless the opener asks (?tab=).
+/// </summary>
 public partial class ExerciseDetailViewModel(DataStore store, StatsService stats, Units units, DialogService dialogs, ProgressionEngine progression)
     : BaseViewModel, IQueryAttributable
 {
+    [ObservableProperty] ExerciseThumb? thumb;
+
+    // History | Instructions: the chosen half lit up.
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HistoryTabBackground), nameof(InstructionsTabBackground), nameof(HistoryTabText), nameof(InstructionsTabText))]
+    bool isHistoryTab;
+    static readonly Color TabOn = Color.FromArgb("#3F7DFF"), TabOnText = Colors.White, TabOffText = Color.FromArgb("#9AA3B5");
+    public Color HistoryTabBackground => IsHistoryTab ? TabOn : Colors.Transparent;
+    public Color InstructionsTabBackground => IsHistoryTab ? Colors.Transparent : TabOn;
+    public Color HistoryTabText => IsHistoryTab ? TabOnText : TabOffText;
+    public Color InstructionsTabText => IsHistoryTab ? TabOffText : TabOnText;
+
+    [RelayCommand]
+    void ShowHistory() => IsHistoryTab = true;
+
+    [RelayCommand]
+    void ShowInstructions() => IsHistoryTab = false;
+
+    [RelayCommand]
+    Task Close() => GoBack();
+
+    string? _tab;
+    bool _tabChosen;
+
     // Coaching for the active plan's goal (or the profile's)
     [ObservableProperty] string goalTitle = "";
     [ObservableProperty] string goalTarget = "";
@@ -268,7 +297,11 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
     [ObservableProperty] List<string> formTips = [];
     [ObservableProperty] bool hasFormTips;
 
-    public void ApplyQueryAttributes(IDictionary<string, object> query) => _id = query["id"]?.ToString();
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        _id = query["id"]?.ToString();
+        _tab = query.TryGetValue("tab", out var tab) ? tab?.ToString() : null;
+    }
 
     public override Task OnAppearingAsync()
     {
@@ -277,6 +310,7 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
             return GoBack();
 
         Name = ex.Name;
+        Thumb = ExerciseThumb.For(ex);
         Subtitle = ex.Subtitle;
         Instructions = ex.Instructions;
         PrimaryMuscle = ex.PrimaryMuscle.Display();
@@ -302,6 +336,12 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
             .Where(x => x.e != null)
             .ToList();
         HasHistory = sessions.Count > 0;
+        // The tab once, when it opens; coming back from the video app keeps whichever was picked.
+        if (!_tabChosen)
+        {
+            IsHistoryTab = _tab switch { "history" => true, "instructions" => false, _ => HasHistory };
+            _tabChosen = true;
+        }
         TimesPerformed = sessions.Count.ToString();
 
         var goal = store.ActivePlan?.Goal ?? store.Profile.Goal;
@@ -324,10 +364,30 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         History = sessions.Take(20).Select(x => new LineItem
         {
             Title = x.s.StartedAt.ToString("ddd, d MMM yyyy"),
-            Detail = string.Join("   ", x.e!.Sets.Where(s => !s.IsWarmup).Select(s => $"{units.Format(s.WeightKg)}×{s.Reps}")),
+            Detail = SetsText(x.e!),
             Value = x.s.Name,
+            Note = x.e.Note ?? "",
+            Warmups = WarmupsText(x.e),
         }).ToList();
         return Task.CompletedTask;
+    }
+
+    /// <summary>The working sets, "60×8   60×8", with how many were skipped, as the warm-ups.</summary>
+    string SetsText(SessionExercise e)
+    {
+        var text = string.Join("   ", e.Sets.Where(s => !s.IsWarmup).Select(s => $"{units.Format(s.WeightKg)}×{s.Reps}"));
+        return e.SkippedSets == 0 ? text : $"{text}   · {e.SkippedSets} skipped";
+    }
+
+    /// <summary>"W1 20×8   W2 40×5", with how many were skipped; or that they all were. Empty without any.</summary>
+    string WarmupsText(SessionExercise e)
+    {
+        var done = e.Sets.Where(s => s.IsWarmup).Select((s, i) => $"W{i + 1} {units.Format(s.WeightKg)}×{s.Reps}").ToList();
+        var skipped = e.SkippedWarmups;
+        if (done.Count == 0)
+            return skipped == 0 ? "" : skipped == 1 ? "Warm-up skipped" : $"{skipped} warm-ups skipped";
+        var text = string.Join("   ", done);
+        return skipped == 0 ? text : $"{text}   · {skipped} skipped";
     }
 
     /// <summary>Stops the video when the page is left (it's loaded again on coming back).</summary>

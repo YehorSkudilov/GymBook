@@ -97,11 +97,27 @@
                                         </Grid>
 
                                         <!-- Opened: change it right here. Grows open and folds away; the gap above it is padding, so that animates too. -->
-                                        <VerticalStackLayout Spacing="10" Padding="0,12,0,0" controls:AnimatedVisibility.IsShown="{Binding IsExpanded}">
+                                        <VerticalStackLayout Spacing="10" Padding="0,10,0,0" controls:AnimatedVisibility.IsShown="{Binding IsExpanded}">
+                                            <!-- Its note, the same one pinned from a workout: each workout of this day starts with it -->
+                                            <!-- The pin, while it has one: unpins it, taking it off the plan -->
+                                            <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="12,2,4,2">
+                                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                                                    <Editor Text="{Binding Note}" Placeholder="Add a note" AutoSize="TextChanges" FontSize="14"
+                                                            TextColor="{StaticResource TextPrimary}" PlaceholderColor="{StaticResource TextTertiary}"
+                                                            BackgroundColor="Transparent" Unfocused="OnNoteUnfocused" />
+                                                    <ImageButton Grid.Column="1" WidthRequest="40" HeightRequest="40" Padding="9" BackgroundColor="Transparent"
+                                                                 VerticalOptions="Start" IsVisible="{Binding HasNote}" Command="{Binding UnpinCommand}">
+                                                        <ImageButton.Source>
+                                                            <FontImageSource FontFamily="OutlinedIcons" Glyph="push_pin" Color="{StaticResource Accent}" Size="22" />
+                                                        </ImageButton.Source>
+                                                    </ImageButton>
+                                                </Grid>
+                                            </Border>
                                             <!-- Each is the plan's unless changed here (then it says what the plan's is), and can go back to it. The rep range
-                                                 is on the Reps pill above. Cards in a row fill it, so they're as tall as each other. -->
-                                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
-                                                <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill">
+                                                 is on the Reps pill above. Two to a row, as tall as each other; a hidden one's place goes to the next, and
+                                                 one left alone on a row takes all of it. -->
+                                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="{Binding CardsRowSpacing}">
+                                                <Border Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill">
                                                     <VerticalStackLayout Spacing="6">
                                                         <Label Text="REST" Style="{StaticResource Overline}" FontSize="10" />
                                                         <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
@@ -119,7 +135,7 @@
                                                         </Label>
                                                     </VerticalStackLayout>
                                                 </Border>
-                                                <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill" IsVisible="{Binding ShowRir}">
+                                                <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill" IsVisible="{Binding ShowRir}">
                                                     <VerticalStackLayout Spacing="6">
                                                         <Label Text="TARGET RIR" Style="{StaticResource Overline}" FontSize="10" />
                                                         <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
@@ -137,7 +153,7 @@
                                                         </Label>
                                                     </VerticalStackLayout>
                                                 </Border>
-                                                <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill" IsVisible="{Binding ShowWarmups}">
+                                                <Border Grid.Row="{Binding WarmupsRow}" Grid.Column="{Binding WarmupsColumn}" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill" IsVisible="{Binding ShowWarmups}">
                                                     <VerticalStackLayout Spacing="6">
                                                         <Label Text="WARM-UPS" Style="{StaticResource Overline}" FontSize="10" />
                                                         <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">
@@ -155,7 +171,7 @@
                                                         </Label>
                                                     </VerticalStackLayout>
                                                 </Border>
-                                                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill">
+                                                <Border Grid.Row="{Binding WeeksRow}" Grid.Column="{Binding WeeksColumn}" Grid.ColumnSpan="{Binding WeeksSpan}" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill">
                                                     <VerticalStackLayout Spacing="6">
                                                         <Label Text="WEEK TO WEEK" Style="{StaticResource Overline}" FontSize="10" />
                                                         <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="0,7">

@@ -282,9 +282,10 @@
                         </Grid>
                     </VerticalStackLayout>
                     <Label Text="{Binding RecoverySummary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
-                    <Button Text="Details" Style="{StaticResource GhostButton}" Command="{Binding OpenRecoveryCommand}" />
                 </VerticalStackLayout>
             </Border>
+            <!-- Every muscle at the moment shown, most tired first -->
+            <views:RecoveryMusclesView Major="{Binding MajorMuscles}" Supporting="{Binding SupportingMuscles}" />
 
         </VerticalStackLayout>
 </views:TabView>

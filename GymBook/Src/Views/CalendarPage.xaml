@@ -10,6 +10,16 @@
     Title="Calendar"
     Shell.TabBarIsVisible="False">
 
+    <!-- The title, with Today at the far end of the bar: back to this month, with today selected. -->
+    <Shell.TitleView>
+        <Grid ColumnDefinitions="*,Auto" Padding="0,0,10,0">
+            <Label Text="Calendar" TextColor="{StaticResource TextPrimary}" FontFamily="OpenSansSemibold" FontSize="20"
+                   VerticalOptions="Center" LineBreakMode="TailTruncation" />
+            <Button Grid.Column="1" Text="Today" Style="{StaticResource SmallButton}" TextColor="{StaticResource Accent}"
+                    VerticalOptions="Center" Command="{Binding GoToTodayCommand}" />
+        </Grid>
+    </Shell.TitleView>
+
     <ScrollView>
         <VerticalStackLayout Padding="10,8,10,32" Spacing="16">
 
@@ -20,19 +30,20 @@
                     <SwipeGestureRecognizer Direction="Left" Command="{Binding NextMonthCommand}" />
                 </Border.GestureRecognizers>
                 <VerticalStackLayout Spacing="10">
-                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                         <ImageButton Source="{StaticResource IconChevronRight}" Rotation="180" WidthRequest="36" HeightRequest="36" Padding="9"
                                      BackgroundColor="{StaticResource Surface2}" CornerRadius="18"
                                      Command="{Binding PreviousMonthCommand}" />
                         <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center">
-                            <Label Text="{Binding MonthTitle}" Style="{StaticResource H3}" HorizontalOptions="Center" />
+                            <!-- The month: tap to pick a year, then a month of it -->
+                            <Label Text="{Binding MonthTitle, StringFormat='{0} ▾'}" Style="{StaticResource H3}" HorizontalOptions="Center">
+                                <Label.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding PickMonthCommand}" />
+                                </Label.GestureRecognizers>
+                            </Label>
                             <Label Text="{Binding MonthSummary}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
                         </VerticalStackLayout>
-                        <!-- Back to this month, with today selected. A pill like the arrow buttons. -->
-                        <Button Grid.Column="2" Text="Today" FontSize="13" FontFamily="OpenSansSemibold" HeightRequest="36" Padding="14,0"
-                                CornerRadius="18" BackgroundColor="{StaticResource Surface2}" TextColor="{StaticResource Accent}"
-                                VerticalOptions="Center" Command="{Binding GoToTodayCommand}" />
-                        <ImageButton Grid.Column="3" Source="{StaticResource IconChevronRight}" WidthRequest="36" HeightRequest="36" Padding="9"
+                        <ImageButton Grid.Column="2" Source="{StaticResource IconChevronRight}" WidthRequest="36" HeightRequest="36" Padding="9"
                                      BackgroundColor="{StaticResource Surface2}" CornerRadius="18"
                                      Command="{Binding NextMonthCommand}" IsVisible="{Binding CanGoNext}" />
                     </Grid>
@@ -176,9 +187,11 @@
                                 </Border>
                             </Grid>
                         </Border>
-                        <Button Text="Details" Style="{StaticResource GhostButton}" IsVisible="{Binding CanOpenRecovery}" Command="{Binding OpenRecoveryCommand}" />
                     </VerticalStackLayout>
                 </Border>
+
+                <!-- Every muscle at that moment, most tired first, as on the recovery details page -->
+                <views:RecoveryMusclesView Major="{Binding MajorMuscles}" Supporting="{Binding SupportingMuscles}" />
             </VerticalStackLayout>
 
             <Label IsVisible="{Binding HasSelection, Converter={StaticResource Not}}" Text="Tap a day to see its workouts."

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Every muscle's recovery, most tired first: the major muscles, then the supporting ones. Under the recovery map on the
+     Workout tab, a calendar day and the recovery details page. -->
+<ContentView
+    x:Class="GymBook.Views.RecoveryMusclesView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:Name="Root"
+    x:DataType="views:RecoveryMusclesView">
+
+    <ContentView.Resources>
+        <DataTemplate x:Key="MuscleRow" x:DataType="vm:MuscleRecoveryItem">
+            <VerticalStackLayout Padding="0,10" Spacing="6">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <Ellipse Fill="{Binding Color}" WidthRequest="10" HeightRequest="10" VerticalOptions="Center" />
+                    <Label Grid.Column="1" Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" VerticalOptions="Center" />
+                    <HorizontalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
+                        <Label Text="{Binding Status}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                        <Label Text="{Binding Percent}" TextColor="{Binding Color}" FontFamily="OpenSansSemibold" FontSize="15" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Grid>
+                <ProgressBar Progress="{Binding Progress}" ProgressColor="{Binding Color}" HeightRequest="6" />
+                <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+            </VerticalStackLayout>
+        </DataTemplate>
+    </ContentView.Resources>
+
+    <VerticalStackLayout Spacing="16">
+        <VerticalStackLayout Spacing="8">
+            <Label Text="Major muscles" Style="{StaticResource H3}" />
+            <Border Style="{StaticResource Card}" Padding="16,4">
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Major, Source={x:Reference Root}}"
+                                     BindableLayout.ItemTemplate="{StaticResource MuscleRow}" />
+            </Border>
+        </VerticalStackLayout>
+        <VerticalStackLayout Spacing="8">
+            <Label Text="Supporting muscles" Style="{StaticResource H3}" />
+            <Label Text="Smaller muscles that assist the big lifts: arms, core, traps, calves and neck." Style="{StaticResource Caption}" FontSize="12" />
+            <Border Style="{StaticResource Card}" Padding="16,4">
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Supporting, Source={x:Reference Root}}"
+                                     BindableLayout.ItemTemplate="{StaticResource MuscleRow}" />
+            </Border>
+        </VerticalStackLayout>
+    </VerticalStackLayout>
+</ContentView>

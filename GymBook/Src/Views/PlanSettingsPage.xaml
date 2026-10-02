@@ -10,7 +10,7 @@
     Shell.NavBarIsVisible="False"
     Backdrop="#B3000000">
 
-    <!-- A plan's rest times, warm-ups and training, from its ··· menu: each the profile's defaults (followed as they change)
+    <!-- A plan's goal, rest times, warm-ups and training, from its ··· menu. The last three are each the profile's defaults (followed as they change)
          or the plan's own. Saved with the plan's other changes. -->
     <views:SheetPage.Resources>
         <Style x:Key="Row" TargetType="Grid">
@@ -71,6 +71,15 @@
                         <ImageButton Grid.Column="1" Source="{StaticResource IconClose}" WidthRequest="36" HeightRequest="36" Padding="8"
                                      CornerRadius="18" BackgroundColor="{StaticResource Surface2}" VerticalOptions="Start" Clicked="OnDoneClicked" />
                     </Grid>
+
+                    <!-- The goal, as a dropdown. Changing it can also reset every exercise's sets, reps, RIR and rest to suit it. -->
+                    <Border Style="{StaticResource Card}" Padding="16,4">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Label Text="Training goal" VerticalOptions="Center" />
+                            <Picker Grid.Column="1" ItemsSource="{Binding Goals}" SelectedIndex="{Binding GoalIndex}"
+                                    TextColor="{StaticResource TextPrimary}" FontSize="14" MinimumWidthRequest="140" VerticalOptions="Center" />
+                        </Grid>
+                    </Border>
 
                     <!-- Rest -->
                     <Label Text="Rest" Style="{StaticResource SectionTitle}" />

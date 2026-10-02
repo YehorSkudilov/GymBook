@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<views:BasePage
+<views:SheetPage
     x:Class="GymBook.Views.ExerciseDetailPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
@@ -7,158 +7,222 @@
     xmlns:views="clr-namespace:GymBook.Views"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:ExerciseDetailViewModel"
-    Title="Exercise"
-    Shell.TabBarIsVisible="False">
+    Shell.PresentationMode="ModalNotAnimated"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="10,8,10,32" Spacing="14">
-            <VerticalStackLayout Spacing="2">
-                <Label Text="{Binding Name}" Style="{StaticResource Title}" FontSize="26" />
-                <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" />
-                <Label Text="{Binding Tags}" IsVisible="{Binding HasTags}" Style="{StaticResource Caption}" FontSize="12"
-                       TextColor="{StaticResource TextTertiary}" />
-            </VerticalStackLayout>
+    <!-- An exercise's info, as a sheet over whatever opened it (the library, a plan, a workout, the stats): a small
+         picture and its name, then its History and its Instructions on two tabs. Tapping the dimmed top edge closes it. -->
+    <Grid>
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding CloseCommand}" />
+        </Grid.GestureRecognizers>
 
-            <!-- The demonstration, trimmed to just the movement -->
-            <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding HasVideo}" HeightRequest="420" BackgroundColor="Black">
-                <controls:YouTubePlayer Url="{Binding VideoUrl}" />
-            </Border>
+        <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
+            <!-- Swallows taps so only the dimmed edge closes it. -->
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer />
+            </Border.GestureRecognizers>
 
-            <Button Text="{Binding WatchText}" Style="{StaticResource SecondaryButton}" Command="{Binding WatchVideoCommand}"
-                    IsVisible="{Binding IsCustom, Converter={StaticResource Not}}" />
-
-            <Border Style="{StaticResource Card}">
-                <VerticalStackLayout Spacing="12">
-                    <GraphicsView Drawable="{Binding MuscleMap}" HeightRequest="220" />
-                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
-                        <VerticalStackLayout>
-                            <Label Text="PRIMARY" Style="{StaticResource Overline}" FontSize="10" />
-                            <Label Text="{Binding PrimaryMuscle}" FontFamily="OpenSansSemibold" TextColor="{StaticResource Accent}" />
-                        </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="1" IsVisible="{Binding HasSecondary}">
-                            <Label Text="SECONDARY" Style="{StaticResource Overline}" FontSize="10" />
-                            <Label Text="{Binding SecondaryMuscles}" FontSize="13" TextColor="{StaticResource TextSecondary}" />
-                        </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="2">
-                            <Label Text="TYPE" Style="{StaticResource Overline}" FontSize="10" />
-                            <Label Text="{Binding Mechanic}" FontSize="13" />
+            <Grid RowDefinitions="Auto,*">
+                <!-- Header -->
+                <VerticalStackLayout Padding="10,8,10,12" Spacing="12">
+                    <Button Text="Close" Style="{StaticResource GhostButton}" TextColor="{StaticResource Accent}" FontSize="17"
+                            HorizontalOptions="Start" Margin="-8,0,0,0" Command="{Binding CloseCommand}" />
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                        <Border WidthRequest="64" HeightRequest="64" StrokeShape="RoundRectangle 14" StrokeThickness="0"
+                                BackgroundColor="{Binding Thumb.TileBackground}" VerticalOptions="Center">
+                            <Grid>
+                                <Label Text="{Binding Thumb.Initial}" TextColor="{Binding Thumb.Color}" FontFamily="OpenSansSemibold" FontSize="16"
+                                       HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding Thumb.HasFallback}" />
+                                <Image Source="{Binding Thumb.Image, Converter={StaticResource Thumb}}" IsVisible="{Binding Thumb.HasImage}"
+                                       Aspect="AspectFill" Margin="-1" />
+                            </Grid>
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Label Text="{Binding Name}" Style="{StaticResource H2}" FontSize="20" />
+                            <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" />
+                            <Label Text="{Binding Tags}" IsVisible="{Binding HasTags}" Style="{StaticResource Caption}" FontSize="12"
+                                   TextColor="{StaticResource TextTertiary}" />
                         </VerticalStackLayout>
                     </Grid>
-                </VerticalStackLayout>
-            </Border>
 
-            <Border Style="{StaticResource Card}">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="How to perform" Style="{StaticResource H3}" />
-                    <Label Text="{Binding Instructions}" FontSize="14" LineHeight="1.35"
-                           TextColor="{StaticResource TextSecondary}" />
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Steps}" IsVisible="{Binding HasSteps}" Spacing="10">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="vm:LineItem">
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                    <Border WidthRequest="22" HeightRequest="22" StrokeShape="RoundRectangle 11" StrokeThickness="0"
-                                            BackgroundColor="{StaticResource AccentSoft}" VerticalOptions="Start">
-                                        <Label Text="{Binding Title}" FontSize="11" FontFamily="OpenSansSemibold" TextColor="{StaticResource Accent}"
-                                               HorizontalOptions="Center" VerticalOptions="Center" />
-                                    </Border>
-                                    <Label Grid.Column="1" Text="{Binding Detail}" FontSize="14" LineHeight="1.3"
-                                           TextColor="{StaticResource TextSecondary}" />
-                                </Grid>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-                </VerticalStackLayout>
-            </Border>
-
-            <!-- Form cues and the common mistakes -->
-            <Border Style="{StaticResource Card}" IsVisible="{Binding HasFormTips}">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Form tips" Style="{StaticResource H3}" />
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding FormTips}" Spacing="8">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                    <Ellipse Fill="{StaticResource Accent}" WidthRequest="6" HeightRequest="6" VerticalOptions="Start" Margin="0,7,0,0" />
-                                    <Label Grid.Column="1" Text="{Binding .}" FontSize="14" LineHeight="1.3" TextColor="{StaticResource TextSecondary}" />
-                                </Grid>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-                </VerticalStackLayout>
-            </Border>
-
-            <!-- How to train it for the goal -->
-            <Border Style="{StaticResource Card}">
-                <VerticalStackLayout Spacing="10">
-                    <VerticalStackLayout Spacing="2">
-                        <Label Text="{Binding GoalTitle}" Style="{StaticResource H3}" />
-                        <Label Text="{Binding GoalTarget}" Style="{StaticResource Caption}" FontSize="13" />
-                    </VerticalStackLayout>
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding GoalTips}" Spacing="8">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="x:String">
-                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                    <Ellipse Fill="{StaticResource Accent}" WidthRequest="6" HeightRequest="6" VerticalOptions="Start" Margin="0,7,0,0" />
-                                    <Label Grid.Column="1" Text="{Binding .}" FontSize="14" LineHeight="1.3" TextColor="{StaticResource TextSecondary}" />
-                                </Grid>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-                    <Border IsVisible="{Binding HasStartingWeight}" BackgroundColor="{StaticResource AccentSoft}" StrokeShape="RoundRectangle 10" Padding="10,8">
-                        <Label Text="{Binding StartingWeight}" FontSize="13" TextColor="#BFD2FF" />
+                    <!-- History | Instructions -->
+                    <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="3">
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="3">
+                            <Border BackgroundColor="{Binding HistoryTabBackground}" StrokeShape="RoundRectangle 10" StrokeThickness="0" Padding="0,8">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ShowHistoryCommand}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="History" TextColor="{Binding HistoryTabText}" FontFamily="OpenSansSemibold" FontSize="13"
+                                       HorizontalOptions="Center" />
+                            </Border>
+                            <Border Grid.Column="1" BackgroundColor="{Binding InstructionsTabBackground}" StrokeShape="RoundRectangle 10"
+                                    StrokeThickness="0" Padding="0,8">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ShowInstructionsCommand}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="Instructions" TextColor="{Binding InstructionsTabText}" FontFamily="OpenSansSemibold" FontSize="13"
+                                       HorizontalOptions="Center" />
+                            </Border>
+                        </Grid>
                     </Border>
                 </VerticalStackLayout>
-            </Border>
 
-            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
-                <Border Style="{StaticResource Card}" Padding="12">
-                    <VerticalStackLayout>
-                        <Label Text="{Binding BestE1Rm}" Style="{StaticResource StatValue}" FontSize="17" />
-                        <Label Text="Est. 1RM" Style="{StaticResource Caption}" FontSize="12" />
-                    </VerticalStackLayout>
-                </Border>
-                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="12">
-                    <VerticalStackLayout>
-                        <Label Text="{Binding BestSet}" Style="{StaticResource StatValue}" FontSize="17" />
-                        <Label Text="Best set" Style="{StaticResource Caption}" FontSize="12" />
-                    </VerticalStackLayout>
-                </Border>
-                <Border Grid.Column="2" Style="{StaticResource Card}" Padding="12">
-                    <VerticalStackLayout>
-                        <Label Text="{Binding TimesPerformed}" Style="{StaticResource StatValue}" FontSize="17" />
-                        <Label Text="Sessions" Style="{StaticResource Caption}" FontSize="12" />
-                    </VerticalStackLayout>
-                </Border>
-            </Grid>
+                <ScrollView Grid.Row="1">
+                    <Grid Padding="10,0,10,32">
+                        <!-- History: the bests, the estimated 1RM over time and each session it was done in -->
+                        <VerticalStackLayout Spacing="14" IsVisible="{Binding IsHistoryTab}">
+                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+                                <Border Style="{StaticResource Card}" Padding="12">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding BestE1Rm}" Style="{StaticResource StatValue}" FontSize="17" />
+                                        <Label Text="Est. 1RM" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                </Border>
+                                <Border Grid.Column="1" Style="{StaticResource Card}" Padding="12">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding BestSet}" Style="{StaticResource StatValue}" FontSize="17" />
+                                        <Label Text="Best set" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                </Border>
+                                <Border Grid.Column="2" Style="{StaticResource Card}" Padding="12">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding TimesPerformed}" Style="{StaticResource StatValue}" FontSize="17" />
+                                        <Label Text="Sessions" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
 
-            <Border Style="{StaticResource Card}" IsVisible="{Binding HasHistory}">
-                <VerticalStackLayout Spacing="8">
-                    <Label Text="Estimated 1RM" Style="{StaticResource H3}" />
-                    <GraphicsView Drawable="{Binding Chart}" HeightRequest="180" />
-                </VerticalStackLayout>
-            </Border>
+                            <Border Style="{StaticResource Card}" IsVisible="{Binding HasHistory}">
+                                <VerticalStackLayout Spacing="8">
+                                    <Label Text="Estimated 1RM" Style="{StaticResource H3}" />
+                                    <GraphicsView Drawable="{Binding Chart}" HeightRequest="180" />
+                                </VerticalStackLayout>
+                            </Border>
 
-            <Label Text="History" Style="{StaticResource H3}" IsVisible="{Binding HasHistory}" />
-            <VerticalStackLayout BindableLayout.ItemsSource="{Binding History}" Spacing="8">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="vm:LineItem">
-                        <Border Style="{StaticResource Card}" Padding="14,12">
-                            <VerticalStackLayout Spacing="2">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="14" />
-                                    <Label Grid.Column="1" Text="{Binding Value}" Style="{StaticResource Caption}" FontSize="12" />
-                                </Grid>
-                                <Label Text="{Binding Detail}" Style="{StaticResource Caption}" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding History}" Spacing="8">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LineItem">
+                                        <Border Style="{StaticResource Card}" Padding="14,12">
+                                            <VerticalStackLayout Spacing="2">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="14" />
+                                                    <Label Grid.Column="1" Text="{Binding Value}" Style="{StaticResource Caption}" FontSize="12" />
+                                                </Grid>
+                                                <Label Text="{Binding Warmups}" IsVisible="{Binding HasWarmups}" Style="{StaticResource Caption}" FontSize="12"
+                                                       TextColor="{StaticResource Warning}" />
+                                                <Label Text="{Binding Detail}" Style="{StaticResource Caption}" />
+                                                <Label Text="{Binding Note}" IsVisible="{Binding HasNote}" FontSize="13" FontAttributes="Italic"
+                                                       TextColor="{StaticResource TextSecondary}" Margin="0,2,0,0" />
+                                            </VerticalStackLayout>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
                             </VerticalStackLayout>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </VerticalStackLayout>
 
-            <Label Text="Log this exercise in a workout to see your progress here." Style="{StaticResource Caption}"
-                   HorizontalTextAlignment="Center" IsVisible="{Binding HasHistory, Converter={StaticResource Not}}" />
+                            <Label Text="Log this exercise in a workout to see your progress here." Style="{StaticResource Caption}"
+                                   HorizontalTextAlignment="Center" Margin="0,8" IsVisible="{Binding HasHistory, Converter={StaticResource Not}}" />
+                        </VerticalStackLayout>
 
-            <Button Text="Delete custom exercise" Style="{StaticResource DangerButton}" IsVisible="{Binding IsCustom}" Command="{Binding DeleteCommand}" />
-        </VerticalStackLayout>
-    </ScrollView>
-</views:BasePage>
+                        <!-- Instructions: the demonstration, the muscles, how it's done, form tips and how to train it for the goal -->
+                        <VerticalStackLayout Spacing="14" IsVisible="{Binding IsHistoryTab, Converter={StaticResource Not}}">
+                            <!-- The demonstration, trimmed to just the movement -->
+                            <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding HasVideo}" HeightRequest="420" BackgroundColor="Black">
+                                <controls:YouTubePlayer Url="{Binding VideoUrl}" />
+                            </Border>
+
+                            <Button Text="{Binding WatchText}" Style="{StaticResource SecondaryButton}" Command="{Binding WatchVideoCommand}"
+                                    IsVisible="{Binding IsCustom, Converter={StaticResource Not}}" />
+
+                            <Border Style="{StaticResource Card}">
+                                <VerticalStackLayout Spacing="12">
+                                    <GraphicsView Drawable="{Binding MuscleMap}" HeightRequest="220" />
+                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                                        <VerticalStackLayout>
+                                            <Label Text="PRIMARY" Style="{StaticResource Overline}" FontSize="10" />
+                                            <Label Text="{Binding PrimaryMuscle}" FontFamily="OpenSansSemibold" TextColor="{StaticResource Accent}" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1" IsVisible="{Binding HasSecondary}">
+                                            <Label Text="SECONDARY" Style="{StaticResource Overline}" FontSize="10" />
+                                            <Label Text="{Binding SecondaryMuscles}" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="2">
+                                            <Label Text="TYPE" Style="{StaticResource Overline}" FontSize="10" />
+                                            <Label Text="{Binding Mechanic}" FontSize="13" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <Border Style="{StaticResource Card}">
+                                <VerticalStackLayout Spacing="10">
+                                    <Label Text="How to perform" Style="{StaticResource H3}" />
+                                    <Label Text="{Binding Instructions}" FontSize="14" LineHeight="1.35"
+                                           TextColor="{StaticResource TextSecondary}" />
+                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Steps}" IsVisible="{Binding HasSteps}" Spacing="10">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:LineItem">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                                    <Border WidthRequest="22" HeightRequest="22" StrokeShape="RoundRectangle 11" StrokeThickness="0"
+                                                            BackgroundColor="{StaticResource AccentSoft}" VerticalOptions="Start">
+                                                        <Label Text="{Binding Title}" FontSize="11" FontFamily="OpenSansSemibold" TextColor="{StaticResource Accent}"
+                                                               HorizontalOptions="Center" VerticalOptions="Center" />
+                                                    </Border>
+                                                    <Label Grid.Column="1" Text="{Binding Detail}" FontSize="14" LineHeight="1.3"
+                                                           TextColor="{StaticResource TextSecondary}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- Form cues and the common mistakes -->
+                            <Border Style="{StaticResource Card}" IsVisible="{Binding HasFormTips}">
+                                <VerticalStackLayout Spacing="10">
+                                    <Label Text="Form tips" Style="{StaticResource H3}" />
+                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding FormTips}" Spacing="8">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="x:String">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                                    <Ellipse Fill="{StaticResource Accent}" WidthRequest="6" HeightRequest="6" VerticalOptions="Start" Margin="0,7,0,0" />
+                                                    <Label Grid.Column="1" Text="{Binding .}" FontSize="14" LineHeight="1.3" TextColor="{StaticResource TextSecondary}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- How to train it for the goal -->
+                            <Border Style="{StaticResource Card}">
+                                <VerticalStackLayout Spacing="10">
+                                    <VerticalStackLayout Spacing="2">
+                                        <Label Text="{Binding GoalTitle}" Style="{StaticResource H3}" />
+                                        <Label Text="{Binding GoalTarget}" Style="{StaticResource Caption}" FontSize="13" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding GoalTips}" Spacing="8">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="x:String">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                                    <Ellipse Fill="{StaticResource Accent}" WidthRequest="6" HeightRequest="6" VerticalOptions="Start" Margin="0,7,0,0" />
+                                                    <Label Grid.Column="1" Text="{Binding .}" FontSize="14" LineHeight="1.3" TextColor="{StaticResource TextSecondary}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+                                    <Border IsVisible="{Binding HasStartingWeight}" BackgroundColor="{StaticResource AccentSoft}" StrokeShape="RoundRectangle 10" Padding="10,8">
+                                        <Label Text="{Binding StartingWeight}" FontSize="13" TextColor="#BFD2FF" />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <Button Text="Delete custom exercise" Style="{StaticResource DangerButton}" IsVisible="{Binding IsCustom}" Command="{Binding DeleteCommand}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </ScrollView>
+            </Grid>
+        </Border>
+    </Grid>
+</views:SheetPage>

@@ -102,6 +102,24 @@ public partial class WorkoutViewModel(
     /// <summary>The goal the exercises are coached for: the plan's, or the profile's for a workout outside a plan.</summary>
     internal Goal Goal => store.GetPlan(_session?.PlanId)?.Goal ?? store.Profile.Goal;
 
+    /// <summary>A workout of a plan day: its exercises' notes can be pinned, for the plan update offered on finishing.</summary>
+    internal bool IsPlanWorkout => _session is { } session
+        && store.GetPlan(session.PlanId)?.Workouts.Any(w => w.Id == session.PlanWorkoutId) == true;
+
+    /// <summary>
+    /// The note an exercise of this workout has in its plan day; null outside a plan, or for an exercise the day doesn't
+    /// have. The same exercise twice in a day pairs up in order, as the plan update does.
+    /// </summary>
+    internal string? PlannedNote(SessionExercise se)
+    {
+        if (_session is not { } session || store.GetPlan(session.PlanId)?.Workouts.FirstOrDefault(w => w.Id == session.PlanWorkoutId) is not { } day)
+            return null;
+        var nth = session.Exercises.TakeWhile(e => e != se).Count(e => e.ExerciseId == se.ExerciseId);
+        return day.Exercises.Where(e => e.ExerciseId == se.ExerciseId).ElementAtOrDefault(nth)?.Note;
+    }
+
+    internal void Save() => workouts.Save();
+
     public override async Task OnAppearingAsync()
     {
         // For the workout notification with the rest timer (Android 13+ asks); once per run of the app.
@@ -119,9 +137,12 @@ public partial class WorkoutViewModel(
         var active = workouts.Active;
         if (active == null)
         {
-            await GoBack();
+            // Finishing closes the page itself; a dialog closing on the way (the plan update) mustn't close it as well.
+            if (!_finishing)
+                await GoBack();
             return;
         }
+        _finishing = false;
         if (_session != active)
         {
             _session = active;
@@ -398,6 +419,8 @@ public partial class WorkoutViewModel(
             SetName(value);
     }
 
+    bool _finishing;
+
     /// <summary>Finishes the workout straight away (no confirmation); unfinished sets are dropped.</summary>
     [RelayCommand]
     async Task Finish()
@@ -416,6 +439,7 @@ public partial class WorkoutViewModel(
         // Worked out before finishing, which drops the sets that weren't done (not getting to one isn't a plan change).
         var update = _session == null ? null : workouts.ProposePlanUpdate(_session);
         IsResting = false;
+        _finishing = true;
         var session = workouts.Finish();
         _session = null;
         // Changes made during the workout stay in it; the plan only takes them over when asked to.
@@ -438,7 +462,7 @@ public partial class WorkoutViewModel(
     [RelayCommand]
     async Task Reset()
     {
-        if (_session == null || !await dialogs.Confirm("Reset workout?", "Every set is unticked and the clock starts again. Exercises, weights and reps stay.", "Reset", "Cancel"))
+        if (_session == null || !await dialogs.Confirm("Reset workout?", "Every set is unticked, skipped sets come back and the clock starts again. Exercises, weights and reps stay.", "Reset", "Cancel"))
             return;
         IsResting = false;
         foreach (var set in _session.Exercises.SelectMany(e => e.Sets))
@@ -446,6 +470,9 @@ public partial class WorkoutViewModel(
             set.IsCompleted = false;
             set.CompletedAt = null;
         }
+        // Skipped sets come back too (skipping is only on the rows, rebuilt below).
+        foreach (var e in _session.Exercises)
+            (e.SkippedWarmups, e.SkippedSets) = (0, 0);
         _session.StartedAt = DateTime.Now;
         workouts.Save();
 
@@ -491,13 +518,64 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         {
             var work = last.Exercise.Sets.Where(s => s.IsCompleted && !s.IsWarmup).ToList();
             PreviousTitle = $"{last.Session.StartedAt:ddd, d MMM} · {last.Session.Name}";
-            PreviousRows = [.. work.Select((s, i) => new PlanDaySetRow($"{i + 1}", WeightText(s), $"{s.Reps}", E1RmText(s)))];
+            // Its skipped sets too, dimmed, as everywhere else.
+            PreviousRows = [.. work.Select((s, i) => new PlanDaySetRow($"{i + 1}", WeightText(s), $"{s.Reps}", E1RmText(s))),
+                .. Enumerable.Range(work.Count + 1, last.Exercise.SkippedSets).Select(n => new PlanDaySetRow($"{n}", "Skipped", "–", "N/A") { IsSkipped = true })];
         }
         foreach (var set in model.Sets)
             Sets.Add(new SetRowViewModel(this, set));
         // Warm-ups start folded away once they're done, and open while there are some left to do.
         showWarmups = model.Sets.Any(s => s.IsWarmup && !s.IsCompleted);
+        note = model.Note ?? "";
         Renumber();
+    }
+
+    /// <summary>The user's note on the exercise in this workout; kept with it like the sets typed in.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PinStatus), nameof(HasPinStatus))]
+    string note = "";
+
+    /// <summary>
+    /// The pin: marks the note to become the exercise's note in the plan (or, unpinning one the plan gave it, to come
+    /// off). Nothing changes in the plan until finishing, when it's among the changes offered for the plan.
+    /// </summary>
+    public bool IsPinned => Model.NotePinned;
+    public bool CanPin => _parent.IsPlanWorkout;
+    public Color PinColor => IsPinned ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#626B7E");
+
+    /// <summary>What the pin will do to the plan, under the note; empty when it changes nothing.</summary>
+    public string PinStatus
+    {
+        get
+        {
+            var planned = _parent.PlannedNote(Model);
+            return IsPinned && Model.Note != null && Model.Note == planned ? "Pinned: this note is in your plan."
+                : IsPinned && Model.Note != null ? "Pinned: when you finish, choose Update plan to keep this note on the exercise in your plan."
+                : planned != null && Model.Note != planned ? "When you finish, choose Update plan to take this note off the exercise in your plan."
+                : "";
+        }
+    }
+    public bool HasPinStatus => PinStatus.Length > 0;
+
+    partial void OnNoteChanged(string value) => Model.Note = string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    [RelayCommand]
+    async Task TogglePin()
+    {
+        if (!CanPin)
+            return;
+        if (!IsPinned && Model.Note == null)
+        {
+            await _parent.Dialogs.Alert("Write a note first",
+                "Pin a note to keep it on this exercise in your plan: when you finish, choose Update plan and it'll be there each time you do this workout.");
+            return;
+        }
+        Model.NotePinned = !Model.NotePinned;
+        _parent.Save();
+        OnPropertyChanged(nameof(IsPinned));
+        OnPropertyChanged(nameof(PinColor));
+        OnPropertyChanged(nameof(PinStatus));
+        OnPropertyChanged(nameof(HasPinStatus));
     }
 
     public Exercise Exercise { get; }
@@ -548,6 +626,9 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     bool showWarmups;
     public bool HasWarmups => Model.Sets.Any(s => s.IsWarmup);
     public bool HasOpenWarmups => Sets.Any(s => s.Model.IsWarmup && !s.IsSettled);
+    /// <summary>Warm-ups not done yet, skipped or not: the Skip warm-ups button skips them, or brings them back.</summary>
+    public bool HasUndoneWarmups => Sets.Any(s => s.Model.IsWarmup && !s.IsCompleted);
+    public string SkipWarmupsText => HasUndoneWarmups && !HasOpenWarmups ? "Don't skip warm-ups" : "Skip warm-ups";
     public string WarmupText
     {
         get
@@ -578,7 +659,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     Task Select() => _parent.SelectExercise(this);
 
     [RelayCommand]
-    Task Help() => Shell.Current.GoToAsync($"{Routes.Exercise}?id={Exercise.Id}");
+    Task Help() => Shell.Current.GoToAsync($"{Routes.Exercise}?id={Exercise.Id}&tab=instructions");
 
     internal string WeightText(SetEntry s) => Exercise.IsBodyweight && s.WeightKg <= 0 ? "BW" : Units.Format(s.WeightKg);
 
@@ -590,11 +671,12 @@ public partial class WorkoutExerciseViewModel : ObservableObject
 
     internal void Renumber()
     {
-        var n = 0;
+        // Warm-ups W1, W2…, working sets 1, 2…
+        var (n, w) = (0, 0);
         foreach (var s in Sets)
-            s.Label = s.Model.IsWarmup ? "W" : (++n).ToString();
+            s.Label = s.Model.IsWarmup ? $"W{++w}" : (++n).ToString();
         OnPropertyChanged(nameof(HasWarmups));
-        OnPropertyChanged(nameof(HasOpenWarmups));
+        OnWarmupsChanged();
         OnPropertyChanged(nameof(WarmupText));
         OnPropertyChanged(nameof(IsSkipped));
         OnPropertyChanged(nameof(SkipExerciseText));
@@ -633,7 +715,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             if (row.Model.IsWarmup && Model.Sets.Where(s => s.IsWarmup).All(s => s.IsCompleted))
                 ShowWarmups = false;
         }
-        OnPropertyChanged(nameof(HasOpenWarmups));
+        OnWarmupsChanged();
         OnPropertyChanged(nameof(IsSkipped));
         OnPropertyChanged(nameof(SkipExerciseText));
         OnPropertyChanged(nameof(CanSkipExercise));
@@ -644,7 +726,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     internal async Task SetMenu(SetRowViewModel row)
     {
         var toggle = row.Model.IsWarmup ? "Mark as working set" : "Mark as warm-up";
-        var skip = row.Model.IsWarmup ? "Skip warm-up" : row.IsSkipped ? "Don't skip set" : "Skip set";
+        var skip = row.Model.IsWarmup ? (row.IsSkipped ? "Don't skip warm-up" : "Skip warm-up") : row.IsSkipped ? "Don't skip set" : "Skip set";
         string[] options = !row.IsCompleted ? [skip, toggle] : [toggle];
         var choice = await _parent.Dialogs.ActionSheet($"Set {row.Label}", "Delete set", options);
         if (choice == skip)
@@ -670,16 +752,11 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Skips a set, or brings a skipped one back. A warm-up is dropped ("Add warm-up sets" in the menu brings them
-    /// back); a working set stays in the table, dimmed, and is left out of the workout when it's finished.
+    /// Skips a set, or brings a skipped one back. It stays in the table, dimmed and marked skipped, and is left out of
+    /// the workout when it's finished (a skipped warm-up is counted for the exercise's history).
     /// </summary>
     internal void Skip(SetRowViewModel row)
     {
-        if (row.Model.IsWarmup)
-        {
-            RemoveWarmups([row]);
-            return;
-        }
         if (row.IsCompleted)
             return;
         row.IsSkipped = !row.IsSkipped;
@@ -701,7 +778,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
 
     void OnSkipsChanged()
     {
-        OnPropertyChanged(nameof(HasOpenWarmups));
+        OnWarmupsChanged();
         OnPropertyChanged(nameof(IsSkipped));
         OnPropertyChanged(nameof(SkipExerciseText));
         OnPropertyChanged(nameof(CanSkipExercise));
@@ -709,24 +786,27 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         _parent.OnSkipped(this);
     }
 
-    /// <summary>Drops every warm-up still to do and goes straight to the working sets.</summary>
+    /// <summary>
+    /// Skips every warm-up still to do, going straight to the working sets; they stay in the table, marked skipped. When
+    /// they're all skipped already, brings them back.
+    /// </summary>
     [RelayCommand]
-    void SkipWarmups() => RemoveWarmups(Sets.Where(s => s.Model.IsWarmup && !s.IsCompleted).ToList());
-
-    void RemoveWarmups(List<SetRowViewModel> rows)
+    void SkipWarmups()
     {
-        if (rows.Count == 0)
+        var undone = Sets.Where(s => s.Model.IsWarmup && !s.IsCompleted).ToList();
+        if (undone.Count == 0)
             return;
-        foreach (var row in rows)
-        {
-            Model.Sets.Remove(row.Model);
-            Sets.Remove(row);
-        }
-        // Whatever warm-ups are left are done: fold them away.
-        if (!HasOpenWarmups)
-            ShowWarmups = false;
-        Renumber();
-        _parent.OnStructureChanged();
+        var skip = HasOpenWarmups;
+        foreach (var s in undone)
+            s.IsSkipped = skip;
+        OnSkipsChanged();
+    }
+
+    void OnWarmupsChanged()
+    {
+        OnPropertyChanged(nameof(HasOpenWarmups));
+        OnPropertyChanged(nameof(HasUndoneWarmups));
+        OnPropertyChanged(nameof(SkipWarmupsText));
     }
 
     // The column headings: one change for every set still to do (working sets not done or skipped; warm-ups keep theirs).
@@ -981,7 +1061,7 @@ public partial class SetRowViewModel : ObservableObject
     public bool ShowRirValue => !IsCurrent && TrackRir;
     public bool ShowDoneTick => !IsCurrent && IsCompleted;
     public double NumberOpacity => IsCurrent ? 1 : 0.6;
-    /// <summary>A skipped set says so where its E1RM would be. (Skipping is in the set number's menu.)</summary>
+    /// <summary>A skipped set says "Skipped" where its tick would be, and N/A for its E1RM. (Skipping is in the set number's menu.)</summary>
     public bool ShowE1Rm => !ShowSkipped;
 
     [ObservableProperty] bool isVisible = true;

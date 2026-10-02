@@ -7,7 +7,12 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>One row of an exercise's set table on the day sheet.</summary>
-public record PlanDaySetRow(string Number, string First, string Second, string Third);
+public record PlanDaySetRow(string Number, string First, string Second, string Third)
+{
+    /// <summary>A set that was skipped: dimmed, "Skipped" for its weight and N/A for its E1RM.</summary>
+    public bool IsSkipped { get; init; }
+    public double RowOpacity => IsSkipped ? 0.45 : 1;
+}
 
 /// <summary>A number on a finished workout's sheet, with how it compares with last time (<paramref name="Note"/>, empty the first time).</summary>
 public record StatTile(string Value, string Label, string Note, Color NoteColor)
@@ -40,6 +45,11 @@ public class PlanDaySheetExercise
     public required string SecondHeader { get; init; }
     public required string ThirdHeader { get; init; }
     public required List<PlanDaySetRow> Rows { get; init; }
+    /// <summary>Tapping the exercise: its info page (how it's done, the video). Nothing for an unknown exercise.</summary>
+    public required IAsyncRelayCommand OpenCommand { get; init; }
+    /// <summary>The note typed in during the workout; empty for a plan day.</summary>
+    public string Note { get; init; } = "";
+    public bool HasNote => Note.Length > 0;
 }
 
 /// <summary>
@@ -156,8 +166,18 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         else
         {
             Meta = $"{planned.Count} exercises · {planned.Sum(x => x.pe.Sets)} sets";
-            When = WorkoutEstimator.Format(estimator.Minutes(workout, plan.Goal));
-            Exercises = planned.Select(x => Planned(x.pe, x.ex)).ToList();
+            // Skipped this week: no time spent, and every set shows as skipped, as in a workout. It can still be done.
+            When = IsSkipped ? "0 min" : WorkoutEstimator.Format(estimator.Minutes(workout, plan.Goal));
+            // Its warm-ups as a workout of it would have them: lighter once an earlier exercise worked the same muscle.
+            var warmups = WarmupSettings.For(plan, store.Profile);
+            var worked = new HashSet<MuscleGroup>();
+            Exercises = planned.Select(x =>
+            {
+                var steps = x.ex == null ? [] : warmups.StepsFor(x.pe, x.ex, worked.Contains(x.ex.PrimaryMuscle));
+                if (x.ex != null)
+                    worked.Add(x.ex.PrimaryMuscle);
+                return IsSkipped ? SkippedExercise(x.pe, x.ex, steps) : Planned(x.pe, x.ex, steps);
+            }).ToList();
             ActionText = $"▶  Start {workout.Name}";
             HasAction = true;
         }
@@ -373,31 +393,55 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var ex = store.GetExercise(se.ExerciseId);
         var sets = se.Sets;
         var reps = sets.Select(s => s.Reps).Distinct().Count() == 1 ? $"{sets[0].Reps}" : $"{sets.Min(s => s.Reps)}–{sets.Max(s => s.Reps)}";
-        var working = 0;
         return new PlanDaySheetExercise
         {
+            OpenCommand = OpenInfo(ex),
             Thumb = Thumb(ex),
             Name = ex?.Name ?? "Unknown exercise",
             Detail = $"{ex?.Equipment.Display() ?? ""} · {sets.Count}×{reps} reps",
+            Note = se.Note ?? "",
             IsDone = true,
             FirstHeader = units.Label.ToUpperInvariant(),
             SecondHeader = "REPS",
             ThirdHeader = "E1RM",
-            Rows = sets.Select(s => new PlanDaySetRow(
-                s.IsWarmup ? "W" : $"{++working}",
-                ex?.IsBodyweight == true && s.WeightKg <= 0 ? "BW" : units.Format(s.WeightKg),
-                $"{s.Reps}",
-                !s.IsWarmup && ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir) is > 0 and var e1 ? units.Format(e1) : "–")).ToList(),
+            Rows = SessionRows(se, ex),
         };
     }
 
-    /// <summary>A planned exercise: each set's target reps beside what was lifted for that set last time.</summary>
-    PlanDaySheetExercise Planned(PlanExercise pe, Exercise? ex)
+    /// <summary>An exercise of a workout skipped this week: each of its sets, warm-ups first, as skipped.</summary>
+    PlanDaySheetExercise SkippedExercise(PlanExercise pe, Exercise? ex, IReadOnlyList<WarmupStep> warmups)
+    {
+        var range = pe.RepMin == pe.RepMax ? $"{pe.RepMin}" : $"{pe.RepMin}–{pe.RepMax}";
+        return new PlanDaySheetExercise
+        {
+            OpenCommand = OpenInfo(ex),
+            Thumb = Thumb(ex),
+            Name = ex?.Name ?? "Unknown exercise",
+            Detail = $"{ex?.Equipment.Display() ?? ""} · {pe.Sets}×{range} reps · skipped",
+            Note = pe.Note ?? "",
+            IsDone = false,
+            FirstHeader = units.Label.ToUpperInvariant(),
+            SecondHeader = "REPS",
+            ThirdHeader = "E1RM",
+            Rows =
+            [
+                .. warmups.Select((_, i) => new PlanDaySetRow($"W{i + 1}", "Skipped", "–", "N/A") { IsSkipped = true }),
+                .. Enumerable.Range(1, pe.Sets).Select(n => new PlanDaySetRow($"{n}", "Skipped", "–", "N/A") { IsSkipped = true }),
+            ],
+        };
+    }
+
+    /// <summary>
+    /// A planned exercise: its warm-ups (percent of the working weight × reps), then each set's target reps beside what
+    /// was lifted for that set last time.
+    /// </summary>
+    PlanDaySheetExercise Planned(PlanExercise pe, Exercise? ex, IReadOnlyList<WarmupStep> warmups)
     {
         var range = pe.RepMin == pe.RepMax ? $"{pe.RepMin}" : $"{pe.RepMin}–{pe.RepMax}";
         var last = ex == null ? [] : progression.LastPerformance(ex.Id)?.Sets.Where(s => s.IsCompleted && !s.IsWarmup).ToList() ?? [];
         return new PlanDaySheetExercise
         {
+            OpenCommand = OpenInfo(ex),
             Thumb = Thumb(ex),
             Name = ex?.Name ?? "Unknown exercise",
             Detail = $"{ex?.Equipment.Display() ?? ""} · {pe.Sets}×{range} reps",
@@ -405,16 +449,45 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             FirstHeader = "TARGET",
             SecondHeader = $"LAST {units.Label.ToUpperInvariant()}",
             ThirdHeader = "LAST REPS",
-            Rows = Enumerable.Range(0, pe.Sets).Select(i => new PlanDaySetRow(
-                $"{i + 1}",
-                range,
-                last.ElementAtOrDefault(i) is { } s ? units.Format(s.WeightKg) : "–",
-                last.ElementAtOrDefault(i) is { } r ? $"{r.Reps}" : "–")).ToList(),
+            Rows =
+            [
+                .. warmups.Select((w, i) => new PlanDaySetRow($"W{i + 1}", w.ToString(), "–", "–")),
+                .. Enumerable.Range(0, pe.Sets).Select(i => new PlanDaySetRow(
+                    $"{i + 1}",
+                    range,
+                    last.ElementAtOrDefault(i) is { } s ? units.Format(s.WeightKg) : "–",
+                    last.ElementAtOrDefault(i) is { } r ? $"{r.Reps}" : "–")),
+            ],
         };
+    }
+
+    /// <summary>
+    /// A finished exercise's sets: the warm-ups done and a row for each one skipped, then the working sets likewise (only
+    /// how many were skipped is kept), the way the workout showed them.
+    /// </summary>
+    List<PlanDaySetRow> SessionRows(SessionExercise se, Exercise? ex)
+    {
+        var (working, warm) = (0, 0);
+        PlanDaySetRow Row(SetEntry s) => new(
+            s.IsWarmup ? $"W{++warm}" : $"{++working}",
+            ex?.IsBodyweight == true && s.WeightKg <= 0 ? "BW" : units.Format(s.WeightKg),
+            $"{s.Reps}",
+            !s.IsWarmup && ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir) is > 0 and var e1 ? units.Format(e1) : "–");
+        return
+        [
+            .. se.Sets.Where(s => s.IsWarmup).Select(Row),
+            .. Enumerable.Range(0, se.SkippedWarmups).Select(_ => new PlanDaySetRow($"W{++warm}", "Skipped", "–", "N/A") { IsSkipped = true }),
+            .. se.Sets.Where(s => !s.IsWarmup).Select(Row),
+            .. Enumerable.Range(0, se.SkippedSets).Select(_ => new PlanDaySetRow($"{++working}", "Skipped", "–", "N/A") { IsSkipped = true }),
+        ];
     }
 
     static ExerciseThumb Thumb(Exercise? ex) =>
         ex == null ? new ExerciseThumb(null, "?", Colors.Gray, Colors.Gray.WithAlpha(0.16f)) : ExerciseThumb.For(ex);
+
+    // Over this sheet, like Help on the workout sheet.
+    IAsyncRelayCommand OpenInfo(Exercise? ex) =>
+        new AsyncRelayCommand(() => ex == null ? Task.CompletedTask : GoTo($"{Routes.Exercise}?id={ex.Id}"));
 
     [RelayCommand]
     Task Close() => GoBack();
