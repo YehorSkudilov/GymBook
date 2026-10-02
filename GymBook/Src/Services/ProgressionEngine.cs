@@ -7,7 +7,8 @@ public record Suggestion(List<SetEntry> Sets, string Note);
 /// <summary>
 /// Double progression driven by reps in reserve: add reps inside the range until every set reaches the top,
 /// then add weight and drop back to the bottom of the range; fall below the bottom and the weight comes down.
-/// Weights are predicted from estimated one-rep maxes, and scaled back after time away from training.
+/// Weights are predicted from estimated one-rep maxes, and scaled back after time away from training. A workout's sets
+/// start as exactly what was done last time; the progression is given as advice (<see cref="Suggestion.Note"/>).
 /// </summary>
 public class ProgressionEngine(DataStore store, Units units)
 {
@@ -42,13 +43,17 @@ public class ProgressionEngine(DataStore store, Units units)
         var work = last.Value.Exercise.Sets.Where(s => s.IsCompleted && !s.IsWarmup).ToList();
         var loaded = !ex.IsBodyweight || work.Max(s => s.WeightKg) > 0;
 
-        // Time away: come back lighter and rebuild from the bottom of the range.
+        // The sets start as exactly what was done last time, set for set (the last one repeated if there are more now);
+        // what to change is only advice, in the note, for the user to act on.
+        foreach (var p in Expand(work, sets))
+            result.Add(new SetEntry { WeightKg = p.WeightKg, Reps = p.Reps });
+
+        // Time away: suggest coming back lighter and rebuilding from the bottom of the range.
         if (Detraining(last.Value.Session.StartedAt) is { Reduction: > 0 } away && loaded)
         {
-            foreach (var p in Expand(work, sets))
-                result.Add(new SetEntry { WeightKg = units.Round(p.WeightKg * (1 - away.Reduction), ex), Reps = repMin });
+            var lighter = units.Round(work[0].WeightKg * (1 - away.Reduction), ex);
             return new Suggestion(result,
-                $"Welcome back: {away.Reason}, so weights are {away.Reduction:P0} lighter and reps start at {repMin}. Build back up over the next few sessions.");
+                $"Welcome back: {away.Reason}. Consider going about {away.Reduction:P0} lighter ({units.FormatWithUnit(lighter)}) for {repMin} reps, and build back up over the next few sessions.");
         }
 
         var avgRir = work.Where(s => s.Rir.HasValue).Select(s => (double)s.Rir!.Value).DefaultIfEmpty(targetRir).Average();
@@ -61,35 +66,27 @@ public class ProgressionEngine(DataStore store, Units units)
         {
             if (!loaded)
             {
-                summary = "You hit the top of the range. Push for one more rep per set.";
-                foreach (var p in Expand(work, sets))
-                    result.Add(new SetEntry { WeightKg = 0, Reps = p.Reps + 1 });
+                summary = "You hit the top of the range last time. Push for one more rep per set.";
             }
             else
             {
-                // Predict the weight that puts you back at the bottom of the range, at least one step up.
+                // The weight that puts you back at the bottom of the range, at least one step up.
                 var predicted = WeightFor(bestE1Rm, repMin, targetRir, ex);
                 var top = work[0].WeightKg;
                 var next = Math.Clamp(predicted, units.Step(top, ex, 1), Math.Max(units.Step(top, ex, 1), units.Round(top * 1.1, ex)));
-                summary = $"Increase to {units.FormatWithUnit(next)}. You hit {repMax}+ reps on every set last time, so this should give you about {repMin}.";
-                foreach (var p in Expand(work, sets))
-                    result.Add(new SetEntry { WeightKg = p.WeightKg + (next - top), Reps = repMin });
+                summary = $"Try {units.FormatWithUnit(next)}. You hit {repMax}+ reps on every set last time, so this should give you about {repMin}.";
             }
         }
         else if (belowMin * 2 >= work.Count && loaded)
         {
-            // Under the minimum: predict the weight that gets you back into the range.
+            // Under the minimum: the weight that gets you back into the range.
             var fewest = work.Min(s => s.Reps);
             var next = Math.Min(WeightFor(bestE1Rm, repMin, targetRir, ex), units.Step(work[0].WeightKg, ex, -1));
-            summary = $"Lower to {units.FormatWithUnit(next)}. You got {fewest} reps last time, under your minimum of {repMin}; this weight should put you back in the range.";
-            foreach (var p in Expand(work, sets))
-                result.Add(new SetEntry { WeightKg = Math.Max(0, p.WeightKg - (work[0].WeightKg - next)), Reps = repMin });
+            summary = $"Consider {units.FormatWithUnit(next)}. You got {fewest} reps last time, under your minimum of {repMin}; that weight should put you back in the range.";
         }
         else
         {
-            summary = "Same weight. Aim for one more rep per set than last time.";
-            foreach (var p in Expand(work, sets))
-                result.Add(new SetEntry { WeightKg = p.WeightKg, Reps = Math.Clamp(p.Reps + 1, repMin, Math.Max(repMax, p.Reps)) });
+            summary = "Same weight as last time. Aim for one more rep per set.";
         }
 
         return new Suggestion(result, summary);
