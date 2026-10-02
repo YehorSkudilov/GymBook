@@ -38,7 +38,7 @@ public class WorkoutNotifier : IWorkoutNotifier
             if (_workouts.Active is not { } active)
                 Clear();
             else if (_shown == null)
-                Show(new WorkoutStatus(active.Name, active.StartedAt, "Workout in progress", "", null, 0));
+                Show(new WorkoutStatus(active.Name, "", WorkoutPhase.InSet, "Workout in progress", active.StartedAt, null, 0));
         });
     }
 
@@ -50,10 +50,10 @@ public class WorkoutNotifier : IWorkoutNotifier
 
     public void Show(WorkoutStatus status)
     {
-        var resting = status.RestEndsAt is { } restEnd && restEnd > DateTime.Now;
+        var resting = status.Phase == WorkoutPhase.Resting && status.RestDueAt > DateTime.Now;
         // Redrawn when what it says changes, and while resting every few seconds for the bar.
-        var restLeft = resting ? (int)(status.RestEndsAt!.Value - DateTime.Now).TotalSeconds : 0;
-        var key = $"{status.Name}|{status.Detail}|{status.Progress}|{status.RestEndsAt:O}|{restLeft / 3}";
+        var restLeft = resting ? (int)(status.RestDueAt!.Value - DateTime.Now).TotalSeconds : 0;
+        var key = $"{status.Name}|{status.Phase}|{status.Next}|{status.Progress}|{status.Since:O}|{status.RestDueAt:O}|{restLeft / 3}";
         if (key == _shown)
             return;
         var context = Android.App.Application.Context;
@@ -75,19 +75,32 @@ public class WorkoutNotifier : IWorkoutNotifier
         if (status.Progress.Length > 0)
             builder.SetSubText(status.Progress);
 
-        if (resting)
+        // The timer beside the title (kept by the system, so it's right in the background) and the line under it.
+        switch (status.Phase)
         {
-            var end = status.RestEndsAt!.Value;
-            builder.SetContentText($"Rest · next: {status.Detail}")
-                .SetWhen(new DateTimeOffset(end).ToUnixTimeMilliseconds())
-                .SetChronometerCountDown(true)
-                .SetProgress(Math.Max(1, status.RestSeconds), Math.Clamp(restLeft, 0, Math.Max(1, status.RestSeconds)), false);
-        }
-        else
-        {
-            builder.SetContentText(status.Detail)
-                .SetWhen(new DateTimeOffset(status.StartedAt).ToUnixTimeMilliseconds())
-                .SetChronometerCountDown(false);
+            case WorkoutPhase.Resting when resting:
+                builder.SetContentText($"Rest · next: {status.Next}")
+                    .SetWhen(new DateTimeOffset(status.RestDueAt!.Value).ToUnixTimeMilliseconds())
+                    .SetChronometerCountDown(true)
+                    .SetProgress(Math.Max(1, status.RestSeconds), Math.Clamp(restLeft, 0, Math.Max(1, status.RestSeconds)), false);
+                break;
+            case WorkoutPhase.Resting or WorkoutPhase.RestOver:
+                // Counting up how far over the rest is.
+                builder.SetContentText($"Rest over · next: {status.Next}")
+                    .SetWhen(new DateTimeOffset(status.RestDueAt ?? status.Since).ToUnixTimeMilliseconds())
+                    .SetChronometerCountDown(false);
+                break;
+            case WorkoutPhase.Done:
+                builder.SetContentText("Every set done · tap to finish")
+                    .SetWhen(new DateTimeOffset(status.Since).ToUnixTimeMilliseconds())
+                    .SetChronometerCountDown(false);
+                break;
+            default:
+                // The set being done, timed since it started.
+                builder.SetContentText($"Now: {status.Next}")
+                    .SetWhen(new DateTimeOffset(status.Since).ToUnixTimeMilliseconds())
+                    .SetChronometerCountDown(false);
+                break;
         }
         Notify(context, WorkoutId, builder.Build());
         _shown = key;

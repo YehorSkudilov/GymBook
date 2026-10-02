@@ -308,22 +308,57 @@ public partial class WorkoutViewModel(
     {
         if (_session == null || workouts.Active != _session)
             return;
-        var rest = SetTimes.RunningRest(_session);
-        var counting = rest is { RestDueAt: { } due, RestStartedAt: { } started } && due > DateTime.Now;
-        notifier.Show(new WorkoutStatus(Name, _session.StartedAt, NextSetText(), ProgressText,
-            counting ? rest!.RestDueAt : null, counting ? (int)Math.Round((rest!.RestDueAt!.Value - rest.RestStartedAt!.Value).TotalSeconds) : 0));
+        var now = DateTime.Now;
+        var next = NextSet();
+        WorkoutStatus status;
+        if (SetTimes.RunningRest(_session) is { RestDueAt: { } due, RestStartedAt: { } started })
+        {
+            status = new WorkoutStatus(Name, ProgressText, due > now ? WorkoutPhase.Resting : WorkoutPhase.RestOver, NextSetText(),
+                started, due, (int)Math.Round((due - started).TotalSeconds));
+        }
+        else if (next == null && !IsEmpty)
+        {
+            status = new WorkoutStatus(Name, ProgressText, WorkoutPhase.Done, "", _session.StartedAt, null, 0);
+        }
+        else
+        {
+            var last = SetTimes.LastDone(_session);
+            var since = last == null ? _session.StartedAt
+                : last.RestEndedAt is { } restEnded && restEnded > last.CompletedAt ? restEnded : last.CompletedAt ?? _session.StartedAt;
+            status = new WorkoutStatus(Name, ProgressText, WorkoutPhase.InSet, NextSetText(), since, null, 0);
+        }
+        notifier.Show(status);
     }
 
-    /// <summary>"Bench Press · set 2 of 4": the exercise on screen and its next set to do.</summary>
+    /// <summary>
+    /// The next set to do: the first one not done or skipped in the exercise on screen, else in the exercises after it,
+    /// then before it. Null when every set is done or skipped.
+    /// </summary>
+    (WorkoutExerciseViewModel Exercise, SetEntry Set)? NextSet()
+    {
+        var order = Exercises.Skip(CurrentIndex).Concat(Exercises.Take(CurrentIndex));
+        foreach (var exercise in order)
+            if (exercise.Model.Sets.FirstOrDefault(s => !s.IsCompleted && !s.IsSkipped) is { } set)
+                return (exercise, set);
+        return null;
+    }
+
+    /// <summary>
+    /// "Leg Extension · set 2 of 3 · 220 lbs × 10" or "Leg Press · warm-up 1 of 2 · 90 lbs × 12": the next set to do
+    /// (see <see cref="NextSet"/>), with what's filled in for it.
+    /// </summary>
     string NextSetText()
     {
-        if (CurrentExercise is not { } exercise)
-            return IsEmpty ? "No exercises yet" : "Workout in progress";
-        var working = exercise.Model.Sets.Where(s => !s.IsWarmup).ToList();
-        var next = working.FindIndex(s => !s.IsCompleted);
-        if (exercise.Model.Sets.FirstOrDefault(s => !s.IsCompleted) is { IsWarmup: true })
-            return $"{exercise.Name} · warm-up";
-        return next < 0 ? $"{exercise.Name} · done" : $"{exercise.Name} · set {next + 1} of {working.Count}";
+        if (IsEmpty)
+            return "No exercises yet";
+        if (NextSet() is not var (exercise, set))
+            return "Every set done";
+        var sets = exercise.Model.Sets.Where(s => s.IsWarmup == set.IsWarmup).ToList();
+        var which = set.IsWarmup ? $"warm-up {sets.IndexOf(set) + 1} of {sets.Count}" : $"set {sets.IndexOf(set) + 1} of {sets.Count}";
+        var load = set.WeightKg > 0 ? units.FormatWithUnit(set.WeightKg) : exercise.Exercise.IsBodyweight ? "bodyweight" : "";
+        var reps = set.Reps > 0 ? $"{set.Reps} reps" : "";
+        var what = load.Length > 0 && set.Reps > 0 ? $" · {load} × {set.Reps}" : load.Length > 0 ? $" · {load}" : reps.Length > 0 ? $" · {reps}" : "";
+        return $"{exercise.Name} · {which}{what}";
     }
 
     WorkoutExerciseViewModel AddExerciseVm(SessionExercise se)

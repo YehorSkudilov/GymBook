@@ -297,6 +297,19 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- The exercise library, which was a tab -->
+            <Label Text="EXERCISES" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+            <Border Style="{StaticResource Card}" Padding="0">
+                <Grid Style="{StaticResource Row}">
+                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenExercisesCommand}" /></Grid.GestureRecognizers>
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label Text="Exercise library" />
+                        <Label Text="Browse every exercise, with videos and how-tos, and make your own" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                </Grid>
+            </Border>
+
             <Label Text="DATA" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0">
                 <VerticalStackLayout>

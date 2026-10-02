@@ -63,6 +63,7 @@ public static class MauiProgram
         AddPage<HomePage, HomeViewModel>(builder.Services);
         AddPage<PlansPage, PlansViewModel>(builder.Services);
         AddPage<ExercisesPage, ExercisesViewModel>(builder.Services);
+        builder.Services.AddTransient<ExerciseLibraryPage>();
         AddPage<StatsPage, StatsViewModel>(builder.Services);
         AddPage<NutritionPage, NutritionViewModel>(builder.Services);
         AddPage<FoodEntryPage, FoodEntryViewModel>(builder.Services);

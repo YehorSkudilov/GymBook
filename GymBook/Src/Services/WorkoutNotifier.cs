@@ -1,7 +1,23 @@
 namespace GymBook.Services;
 
-/// <summary>What the workout notification shows: the workout, where it's at, and the rest timer when resting.</summary>
-public record WorkoutStatus(string Name, DateTime StartedAt, string Detail, string Progress, DateTime? RestEndsAt, int RestSeconds);
+/// <summary>Where the workout is at, for its notification.</summary>
+public enum WorkoutPhase
+{
+    /// <summary>Doing <see cref="WorkoutStatus.Next"/>, timed since <see cref="WorkoutStatus.Since"/>.</summary>
+    InSet,
+    /// <summary>Resting, counting down to <see cref="WorkoutStatus.RestDueAt"/>; then <see cref="WorkoutStatus.Next"/>.</summary>
+    Resting,
+    /// <summary>The rest ran out at <see cref="WorkoutStatus.RestDueAt"/> and the next set hasn't been started.</summary>
+    RestOver,
+    /// <summary>Every set done or skipped: time to finish.</summary>
+    Done,
+}
+
+/// <summary>
+/// What the workout notification shows: the workout and its progress, what's being done or comes next (exercise, set,
+/// weight × reps), and the timer that goes with it.
+/// </summary>
+public record WorkoutStatus(string Name, string Progress, WorkoutPhase Phase, string Next, DateTime Since, DateTime? RestDueAt, int RestSeconds);
 
 /// <summary>
 /// The notification of the workout in progress (Android: Platforms/Android/WorkoutNotifier.cs), with the rest timer
