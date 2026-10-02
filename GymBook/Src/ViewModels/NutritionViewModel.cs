@@ -157,7 +157,7 @@ public partial class NutritionViewModel(
 
         BurnedText = day.BurnedKcal is { } burned ? NutritionService.Kcal(burned) : "N/A";
         BurnedCaption = day.BurnSource == BurnSource.Measured
-            ? day.IsToday ? $"So far · {day.Health?.Source ?? "health data"}" : day.Health?.Source ?? "Health data"
+            ? (day.IsToday ? "So far · " : "") + (day.StepsCounted ? "resting + steps" : day.Health?.Source ?? "health data")
             : "No health data";
 
         if (day.Balance is { } balance)

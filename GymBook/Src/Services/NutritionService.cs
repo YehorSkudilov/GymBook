@@ -23,7 +23,8 @@ public record DayNutrition(
     double FatG,
     double? BurnedKcal,
     BurnSource BurnSource,
-    HealthDay? Health)
+    HealthDay? Health,
+    bool StepsCounted = false)
 {
     public double EatenKcal => LoggedKcal + ImportedKcal;
 
@@ -65,10 +66,7 @@ public class NutritionService(DataStore store)
         var health = store.Data.HealthDays.FirstOrDefault(h => h.Date.Date == date);
         var import = Profile.ImportHealthFood && health != null;
 
-        // Only what the health apps measured: no estimate in its place (shown as N/A until there's data).
-        var (burned, source) = health?.TotalBurnedKcal is { } total ? (total, BurnSource.Measured)
-            : health is { BasalBurnedKcal: { } basal, ActiveBurnedKcal: { } active } ? (basal + active, BurnSource.Measured)
-            : ((double?)null, BurnSource.None);
+        var (burned, source, stepsCounted) = Burned(health, date);
 
         return new DayNutrition(
             date,
@@ -80,8 +78,43 @@ public class NutritionService(DataStore store)
             foods.Sum(f => f.FatG) + (import ? health!.FoodFatG ?? 0 : 0),
             burned,
             source,
-            health);
+            health,
+            stepsCounted);
     }
+
+    /// <summary>
+    /// Net calories walking burns per step for each kilogram of body weight, on top of resting: about 0.5 kcal per kg per
+    /// km, at roughly 1,300 steps a km (some 260 kcal for 10,000 steps at 70 kg).
+    /// </summary>
+    const double WalkKcalPerStepPerKg = 0.0004;
+
+    /// <summary>
+    /// The day's burn from the health apps: resting plus activity. Where an app shares no total of its own, Health
+    /// Connect's total is only resting (worked out from the BMR) plus any active calories recorded, so walking that
+    /// only shows up as steps would be missed: the activity is the most of the active calories recorded, what the total
+    /// has beyond resting, and what the day's steps burn. Null (N/A) with nothing from the health apps.
+    /// </summary>
+    (double? Kcal, BurnSource Source, bool StepsCounted) Burned(HealthDay? health, DateTime date)
+    {
+        if (health == null)
+            return (null, BurnSource.None, false);
+        var total = health.TotalBurnedKcal;
+        var basal = health.BasalBurnedKcal;
+        var steps = health.Steps is { } s && s > 0 ? s * WalkKcalPerStepPerKg * WeightOn(date) : (double?)null;
+        if (basal == null)
+        {
+            // No resting figure to build on: the total as it is, or active calories alone aren't a day's burn.
+            return total is { } t ? (t, BurnSource.Measured, false) : (null, BurnSource.None, false);
+        }
+        var recorded = Math.Max(health.ActiveBurnedKcal ?? 0, total is { } all ? all - basal.Value : 0);
+        var activity = Math.Max(recorded, steps ?? 0);
+        return (basal.Value + activity, BurnSource.Measured, steps is { } walked && walked > recorded);
+    }
+
+    /// <summary>Body weight on a day: the last weighed by then, else the profile's.</summary>
+    double WeightOn(DateTime date) =>
+        store.Data.BodyWeights.Where(b => b.Date.Date <= date && b.WeightKg > 0).OrderBy(b => b.Date).LastOrDefault()?.WeightKg
+        ?? Profile.BodyWeightKg;
 
     /// <summary>
     /// The last <paramref name="days"/> finished days (today isn't over, so it isn't counted), only those with food logged
