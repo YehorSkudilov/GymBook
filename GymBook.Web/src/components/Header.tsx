@@ -1,7 +1,8 @@
 import Link from "next/link";
 import styles from "./Header.module.css";
 
-// A frosted bar like the app's nav bar, stuck to the top.
+// A frosted bar like the app's nav bar, stuck to the top. The links to sections are plain anchors: Next's Link does
+// nothing when the address already ends in that #section (tapped before, then scrolled away), a plain one scrolls again.
 export function Header() {
   return (
     <header className={styles.header}>
@@ -12,13 +13,16 @@ export function Header() {
           <span>Gym Book</span>
         </Link>
         <nav className={styles.nav}>
-          <Link href="/#features">Features</Link>
-          <Link href="/#faq">FAQ</Link>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- see above */}
+          <a href="/#features">Features</a>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- see above */}
+          <a href="/#faq">FAQ</a>
           <Link href="/support/">Support</Link>
         </nav>
-        <Link href="/#download" className={`btn btn-primary ${styles.cta}`}>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- see above */}
+        <a href="/#download" className={`btn btn-primary ${styles.cta}`}>
           Get the app
-        </Link>
+        </a>
       </div>
     </header>
   );

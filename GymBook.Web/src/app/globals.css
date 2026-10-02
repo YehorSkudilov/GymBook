@@ -44,6 +44,8 @@ body {
 
 html {
   scroll-behavior: smooth;
+  /* Sections jumped to land below the sticky header (64px), not under it. */
+  scroll-padding-top: 64px;
 }
 
 body {
