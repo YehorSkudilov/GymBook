@@ -35,8 +35,8 @@
 		<ApplicationId>com.yehorskudilov.gymbook</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.55</ApplicationDisplayVersion>
-		<ApplicationVersion>1000055</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0.56</ApplicationDisplayVersion>
+		<ApplicationVersion>1000056</ApplicationVersion>
 		<!-- Pin Version for every TFM, or MAUI sets it per platform and NuGet restore fails with NU1105. -->
 		<Version>$(ApplicationDisplayVersion)</Version>
 
