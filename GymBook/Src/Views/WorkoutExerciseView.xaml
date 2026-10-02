@@ -108,7 +108,7 @@
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding EditCommand}" />
                                 </Grid.GestureRecognizers>
-                                <!-- Its state behind it: green tint when done, outlined in blue when it's the one being logged -->
+                                <!-- Behind it: a slightly lighter background on the set being logged -->
                                 <Border Grid.ColumnSpan="6" Margin="-6,-3" StrokeShape="RoundRectangle 16" StrokeThickness="1.5"
                                         BackgroundColor="{Binding RowBackground}" Stroke="{Binding RowStroke}" InputTransparent="True" />
 
@@ -147,7 +147,7 @@
                                 <Label Grid.Column="4" Text="{Binding E1Rm}" TextColor="{StaticResource TextSecondary}" FontSize="18"
                                        HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowE1Rm}" />
 
-                                <!-- Check: a solid green button on the set being logged, a green tick badge on finished ones -->
+                                <!-- Check: a solid green button on the set being logged (red to untick a done one), a plain grey tick on finished ones -->
                                 <Border Grid.Column="5" BackgroundColor="{Binding CheckBackground}" Stroke="{Binding CheckStroke}" StrokeShape="RoundRectangle 14" HeightRequest="46"
                                         StrokeThickness="1.5" IsVisible="{Binding IsCurrent}">
                                     <Border.GestureRecognizers>
@@ -156,9 +156,9 @@
                                     <Image Source="{Binding CheckIcon}" WidthRequest="24" HeightRequest="24" />
                                 </Border>
                                 <Border Grid.Column="5" WidthRequest="30" HeightRequest="30" StrokeShape="RoundRectangle 15" StrokeThickness="0"
-                                        BackgroundColor="{StaticResource Success}" HorizontalOptions="Center" VerticalOptions="Center"
+                                        BackgroundColor="Transparent" HorizontalOptions="Center" VerticalOptions="Center"
                                         IsVisible="{Binding ShowDoneTick}" controls:Pop.When="{Binding IsCompleted}" controls:Pop.Amount="1.4">
-                                    <Image Source="{StaticResource IconCheck}" WidthRequest="18" HeightRequest="18" />
+                                    <Image Source="{StaticResource IconCheckMuted}" WidthRequest="22" HeightRequest="22" />
                                 </Border>
                                 <Label Grid.Column="4" Text="N/A" TextColor="{StaticResource TextSecondary}" FontSize="18"
                                        HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding ShowSkipped}" />
