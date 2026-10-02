@@ -771,6 +771,9 @@ public partial class WorkoutExerciseViewModel : ObservableObject
 
     /// <summary>Every working set done or skipped.</summary>
     public bool IsDone => Sets.Where(s => !s.Model.IsWarmup).All(s => s.IsSettled) && Sets.Any(s => !s.Model.IsWarmup);
+
+    /// <summary>Every working set done or skipped, with at least one done: the tick on its photo in the strip.</summary>
+    public bool IsFinished => IsDone && Sets.Any(s => !s.Model.IsWarmup && s.IsCompleted);
     /// <summary>Every working set left was skipped: the whole exercise is.</summary>
     public bool IsSkipped => Sets.Where(s => !s.Model.IsWarmup && !s.IsCompleted).Any() && Sets.Where(s => !s.Model.IsWarmup && !s.IsCompleted).All(s => s.IsSkipped);
     public string SkipExerciseText => IsSkipped ? "Don't skip exercise" : "Skip exercise";
@@ -802,6 +805,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
 
     internal void Renumber()
     {
+        OnPropertyChanged(nameof(IsFinished));
         // Warm-ups W1, W2…, working sets 1, 2…
         var (n, w) = (0, 0);
         foreach (var s in Sets)
@@ -810,6 +814,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         OnWarmupsChanged();
         OnPropertyChanged(nameof(WarmupText));
         OnPropertyChanged(nameof(IsSkipped));
+        OnPropertyChanged(nameof(IsFinished));
         OnPropertyChanged(nameof(SkipExerciseText));
         OnPropertyChanged(nameof(CanSkipExercise));
         foreach (var s in Sets)
@@ -844,6 +849,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         }
         OnWarmupsChanged();
         OnPropertyChanged(nameof(IsSkipped));
+        OnPropertyChanged(nameof(IsFinished));
         OnPropertyChanged(nameof(SkipExerciseText));
         OnPropertyChanged(nameof(CanSkipExercise));
         UpdateCurrent();
@@ -907,6 +913,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     {
         OnWarmupsChanged();
         OnPropertyChanged(nameof(IsSkipped));
+        OnPropertyChanged(nameof(IsFinished));
         OnPropertyChanged(nameof(SkipExerciseText));
         OnPropertyChanged(nameof(CanSkipExercise));
         UpdateCurrent();

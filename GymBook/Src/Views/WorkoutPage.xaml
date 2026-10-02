@@ -70,6 +70,12 @@
                                        FontFamily="OpenSansSemibold" FontSize="14"
                                        HorizontalOptions="Center" VerticalOptions="Center" />
                                 <Image Source="{Binding Thumb.Image, Converter={StaticResource Thumb}}" IsVisible="{Binding Thumb.HasImage}" Aspect="AspectFill" Margin="-1" />
+                                <!-- Every set done: a small tick in the corner -->
+                                <Border WidthRequest="18" HeightRequest="18" StrokeShape="RoundRectangle 9" StrokeThickness="1.5" Stroke="{StaticResource Bg}"
+                                        BackgroundColor="{StaticResource Success}" HorizontalOptions="End" VerticalOptions="Start" Margin="0,3,3,0"
+                                        IsVisible="{Binding IsFinished}" controls:Pop.When="{Binding IsFinished}" controls:Pop.Amount="1.4" InputTransparent="True">
+                                    <Image Source="{StaticResource IconCheck}" WidthRequest="12" HeightRequest="12" />
+                                </Border>
                             </Grid>
                         </Border>
                     </DataTemplate>
