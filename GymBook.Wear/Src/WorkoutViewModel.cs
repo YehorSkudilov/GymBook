@@ -263,9 +263,9 @@ public partial class WorkoutViewModel : ObservableObject
         }
         // Rest as the phone would: the warm-up rest after a warm-up, the exercise's own after a working set.
         _restTotal = set.IsWarmup ? _workouts.WarmupsFor(Session).RestSeconds : se.RestSeconds;
-        _restEndsAt = _store.Profile.AutoRestTimer && _restTotal > 0 ? now.AddSeconds(_restTotal) : null;
-        if (_restEndsAt is { } restEnds)
-            SetTimes.StartRest(Session!, set, now, restEnds);
+        // Every set done is followed by a rest, as on the phone.
+        _restEndsAt = now.AddSeconds(Math.Max(0, _restTotal));
+        SetTimes.StartRest(Session!, set, now, _restEndsAt.Value);
         _workouts.Save();
         // This exercise done: on to the next one with sets left (the rest timer runs over it).
         if (!se.Sets.Any(s => !s.IsCompleted) && Session!.Exercises.FindIndex(_exercise + 1, e => e.Sets.Any(s => !s.IsCompleted)) is >= 0 and var next)

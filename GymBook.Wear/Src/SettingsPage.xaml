@@ -52,12 +52,6 @@
                     <Switch Grid.Column="1" IsToggled="{Binding UsesPounds}" />
                 </Grid>
             </Border>
-            <Border Style="{StaticResource Row}">
-                <Grid ColumnDefinitions="*,Auto">
-                    <Label Text="Rest timer after a set" Style="{StaticResource RowLabel}" />
-                    <Switch Grid.Column="1" IsToggled="{Binding AutoRestTimer}" />
-                </Grid>
-            </Border>
             <Label Text="Also on your phone." Style="{StaticResource Small}" FontSize="10" />
 
             <!-- This watch's -->

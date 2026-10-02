@@ -238,14 +238,6 @@
                         <Label Grid.Column="1" Text="{Binding WarmupSettings.RestText}" Style="{StaticResource RowValue}" />
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
-                    <Grid Style="{StaticResource Row}" Padding="16,6">
-                        <VerticalStackLayout VerticalOptions="Center">
-                            <Label Text="Auto-start rest timer" />
-                            <Label Text="Start the timer when you tick off a set" Style="{StaticResource Caption}" FontSize="12" />
-                        </VerticalStackLayout>
-                        <Switch Grid.Column="2" IsToggled="{Binding AutoRest}" />
-                    </Grid>
                 </VerticalStackLayout>
             </Border>
 

@@ -100,17 +100,10 @@
                  it. Filled in the code-behind. -->
             <skeleton:CView x:Name="ExercisePager" IsVisible="{Binding IsEmpty, Converter={StaticResource Not}}" />
 
-            <!-- Rest timer button, floating over the exercise -->
-            <Border IsVisible="{Binding ShowRestButton}" WidthRequest="72" HeightRequest="60" StrokeShape="RoundRectangle 20"
-                    StrokeThickness="0" BackgroundColor="{StaticResource Surface3}" HorizontalOptions="Center" VerticalOptions="End" Margin="0,0,0,20">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding StartRestNowCommand}" />
-                </Border.GestureRecognizers>
-                <Image Source="{StaticResource IconTimer}" WidthRequest="28" HeightRequest="28" />
-            </Border>
         </Grid>
 
-        <!-- Rest timer -->
+        <!-- Rest after a set: counts down, then below zero in red once it's over (with a notification), until the next set
+             is started. −15 / +15 move it; taken back above zero, it says so again when it gets there. -->
         <Border Grid.Row="4" IsVisible="{Binding IsResting}" BackgroundColor="{StaticResource Surface2}"
                 StrokeShape="RoundRectangle 24,24,0,0" Padding="20,14,20,22">
             <VerticalStackLayout Spacing="12">
@@ -119,31 +112,31 @@
                 <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="8">
                     <Image Source="{StaticResource IconTimer}" WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                        <Label Text="Rest" Style="{StaticResource Caption}" FontSize="12" />
-                        <Label Text="{Binding RestText}" FontFamily="OpenSansSemibold" FontSize="26" FontAttributes="Bold" />
+                        <Label Text="{Binding RestCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                        <Label Text="{Binding RestText}" TextColor="{Binding RestTextColor}" FontFamily="OpenSansSemibold" FontSize="26" FontAttributes="Bold" />
                     </VerticalStackLayout>
                     <Button Grid.Column="2" Text="−15" Style="{StaticResource SmallButton}" BackgroundColor="{StaticResource Surface3}"
                             Command="{Binding AdjustRestCommand}" CommandParameter="-15" VerticalOptions="Center" />
                     <Button Grid.Column="3" Text="+15" Style="{StaticResource SmallButton}" BackgroundColor="{StaticResource Surface3}"
                             Command="{Binding AdjustRestCommand}" CommandParameter="15" VerticalOptions="Center" />
-                    <Button Grid.Column="4" Text="Skip" Style="{StaticResource SmallButton}" BackgroundColor="{StaticResource Accent}" TextColor="White"
-                            Command="{Binding SkipRestCommand}" VerticalOptions="Center" />
+                    <Button Grid.Column="4" Text="Start set" Style="{StaticResource SmallButton}" BackgroundColor="{StaticResource Success}" TextColor="White"
+                            FontFamily="OpenSansSemibold" Command="{Binding StartSetCommand}" VerticalOptions="Center" />
                 </Grid>
             </VerticalStackLayout>
         </Border>
 
-        <!-- After the rest (ran out or skipped), until the next set is done: how long since, counting up -->
-        <Border Grid.Row="4" IsVisible="{Binding IsOverRest}" BackgroundColor="{StaticResource Surface2}"
+        <!-- The set being done: how long it's taken so far, from the end of the rest (or the workout's start). Back to the
+             rest if it was started too soon. -->
+        <Border Grid.Row="4" IsVisible="{Binding IsTimingSet}" BackgroundColor="{StaticResource Surface2}"
                 StrokeShape="RoundRectangle 24,24,0,0" Padding="20,14,20,22">
             <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
                 <Image Source="{StaticResource IconTimer}" WidthRequest="22" HeightRequest="22" VerticalOptions="Center" />
                 <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                    <Label Text="Since rest ended" Style="{StaticResource Caption}" FontSize="12" />
-                    <Label Text="{Binding OverRestText}" FontFamily="OpenSansSemibold" FontSize="26" FontAttributes="Bold" TextColor="{StaticResource Warning}" />
+                    <Label Text="{Binding SetTimerCaption}" Style="{StaticResource Caption}" FontSize="12" LineBreakMode="TailTruncation" />
+                    <Label Text="{Binding SetTimerText}" FontFamily="OpenSansSemibold" FontSize="26" FontAttributes="Bold" />
                 </VerticalStackLayout>
-                <ImageButton Grid.Column="2" Source="{StaticResource IconClose}" WidthRequest="36" HeightRequest="36" Padding="8"
-                             BackgroundColor="{StaticResource Surface3}" CornerRadius="18" VerticalOptions="Center"
-                             Command="{Binding HideOverRestCommand}" />
+                <Button Grid.Column="2" Text="Back to rest" Style="{StaticResource SmallButton}" BackgroundColor="{StaticResource Surface3}"
+                        Command="{Binding BackToRestCommand}" IsVisible="{Binding CanGoBackToRest}" VerticalOptions="Center" />
             </Grid>
         </Border>
 

@@ -149,15 +149,6 @@
                                 <Label Text="Track RIR" Style="{StaticResource MenuLabel}" />
                                 <Switch Grid.Column="2" IsToggled="{Binding TrackRir}" VerticalOptions="Center" />
                             </Grid>
-                            <Grid Style="{StaticResource MenuRow}">
-                                <Image Style="{StaticResource MenuIcon}">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="timer" Color="{StaticResource TextSecondary}" Size="32" />
-                                    </Image.Source>
-                                </Image>
-                                <Label Text="Auto-start rest timer" Style="{StaticResource MenuLabel}" />
-                                <Switch Grid.Column="2" IsToggled="{Binding AutoRest}" VerticalOptions="Center" />
-                            </Grid>
                         </VerticalStackLayout>
                     </Border>
                 </VerticalStackLayout>

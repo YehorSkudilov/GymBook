@@ -20,7 +20,6 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
     [ObservableProperty] bool trackRir;
     /// <summary>False in a workout of a plan with RIR switched off: the switch would do nothing there.</summary>
     [ObservableProperty] bool canTrackRir = true;
-    [ObservableProperty] bool autoRest;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) => _workout = query.TryGetValue("workout", out var w) ? w as WorkoutViewModel : null;
 
@@ -37,7 +36,6 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
         TrackRir = store.Profile.TrackRir;
         // Only a plan with its own training settings and RIR off rules it out; one on the defaults follows this switch.
         CanTrackRir = store.GetPlan(store.Data.ActiveSession?.PlanId) is not { OwnTraining: true, UseRir: false };
-        AutoRest = store.Profile.AutoRestTimer;
         _loading = false;
         Tick();
 
@@ -84,7 +82,6 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
         Services.PlanTraining.ApplyToPlans(store);
     });
 
-    partial void OnAutoRestChanged(bool value) => UpdateProfile(p => p.AutoRestTimer = value);
 
     void UpdateProfile(Action<Models.UserProfile> change)
     {

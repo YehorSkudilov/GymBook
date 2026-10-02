@@ -26,7 +26,6 @@ public partial class SettingsViewModel : ObservableObject
 
     // The account's, synced with the phone.
     [ObservableProperty] bool usesPounds;
-    [ObservableProperty] bool autoRestTimer;
 
     // This watch's.
     [ObservableProperty] bool heartRate;
@@ -46,7 +45,6 @@ public partial class SettingsViewModel : ObservableObject
     {
         _loading = true;
         UsesPounds = _store.Profile.Unit == WeightUnit.Lbs;
-        AutoRestTimer = _store.Profile.AutoRestTimer;
         HeartRate = WatchSettings.HeartRate;
         RestBuzz = WatchSettings.RestBuzz;
         TapFeedback = WatchSettings.TapFeedback;
@@ -72,13 +70,6 @@ public partial class SettingsViewModel : ObservableObject
         _store.Save();
     }
 
-    partial void OnAutoRestTimerChanged(bool value)
-    {
-        if (_loading)
-            return;
-        _store.Profile.AutoRestTimer = value;
-        _store.Save();
-    }
 
     partial void OnHeartRateChanged(bool value)
     {

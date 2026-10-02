@@ -104,6 +104,7 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
             s.Property(p => p.StartedAt).HasConversion(jsonWallClock);
             s.Property(p => p.CompletedAt).HasConversion(jsonWallClock);
             s.Property(p => p.RestStartedAt).HasConversion(jsonWallClock);
+            s.Property(p => p.RestDueAt).HasConversion(jsonWallClock);
             s.Property(p => p.RestEndedAt).HasConversion(jsonWallClock);
         }));
 

@@ -25,7 +25,6 @@ public partial class ProfileViewModel(
     [ObservableProperty] string compoundRestText = "";
     [ObservableProperty] string isolationRestText = "";
     [ObservableProperty] string experienceText = "";
-    [ObservableProperty] bool autoRest;
     [ObservableProperty] bool trackRir;
     [ObservableProperty] bool defaultDeloads;
     [ObservableProperty] bool defaultPeriodization;
@@ -100,7 +99,6 @@ public partial class ProfileViewModel(
         CompoundRestText = RestLabel(P.CompoundRestSeconds);
         IsolationRestText = RestLabel(P.IsolationRestSeconds);
         ExperienceText = P.Experience.Display();
-        AutoRest = P.AutoRestTimer;
         WarmupSettings.Refresh();
         TrackRir = P.TrackRir;
         DefaultDeloads = P.DefaultDeloads;
@@ -109,7 +107,6 @@ public partial class ProfileViewModel(
         _loading = false;
     }
 
-    partial void OnAutoRestChanged(bool value) => Update(() => P.AutoRestTimer = value);
     // The training defaults: plans following them (not those with their own, in their Plan settings) follow along.
     partial void OnTrackRirChanged(bool value) => UpdateTraining(() => P.TrackRir = value);
     partial void OnDefaultDeloadsChanged(bool value) => UpdateTraining(() => P.DefaultDeloads = value);

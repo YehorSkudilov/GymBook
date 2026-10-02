@@ -211,11 +211,13 @@ public class SetEntry
     public DateTime? StartedAt { get; set; }
     /// <summary>When it was ticked done.</summary>
     public DateTime? CompletedAt { get; set; }
-    /// <summary>When the rest after it began, if one was timed.</summary>
+    /// <summary>When the rest after it began. Every set done starts one.</summary>
     public DateTime? RestStartedAt { get; set; }
+    /// <summary>When that rest's countdown reaches zero (moved by −/+); past it, the rest runs over.</summary>
+    public DateTime? RestDueAt { get; set; }
     /// <summary>
-    /// When that rest ended: when the timer ran out, or earlier when it was skipped or the next set was ticked. While it
-    /// runs, when it's due to end.
+    /// When that rest really ended: the next set was started (or ticked), or the workout finished. Null while it's still
+    /// going, even past <see cref="RestDueAt"/>.
     /// </summary>
     public DateTime? RestEndedAt { get; set; }
 }

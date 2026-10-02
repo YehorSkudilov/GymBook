@@ -3,10 +3,12 @@ namespace GymBook.Models;
 /// <summary>
 /// Stamps a workout's sets with when things happened (see <see cref="SetEntry.StartedAt"/> and the rest), so how long each
 /// set, warm-up and rest took can be worked out later. Used by the phone, the watch and finishing a workout alike.
+/// A rest starts when a set is ticked and lasts until the next set is started (or ticked): it can run past when it was
+/// due, and the next set's time starts when the rest ends.
 /// </summary>
 public static class SetTimes
 {
-    /// <summary>Ticks <paramref name="set"/> done at <paramref name="now"/>, ending any rest still running.</summary>
+    /// <summary>Ticks <paramref name="set"/> done at <paramref name="now"/>, ending any rest still going.</summary>
     public static void Complete(WorkoutSession session, SetEntry set, DateTime now)
     {
         EndRest(session, now);
@@ -14,8 +16,7 @@ public static class SetTimes
         set.IsCompleted = true;
         set.CompletedAt = now;
         set.StartedAt = StartOf(session, set, now);
-        set.RestStartedAt = null;
-        set.RestEndedAt = null;
+        ClearRest(set);
     }
 
     /// <summary>Unticks <paramref name="set"/>: it hasn't happened, so it has no times.</summary>
@@ -24,7 +25,13 @@ public static class SetTimes
         set.IsCompleted = false;
         set.CompletedAt = null;
         set.StartedAt = null;
+        ClearRest(set);
+    }
+
+    static void ClearRest(SetEntry set)
+    {
         set.RestStartedAt = null;
+        set.RestDueAt = null;
         set.RestEndedAt = null;
     }
 
@@ -46,28 +53,44 @@ public static class SetTimes
         return start > now ? now : start;
     }
 
-    /// <summary>A rest begins after <paramref name="after"/>, due to end at <paramref name="endsAt"/>; any other one still running ends.</summary>
-    public static void StartRest(WorkoutSession session, SetEntry after, DateTime now, DateTime endsAt)
+    /// <summary>A rest begins after <paramref name="after"/>, due at <paramref name="dueAt"/>; any other one still going ends.</summary>
+    public static void StartRest(WorkoutSession session, SetEntry after, DateTime now, DateTime dueAt)
     {
         EndRest(session, now);
         after.RestStartedAt = now;
-        after.RestEndedAt = endsAt;
+        after.RestDueAt = dueAt < now ? now : dueAt;
+        after.RestEndedAt = null;
     }
 
-    /// <summary>The running rest (after <paramref name="after"/>) is now due at <paramref name="endsAt"/>.</summary>
-    public static void MoveRestEnd(SetEntry after, DateTime endsAt)
+    /// <summary>The rest after <paramref name="after"/> is now due at <paramref name="dueAt"/> (−/+ on the timer).</summary>
+    public static void MoveRestDue(SetEntry after, DateTime dueAt)
     {
         if (after.RestStartedAt is { } started)
-            after.RestEndedAt = endsAt < started ? started : endsAt;
+            after.RestDueAt = dueAt < started ? started : dueAt;
     }
 
-    /// <summary>Ends a rest still running at <paramref name="now"/> (skipped, the next set ticked, the workout finished).</summary>
+    /// <summary>Ends the rest still going at <paramref name="now"/>: the next set started, or the workout finished.</summary>
     public static void EndRest(WorkoutSession session, DateTime now)
     {
         foreach (var set in session.Exercises.SelectMany(e => e.Sets))
-            if (set.RestStartedAt is { } started && set.RestEndedAt is { } ends && ends > now)
+            if (set.RestStartedAt is { } started && set.RestEndedAt == null)
                 set.RestEndedAt = now < started ? started : now;
     }
+
+    /// <summary>Back to resting after the next set was started: the rest after <paramref name="after"/> carries on.</summary>
+    public static void ResumeRest(SetEntry after)
+    {
+        if (after.RestStartedAt != null)
+            after.RestEndedAt = null;
+    }
+
+    /// <summary>The set whose rest is still going (none, or one), e.g. to pick the timer back up after a restart.</summary>
+    public static SetEntry? RunningRest(WorkoutSession session) =>
+        session.Exercises.SelectMany(e => e.Sets).FirstOrDefault(s => s.IsCompleted && s.RestStartedAt != null && s.RestEndedAt == null);
+
+    /// <summary>The last set done (by when it was ticked), or null.</summary>
+    public static SetEntry? LastDone(WorkoutSession session) =>
+        session.Exercises.SelectMany(e => e.Sets).Where(s => s.IsCompleted && s.CompletedAt != null).MaxBy(s => s.CompletedAt);
 
     /// <summary>
     /// Moves the whole workout by <paramref name="delta"/>: its start and end, and every time logged in it, so how long
@@ -82,20 +105,17 @@ public static class SetTimes
             set.StartedAt += delta;
             set.CompletedAt += delta;
             set.RestStartedAt += delta;
+            set.RestDueAt += delta;
             set.RestEndedAt += delta;
         }
     }
 
-    /// <summary>The latest moment that already happened in the workout (a rest still running doesn't count): it can't move past now.</summary>
+    /// <summary>The latest moment that already happened in the workout (not when a rest is due): it can't move past now.</summary>
     public static DateTime LastLogged(WorkoutSession session) =>
         session.Exercises.SelectMany(e => e.Sets)
-            .SelectMany(s => new[] { s.StartedAt, s.CompletedAt, s.RestStartedAt })
+            .SelectMany(s => new[] { s.StartedAt, s.CompletedAt, s.RestStartedAt, s.RestEndedAt })
             .Append(session.EndedAt)
             .OfType<DateTime>()
             .Append(session.StartedAt)
             .Max();
-
-    /// <summary>The set whose rest is still running at <paramref name="now"/>, to pick the timer back up after a restart.</summary>
-    public static SetEntry? RunningRest(WorkoutSession session, DateTime now) =>
-        session.Exercises.SelectMany(e => e.Sets).FirstOrDefault(s => s.RestStartedAt != null && s.RestEndedAt > now);
 }

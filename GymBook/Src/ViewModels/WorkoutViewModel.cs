@@ -19,10 +19,8 @@ public partial class WorkoutViewModel(
     static bool _askedNotifications;
     IDispatcherTimer? _timer;
     WorkoutSession? _session;
-    DateTime _restEndsAt;
-    int _restTotal;
-    /// <summary>The set the running rest comes after, which holds its times (see <see cref="SetTimes"/>).</summary>
-    SetEntry? _restSet;
+    /// <summary>The rest's countdown was still above zero at the last tick: crossing zero then says the rest is over.</summary>
+    bool _restCounting;
 
     public ObservableCollection<WorkoutExerciseViewModel> Exercises { get; } = [];
 
@@ -32,22 +30,30 @@ public partial class WorkoutViewModel(
     /// <summary>Every set ticked: the Finish button shows in the header. Until then finishing is in the ··· menu.</summary>
     [ObservableProperty] bool canFinish;
     [ObservableProperty] double progress;
+    // The bar at the bottom is always one of two timers, worked out each second from the times logged (see SetTimes), so it
+    // carries on after the app is reopened: resting after a set (counting down, then below zero once it's over, until the
+    // next set is started), or the set being done (counting up since the rest, or the workout, began).
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowRestButton))]
+    [NotifyPropertyChangedFor(nameof(IsTimingSet))]
     bool isResting;
     [ObservableProperty] string restText = "";
     [ObservableProperty] double restProgress;
-    /// <summary>The rest ended (ran out or skipped) and the next set isn't done yet: how long since, counting up.</summary>
-    [ObservableProperty] bool isOverRest;
-    [ObservableProperty] string overRestText = "";
-    /// <summary>The set whose time since rest was hidden; it shows again after the next rest.</summary>
-    SetEntry? _overRestHidden;
+    /// <summary>The rest went past its time and is counting below zero.</summary>
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowRestButton))]
+    [NotifyPropertyChangedFor(nameof(RestTextColor), nameof(RestCaption))]
+    bool isRestOver;
+    public Color RestTextColor => IsRestOver ? Color.FromArgb("#FF4D5E") : Color.FromArgb("#F4F6FB");
+    public string RestCaption => IsRestOver ? "Rest over" : "Rest";
+    /// <summary>The set being done: how long it has taken so far.</summary>
+    [ObservableProperty] string setTimerText = "";
+    [ObservableProperty] string setTimerCaption = "";
+    /// <summary>The set was started from a rest, which it can go back to.</summary>
+    [ObservableProperty] bool canGoBackToRest;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTimingSet))]
     bool isEmpty;
 
-    /// <summary>The floating rest timer button: not while resting, and not before there's an exercise to rest between.</summary>
-    public bool ShowRestButton => !IsResting && !IsEmpty;
+    public bool IsTimingSet => !IsResting && !IsEmpty;
 
     /// <summary>The exercise on screen; the page and the photo strip both follow it.</summary>
     [ObservableProperty] int currentIndex;
@@ -186,15 +192,8 @@ public partial class WorkoutViewModel(
             var open = Exercises.ToList().FindIndex(e => !e.IsDone);
             CurrentIndex = Math.Max(0, open);
             OnCurrentIndexChanged(CurrentIndex);
-            // A rest that was running when the app closed carries on until it's due.
-            IsResting = false;
-            if (SetTimes.RunningRest(active, DateTime.Now) is { RestStartedAt: { } restStarted, RestEndedAt: { } restEnds } resting)
-            {
-                _restSet = resting;
-                _restEndsAt = restEnds;
-                _restTotal = Math.Max(1, (int)Math.Round((restEnds - restStarted).TotalSeconds));
-                IsResting = true;
-            }
+            // A rest still going when the app closed carries on; one already over doesn't announce itself again.
+            _restCounting = SetTimes.RunningRest(active)?.RestDueAt > DateTime.Now;
         }
         OnPropertyChanged(nameof(UnitLabel));
         OnPropertyChanged(nameof(TrackRir));
@@ -238,33 +237,70 @@ public partial class WorkoutViewModel(
 
     void Tick()
     {
+        var now = DateTime.Now;
         if (_session != null)
-            Elapsed = Units.Clock(DateTime.Now - _session.StartedAt);
+            Elapsed = Units.Clock(now - _session.StartedAt);
+        UpdateTimers(now);
         UpdateNotification();
-        UpdateOverRest();
-        if (!IsResting)
-            return;
-        var left = _restEndsAt - DateTime.Now;
-        if (left <= TimeSpan.Zero)
+    }
+
+    /// <summary>The rest (counting down, then below zero) or the set being done (counting up), from the times logged.</summary>
+    void UpdateTimers(DateTime now)
+    {
+        if (_session == null)
         {
             IsResting = false;
-            UpdateOverRest();
-            RestFinished?.Invoke();
-            notifier.RestOver(NextSetText());
-            UpdateNotification();
-            try
+            return;
+        }
+        if (SetTimes.RunningRest(_session) is { RestStartedAt: { } started, RestDueAt: { } due })
+        {
+            IsResting = true;
+            var left = due - now;
+            var total = Math.Max(1, (due - started).TotalSeconds);
+            if (left > TimeSpan.Zero)
             {
-                HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
-                Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(600));
+                IsRestOver = false;
+                RestText = Units.Rest((int)Math.Ceiling(left.TotalSeconds));
+                RestProgress = left.TotalSeconds / total;
+                _restCounting = true;
+                return;
             }
-            catch
+            IsRestOver = true;
+            RestText = "−" + Units.Rest((int)Math.Floor(-left.TotalSeconds));
+            RestProgress = 0;
+            // Just reached zero (also again after more time was added): say so once.
+            if (_restCounting)
             {
-                // Not every platform supports vibration.
+                _restCounting = false;
+                RestOver();
             }
             return;
         }
-        RestText = Units.Rest((int)Math.Ceiling(left.TotalSeconds));
-        RestProgress = _restTotal <= 0 ? 0 : left.TotalSeconds / _restTotal;
+
+        IsResting = false;
+        IsRestOver = false;
+        _restCounting = false;
+        var last = SetTimes.LastDone(_session);
+        var since = last == null ? _session.StartedAt : last.RestEndedAt is { } restEnded && restEnded > last.CompletedAt ? restEnded : last.CompletedAt ?? _session.StartedAt;
+        SetTimerText = Units.Clock(now - (since > now ? now : since));
+        SetTimerCaption = NextSetText();
+        CanGoBackToRest = last is { RestStartedAt: not null, RestEndedAt: not null };
+    }
+
+    /// <summary>The rest ran out: the page says it's time for the next set, with a buzz, and a notification when the app is away.</summary>
+    void RestOver()
+    {
+        RestFinished?.Invoke();
+        notifier.RestOver(NextSetText());
+        try
+        {
+            HapticFeedback.Default.Perform(HapticFeedbackType.LongPress);
+            Vibration.Default.Vibrate(TimeSpan.FromMilliseconds(600));
+        }
+        catch
+        {
+            // Not every platform supports vibration.
+        }
     }
 
     /// <summary>The workout notification (Android): where it's at, and the rest timer while resting. Redrawn only on change.</summary>
@@ -272,8 +308,10 @@ public partial class WorkoutViewModel(
     {
         if (_session == null || workouts.Active != _session)
             return;
+        var rest = SetTimes.RunningRest(_session);
+        var counting = rest is { RestDueAt: { } due, RestStartedAt: { } started } && due > DateTime.Now;
         notifier.Show(new WorkoutStatus(Name, _session.StartedAt, NextSetText(), ProgressText,
-            IsResting ? _restEndsAt : null, _restTotal));
+            counting ? rest!.RestDueAt : null, counting ? (int)Math.Round((rest!.RestDueAt!.Value - rest.RestStartedAt!.Value).TotalSeconds) : 0));
     }
 
     /// <summary>"Bench Press · set 2 of 4": the exercise on screen and its next set to do.</summary>
@@ -300,29 +338,28 @@ public partial class WorkoutViewModel(
     /// <summary>An exercise's last set was just done: the page celebrates it (the whole workout, when it was the last one).</summary>
     public event Action<WorkoutExerciseViewModel, bool>? ExerciseFinished;
 
-    /// <summary>The rest timer ran out (not skipped): the page says it's time for the next set.</summary>
+    /// <summary>The rest timer reached zero: the page says it's time for the next set.</summary>
     public event Action? RestFinished;
 
     internal void OnSetToggled(WorkoutExerciseViewModel exercise, SetRowViewModel set)
     {
-        // When it began and ended (and the rest before it, if one was running, ends now).
+        // When it began and ended (the rest before it, if still going, ends now), and the rest after it starts: every set
+        // done is followed by one, until the next set is started.
         if (_session != null && set.IsCompleted)
         {
-            SetTimes.Complete(_session, set.Model, set.Model.CompletedAt ?? DateTime.Now);
-            if (IsResting && _restSet != set.Model)
-                IsResting = false;
+            var now = set.Model.CompletedAt ?? DateTime.Now;
+            SetTimes.Complete(_session, set.Model, now);
+            var seconds = set.Model.IsWarmup ? Warmups.RestSeconds : exercise.Model.RestSeconds;
+            SetTimes.StartRest(_session, set.Model, now, now.AddSeconds(Math.Max(0, seconds)));
+            _restCounting = seconds > 0;
         }
         else
         {
             SetTimes.Uncomplete(set.Model);
-            if (_restSet == set.Model)
-                IsResting = false;
         }
-        if (set.IsCompleted && store.Profile.AutoRestTimer)
-            StartRest(set.Model.IsWarmup ? Warmups.RestSeconds : exercise.Model.RestSeconds, set.Model);
         workouts.Save();
         UpdateProgress();
-        UpdateOverRest();
+        Tick();
         if (set.IsCompleted && !set.Model.IsWarmup && exercise.IsDone)
             ExerciseFinished?.Invoke(exercise, CanFinish);
         // Its last set done: move straight on to the next exercise (the rest timer keeps running over it).
@@ -398,83 +435,43 @@ public partial class WorkoutViewModel(
         CanFinish = sets.Count > 0 && sets.All(s => s.IsSettled);
     }
 
-    /// <summary>Rests for <paramref name="seconds"/>, logged as the rest after <paramref name="after"/> (when there's a set before it).</summary>
-    void StartRest(int seconds, SetEntry? after)
-    {
-        var now = DateTime.Now;
-        _restTotal = seconds;
-        _restEndsAt = now.AddSeconds(seconds);
-        _restSet = after;
-        if (_session != null)
-        {
-            if (after != null)
-                SetTimes.StartRest(_session, after, now, _restEndsAt);
-            else
-                SetTimes.EndRest(_session, now);
-        }
-        IsResting = true;
-        Tick();
-    }
-
+    /// <summary>−15 / +15 on the rest: moves when it's due. Taking it back above zero makes it say "rest over" again when it gets there.</summary>
     [RelayCommand]
     void AdjustRest(string delta)
     {
-        var d = int.Parse(delta);
-        _restEndsAt = _restEndsAt.AddSeconds(d);
-        _restTotal = Math.Max(1, _restTotal + d);
-        if (_restSet != null)
-        {
-            SetTimes.MoveRestEnd(_restSet, _restEndsAt);
-            workouts.Save();
-        }
+        if (_session == null || SetTimes.RunningRest(_session) is not { RestDueAt: { } due } rest)
+            return;
+        var now = DateTime.Now;
+        // From where it is now: past zero, adding time counts from now, not from when it ran out.
+        var from = due < now && int.Parse(delta) > 0 ? now : due;
+        SetTimes.MoveRestDue(rest, from.AddSeconds(int.Parse(delta)));
+        _restCounting = rest.RestDueAt > now;
+        workouts.Save();
         Tick();
     }
 
+    /// <summary>Ends the rest: the next set starts now, and is timed from here.</summary>
     [RelayCommand]
-    void SkipRest()
+    void StartSet()
     {
-        IsResting = false;
-        if (_session != null)
-        {
-            SetTimes.EndRest(_session, DateTime.Now);
-            workouts.Save();
-        }
-        UpdateOverRest();
-    }
-
-    /// <summary>
-    /// Time since the last rest ended, while the next set isn't done: from the times logged (the last set done and when
-    /// its rest ended), so it carries on after the app was closed. Not while resting, or once hidden.
-    /// </summary>
-    void UpdateOverRest()
-    {
-        var now = DateTime.Now;
-        var last = _session?.Exercises.SelectMany(e => e.Sets).Where(s => s.IsCompleted && s.CompletedAt != null).MaxBy(s => s.CompletedAt);
-        if (IsResting || last is not { RestStartedAt: not null, RestEndedAt: { } ended } || ended > now || last == _overRestHidden)
-        {
-            IsOverRest = false;
+        if (_session == null)
             return;
-        }
-        OverRestText = "+" + Units.Clock(now - ended);
-        IsOverRest = true;
-    }
-
-    /// <summary>The ✕ on the time since rest: hides it until the next rest.</summary>
-    [RelayCommand]
-    void HideOverRest()
-    {
-        _overRestHidden = _session?.Exercises.SelectMany(e => e.Sets).Where(s => s.IsCompleted && s.CompletedAt != null).MaxBy(s => s.CompletedAt);
-        IsOverRest = false;
-    }
-
-    /// <summary>The round timer button: rests for the current exercise's rest time, after the last set done.</summary>
-    [RelayCommand]
-    void StartRestNow()
-    {
-        var rest = Exercises.ElementAtOrDefault(CurrentIndex)?.Model.RestSeconds ?? store.Profile.CompoundRestSeconds ?? 120;
-        var last = _session?.Exercises.SelectMany(e => e.Sets).Where(s => s.IsCompleted && s.CompletedAt != null).MaxBy(s => s.CompletedAt);
-        StartRest(rest, last);
+        SetTimes.EndRest(_session, DateTime.Now);
+        _restCounting = false;
         workouts.Save();
+        Tick();
+    }
+
+    /// <summary>Back to the rest the set was started from, as if it hadn't been: it carries on from where its time is.</summary>
+    [RelayCommand]
+    void BackToRest()
+    {
+        if (_session == null || SetTimes.LastDone(_session) is not { RestStartedAt: not null } last)
+            return;
+        SetTimes.ResumeRest(last);
+        _restCounting = last.RestDueAt > DateTime.Now;
+        workouts.Save();
+        Tick();
     }
 
     /// <summary>The ··· in the header: a sheet with the workout's name, timing, finishing it and the logging settings.</summary>
@@ -491,11 +488,8 @@ public partial class WorkoutViewModel(
     {
         if (_session == null)
             return null;
-        var delta = start - _session.StartedAt;
         if (WorkoutService.ChangeStart(_session, start) is { } error)
             return error;
-        if (IsResting)
-            _restEndsAt += delta;
         workouts.Save();
         Tick();
         return null;
@@ -594,7 +588,6 @@ public partial class WorkoutViewModel(
             SetTimes.Uncomplete(set);
             set.IsSkipped = false;
         }
-        _restSet = null;
         // Skipped sets come back too.
         foreach (var e in _session.Exercises)
             (e.SkippedWarmups, e.SkippedSets) = (0, 0);
