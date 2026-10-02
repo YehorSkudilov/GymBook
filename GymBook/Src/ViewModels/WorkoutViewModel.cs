@@ -14,8 +14,15 @@ public partial class WorkoutViewModel(
     DialogService dialogs,
     ExercisePickerService picker,
     WatchLink watch,
-    IWorkoutNotifier notifier) : BaseViewModel
+    IWorkoutNotifier notifier,
+    WorkoutEstimator estimator) : BaseViewModel
 {
+    /// <summary>The user's pace from their recent workouts, for the time left (worked out once per workout).</summary>
+    WorkoutEstimator.LivePace? _pace;
+    /// <summary>When the set under way began, while not resting (for the time left).</summary>
+    DateTime? _setSince;
+    /// <summary>"~24 min left · ends ~18:42": the estimate for the rest of the workout.</summary>
+    [ObservableProperty] string estimateText = "";
     static bool _askedNotifications;
     IDispatcherTimer? _timer;
     WorkoutSession? _session;
@@ -192,6 +199,7 @@ public partial class WorkoutViewModel(
             var open = Exercises.ToList().FindIndex(e => !e.IsDone);
             CurrentIndex = Math.Max(0, open);
             OnCurrentIndexChanged(CurrentIndex);
+            _pace = estimator.HistoryPace(active.Id);
             // A rest still going when the app closed carries on; one already over doesn't announce itself again.
             _restCounting = SetTimes.RunningRest(active)?.RestDueAt > DateTime.Now;
         }
@@ -241,7 +249,27 @@ public partial class WorkoutViewModel(
         if (_session != null)
             Elapsed = Units.Clock(now - _session.StartedAt);
         UpdateTimers(now);
+        UpdateEstimate(now);
         UpdateNotification();
+    }
+
+    /// <summary>The time left and when it should end, from the user's own pace (see <see cref="WorkoutEstimator.Remaining"/>).</summary>
+    void UpdateEstimate(DateTime now)
+    {
+        if (_session == null || IsEmpty)
+        {
+            EstimateText = "";
+            return;
+        }
+        var left = estimator.Remaining(_session, _pace ??= estimator.HistoryPace(_session.Id), now, IsResting ? null : _setSince);
+        if (left <= TimeSpan.Zero)
+        {
+            EstimateText = "Every set done";
+            return;
+        }
+        var minutes = (int)Math.Ceiling(left.TotalMinutes);
+        var length = minutes >= 60 ? $"{minutes / 60} h {minutes % 60:00} min" : $"{minutes} min";
+        EstimateText = $"~{length} left · ends ~{now + left:t}";
     }
 
     /// <summary>The rest (counting down, then below zero) or the set being done (counting up), from the times logged.</summary>
@@ -282,6 +310,7 @@ public partial class WorkoutViewModel(
         _restCounting = false;
         var last = SetTimes.LastDone(_session);
         var since = last == null ? _session.StartedAt : last.RestEndedAt is { } restEnded && restEnded > last.CompletedAt ? restEnded : last.CompletedAt ?? _session.StartedAt;
+        _setSince = since > now ? now : since;
         SetTimerText = Units.Clock(now - (since > now ? now : since));
         SetTimerCaption = NextSetText();
         CanGoBackToRest = last is { RestStartedAt: not null, RestEndedAt: not null };

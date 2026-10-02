@@ -32,6 +32,8 @@
                     <!-- The heart rate from the watch, live -->
                     <controls:HeartRatePill />
                 </HorizontalStackLayout>
+                <!-- How long is left and when it should end, from the user's own pace -->
+                <Label Text="{Binding EstimateText}" Style="{StaticResource Caption}" FontSize="12" LineBreakMode="TailTruncation" />
             </VerticalStackLayout>
             <ImageButton Grid.Column="2" Source="{StaticResource IconMore}" WidthRequest="40" HeightRequest="40" Padding="9"
                          BackgroundColor="{StaticResource Surface2}" CornerRadius="20" Command="{Binding WorkoutMenuCommand}" />
