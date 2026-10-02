@@ -82,6 +82,12 @@
   }
 }
 
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
 /* ---------- Strip ---------- */
 
 .strip {

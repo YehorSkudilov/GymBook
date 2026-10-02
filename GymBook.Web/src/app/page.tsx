@@ -38,8 +38,8 @@ const features = [
   {
     icon: <SyncIcon />,
     tone: "purple",
-    title: "Phone and PC, in sync",
-    text: "Sign in to back up your training and pick up where you left off on any device - even mid-workout.",
+    title: "Phone, watch and computer, in sync",
+    text: "Sign in to back up your training and pick up where you left off on your phone, Mac or PC - even mid-workout. On a Wear OS watch, tick sets and see your rest and heart rate.",
   },
 ];
 
@@ -54,7 +54,7 @@ const faq = [
   },
   {
     q: "Which devices does it run on?",
-    a: "Android phones, iPhone and iPad, and Windows PCs. Your data syncs between all of them when you're signed in.",
+    a: "Android phones, Wear OS watches, iPhone and iPad, Macs and Windows PCs. Your data syncs between all of them when you're signed in, and the watch app follows the workout on your phone.",
   },
   {
     q: "How do the AI features work?",
@@ -87,8 +87,13 @@ export default function Home() {
               <span className="gradient-text">Track everything.</span>
             </h1>
             <p className={styles.lead}>{site.description}</p>
-            <div id="download-hero">
-              <StoreButtons />
+            <div className={styles.heroActions}>
+              <a href="#download" className="btn btn-primary">
+                Download free
+              </a>
+              <a href="#features" className="btn btn-secondary">
+                See features
+              </a>
             </div>
           </div>
           <div className={styles.heroPhone}>
@@ -114,7 +119,7 @@ export default function Home() {
           </div>
           <div>
             <SyncIcon size={22} />
-            <span>syncs phone &amp; PC</span>
+            <span>syncs phone, watch &amp; PC</span>
           </div>
         </div>
       </section>
@@ -237,7 +242,7 @@ export default function Home() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.svg" alt="" width={56} height={68} />
             <h2>Get Gym Book</h2>
-            <p>Free on Android, iPhone, iPad and Windows.</p>
+            <p>Free on Android, Wear OS, iPhone, iPad, Mac and Windows.</p>
             <StoreButtons large />
           </div>
         </div>

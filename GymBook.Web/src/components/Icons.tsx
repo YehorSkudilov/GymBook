@@ -95,6 +95,15 @@ export const AndroidLogo = (p: IconProps) => (
   </svg>
 );
 
+export const WatchLogo = (p: IconProps) => (
+  <svg width={p.size ?? 22} height={p.size ?? 22} viewBox="0 0 24 24" className={p.className} aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M9 1.5h6l.8 3.4A7 7 0 0 1 19 11v2a7 7 0 0 1-3.2 6.1L15 22.5H9l-.8-3.4A7 7 0 0 1 5 13v-2a7 7 0 0 1 3.2-6.1zM12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm-.75 1.75h1.5V12l1.8 1.1-.75 1.3-2.55-1.55z"
+    />
+  </svg>
+);
+
 export const WindowsLogo = (p: IconProps) => (
   <svg width={p.size ?? 20} height={p.size ?? 20} viewBox="0 0 24 24" className={p.className} aria-hidden="true">
     <path fill="currentColor" d="M2 4.3l8.2-1.1v8H2zM11.2 3l10.8-1.5v9.7H11.2zM2 12.3h8.2v8L2 19.2zM11.2 12.3H22V22l-10.8-1.5z" />
