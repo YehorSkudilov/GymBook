@@ -68,6 +68,32 @@ public static class SetTimes
                 set.RestEndedAt = now < started ? started : now;
     }
 
+    /// <summary>
+    /// Moves the whole workout by <paramref name="delta"/>: its start and end, and every time logged in it, so how long
+    /// each set and rest took stays the same.
+    /// </summary>
+    public static void Shift(WorkoutSession session, TimeSpan delta)
+    {
+        session.StartedAt += delta;
+        session.EndedAt += delta;
+        foreach (var set in session.Exercises.SelectMany(e => e.Sets))
+        {
+            set.StartedAt += delta;
+            set.CompletedAt += delta;
+            set.RestStartedAt += delta;
+            set.RestEndedAt += delta;
+        }
+    }
+
+    /// <summary>The latest moment that already happened in the workout (a rest still running doesn't count): it can't move past now.</summary>
+    public static DateTime LastLogged(WorkoutSession session) =>
+        session.Exercises.SelectMany(e => e.Sets)
+            .SelectMany(s => new[] { s.StartedAt, s.CompletedAt, s.RestStartedAt })
+            .Append(session.EndedAt)
+            .OfType<DateTime>()
+            .Append(session.StartedAt)
+            .Max();
+
     /// <summary>The set whose rest is still running at <paramref name="now"/>, to pick the timer back up after a restart.</summary>
     public static SetEntry? RunningRest(WorkoutSession session, DateTime now) =>
         session.Exercises.SelectMany(e => e.Sets).FirstOrDefault(s => s.RestStartedAt != null && s.RestEndedAt > now);

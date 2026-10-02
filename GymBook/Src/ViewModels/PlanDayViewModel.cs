@@ -190,9 +190,22 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     {
         var plan = store.GetPlan(session.PlanId);
         var day = plan == null ? -1 : PlanSchedule.Days(plan).FindIndex(w => w?.Id == session.PlanWorkoutId);
-        var options = day >= 0 ? new[] { "Edit in plan" } : Array.Empty<string>();
+        const string startTime = "Change start time";
+        var options = day >= 0 ? new[] { startTime, "Edit in plan" } : [startTime];
         switch (await dialogs.ActionSheet(DayName, "Discard workout", options))
         {
+            case startTime:
+                // Its end and every set and rest logged move with it, so its length stays the same.
+                if (await dialogs.DateAndTime("Start time", "The end and every set and rest logged move with it.", session.StartedAt) is not { } start)
+                    break;
+                if (WorkoutService.ChangeStart(session, start) is { } error)
+                {
+                    await dialogs.Alert("Can't start then", error);
+                    break;
+                }
+                store.Save();
+                ShowFinishedWorkout(session);
+                break;
             case "Edit in plan":
                 // One navigation: the sheet slides away as the plan comes in, with nothing in between.
                 await GoTo($"../{Routes.Plan}?id={plan!.Id}&day={day}");

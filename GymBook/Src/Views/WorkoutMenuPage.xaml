@@ -71,14 +71,18 @@
                     <!-- Timing -->
                     <Border Style="{StaticResource MenuCard}">
                         <VerticalStackLayout>
-                            <Grid Style="{StaticResource MenuRow}">
+                            <!-- Tap to change when it started; every set and rest logged moves along -->
+                            <Grid Style="{StaticResource MenuRow}" BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding EditStartCommand}" />
+                                </Grid.GestureRecognizers>
                                 <Image Style="{StaticResource MenuIcon}">
                                     <Image.Source>
                                         <FontImageSource FontFamily="OutlinedIcons" Glyph="event_note" Color="{StaticResource TextSecondary}" Size="32" />
                                     </Image.Source>
                                 </Image>
                                 <Label Text="Start" Style="{StaticResource MenuLabel}" />
-                                <Label Text="{Binding StartText}" Style="{StaticResource MenuValue}" />
+                                <Label Text="{Binding StartText}" Style="{StaticResource MenuValue}" TextColor="{StaticResource Accent}" />
                             </Grid>
                             <Grid Style="{StaticResource MenuRow}">
                                 <Image Style="{StaticResource MenuIcon}">

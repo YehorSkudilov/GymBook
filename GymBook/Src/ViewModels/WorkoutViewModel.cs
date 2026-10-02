@@ -426,6 +426,24 @@ public partial class WorkoutViewModel(
 
     internal DateTime? StartedAt => _session?.StartedAt;
 
+    /// <summary>
+    /// Moves the workout's start to <paramref name="start"/>, and every time logged in it with it (a running rest too).
+    /// Null when done, else why not.
+    /// </summary>
+    internal string? ChangeStart(DateTime start)
+    {
+        if (_session == null)
+            return null;
+        var delta = start - _session.StartedAt;
+        if (WorkoutService.ChangeStart(_session, start) is { } error)
+            return error;
+        if (IsResting)
+            _restEndsAt += delta;
+        workouts.Save();
+        Tick();
+        return null;
+    }
+
     internal void SetName(string value)
     {
         if (_session == null || string.IsNullOrWhiteSpace(value))

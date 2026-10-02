@@ -79,6 +79,24 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         return CreateExercise(ex, p.Sets, p.RepMin, p.RepMax, p.TargetRir, rest, WarmupSettings.For(plan, store.Profile), warm);
     }
 
+    /// <summary>
+    /// Moves <paramref name="session"/> (in progress or finished) to start at <paramref name="start"/>, with its end and
+    /// every set and rest time moving by the same amount. Null when done, else why not (nothing that happened may end up
+    /// in the future). Saving is up to the caller.
+    /// </summary>
+    public static string? ChangeStart(WorkoutSession session, DateTime start)
+    {
+        var delta = start - session.StartedAt;
+        if (delta == TimeSpan.Zero)
+            return null;
+        if (SetTimes.LastLogged(session) + delta > DateTime.Now)
+            return session.EndedAt == null
+                ? "That's in the future: sets already done would come after now. Pick an earlier time."
+                : "That's too late: the workout would end in the future. Pick an earlier time.";
+        SetTimes.Shift(session, delta);
+        return null;
+    }
+
     /// <summary>The warm-up settings for <paramref name="session"/>: its plan's, or the profile's.</summary>
     public WarmupSettings WarmupsFor(WorkoutSession? session) => WarmupSettings.For(store.GetPlan(session?.PlanId), store.Profile);
 

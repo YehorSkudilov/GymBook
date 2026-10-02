@@ -33,7 +33,7 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
         }
         _loading = true;
         Name = _workout.Name;
-        StartText = started.Date == DateTime.Today ? $"Today, {started:t}" : $"{started:ddd d MMM}, {started:t}";
+        ShowStart(started);
         TrackRir = store.Profile.TrackRir;
         // Only a plan with its own training settings and RIR off rules it out; one on the defaults follows this switch.
         CanTrackRir = store.GetPlan(store.Data.ActiveSession?.PlanId) is not { OwnTraining: true, UseRir: false };
@@ -48,7 +48,26 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
         _timer.Start();
     }
 
+    void ShowStart(DateTime started) =>
+        StartText = started.Date == DateTime.Today ? $"Today, {started:t}" : $"{started:ddd d MMM}, {started:t}";
+
     public override void OnDisappearing() => _timer?.Stop();
+
+    /// <summary>Tap Start: when the workout really began. Every set and rest logged in it moves along.</summary>
+    [RelayCommand]
+    async Task EditStart()
+    {
+        if (_workout?.StartedAt is not { } started
+            || await dialogs.DateAndTime("Start time", "Every set and rest logged moves with it.", started) is not { } value)
+            return;
+        if (_workout.ChangeStart(value) is { } error)
+        {
+            await dialogs.Alert("Can't start then", error);
+            return;
+        }
+        ShowStart(value);
+        Tick();
+    }
 
     void OnTick(object? sender, EventArgs e) => Tick();
 

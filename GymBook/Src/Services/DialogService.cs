@@ -34,6 +34,10 @@ public class DialogService
     /// <summary>A rest time in seconds, typed as m:ss or stepped by 15 s; null when cancelled.</summary>
     public Task<int?> RestTime(string title, int seconds) => DialogSheet.RestTime(title, seconds);
 
+    /// <summary>A date and time of day (no later than today); null when cancelled.</summary>
+    public Task<DateTime?> DateAndTime(string title, string? message, DateTime initial, string accept = "Save") =>
+        DialogSheet.DateAndTime(title, message, initial, accept);
+
     public Task<string?> Prompt(string title, string message, string? initial = null, Keyboard? keyboard = null, string accept = "Save") =>
         DialogSheet.Prompt(title, message, initial ?? "", keyboard ?? Keyboard.Text, accept);
 

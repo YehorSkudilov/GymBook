@@ -325,6 +325,25 @@ public class DialogSheet : SheetPage
         return await Show(sheet) == null ? null : Read();
     }
 
+    /// <summary>A date and a time of day, picked with the platform's pickers; null when cancelled.</summary>
+    public static async Task<DateTime?> DateAndTime(string title, string? message, DateTime initial, string accept)
+    {
+        var date = new DatePicker { Date = initial.Date, MaximumDate = DateTime.Today, FontSize = 17, VerticalOptions = LayoutOptions.Center };
+        var time = new TimePicker { Time = initial.TimeOfDay, FontSize = 17, VerticalOptions = LayoutOptions.Center };
+        var sheet = new DialogSheet(title, message, s =>
+        {
+            var row = new Grid { ColumnSpacing = 10, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
+            row.Add(new Border { Style = Resource<Style>("InputBox"), HeightRequest = 52, Padding = new Thickness(12, 0), Content = date }, 0);
+            row.Add(new Border { Style = Resource<Style>("InputBox"), HeightRequest = 52, Padding = new Thickness(12, 0), Content = time }, 1);
+            return s.SaveCancel(row, accept, () => "ok");
+        });
+        if (await Show(sheet) == null)
+            return null;
+        var day = date.Date ?? initial.Date;
+        var at = time.Time ?? initial.TimeOfDay;
+        return day.Date + new TimeSpan(at.Hours, at.Minutes, 0);
+    }
+
     /// <summary>One half of a two-way toggle (Exact | Range, Add | Subtract): tap to pick it.</summary>
     static Border Half(string text) => new()
     {
