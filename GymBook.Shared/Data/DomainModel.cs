@@ -43,6 +43,14 @@ public static class DomainModel
             b.Property(e => e.Id).UsePropertyAccessMode(PropertyAccessMode.Property);
         });
 
+        model.Entity<FoodEntry>().ToTable("food_entries");
+
+        model.Entity<HealthDay>(b =>
+        {
+            b.ToTable("health_days");
+            b.Property(e => e.Id).UsePropertyAccessMode(PropertyAccessMode.Property);
+        });
+
         model.Entity<UserProfile>().ToTable("profiles");
     }
 }

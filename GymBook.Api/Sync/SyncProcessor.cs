@@ -29,6 +29,8 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock)
         wrote |= await UpsertAsync(db.Sessions, changes.Sessions, (to, from) => to.Exercises = from.Exercises, rejected.Sessions);
         wrote |= await UpsertAsync(db.CustomExercises, changes.CustomExercises, (to, from) => to.SecondaryMuscles = from.SecondaryMuscles, rejected.CustomExercises);
         wrote |= await UpsertAsync(db.BodyWeights, changes.BodyWeights, (_, _) => { }, rejected.BodyWeights);
+        wrote |= await UpsertAsync(db.FoodEntries, changes.FoodEntries, (_, _) => { }, rejected.FoodEntries);
+        wrote |= await UpsertAsync(db.HealthDays, changes.HealthDays, (_, _) => { }, rejected.HealthDays);
         wrote |= await UpsertProfileAsync();
 
         if (wrote)
@@ -122,6 +124,7 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock)
         {
             await CountsAsync(db.Plans), await CountsAsync(db.Sessions), await CountsAsync(db.CustomExercises),
             await CountsAsync(db.BodyWeights), await CountsAsync(db.Profiles),
+            await CountsAsync(db.FoodEntries), await CountsAsync(db.HealthDays),
         };
         var totals = new int[counts.Length];
         var cursor = since;
@@ -146,6 +149,8 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock)
         c.Sessions = Merge(await InRangeAsync(db.Sessions), rejected.Sessions);
         c.CustomExercises = Merge(await InRangeAsync(db.CustomExercises), rejected.CustomExercises);
         c.BodyWeights = Merge(await InRangeAsync(db.BodyWeights), rejected.BodyWeights);
+        c.FoodEntries = Merge(await InRangeAsync(db.FoodEntries), rejected.FoodEntries);
+        c.HealthDays = Merge(await InRangeAsync(db.HealthDays), rejected.HealthDays);
         c.Profile = rejected.Profile;
         if (c.Profile == null && !accepted.Contains((typeof(UserProfile), "")))
             c.Profile = (await InRangeAsync(db.Profiles)).FirstOrDefault();

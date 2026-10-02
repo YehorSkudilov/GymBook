@@ -7,7 +7,7 @@ namespace GymBook.Api.Privacy;
 /// </summary>
 public static class PrivacyPolicy
 {
-    public const string LastUpdated = "1 October 2026";
+    public const string LastUpdated = "2 October 2026";
     public const string ContactEmail = "yskudilov@gmail.com";
 
     public static IResult Page() =>
@@ -40,13 +40,25 @@ public static class PrivacyPolicy
 
         <h2>Data stored on your device</h2>
         <p>Everything you enter is saved on your device: your profile (name, goal, experience, training days, units, body weight,
-        and optionally your age, body fat percentage and how long you've trained), your training plans, workouts and sets,
-        custom exercises and body weight history. Without an account, this data never leaves your device.</p>
+        and optionally your age, body fat percentage, height, sex, activity level and how long you've trained), your training plans,
+        workouts and sets, custom exercises, body weight history, the food you log with its calories and macros, and your nutrition goals.
+        Without an account, this data never leaves your device.</p>
+        <h2>Health data from Samsung Health and Health Connect</h2>
+        <p>On Android, you can choose to let GymBook read health data through Health Connect, either Samsung Health's data or every
+        app's. Only with your permission, given in Health Connect and changeable there at any time, GymBook reads: calories burned
+        (total, active and resting), steps, food logged in other apps (calories, protein, carbohydrates and fat), weight, body fat,
+        lean body mass, bone mass, body water mass, basal metabolic rate and height. GymBook only reads; it never writes to or
+        changes your health data.</p>
+        <p>This data is used only to show your nutrition, energy balance (calories eaten against burned), activity and body
+        composition in the app, and to estimate and suggest your nutrition goals. Daily totals and body measurements are saved in
+        the app like the rest of your data and, if you have an account, synced to it so they appear on your other devices. Health data
+        is never used for advertising, never sold, and never shared with anyone, including the AI features. Disconnecting stops
+        further reading; deleting your account deletes what was synced.</p>
 
         <h2>Data we collect when you create an account</h2>
         <ul>
           <li><strong>Account details:</strong> your email address and password. Passwords are stored only as a secure hash, never in readable form. If you sign in with Google, we receive your Google account's email address and account ID from Google, and nothing else.</li>
-          <li><strong>Your training data:</strong> the data listed above, including a workout in progress, is uploaded so it can be restored and synced to your other devices.</li>
+          <li><strong>Your training and nutrition data:</strong> the data listed above, including a workout in progress and any health data read as described above, is uploaded so it can be restored and synced to your other devices.</li>
           <li><strong>Sign-in sessions:</strong> sign-in tokens that keep you signed in on each device, stored only as hashes.</li>
           <li><strong>Server logs:</strong> the server may record IP addresses and request times in its logs, used only to keep the service secure and to fix problems.</li>
         </ul>

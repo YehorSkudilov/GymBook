@@ -21,8 +21,15 @@ public class SyncChanges
     [MaxItems(SyncLimits.BatchSize)]
     public List<BodyWeightEntry> BodyWeights { get; set; } = [];
 
+    [MaxItems(SyncLimits.BatchSize)]
+    public List<FoodEntry> FoodEntries { get; set; } = [];
+
+    [MaxItems(SyncLimits.BatchSize)]
+    public List<HealthDay> HealthDays { get; set; } = [];
+
     [JsonIgnore]
-    public int Count => (Profile != null ? 1 : 0) + Plans.Count + Sessions.Count + CustomExercises.Count + BodyWeights.Count;
+    public int Count => (Profile != null ? 1 : 0) + Plans.Count + Sessions.Count + CustomExercises.Count + BodyWeights.Count
+        + FoodEntries.Count + HealthDays.Count;
 }
 
 /// <summary>Pushes local changes and pulls everything the server has after <see cref="Since"/>.</summary>

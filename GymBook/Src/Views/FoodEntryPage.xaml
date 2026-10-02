@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.FoodEntryPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:FoodEntryViewModel"
+    Title="{Binding Title}"
+    Shell.TabBarIsVisible="False">
+
+    <!-- Something eaten: its meal, name, calories and macros per serving, and how many servings. Foods logged before
+         fill it in with a tap. -->
+    <ScrollView>
+        <VerticalStackLayout Padding="16,8,16,30" Spacing="10">
+            <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
+
+            <Label Text="MEAL" Style="{StaticResource Overline}" Margin="0,6,0,0" />
+            <FlexLayout BindableLayout.ItemsSource="{Binding MealChips}" Wrap="Wrap">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ChipItem">
+                        <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,8" Margin="0,0,8,8">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                            </Border.GestureRecognizers>
+                            <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+
+            <Label Text="NAME" Style="{StaticResource Overline}" />
+            <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                <Entry Text="{Binding Name}" Placeholder="Chicken and rice" MaxLength="200" />
+            </Border>
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto" RowSpacing="6" Margin="0,6,0,0">
+                <Label Text="CALORIES (KCAL)" Style="{StaticResource Overline}" />
+                <Label Grid.Column="1" Text="SERVINGS" Style="{StaticResource Overline}" />
+                <Border Grid.Row="1" Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                    <Entry Text="{Binding Calories}" Keyboard="Numeric" Placeholder="From macros" />
+                </Border>
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                    <Entry Text="{Binding Servings}" Keyboard="Numeric" Placeholder="1" />
+                </Border>
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto" RowSpacing="6" Margin="0,6,0,0">
+                <Label Text="PROTEIN (G)" Style="{StaticResource Overline}" />
+                <Label Grid.Column="1" Text="CARBS (G)" Style="{StaticResource Overline}" />
+                <Label Grid.Column="2" Text="FAT (G)" Style="{StaticResource Overline}" />
+                <Border Grid.Row="1" Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                    <Entry Text="{Binding Protein}" Keyboard="Numeric" Placeholder="0" />
+                </Border>
+                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                    <Entry Text="{Binding Carbs}" Keyboard="Numeric" Placeholder="0" />
+                </Border>
+                <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                    <Entry Text="{Binding Fat}" Keyboard="Numeric" Placeholder="0" />
+                </Border>
+            </Grid>
+            <Label Text="{Binding CaloriesHint}" Style="{StaticResource Caption}" FontSize="12" />
+            <Label Text="Amounts are per serving. Leave calories empty to work them out from the macros."
+                   Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource TextTertiary}" />
+
+            <Button Text="Save" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}" Margin="0,10,0,0" />
+            <Button Text="Delete" Style="{StaticResource DangerButton}" Command="{Binding DeleteCommand}" IsVisible="{Binding IsEditing}" />
+
+            <!-- Logged before: tap to fill in -->
+            <Label Text="RECENT" Style="{StaticResource Overline}" Margin="0,14,0,0" IsVisible="{Binding HasRecent}" />
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Recent}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:RecentFoodItem">
+                        <Border Style="{StaticResource InnerCard}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout>
+                                <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="14" LineBreakMode="TailTruncation" />
+                                <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</views:BasePage>

@@ -62,6 +62,8 @@ public static class GymBookJson
 [JsonSerializable(typeof(WorkoutPlan))]
 [JsonSerializable(typeof(Exercise))]
 [JsonSerializable(typeof(BodyWeightEntry))]
+[JsonSerializable(typeof(FoodEntry))]
+[JsonSerializable(typeof(HealthDay))]
 [JsonSerializable(typeof(UserProfile))]
 [JsonSerializable(typeof(DashboardResponse))]
 [JsonSerializable(typeof(List<UserRow>))]

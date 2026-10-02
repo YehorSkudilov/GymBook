@@ -18,6 +18,8 @@ public class LocalDbContext(DbContextOptions<LocalDbContext> options) : DbContex
     public DbSet<WorkoutSession> Sessions => Set<WorkoutSession>();
     public DbSet<Exercise> CustomExercises => Set<Exercise>();
     public DbSet<BodyWeightEntry> BodyWeights => Set<BodyWeightEntry>();
+    public DbSet<FoodEntry> FoodEntries => Set<FoodEntry>();
+    public DbSet<HealthDay> HealthDays => Set<HealthDay>();
     public DbSet<UserProfile> Profiles => Set<UserProfile>();
     public DbSet<LocalSetting> Settings => Set<LocalSetting>();
 
@@ -30,7 +32,7 @@ public class LocalDbContext(DbContextOptions<LocalDbContext> options) : DbContex
     {
         DomainModel.Map(model);
 
-        foreach (var type in new[] { typeof(WorkoutPlan), typeof(WorkoutSession), typeof(Exercise), typeof(BodyWeightEntry), typeof(UserProfile) })
+        foreach (var type in new[] { typeof(WorkoutPlan), typeof(WorkoutSession), typeof(Exercise), typeof(BodyWeightEntry), typeof(FoodEntry), typeof(HealthDay), typeof(UserProfile) })
             model.Entity(type).Property<bool>(Dirty);
 
         model.Entity<UserProfile>(b =>

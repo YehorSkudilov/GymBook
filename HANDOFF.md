@@ -1,5 +1,36 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-02): Nutrition tab + Samsung Health / Health Connect (done, not built on a device)
+
+The owner asked for a Nutrition tab (calories, protein, carbs, fat against goals; daily surplus/deficit and its running total)
+fed by Samsung Health (body composition, weight, height, calories burned), plus Health Connect for people without Samsung.
+- **Data** (shared models, synced like everything else; EF migrations `Nutrition` for both databases, made with `dotnet ef`;
+  the `ActivityLevel`/`ImportHealthFood` column defaults were edited to match the C# defaults, like `TrainNeck` before):
+  `FoodEntry` (food log), `HealthDay` (one per day: total/active/resting kcal burned, steps, food logged in the health app),
+  body composition on `BodyWeightEntry` (body fat, lean, bone, water, BMR, `Source`), and on `UserProfile`: height, sex,
+  activity level, calorie/protein/carbs/fat goals, `EnergyBalanceGoal` (kcal/day, negative = deficit), `HealthSource`, `ImportHealthFood`.
+- **Health data** (`Src/Services/Health/`, `Platforms/Android/HealthConnectPlatform.cs`): read-only, through Android's
+  **framework** Health Connect API (`Android.Health.Connect`, Android 14+), so no new NuGet package. "Samsung Health" = Health
+  Connect filtered to `com.sec.android.app.shealth`; "Health Connect" = every app. Samsung's own Health Data SDK was not used: it's
+  an .aar behind a partner approval, and Samsung shares the same data to Health Connect (Samsung Health › Settings › Health Connect).
+  Not available there: skeletal muscle mass. Android 13 and older: shows "needs Android 14" (the Jetpack client would be needed).
+  `HealthSyncService` reads the last 30 days when the tab opens (at most every 10 min; "Read now" forces it), never overwrites a
+  weight typed in Gym Book, and deliberately leaves `Profile.BodyWeightKg` alone because the AI features send it to OpenAI
+  (the privacy policy now promises health data never goes to them).
+- **UI**: `NutritionPage` (tab between Workout and Progress, glyph `lunch_dining`), `FoodEntryPage` (route `food`),
+  `NutritionGoalsPage` (route `nutritiongoals`, with "Suggest goals for me"). Maths in `NutritionService` (burn: measured, else
+  scale BMR → Katch–McArdle → Mifflin–St Jeor × activity; 7,700 kcal per kg). Days with no food logged have no balance;
+  period totals skip today.
+- **Manifest/Play**: 11 `android.permission.health.READ_*` permissions; `HealthPrivacyActivity` handles Health Connect's
+  privacy-policy link (required on Android 14 or the permission screen won't show). Google Play needs the **Health Connect
+  declaration form** in Play Console before release. Privacy policy (`GymBook.Api/Privacy/PrivacyPolicy.cs`) updated.
+- Checked here: Shared/LocalData/Api build; the whole app's C# and XAML compiled as a plain net10.0 library against stubbed
+  AppSkeleton; the Android file compiled against Mono.Android 36's reference assembly; the SQLite migration, save/reload, sync
+  JSON and upgrade defaults were run. **Not** run on a phone.
+- **For the owner to test:** 6 tabs fit the nav bar on a small phone; connect Samsung Health (with its Health Connect sharing on)
+  and Health Connect; partial permissions; day arrows; add/edit/delete food, recent foods, servings; goals + suggestions; the
+  balance chart with a target; body card with a Galaxy Watch/scale body-composition reading; Windows/iOS show synced data.
+
 ## LATEST (2026-10-01, later session): read this section first; it supersedes the "State" section below
 
 ### 1. Adding missing exercises (done: 883 exercises, all with a video and a picture)

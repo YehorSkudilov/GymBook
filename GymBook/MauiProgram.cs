@@ -28,6 +28,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<WorkoutEstimator>();
         builder.Services.AddSingleton<RecoveryService>();
         builder.Services.AddSingleton<StatsService>();
+        builder.Services.AddSingleton<NutritionService>();
         builder.Services.AddSingleton<WorkoutService>();
         builder.Services.AddSingleton<DialogService>();
         builder.Services.AddSingleton<ExercisePickerService>();
@@ -50,12 +51,22 @@ public static class MauiProgram
 #else
         builder.Services.AddSingleton<IWorkoutNotifier, NoWorkoutNotifier>();
 #endif
+#if ANDROID
+        // Samsung Health and Health Connect, both through Android's Health Connect.
+        builder.Services.AddSingleton<GymBook.Services.Health.IHealthPlatform, HealthConnectPlatform>();
+#else
+        builder.Services.AddSingleton<GymBook.Services.Health.IHealthPlatform, GymBook.Services.Health.NoHealthPlatform>();
+#endif
+        builder.Services.AddSingleton<GymBook.Services.Health.HealthSyncService>();
 
         builder.Services.AddTransient<MainPage>();
         AddPage<HomePage, HomeViewModel>(builder.Services);
         AddPage<PlansPage, PlansViewModel>(builder.Services);
         AddPage<ExercisesPage, ExercisesViewModel>(builder.Services);
         AddPage<StatsPage, StatsViewModel>(builder.Services);
+        AddPage<NutritionPage, NutritionViewModel>(builder.Services);
+        AddPage<FoodEntryPage, FoodEntryViewModel>(builder.Services);
+        AddPage<NutritionGoalsPage, NutritionGoalsViewModel>(builder.Services);
         AddPage<ProfilePage, ProfileViewModel>(builder.Services);
         AddPage<WorkoutPage, WorkoutViewModel>(builder.Services);
         AddPage<WorkoutMenuPage, WorkoutMenuViewModel>(builder.Services);

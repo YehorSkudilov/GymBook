@@ -15,6 +15,16 @@ public enum EquipmentAccess { FullGym, HomeDumbbells, Bodyweight }
 
 public enum WeightUnit { Kg, Lbs }
 
+public enum MealType { Breakfast, Lunch, Dinner, Snack }
+
+public enum Sex { Male, Female }
+
+/// <summary>Daily activity outside workouts, for estimating calories burned without health data.</summary>
+public enum ActivityLevel { Sedentary, Light, Moderate, VeryActive }
+
+/// <summary>Where health data comes from. Both read through Android's Health Connect; Samsung Health keeps to Samsung's own records.</summary>
+public enum HealthSource { None, SamsungHealth, HealthConnect }
+
 public static class EnumDisplay
 {
     public static string Display(this MuscleGroup m) => m switch
@@ -48,6 +58,29 @@ public static class EnumDisplay
     };
 
     public static string Display(this Experience e) => e.ToString();
+
+    public static string Display(this ActivityLevel a) => a switch
+    {
+        ActivityLevel.Sedentary => "Sedentary",
+        ActivityLevel.Light => "Lightly active",
+        ActivityLevel.Moderate => "Moderately active",
+        _ => "Very active",
+    };
+
+    public static string Description(this ActivityLevel a) => a switch
+    {
+        ActivityLevel.Sedentary => "Desk job, little walking",
+        ActivityLevel.Light => "Some walking, on your feet now and then",
+        ActivityLevel.Moderate => "On your feet most of the day",
+        _ => "Physical job or lots of daily activity",
+    };
+
+    public static string Display(this HealthSource s) => s switch
+    {
+        HealthSource.SamsungHealth => "Samsung Health",
+        HealthSource.HealthConnect => "Health Connect",
+        _ => "Off",
+    };
 
     public static string Description(this Experience e) => e switch
     {

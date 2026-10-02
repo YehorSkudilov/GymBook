@@ -4,8 +4,8 @@ using GymBook.Services;
 
 namespace GymBook.Views;
 
-/// <summary>The tabs, in the order they sit in the nav bar (and swipe): Workout is the big button in the middle.</summary>
-public enum AppTab { Exercises, Plans, Workout, Progress, Profile }
+/// <summary>The tabs, in the order they sit in the nav bar (and swipe): Workout is the big button.</summary>
+public enum AppTab { Exercises, Plans, Workout, Nutrition, Progress, Profile }
 
 /// <summary>The app's root: the tabs live in a swipeable CView with a CNavBar underneath. Detail pages still push through Shell.</summary>
 public partial class MainPage : ContentPage
@@ -21,7 +21,8 @@ public partial class MainPage : ContentPage
     bool _visible;
     IDispatcherTimer? _activeTimer;
 
-    public MainPage(WorkoutService workouts, DataStore store, HomePage home, PlansPage plans, ExercisesPage exercises, StatsPage stats, ProfilePage profile)
+    public MainPage(WorkoutService workouts, DataStore store, HomePage home, PlansPage plans, ExercisesPage exercises,
+        NutritionPage nutrition, StatsPage stats, ProfilePage profile)
     {
         InitializeComponent();
         _workouts = workouts;
@@ -30,7 +31,7 @@ public partial class MainPage : ContentPage
         var resources = Application.Current!.Resources;
         var color = (Color)resources["TextPrimary"];
         var accent = (Color)resources["Accent"];
-        // In AppTab order. Workout sits in the middle as a larger round button (no label, it speaks for itself), lit up
+        // In AppTab order. Workout sits near the middle as a larger round button (no label, it speaks for itself), lit up
         // when open; the others keep the bar's usual look (the filled icon font when selected).
         _tabs =
         [
@@ -46,6 +47,7 @@ public partial class MainPage : ContentPage
                 IconBackground = Color.FromArgb("#2E4677"), SelectedIconBackground = accent,
                 IconSize = 26, IconBackgroundSize = 44, ItemWidth = 72, ShowLabel = false,
             },
+            new() { Glyph = "lunch_dining", PageName = "Nutrition", Page = nutrition, Color = color },
             new() { Glyph = "analytics", PageName = "Progress", Page = stats, Color = color },
             new() { Glyph = "person", PageName = "Profile", Page = profile, Color = color },
         ];

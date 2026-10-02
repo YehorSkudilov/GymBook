@@ -102,7 +102,8 @@ public class SyncService
                     _store.RaiseChanged();
 
                 var morePending = pending.Plans.Count == PushBatch || pending.Sessions.Count == PushBatch
-                    || pending.CustomExercises.Count == PushBatch || pending.BodyWeights.Count == PushBatch;
+                    || pending.CustomExercises.Count == PushBatch || pending.BodyWeights.Count == PushBatch
+                    || pending.FoodEntries.Count == PushBatch || pending.HealthDays.Count == PushBatch;
                 if (!response.HasMore && !morePending)
                     break;
             }
@@ -146,6 +147,8 @@ public class SyncService
             $"{s.Name} · {s.StartedAt:ddd d MMM, HH:mm}", s, s.IsDeleted)));
         items.AddRange(pending.CustomExercises.Select(e => Item("Custom exercise", e.Name, e, e.IsDeleted)));
         items.AddRange(pending.BodyWeights.Select(b => Item("Body weight", $"{b.Date:d MMM yyyy}", b, b.IsDeleted)));
+        items.AddRange(pending.FoodEntries.Select(f => Item("Food", $"{f.Name} · {f.Date:d MMM yyyy}", f, f.IsDeleted)));
+        items.AddRange(pending.HealthDays.Select(h => Item("Health data", $"{h.Date:d MMM yyyy}", h, h.IsDeleted)));
         return items;
 
         static SyncPendingItem Item(string kind, string name, object record, bool deleted) =>
@@ -161,7 +164,9 @@ public class SyncService
         var removed = changes.Plans.RemoveAll(p => !ModelValidator.IsValid(p))
             + changes.Sessions.RemoveAll(s => !ModelValidator.IsValid(s))
             + changes.CustomExercises.RemoveAll(e => !ModelValidator.IsValid(e))
-            + changes.BodyWeights.RemoveAll(b => !ModelValidator.IsValid(b));
+            + changes.BodyWeights.RemoveAll(b => !ModelValidator.IsValid(b))
+            + changes.FoodEntries.RemoveAll(f => !ModelValidator.IsValid(f))
+            + changes.HealthDays.RemoveAll(h => !ModelValidator.IsValid(h));
         if (changes.Profile != null && !ModelValidator.IsValid(changes.Profile))
         {
             changes.Profile = null;

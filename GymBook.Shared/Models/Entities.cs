@@ -210,6 +210,80 @@ public class BodyWeightEntry : ISyncEntity
     public string Id { get => field ?? Date.ToString("yyyy-MM-dd"); set; }
     public DateTime Date { get; set; }
     public double WeightKg { get; set; }
+    // Body composition, when a scale or watch measured it (read from Samsung Health or Health Connect). Null: not measured.
+    [Range(1, 80)]
+    public double? BodyFatPercent { get; set; }
+    /// <summary>Fat-free mass: everything but fat.</summary>
+    [Range(0, 500)]
+    public double? LeanMassKg { get; set; }
+    [Range(0, 50)]
+    public double? BoneMassKg { get; set; }
+    [Range(0, 300)]
+    public double? BodyWaterKg { get; set; }
+    /// <summary>Basal metabolic rate the measurement came with: the calories burned a day at complete rest.</summary>
+    [Range(0, 10000)]
+    public double? BmrKcal { get; set; }
+    /// <summary>The app it was read from ("Samsung Health", "Health Connect"); null when logged in Gym Book.</summary>
+    [MaxLength(SyncLimits.NameLength)]
+    public string? Source { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public bool IsDeleted { get; set; }
+}
+
+/// <summary>Something eaten, logged in the Nutrition tab.</summary>
+public class FoodEntry : ISyncEntity
+{
+    [MaxLength(SyncLimits.IdLength)]
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    /// <summary>The day it counts toward (midnight, wall-clock).</summary>
+    public DateTime Date { get; set; } = DateTime.Today;
+    public MealType Meal { get; set; }
+    [MaxLength(SyncLimits.NameLength)]
+    public string Name { get; set; } = "";
+    // The amounts are for everything eaten, all servings together.
+    [Range(0, 20000)]
+    public double Calories { get; set; }
+    [Range(0, 2000)]
+    public double ProteinG { get; set; }
+    [Range(0, 2000)]
+    public double CarbsG { get; set; }
+    [Range(0, 2000)]
+    public double FatG { get; set; }
+    /// <summary>When it was logged, to keep a meal's foods in order.</summary>
+    public DateTime LoggedAt { get; set; } = DateTime.Now;
+    public DateTimeOffset UpdatedAt { get; set; }
+    public bool IsDeleted { get; set; }
+}
+
+/// <summary>
+/// A day's totals read from the phone's health data (Samsung Health or Health Connect): energy burned, steps, and food
+/// logged in other apps. One per calendar day, so the day is the identity, like <see cref="BodyWeightEntry"/>.
+/// </summary>
+public class HealthDay : ISyncEntity
+{
+    [MaxLength(SyncLimits.IdLength)]
+    public string Id { get => field ?? Date.ToString("yyyy-MM-dd"); set; }
+    public DateTime Date { get; set; }
+    /// <summary>Everything burned that day: resting (basal) plus active.</summary>
+    [Range(0, 50000)]
+    public double? TotalBurnedKcal { get; set; }
+    [Range(0, 50000)]
+    public double? ActiveBurnedKcal { get; set; }
+    [Range(0, 50000)]
+    public double? BasalBurnedKcal { get; set; }
+    [Range(0, 1_000_000)]
+    public int? Steps { get; set; }
+    // Food logged in other apps (e.g. Samsung Health's food diary), counted with what's logged here.
+    [Range(0, 50000)]
+    public double? FoodKcal { get; set; }
+    [Range(0, 5000)]
+    public double? FoodProteinG { get; set; }
+    [Range(0, 5000)]
+    public double? FoodCarbsG { get; set; }
+    [Range(0, 5000)]
+    public double? FoodFatG { get; set; }
+    [MaxLength(SyncLimits.NameLength)]
+    public string? Source { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
 }
@@ -230,6 +304,28 @@ public class UserProfile
     public int? BirthYear { get; set; }
     [Range(3, 60)]
     public double? BodyFatPercent { get; set; }
+    [Range(50, 272)]
+    public double? HeightCm { get; set; }
+    /// <summary>For estimating calories burned when there's no health data; null until asked.</summary>
+    public Sex? Sex { get; set; }
+    /// <summary>How active a day is outside workouts, for the same estimate.</summary>
+    public ActivityLevel ActivityLevel { get; set; } = ActivityLevel.Light;
+    // Nutrition goals, per day; null: no goal set.
+    [Range(500, 10000)]
+    public int? CalorieGoal { get; set; }
+    [Range(0, 1000)]
+    public int? ProteinGoalG { get; set; }
+    [Range(0, 1500)]
+    public int? CarbsGoalG { get; set; }
+    [Range(0, 600)]
+    public int? FatGoalG { get; set; }
+    /// <summary>Calories eaten minus burned the user aims for each day: negative for a deficit, positive for a surplus.</summary>
+    [Range(-2000, 2000)]
+    public int? EnergyBalanceGoal { get; set; }
+    /// <summary>Where calories burned, steps and body measurements are read from.</summary>
+    public HealthSource HealthSource { get; set; }
+    /// <summary>Food logged in the health app is counted with what's logged in Gym Book.</summary>
+    public bool ImportHealthFood { get; set; } = true;
     /// <summary>When the user started training consistently.</summary>
     public DateTime? TrainingSince { get; set; }
     /// <summary>Whether generated plans include neck work.</summary>

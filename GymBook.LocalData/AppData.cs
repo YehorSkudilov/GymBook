@@ -25,6 +25,8 @@ public class AppData
 
     public List<BodyWeightEntry> BodyWeights { get; set; } = [];
     public List<Exercise> CustomExercises { get; set; } = [];
+    public List<FoodEntry> FoodEntries { get; set; } = [];
+    public List<HealthDay> HealthDays { get; set; } = [];
 }
 
 /// <summary>JSON for device-side use (export, cloning, old-format import): the wire settings plus <see cref="AppData"/>.</summary>

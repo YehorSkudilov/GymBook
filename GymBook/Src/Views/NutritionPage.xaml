@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:TabView
+    x:Class="GymBook.Views.NutritionPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:GymBook.Controls"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:NutritionViewModel">
+
+    <!-- A day's food against its goals and what was burned, the surplus or deficit over time, activity and body
+         measurements, and the link to Samsung Health or Health Connect. Charts play in each time the tab comes into view. -->
+    <ContentView.Resources>
+        <Style x:Key="HeaderIcon" TargetType="controls:StatIconView">
+            <Setter Property="WidthRequest" Value="26" />
+            <Setter Property="HeightRequest" Value="26" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="Figure" TargetType="Label">
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="17" />
+        </Style>
+        <Style x:Key="Divider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Color" Value="{StaticResource Surface2}" />
+        </Style>
+    </ContentView.Resources>
+
+    <VerticalStackLayout Spacing="14">
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Label Text="Nutrition" Style="{StaticResource Title}" />
+            <Button Grid.Column="1" Text="Goals" Style="{StaticResource SmallButton}" Command="{Binding OpenGoalsCommand}" VerticalOptions="Center" />
+        </Grid>
+
+        <!-- The day: back and forward a day at a time; tap the name for today -->
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+            <Button Text="‹" Style="{StaticResource StepButton}" Command="{Binding PreviousDayCommand}" VerticalOptions="Center" />
+            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center">
+                <VerticalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding GoToTodayCommand}" />
+                </VerticalStackLayout.GestureRecognizers>
+                <Label Text="{Binding DateTitle}" Style="{StaticResource H3}" HorizontalOptions="Center" />
+                <Label Text="{Binding DateSubtitle}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
+            </VerticalStackLayout>
+            <Button Grid.Column="2" Text="›" Style="{StaticResource StepButton}" Command="{Binding NextDayCommand}" IsEnabled="{Binding CanGoNext}"
+                    Opacity="{Binding NextOpacity}" VerticalOptions="Center" />
+        </Grid>
+
+        <!-- Calories: eaten against the goal, burned, and the surplus or deficit between them -->
+        <Border Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="14">
+                <Grid ColumnDefinitions="150,*" ColumnSpacing="16">
+                    <GraphicsView Drawable="{Binding CalorieRing}" HeightRequest="150" controls:ChartReveal.When="{Binding IsShowing}" />
+                    <VerticalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Eaten" Style="{StaticResource Caption}" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{Binding EatenText}" Style="{StaticResource Figure}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Goal" Style="{StaticResource Caption}" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{Binding GoalText}" Style="{StaticResource Figure}" />
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                            <Label Text="Burned" Style="{StaticResource Caption}" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{Binding BurnedText}" Style="{StaticResource Figure}" />
+                            <Label Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding BurnedCaption}" Style="{StaticResource Caption}" FontSize="11"
+                                   TextColor="{StaticResource TextTertiary}" HorizontalOptions="End" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Grid>
+                <BoxView Style="{StaticResource Divider}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout VerticalOptions="Center">
+                        <Label Text="{Binding BalanceCaption}" Style="{StaticResource H3}" />
+                        <Label Text="Eaten minus burned" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1" Text="{Binding BalanceText}" TextColor="{Binding BalanceColor}" Style="{StaticResource StatValue}" VerticalOptions="Center" />
+                </Grid>
+                <Label Text="{Binding BalanceTargetText}" TextColor="{Binding BalanceTargetColor}" FontSize="13" IsVisible="{Binding HasBalanceTarget}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- No goals yet: where to set them -->
+        <Border Style="{StaticResource Card}" IsVisible="{Binding HasNoGoals}" BackgroundColor="{StaticResource AccentSoft}">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding OpenGoalsCommand}" />
+            </Border.GestureRecognizers>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Set your goals" Style="{StaticResource H3}" />
+                    <Label Text="{Binding NoGoalsHint}" Style="{StaticResource Caption}" FontSize="12" />
+                </VerticalStackLayout>
+                <Image Grid.Column="1" Source="{StaticResource IconChevronRight}" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
+            </Grid>
+        </Border>
+
+        <!-- Macros -->
+        <Border Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="10">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <controls:StatIconView Icon="Pie" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                    <Label Grid.Column="1" Text="Macros" Style="{StaticResource H3}" VerticalOptions="Center" />
+                </Grid>
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Macros}" Spacing="10">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MacroItem">
+                            <VerticalStackLayout Spacing="5">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="14" />
+                                    <Label Grid.Column="1" Text="{Binding Value}" TextColor="{Binding ValueColor}" FontSize="13" />
+                                </Grid>
+                                <ProgressBar controls:SmoothProgress.Value="{Binding Progress}" ProgressColor="{Binding Color}" />
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Food, by meal -->
+        <Border Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="12">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <controls:StatIconView Icon="Target" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                    <Label Grid.Column="1" Text="Food" Style="{StaticResource H3}" VerticalOptions="Center" />
+                    <Button Grid.Column="2" Text="Add" Style="{StaticResource SmallButton}" Command="{Binding AddFoodCommand}" VerticalOptions="Center" />
+                </Grid>
+
+                <!-- Food logged in Samsung Health (or another app), counted with what's logged here -->
+                <Border Style="{StaticResource InnerCard}" IsVisible="{Binding HasImportedFood}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding ImportedFoodTitle}" FontFamily="OpenSansSemibold" FontSize="14" />
+                            <Label Text="{Binding ImportedFoodText}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="{Binding ImportedFoodCalories}" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Meals}" Spacing="12">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:MealItem">
+                            <VerticalStackLayout Spacing="4">
+                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+                                    <Label Text="{Binding Title}" Style="{StaticResource Overline}" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding Total}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                                    <Image Grid.Column="2" Source="{StaticResource IconPlus}" WidthRequest="22" HeightRequest="22" VerticalOptions="Center">
+                                        <Image.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding AddCommand}" />
+                                        </Image.GestureRecognizers>
+                                    </Image>
+                                </Grid>
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Foods}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FoodItem">
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,6">
+                                                <Grid.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                                                </Grid.GestureRecognizers>
+                                                <VerticalStackLayout>
+                                                    <Label Text="{Binding Name}" FontSize="14" LineBreakMode="TailTruncation" />
+                                                    <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                                </VerticalStackLayout>
+                                                <Label Grid.Column="1" Text="{Binding Calories}" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                                <Label Text="Nothing logged" Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource TextTertiary}"
+                                       IsVisible="{Binding HasFoods, Converter={StaticResource Not}}" />
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- The surplus or deficit, day by day and added up -->
+        <Border Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="10">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <controls:StatIconView Icon="Trend" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="Surplus &amp; deficit" Style="{StaticResource H3}" />
+                        <Label Text="Calories eaten minus burned, each day" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                </Grid>
+                <HorizontalStackLayout BindableLayout.ItemsSource="{Binding PeriodChips}" Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ChipItem">
+                            <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,7">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                </Border.GestureRecognizers>
+                                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+                <GraphicsView Drawable="{Binding BalanceChart}" HeightRequest="170" controls:ChartReveal.When="{Binding IsShowing}" />
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8" IsVisible="{Binding HasPeriod}">
+                    <Border Style="{StaticResource InnerCard}">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding PeriodTotalText}" TextColor="{Binding PeriodTotalColor}" Style="{StaticResource Figure}" />
+                            <Label Text="{Binding PeriodTotalCaption}" Style="{StaticResource Caption}" FontSize="11" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource InnerCard}">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding PeriodAverageText}" Style="{StaticResource Figure}" />
+                            <Label Text="A day on average" Style="{StaticResource Caption}" FontSize="11" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource InnerCard}">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding PeriodWeightText}" Style="{StaticResource Figure}" />
+                            <Label Text="Body weight, roughly" Style="{StaticResource Caption}" FontSize="11" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+                <Label Text="{Binding PeriodSummary}" Style="{StaticResource Caption}" FontSize="12" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Border Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="8">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <controls:StatIconView Icon="Volume" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                    <Label Grid.Column="1" Text="Calories eaten" Style="{StaticResource H3}" VerticalOptions="Center" />
+                </Grid>
+                <GraphicsView Drawable="{Binding EatenChart}" HeightRequest="150" controls:ChartReveal.When="{Binding IsShowing}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- The day's activity, from health data -->
+        <Border Style="{StaticResource Card}" IsVisible="{Binding HasActivity}">
+            <VerticalStackLayout Spacing="10">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                    <controls:StatIconView Icon="Streak" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                    <Label Grid.Column="1" Text="Activity" Style="{StaticResource H3}" VerticalOptions="Center" />
+                </Grid>
+                <FlexLayout BindableLayout.ItemsSource="{Binding Activity}" Wrap="Wrap" JustifyContent="Start">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:StatItem">
+                            <VerticalStackLayout FlexLayout.Basis="50%" Padding="0,4">
+                                <Label Text="{Binding Value}" Style="{StaticResource Figure}" />
+                                <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Body composition: the latest of each measurement -->
+        <Border Style="{StaticResource Card}">
+            <VerticalStackLayout Spacing="10">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                    <controls:StatIconView Icon="Scale" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" VerticalOptions="Start" />
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="Body" Style="{StaticResource H3}" />
+                        <Label Text="{Binding BodyCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Button Grid.Column="2" Text="Log" Style="{StaticResource SmallButton}" Command="{Binding LogWeightCommand}" VerticalOptions="Start" />
+                </Grid>
+                <FlexLayout BindableLayout.ItemsSource="{Binding Body}" Wrap="Wrap" JustifyContent="Start">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:StatItem">
+                            <VerticalStackLayout FlexLayout.Basis="33.3%" Padding="0,4">
+                                <Label Text="{Binding Value}" Style="{StaticResource Figure}" FontSize="15" />
+                                <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+                <Label Text="Body fat" Style="{StaticResource Overline}" Margin="0,4,0,0" IsVisible="{Binding HasBodyFatChart}" />
+                <GraphicsView Drawable="{Binding BodyFatChart}" HeightRequest="140" IsVisible="{Binding HasBodyFatChart}"
+                              controls:ChartReveal.When="{Binding IsShowing}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Samsung Health / Health Connect -->
+        <Border Style="{StaticResource Card}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                <VerticalStackLayout Spacing="2" VerticalOptions="Center">
+                    <Label Text="{Binding HealthTitle}" Style="{StaticResource H3}" />
+                    <Label Text="{Binding HealthStatus}" Style="{StaticResource Caption}" FontSize="12" />
+                </VerticalStackLayout>
+                <Button Grid.Column="1" Text="{Binding HealthAction}" Style="{StaticResource SmallButton}" Command="{Binding HealthTappedCommand}"
+                        IsVisible="{Binding HasHealthAction}" VerticalOptions="Center" />
+            </Grid>
+        </Border>
+    </VerticalStackLayout>
+</views:TabView>
