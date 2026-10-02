@@ -251,9 +251,8 @@ public partial class WorkoutViewModel : ObservableObject
     {
         if (CurrentSet is not { Reps: > 0 } set || CurrentExercise is not { } se)
             return;
-        set.IsCompleted = true;
-        set.CompletedAt = DateTime.Now;
-        _workouts.Save();
+        var now = DateTime.Now;
+        SetTimes.Complete(Session!, set, now);
         try
         {
             if (WatchSettings.TapFeedback)
@@ -264,7 +263,10 @@ public partial class WorkoutViewModel : ObservableObject
         }
         // Rest as the phone would: the warm-up rest after a warm-up, the exercise's own after a working set.
         _restTotal = set.IsWarmup ? _workouts.WarmupsFor(Session).RestSeconds : se.RestSeconds;
-        _restEndsAt = _store.Profile.AutoRestTimer && _restTotal > 0 ? DateTime.Now.AddSeconds(_restTotal) : null;
+        _restEndsAt = _store.Profile.AutoRestTimer && _restTotal > 0 ? now.AddSeconds(_restTotal) : null;
+        if (_restEndsAt is { } restEnds)
+            SetTimes.StartRest(Session!, set, now, restEnds);
+        _workouts.Save();
         // This exercise done: on to the next one with sets left (the rest timer runs over it).
         if (!se.Sets.Any(s => !s.IsCompleted) && Session!.Exercises.FindIndex(_exercise + 1, e => e.Sets.Any(s => !s.IsCompleted)) is >= 0 and var next)
             _exercise = next;
@@ -275,6 +277,11 @@ public partial class WorkoutViewModel : ObservableObject
     void SkipRest()
     {
         _restEndsAt = null;
+        if (Session is { } session)
+        {
+            SetTimes.EndRest(session, DateTime.Now);
+            _workouts.Save();
+        }
         Refresh();
     }
 
@@ -351,10 +358,7 @@ public partial class WorkoutViewModel : ObservableObject
                 if (!await Page.DisplayAlertAsync("Reset workout?", "Every set is unticked and the clock starts again. Exercises, weights and reps stay.", "Reset", "Cancel"))
                     return;
                 foreach (var set in session.Exercises.SelectMany(e => e.Sets))
-                {
-                    set.IsCompleted = false;
-                    set.CompletedAt = null;
-                }
+                    SetTimes.Uncomplete(set);
                 session.StartedAt = DateTime.Now;
                 _restEndsAt = null;
                 _exercise = 0;

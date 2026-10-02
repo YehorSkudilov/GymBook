@@ -200,7 +200,19 @@ public class SetEntry
     public int? Rir { get; set; }
     public bool IsWarmup { get; set; }
     public bool IsCompleted { get; set; }
+    // Times are stored as moments (wall-clock, like the workout's), never as counted seconds: how long a set, a warm-up
+    // or a rest took is the difference between two of them. Set by SetTimes.
+    /// <summary>When work on the set began: the end of whatever came before it in the workout (a rest, a set, the start).</summary>
+    public DateTime? StartedAt { get; set; }
+    /// <summary>When it was ticked done.</summary>
     public DateTime? CompletedAt { get; set; }
+    /// <summary>When the rest after it began, if one was timed.</summary>
+    public DateTime? RestStartedAt { get; set; }
+    /// <summary>
+    /// When that rest ended: when the timer ran out, or earlier when it was skipped or the next set was ticked. While it
+    /// runs, when it's due to end.
+    /// </summary>
+    public DateTime? RestEndedAt { get; set; }
 }
 
 public class BodyWeightEntry : ISyncEntity

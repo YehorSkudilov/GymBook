@@ -52,8 +52,7 @@ public class WatchLink(DataStore store, WorkoutService workouts, Units units)
         // (the watch knows, and doesn't offer it).
         if (set.Reps <= 0)
             return;
-        set.IsCompleted = true;
-        set.CompletedAt = DateTime.Now;
+        SetTimes.Complete(session, set, DateTime.Now);
         workouts.Save();
     }
 }

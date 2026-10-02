@@ -91,6 +91,8 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             return null;
 
         session.EndedAt = DateTime.Now;
+        // A rest still running ends with the workout.
+        SetTimes.EndRest(session, session.EndedAt.Value);
         foreach (var e in session.Exercises)
         {
             // Sets not done by the end count as skipped, for the finished workout and the exercise's history.

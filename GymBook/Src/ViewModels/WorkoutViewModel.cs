@@ -21,6 +21,8 @@ public partial class WorkoutViewModel(
     WorkoutSession? _session;
     DateTime _restEndsAt;
     int _restTotal;
+    /// <summary>The set the running rest comes after, which holds its times (see <see cref="SetTimes"/>).</summary>
+    SetEntry? _restSet;
 
     public ObservableCollection<WorkoutExerciseViewModel> Exercises { get; } = [];
 
@@ -156,6 +158,15 @@ public partial class WorkoutViewModel(
             var open = Exercises.ToList().FindIndex(e => !e.IsDone);
             CurrentIndex = Math.Max(0, open);
             OnCurrentIndexChanged(CurrentIndex);
+            // A rest that was running when the app closed carries on until it's due.
+            IsResting = false;
+            if (SetTimes.RunningRest(active, DateTime.Now) is { RestStartedAt: { } restStarted, RestEndedAt: { } restEnds } resting)
+            {
+                _restSet = resting;
+                _restEndsAt = restEnds;
+                _restTotal = Math.Max(1, (int)Math.Round((restEnds - restStarted).TotalSeconds));
+                IsResting = true;
+            }
         }
         OnPropertyChanged(nameof(UnitLabel));
         OnPropertyChanged(nameof(TrackRir));
@@ -264,12 +275,25 @@ public partial class WorkoutViewModel(
 
     internal void OnSetToggled(WorkoutExerciseViewModel exercise, SetRowViewModel set)
     {
+        // When it began and ended (and the rest before it, if one was running, ends now).
+        if (_session != null && set.IsCompleted)
+        {
+            SetTimes.Complete(_session, set.Model, set.Model.CompletedAt ?? DateTime.Now);
+            if (IsResting && _restSet != set.Model)
+                IsResting = false;
+        }
+        else
+        {
+            SetTimes.Uncomplete(set.Model);
+            if (_restSet == set.Model)
+                IsResting = false;
+        }
+        if (set.IsCompleted && store.Profile.AutoRestTimer)
+            StartRest(set.Model.IsWarmup ? Warmups.RestSeconds : exercise.Model.RestSeconds, set.Model);
         workouts.Save();
         UpdateProgress();
         if (set.IsCompleted && !set.Model.IsWarmup && exercise.IsDone)
             ExerciseFinished?.Invoke(exercise, CanFinish);
-        if (set.IsCompleted && store.Profile.AutoRestTimer)
-            StartRest(set.Model.IsWarmup ? Warmups.RestSeconds : exercise.Model.RestSeconds);
         // Its last set done: move straight on to the next exercise (the rest timer keeps running over it).
         if (set.IsCompleted && exercise.IsDone && Exercises.IndexOf(exercise) == CurrentIndex)
             _ = AdvanceAfterAsync(exercise);
@@ -343,10 +367,20 @@ public partial class WorkoutViewModel(
         CanFinish = sets.Count > 0 && sets.All(s => s.IsSettled);
     }
 
-    void StartRest(int seconds)
+    /// <summary>Rests for <paramref name="seconds"/>, logged as the rest after <paramref name="after"/> (when there's a set before it).</summary>
+    void StartRest(int seconds, SetEntry? after)
     {
+        var now = DateTime.Now;
         _restTotal = seconds;
-        _restEndsAt = DateTime.Now.AddSeconds(seconds);
+        _restEndsAt = now.AddSeconds(seconds);
+        _restSet = after;
+        if (_session != null)
+        {
+            if (after != null)
+                SetTimes.StartRest(_session, after, now, _restEndsAt);
+            else
+                SetTimes.EndRest(_session, now);
+        }
         IsResting = true;
         Tick();
     }
@@ -357,18 +391,33 @@ public partial class WorkoutViewModel(
         var d = int.Parse(delta);
         _restEndsAt = _restEndsAt.AddSeconds(d);
         _restTotal = Math.Max(1, _restTotal + d);
+        if (_restSet != null)
+        {
+            SetTimes.MoveRestEnd(_restSet, _restEndsAt);
+            workouts.Save();
+        }
         Tick();
     }
 
     [RelayCommand]
-    void SkipRest() => IsResting = false;
+    void SkipRest()
+    {
+        IsResting = false;
+        if (_session != null)
+        {
+            SetTimes.EndRest(_session, DateTime.Now);
+            workouts.Save();
+        }
+    }
 
-    /// <summary>The round timer button: rests for the current exercise's rest time.</summary>
+    /// <summary>The round timer button: rests for the current exercise's rest time, after the last set done.</summary>
     [RelayCommand]
     void StartRestNow()
     {
         var rest = Exercises.ElementAtOrDefault(CurrentIndex)?.Model.RestSeconds ?? store.Profile.CompoundRestSeconds ?? 120;
-        StartRest(rest);
+        var last = _session?.Exercises.SelectMany(e => e.Sets).Where(s => s.IsCompleted && s.CompletedAt != null).MaxBy(s => s.CompletedAt);
+        StartRest(rest, last);
+        workouts.Save();
     }
 
     /// <summary>The ··· in the header: a sheet with the workout's name, timing, finishing it and the logging settings.</summary>
@@ -466,10 +515,8 @@ public partial class WorkoutViewModel(
             return;
         IsResting = false;
         foreach (var set in _session.Exercises.SelectMany(e => e.Sets))
-        {
-            set.IsCompleted = false;
-            set.CompletedAt = null;
-        }
+            SetTimes.Uncomplete(set);
+        _restSet = null;
         // Skipped sets come back too (skipping is only on the rows, rebuilt below).
         foreach (var e in _session.Exercises)
             (e.SkippedWarmups, e.SkippedSets) = (0, 0);

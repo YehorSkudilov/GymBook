@@ -97,9 +97,15 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
         model.Entity<HealthDay>().Property(h => h.Date).HasColumnType(wallClock);
         // Inside jsonb, Npgsql only writes UTC-kind DateTimes. Label the wall-clock value UTC on the way in and
         // drop the label on the way out; the stored digits are the same.
+        var jsonWallClock = new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+            v => DateTime.SpecifyKind(v, DateTimeKind.Utc), v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified));
         model.Entity<WorkoutSession>().ComplexCollection(s => s.Exercises, e => e.ComplexCollection(x => x.Sets, s =>
-            s.Property(p => p.CompletedAt).HasConversion(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
-                v => DateTime.SpecifyKind(v, DateTimeKind.Utc), v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified)))));
+        {
+            s.Property(p => p.StartedAt).HasConversion(jsonWallClock);
+            s.Property(p => p.CompletedAt).HasConversion(jsonWallClock);
+            s.Property(p => p.RestStartedAt).HasConversion(jsonWallClock);
+            s.Property(p => p.RestEndedAt).HasConversion(jsonWallClock);
+        }));
 
         model.Entity<RefreshToken>(b =>
         {

@@ -1,5 +1,18 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-02, later): set timestamps + acrylic Skip button
+
+- **Every set is timed with moments, not counted seconds** (`SetEntry.StartedAt`, `CompletedAt`, `RestStartedAt`,
+  `RestEndedAt`; rules in `GymBook.Shared/Models/SetTimes.cs`). A set starts when whatever came before it ended (the
+  workout's start, the last set, or the rest after it); a rest's end is when the timer ran out, or earlier if skipped, the
+  next set was ticked or the workout finished, and it moves with +/− on the timer. Phone, watch (both its own screen and
+  ticks relayed from it) and Finish all go through it. A rest running when the app closed resumes on reopening. Older sets
+  just have nulls. `SessionExercise.RestSeconds` stays: it's the prescribed rest, not a measurement. Migrations `SetTimes`
+  are empty on purpose (JSON column), like `ExerciseNotesAndSkips`; the API converts the new times like `CompletedAt`.
+  Not shown anywhere in the UI yet.
+- **Skip** on Home's Up next sits in a `skeleton:AcrylicView` (tint #272C39 at 0.2, corner 14); the button itself is unchanged.
+  Check it looks right on Android and Windows.
+
 ## NEWEST (2026-10-02): Nutrition tab + Samsung Health / Health Connect (done, not built on a device)
 
 The owner asked for a Nutrition tab (calories, protein, carbs, fat against goals; daily surplus/deficit and its running total)
