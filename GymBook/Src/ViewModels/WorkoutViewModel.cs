@@ -1205,10 +1205,10 @@ public partial class SetRowViewModel : ObservableObject
     static readonly Color Green = Color.FromArgb("#2ED47A"), GreenSoft = Color.FromArgb("#133526"), GreenTint = Color.FromArgb("#0F2ED47A"),
         Blue = Color.FromArgb("#3F7DFF"), Pending = Color.FromArgb("#626B7E");
 
-    /// <summary>The current set's button: solid green to tick it; once done, a quiet green tick (tap to undo).</summary>
-    public Color CheckBackground => IsCompleted ? GreenSoft : Green;
-    public Color CheckStroke => IsCompleted ? Green : Colors.Transparent;
-    public ImageSource CheckIcon => (ImageSource)Application.Current!.Resources[IsCompleted ? "IconCheckGreen" : "IconCheck"];
+    /// <summary>The current set's button: solid green to tick it; on a done set opened again, red, since tapping it unticks it.</summary>
+    public Color CheckBackground => IsCompleted ? Color.FromArgb("#3A1419") : Green;
+    public Color CheckStroke => IsCompleted ? Color.FromArgb("#FF4D5E") : Colors.Transparent;
+    public ImageSource CheckIcon => (ImageSource)Application.Current!.Resources[IsCompleted ? "IconCheckRed" : "IconCheck"];
     public Color RowBackground => IsCompleted && !IsCurrent ? GreenTint : IsCurrent ? Color.FromArgb("#151821") : Colors.Transparent;
     public Color RowStroke => IsCurrent ? Blue : Colors.Transparent;
     public Color NumberBackground => IsCompleted ? GreenSoft : IsCurrent ? Color.FromArgb("#1A2A4F") : Color.FromArgb("#1D212C");
