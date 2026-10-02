@@ -1200,7 +1200,7 @@ public partial class SetRowViewModel : ObservableObject
     public string RepsDisplay => string.IsNullOrWhiteSpace(RepsText) ? "–" : RepsText;
     public string RirDisplay => string.IsNullOrWhiteSpace(RirText) ? "–" : RirText;
     public string E1Rm => _parent.E1RmText(Model);
-    // Each set's state at a glance: done rows are tinted green with a green number and tick; the one being logged is
+    // Each set's state at a glance: done rows are tinted green with a green tick (their text stays plain); the one being logged is
     // outlined in blue with a solid green button to tick it; the ones still to do are dimmed; skipped ones fade out.
     static readonly Color Green = Color.FromArgb("#2ED47A"), GreenSoft = Color.FromArgb("#133526"), GreenTint = Color.FromArgb("#0F2ED47A"),
         Blue = Color.FromArgb("#3F7DFF"), Pending = Color.FromArgb("#626B7E");
@@ -1212,8 +1212,8 @@ public partial class SetRowViewModel : ObservableObject
     public Color RowBackground => IsCompleted && !IsCurrent ? GreenTint : IsCurrent ? Color.FromArgb("#151821") : Colors.Transparent;
     public Color RowStroke => IsCurrent ? Blue : Colors.Transparent;
     public Color NumberBackground => IsCompleted ? GreenSoft : IsCurrent ? Color.FromArgb("#1A2A4F") : Color.FromArgb("#1D212C");
-    public Color LabelColor => IsCompleted ? Green : Model.IsWarmup ? Color.FromArgb("#FFB020") : IsCurrent ? Color.FromArgb("#F4F6FB") : Color.FromArgb("#9AA3B5");
-    public Color ValueColor => IsCompleted ? Green : Pending;
+    public Color LabelColor => Model.IsWarmup ? Color.FromArgb("#FFB020") : IsCurrent || IsCompleted ? Color.FromArgb("#F4F6FB") : Color.FromArgb("#9AA3B5");
+    public Color ValueColor => IsCompleted ? Color.FromArgb("#F4F6FB") : Pending;
     public bool TrackRir => _parent.TrackRir;
 
     internal void RefreshSettings()
