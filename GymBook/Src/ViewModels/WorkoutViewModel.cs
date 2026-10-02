@@ -1361,6 +1361,30 @@ public partial class SetRowViewModel : ObservableObject
         _parent.SaveSoon();
     }
 
+    // Weight, reps and RIR are picked on the number pad (a wheel to swipe, keys to type), not the phone's keyboard.
+    [RelayCommand]
+    async Task EditWeight()
+    {
+        var units = _parent.Units;
+        var max = units.Unit == WeightUnit.Kg ? 500 : 1100;
+        if (await Views.NumberPadSheet.Show(WeightText, units.ToDisplay(Model.WeightKg), units.Increment(_parent.Exercise), 0, max, units.Label, decimals: true) is { } v)
+            WeightText = v.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    [RelayCommand]
+    async Task EditReps()
+    {
+        if (await Views.NumberPadSheet.Show(RepsText, Model.Reps, 1, 0, 100, "reps") is { } v)
+            RepsText = ((int)v).ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    [RelayCommand]
+    async Task EditRir()
+    {
+        if (await Views.NumberPadSheet.Show(RirText, Model.Rir ?? _parent.Model.TargetRir, 1, 0, 10, "RIR", allowEmpty: true) is { } v)
+            RirText = double.IsNaN(v) ? "" : ((int)Math.Min(v, 10)).ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+
     /// <summary>Its check: ticks it, or unticks it (working sets carry the others along: see WorkoutExerciseViewModel.ToggleAsync).</summary>
     [RelayCommand]
     Task Toggle() => _parent.ToggleAsync(this);

@@ -182,7 +182,7 @@ public class DialogSheet : SheetPage
     }
 
     /// <summary>
-    /// One or more whole numbers side by side, each a two-digit box between − and +, with Save and Cancel. Resolves to
+    /// One or more whole numbers side by side, each between − and + (tap it for the number pad), with Save and Cancel. Resolves to
     /// the numbers, each kept within its field's limits, or null when cancelled.
     /// </summary>
     public static async Task<int[]?> Numbers(string title, string? message, IReadOnlyList<NumberField> fields, string accept)
@@ -460,28 +460,31 @@ public class DialogSheet : SheetPage
         return layout;
     }
 
-    /// <summary>A labelled whole number: a two-digit box between − and +, kept within the field's limits.</summary>
+    /// <summary>A labelled whole number between − and + (tap it for the number pad), kept within the field's limits.</summary>
     sealed class NumberInput
     {
         readonly NumberField _field;
-        readonly Entry _entry;
+        readonly Label _number;
 
         public NumberInput(NumberField field)
         {
             _field = field;
             Value = Math.Clamp(field.Value, field.Min, field.Max);
-            _entry = new Entry
+            // Tap the number to pick it on the number pad (swipe or type), or step it with − and +.
+            _number = new Label
             {
                 Text = Value.ToString(),
-                Keyboard = Keyboard.Numeric,
-                MaxLength = field.Max.ToString().Length,
                 FontSize = 28,
                 FontFamily = "OpenSansSemibold",
-                HorizontalTextAlignment = TextAlignment.Center,
+                HorizontalOptions = LayoutOptions.Center,
                 VerticalOptions = LayoutOptions.Center,
             };
-            _entry.Unfocused += (_, _) => Set(Read());
-            var box = new Border { Style = Resource<Style>("InputBox"), HeightRequest = 60, Content = _entry };
+            var box = new Border { Style = Resource<Style>("InputBox"), HeightRequest = 60, Content = _number };
+            box.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(async () =>
+            {
+                if (await NumberPadSheet.Show(Value.ToString(), Value, 1, field.Min, Math.Min(field.Max, field.Min + 200), field.Label.ToLowerInvariant()) is { } v)
+                    Set((int)Math.Round(v));
+            }) });
             var line = new Grid { ColumnSpacing = 8, ColumnDefinitions = [new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto)] };
             line.Add(Step("−", -1), 0);
             line.Add(box, 1);
@@ -495,18 +498,13 @@ public class DialogSheet : SheetPage
         public View View { get; }
         public int Value { get; private set; }
 
-        /// <summary>What's typed (kept within the limits), or the last value when it isn't a number.</summary>
-        public int Read()
-        {
-            if (int.TryParse(_entry.Text, out var v))
-                Value = Math.Clamp(v, _field.Min, _field.Max);
-            return Value;
-        }
+        /// <summary>The number as it stands (kept within the limits).</summary>
+        public int Read() => Value;
 
         public void Set(int value)
         {
             Value = Math.Clamp(value, _field.Min, _field.Max);
-            _entry.Text = Value.ToString();
+            _number.Text = Value.ToString();
         }
 
         Button Step(string text, int delta)

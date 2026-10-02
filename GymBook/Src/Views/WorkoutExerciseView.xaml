@@ -122,15 +122,18 @@
                                            HorizontalOptions="Center" VerticalOptions="Center" />
                                 </Border>
 
-                                <!-- The current set: edited in place -->
+                                <!-- The current set: tap a value to pick it on the number pad (swipe the wheel, or type) -->
                                 <Border Grid.Column="1" Style="{StaticResource InputBox}" HeightRequest="46" StrokeShape="RoundRectangle 14" IsVisible="{Binding IsCurrent}">
-                                    <Entry Text="{Binding WeightText}" Keyboard="Numeric" HorizontalTextAlignment="Center" FontFamily="OpenSansSemibold" FontSize="20" Placeholder="0" />
+                                    <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding EditWeightCommand}" /></Border.GestureRecognizers>
+                                    <Label Text="{Binding WeightDisplay}" HorizontalOptions="Center" VerticalOptions="Center" FontFamily="OpenSansSemibold" FontSize="20" />
                                 </Border>
                                 <Border Grid.Column="2" Style="{StaticResource InputBox}" HeightRequest="46" StrokeShape="RoundRectangle 14" IsVisible="{Binding IsCurrent}">
-                                    <Entry Text="{Binding RepsText}" Keyboard="Numeric" HorizontalTextAlignment="Center" FontFamily="OpenSansSemibold" FontSize="20" Placeholder="0" />
+                                    <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding EditRepsCommand}" /></Border.GestureRecognizers>
+                                    <Label Text="{Binding RepsDisplay}" HorizontalOptions="Center" VerticalOptions="Center" FontFamily="OpenSansSemibold" FontSize="20" />
                                 </Border>
                                 <Border Grid.Column="3" Style="{StaticResource InputBox}" HeightRequest="46" WidthRequest="52" StrokeShape="RoundRectangle 14" IsVisible="{Binding ShowRirInput}">
-                                    <Entry Text="{Binding RirText}" Keyboard="Numeric" HorizontalTextAlignment="Center" FontSize="18" Placeholder="–" />
+                                    <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding EditRirCommand}" /></Border.GestureRecognizers>
+                                    <Label Text="{Binding RirDisplay}" HorizontalOptions="Center" VerticalOptions="Center" FontSize="18" />
                                 </Border>
 
                                 <!-- Every other set: plain values -->

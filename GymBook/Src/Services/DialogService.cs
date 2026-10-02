@@ -21,7 +21,7 @@ public class DialogService
     public Task<string?> ActionSheet(string title, string? destructive, IReadOnlyList<MenuSwitch> switches, params string[] options) =>
         DialogSheet.Menu(title, destructive, options, switches);
 
-    /// <summary>Whole numbers, each typed (two digits) or stepped with − and +; null when cancelled.</summary>
+    /// <summary>Whole numbers, each picked on the number pad or stepped with − and +; null when cancelled.</summary>
     public Task<int[]?> Numbers(string title, string? message, string accept, params NumberField[] fields) =>
         DialogSheet.Numbers(title, message, fields, accept);
 
