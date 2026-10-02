@@ -102,7 +102,10 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock)
             if (current == null)
                 entry.Property(ApiDbContext.UserIdColumn).CurrentValue = user.Id;
             else
+            {
                 entry.CurrentValues.SetValues(profile);
+                current.MyFoods = profile.MyFoods;
+            }
             entry.Property(ApiDbContext.VersionColumn).CurrentValue = version;
             if (current == null)
                 entry.State = EntityState.Added;

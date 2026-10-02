@@ -155,6 +155,24 @@ public class ApiClient(HttpClient http, AuthSession session)
         return await ReadAsync<PlanQuotaResponse>(response);
     }
 
+    /// <summary>Foods from the databases the API searches (USDA branded foods, FatSecret). Works signed out too.</summary>
+    public async Task<FoodSearchResponse> SearchFoodsAsync(string query, CancellationToken ct = default)
+    {
+        using var response = await SendAsync(new HttpRequestMessage(HttpMethod.Get, "api/foods/search?q=" + Uri.EscapeDataString(query)), null, ct,
+            TimeSpan.FromSeconds(15));
+        return await ReadAsync<FoodSearchResponse>(response);
+    }
+
+    /// <summary>The packaged food with this barcode in the API's databases; null when none is known.</summary>
+    public async Task<FoodInfo?> FoodByBarcodeAsync(string code, CancellationToken ct = default)
+    {
+        using var response = await SendAsync(new HttpRequestMessage(HttpMethod.Get, "api/foods/barcode/" + Uri.EscapeDataString(code)), null, ct,
+            TimeSpan.FromSeconds(15));
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return null;
+        return await ReadAsync<FoodInfo>(response);
+    }
+
     /// <summary>Confirmed with the password, or for an account without one, a fresh Google ID token.</summary>
     public async Task DeleteAccountAsync(string password, string? googleIdToken = null, CancellationToken ct = default)
     {

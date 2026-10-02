@@ -1,5 +1,22 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-02, latest): bigger food search, barcodes, My foods
+
+- **Search order** (`Src/Services/FoodSearchService.cs`): My foods → ~80 typical everyday foods → **13,124 USDA generic foods
+  built in** (`Resources/Raw/foods/usda_foods.tsv.gz`, 240 KB, SR Legacy + FNDDS 2024; rebuild with `tools/build_usda_foods.py`)
+  → online: the API's `GET api/foods/search` (USDA branded + FatSecret) and Open Food Facts. Amounts are per 100 g, or per
+  serving when FatSecret only gives that (then the number pad asks servings, not grams).
+- **API** (`GymBook.Api/Foods/FoodDatabases.cs`, `Controllers/FoodsController.cs`): anonymous, rate-limited per IP (60/min),
+  cached a day. Keys from `.env`/GitHub secrets: `USDA_API_KEY` (api.data.gov), `FATSECRET_CLIENT_ID`/`FATSECRET_CLIENT_SECRET`
+  (FatSecret Platform, free tier; add the server's IP to its allowed list). Unset = that source is skipped. "Powered by FatSecret"
+  shows under results that include FatSecret's (their terms).
+- **Barcodes**: Android only, Google's code scanner (`Xamarin.GooglePlayServices.Code.Scanner`, no camera permission;
+  `Platforms/Android/GoogleBarcodeScanner.cs`), looked up in Open Food Facts then `api/foods/barcode/{code}` (USDA branded).
+  **Not built on a device**: the package brings AndroidX Activity 1.13, so `Xamarin.AndroidX.Activity.Ktx` 1.13.0.1 is lifted in
+  the csproj like the other -ktx lifts. If the build reports duplicate classes, lift the named package the same way.
+- **My foods**: `UserProfile.MyFoods` (JSON column, migrations `MyFoods`, default `[]`), saved from Add food's "Save to My foods"
+  switch with one serving's amounts; × on a result removes it. Privacy policy (API and website) updated.
+
 ## NEWEST (2026-10-02, later): set timestamps + acrylic Skip button
 
 - **Every set is timed with moments, not counted seconds** (`SetEntry.StartedAt`, `CompletedAt`, `RestStartedAt`,

@@ -51,6 +51,8 @@ public static class GymBookJson
 [JsonSerializable(typeof(GeneratePlanRequest))]
 [JsonSerializable(typeof(GeneratePlanResponse))]
 [JsonSerializable(typeof(PlanQuotaResponse))]
+[JsonSerializable(typeof(FoodSearchResponse))]
+[JsonSerializable(typeof(FoodInfo))]
 [JsonSerializable(typeof(PlanAnswers))]
 [JsonSerializable(typeof(PlanQuestionsResponse))]
 [JsonSerializable(typeof(PlanChatRequest))]

@@ -15,6 +15,7 @@
     <FontImageSource x:Key="IconCheckMuted" FontFamily="OutlinedIcons" Glyph="check" Color="{StaticResource TextSecondary}" Size="32" />
     <FontImageSource x:Key="IconCheckGreen" FontFamily="OutlinedIcons" Glyph="check" Color="{StaticResource Success}" Size="32" />
     <FontImageSource x:Key="IconClose" FontFamily="OutlinedIcons" Glyph="close" Color="{StaticResource TextSecondary}" Size="32" />
+    <FontImageSource x:Key="IconBarcode" FontFamily="OutlinedIcons" Glyph="barcode_scanner" Color="{StaticResource TextPrimary}" Size="32" />
     <FontImageSource x:Key="IconSearch" FontFamily="OutlinedIcons" Glyph="search" Color="{StaticResource TextSecondary}" Size="32" />
     <FontImageSource x:Key="IconFilter" FontFamily="OutlinedIcons" Glyph="tune" Color="{StaticResource TextPrimary}" Size="32" />
     <FontImageSource x:Key="IconPlus" FontFamily="OutlinedIcons" Glyph="add" Color="{StaticResource Accent}" Size="32" />

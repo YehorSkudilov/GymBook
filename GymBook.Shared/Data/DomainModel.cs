@@ -52,6 +52,10 @@ public static class DomainModel
             b.Property(e => e.Id).UsePropertyAccessMode(PropertyAccessMode.Property);
         });
 
-        model.Entity<UserProfile>().ToTable("profiles");
+        model.Entity<UserProfile>(b =>
+        {
+            b.ToTable("profiles");
+            b.ComplexCollection(p => p.MyFoods, f => f.ToJson());
+        });
     }
 }

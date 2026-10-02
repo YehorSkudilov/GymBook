@@ -115,6 +115,10 @@
 		<PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" Version="2.11.0.1" />
 		<PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" Version="2.11.0.1" />
 		<PackageReference Include="Xamarin.AndroidX.Collection.Ktx" Version="1.6.0.1" />
+		<!-- Barcodes for logging food (Platforms/Android/GoogleBarcodeScanner.cs): Google's code scanner, no camera permission.
+		     It brings AndroidX Activity 1.13, so its -ktx is lifted to match, like the ones above. -->
+		<PackageReference Include="Xamarin.GooglePlayServices.Code.Scanner" Version="116.1.0.17" />
+		<PackageReference Include="Xamarin.AndroidX.Activity.Ktx" Version="1.13.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>

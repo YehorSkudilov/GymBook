@@ -1,26 +1,51 @@
 using System.Globalization;
+using System.IO.Compression;
 using System.Text.Json;
+using GymBook.Contracts;
+using GymBook.Models;
+using GymBook.Services.Sync;
 
 namespace GymBook.Services;
 
-/// <summary>A food found by <see cref="FoodSearchService"/>: its amounts per 100 g, and a usual serving when known.</summary>
-public record FoodMatch(string Name, string? Brand, double Kcal100, double Protein100, double Carbs100, double Fat100,
-    double? ServingG, string? ServingText)
+/// <summary>
+/// A food found by <see cref="FoodSearchService"/>: its amounts per <see cref="PerText"/> (per 100 g when
+/// <see cref="PerGrams"/> is 100; per serving when its weight isn't known), a usual serving, and where it's from.
+/// </summary>
+public record FoodMatch(string Name, string? Brand, double Kcal, double Protein, double Carbs, double Fat,
+    string PerText, double? PerGrams, double? ServingG, string? ServingText, string Source)
 {
     public string Title => Brand is { Length: > 0 } b && !Name.Contains(b, StringComparison.OrdinalIgnoreCase) ? $"{Name} · {b}" : Name;
 
-    /// <summary>The amounts in <paramref name="grams"/> of it.</summary>
-    public (double Kcal, double Protein, double Carbs, double Fat) For(double grams) =>
-        (Kcal100 * grams / 100, Protein100 * grams / 100, Carbs100 * grams / 100, Fat100 * grams / 100);
+    /// <summary>Amounts by weight; false when only a serving's are known (picked by servings instead).</summary>
+    public bool ByWeight => PerGrams is > 0;
+
+    /// <summary>The amounts in <paramref name="amount"/> grams (by weight) or servings.</summary>
+    public (double Kcal, double Protein, double Carbs, double Fat) For(double amount)
+    {
+        var factor = ByWeight ? amount / PerGrams!.Value : amount;
+        return (Kcal * factor, Protein * factor, Carbs * factor, Fat * factor);
+    }
+
+    public static FoodMatch From(FoodInfo f) =>
+        new(f.Name, f.Brand, f.Kcal, f.ProteinG, f.CarbsG, f.FatG, f.PerText, f.PerGrams, f.ServingG, f.ServingText, f.Source);
 }
 
+/// <summary>What a search found, and whose credit to show with it.</summary>
+public record FoodSearchResult(List<FoodMatch> Foods, bool PoweredByFatSecret, bool Offline);
+
 /// <summary>
-/// Foods with their nutrition already filled in, to log by name: common everyday foods (typical values, built in, so
-/// they're found offline too) first, then packaged foods from Open Food Facts, the free, open food database.
+/// Foods with their nutrition filled in, to log by name or barcode. In order: the user's own saved foods, everyday foods
+/// (a short list of typical values, then USDA FoodData Central's ~13,000 generic foods and dishes, built in so they're
+/// found offline), then online: USDA's branded foods and FatSecret (searched by the Gym Book server, which holds their
+/// keys) and Open Food Facts, the free, open database of packaged foods.
 /// </summary>
-public class FoodSearchService
+public class FoodSearchService(DataStore store, ApiClient api)
 {
+    const int LocalMax = 15, OnlineMax = 25;
+
     static readonly HttpClient Http = CreateClient();
+    static List<FoodMatch>? _usda;
+    static readonly SemaphoreSlim UsdaGate = new(1, 1);
 
     static HttpClient CreateClient()
     {
@@ -30,34 +55,145 @@ public class FoodSearchService
         return client;
     }
 
-    /// <summary>Up to about 30 foods matching <paramref name="query"/>, common ones first. Throws when offline and nothing common matches.</summary>
-    public async Task<List<FoodMatch>> SearchAsync(string query, CancellationToken ct)
+    public async Task<FoodSearchResult> SearchAsync(string query, CancellationToken ct)
     {
         query = query.Trim();
-        var results = Common(query).Take(8).ToList();
+        var words = Words(query);
+        var results = new List<FoodMatch>();
+        if (words.Length == 0)
+            return new(results, false, false);
+
+        results.AddRange(Ranked(MyFoods(), words).Take(LocalMax));
+        results.AddRange(Ranked(CommonFoods, words).Take(8));
+        results.AddRange(Ranked(await UsdaAsync(), words).Take(LocalMax));
         if (query.Length < 2)
-            return results;
-        try
-        {
-            results.AddRange(await OpenFoodFactsAsync(query, ct));
-        }
-        catch (Exception) when (results.Count > 0 && !ct.IsCancellationRequested)
-        {
-            // Offline: the common foods are still there.
-        }
-        return results;
+            return new(results, false, false);
+
+        // Online, side by side; whichever fails (offline, server down) just adds nothing.
+        var server = Try(() => api.SearchFoodsAsync(query, ct));
+        var openFoodFacts = Try(() => OpenFoodFactsAsync(query, ct));
+        var fromServer = await server;
+        var fromOff = await openFoodFacts;
+        ct.ThrowIfCancellationRequested();
+        if (fromServer != null)
+            results.AddRange(fromServer.Foods.Take(OnlineMax).Select(FoodMatch.From));
+        if (fromOff != null)
+            results.AddRange(fromOff.Take(OnlineMax));
+        // The same food from two places (or listed twice) only once.
+        results = [.. results.DistinctBy(f => (f.Title.ToLowerInvariant(), Math.Round(f.Kcal), f.PerText))];
+        return new(results, fromServer?.PoweredByFatSecret == true, fromServer == null && fromOff == null);
     }
 
-    static IEnumerable<FoodMatch> Common(string query)
+    /// <summary>The packaged food with this barcode: Open Food Facts first, then the server's databases. Null when unknown.</summary>
+    public async Task<FoodMatch?> BarcodeAsync(string code, CancellationToken ct)
     {
-        var words = query.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (words.Length == 0)
-            return [];
-        return CommonFoods
-            .Where(f => words.All(w => f.Name.Contains(w, StringComparison.OrdinalIgnoreCase)))
-            .OrderBy(f => f.Name.StartsWith(words[0], StringComparison.OrdinalIgnoreCase) ? 0 : 1)
-            .ThenBy(f => f.Name.Length);
+        var off = await Try(() => OpenFoodFactsProductAsync(code, ct));
+        if (off != null)
+            return off;
+        var server = await Try(() => api.FoodByBarcodeAsync(code, ct));
+        return server != null ? FoodMatch.From(server) : null;
     }
+
+    static async Task<T?> Try<T>(Func<Task<T>> call) where T : class
+    {
+        try
+        {
+            return await call();
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            return null;
+        }
+    }
+
+    // ---------- My foods ----------
+
+    IEnumerable<FoodMatch> MyFoods() => store.Profile.MyFoods.Select(f =>
+        new FoodMatch(f.Name, null, f.Calories, f.ProteinG, f.CarbsG, f.FatG, "1 serving", null, null, null, "My food"));
+
+    /// <summary>Saves a food to My foods (replacing one with the same name), with what one serving has.</summary>
+    public void Save(string name, double kcal, double protein, double carbs, double fat)
+    {
+        name = name.Trim();
+        if (name.Length == 0)
+            return;
+        var foods = store.Profile.MyFoods;
+        foods.RemoveAll(f => string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase));
+        foods.Insert(0, new SavedFood
+        {
+            Name = name.Length > SyncLimits.NameLength ? name[..SyncLimits.NameLength] : name,
+            Calories = Math.Round(kcal, 1),
+            ProteinG = Math.Round(protein, 1),
+            CarbsG = Math.Round(carbs, 1),
+            FatG = Math.Round(fat, 1),
+        });
+        if (foods.Count > SavedFood.Max)
+            foods.RemoveRange(SavedFood.Max, foods.Count - SavedFood.Max);
+        store.Save();
+    }
+
+    public void Forget(string name)
+    {
+        if (store.Profile.MyFoods.RemoveAll(f => string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase)) > 0)
+            store.Save();
+    }
+
+    // ---------- Matching ----------
+
+    static string[] Words(string query) => query.ToLowerInvariant().Split([' ', ',', '-'], StringSplitOptions.RemoveEmptyEntries);
+
+    /// <summary>Foods with every word in their name: names starting with the first word first, then the shortest.</summary>
+    static IEnumerable<FoodMatch> Ranked(IEnumerable<FoodMatch> foods, string[] words) => foods
+        .Where(f => words.All(w => f.Title.Contains(w, StringComparison.OrdinalIgnoreCase)))
+        .OrderBy(f => f.Title.StartsWith(words[0], StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+        .ThenBy(f => f.Title.Length);
+
+    // ---------- USDA generic foods (built in) ----------
+
+    /// <summary>Loaded the first time it's searched (Resources/Raw/foods/usda_foods.tsv.gz, made by tools/build_usda_foods.py).</summary>
+    static async Task<List<FoodMatch>> UsdaAsync()
+    {
+        if (_usda != null)
+            return _usda;
+        await UsdaGate.WaitAsync();
+        try
+        {
+            if (_usda != null)
+                return _usda;
+            var foods = new List<FoodMatch>(14000);
+            try
+            {
+                await using var file = await FileSystem.OpenAppPackageFileAsync("foods/usda_foods.tsv.gz");
+                await using var gzip = new GZipStream(file, CompressionMode.Decompress);
+                using var reader = new StreamReader(gzip);
+                await Task.Run(() =>
+                {
+                    while (reader.ReadLine() is { } line)
+                    {
+                        var p = line.Split('\t');
+                        if (p.Length < 7 || !Num(p[1], out var kcal) || !Num(p[2], out var protein) || !Num(p[3], out var carbs) || !Num(p[4], out var fat))
+                            continue;
+                        double? serving = Num(p[5], out var g) && g > 0 ? g : null;
+                        foods.Add(new FoodMatch(p[0], null, kcal, protein, carbs, fat, "100 g", 100, serving,
+                            p[6].Length > 0 ? p[6] : null, "USDA"));
+                    }
+                });
+            }
+            catch (Exception)
+            {
+                // Missing from the package: the other sources still search.
+            }
+            return _usda = foods;
+        }
+        finally
+        {
+            UsdaGate.Release();
+        }
+
+        static bool Num(string text, out double value) => double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+    }
+
+    // ---------- Open Food Facts ----------
 
     static async Task<List<FoodMatch>> OpenFoodFactsAsync(string query, CancellationToken ct)
     {
@@ -71,26 +207,40 @@ public class FoodSearchService
         if (!doc.RootElement.TryGetProperty("hits", out var hits) || hits.ValueKind != JsonValueKind.Array)
             return found;
         foreach (var hit in hits.EnumerateArray())
-        {
-            var name = Text(hit, "product_name")?.Trim();
-            if (string.IsNullOrEmpty(name) || !hit.TryGetProperty("nutriments", out var n) || n.ValueKind != JsonValueKind.Object)
-                continue;
-            var kcal = Number(n, "energy-kcal_100g") ?? Number(n, "energy-kj_100g") / 4.184;
-            var protein = Number(n, "proteins_100g");
-            var carbs = Number(n, "carbohydrates_100g");
-            var fat = Number(n, "fat_100g");
-            // Only foods with the nutrition filled in.
-            if (kcal is not { } k || k < 0 || k > 950 || protein == null || carbs == null || fat == null)
-                continue;
-            var brand = hit.TryGetProperty("brands", out var brands) && brands.ValueKind == JsonValueKind.Array
-                ? brands.EnumerateArray().Select(b => b.ValueKind == JsonValueKind.String ? b.GetString() : null).FirstOrDefault(b => !string.IsNullOrWhiteSpace(b))
-                : Text(hit, "brands");
-            var serving = Number(hit, "serving_quantity");
-            found.Add(new FoodMatch(name, brand?.Trim(), k, protein.Value, carbs.Value, fat.Value,
-                serving is > 0 and < 2000 ? serving : null, Text(hit, "serving_size")));
-        }
-        // The same product listed twice (it happens) only once.
-        return [.. found.DistinctBy(f => (f.Title.ToLowerInvariant(), Math.Round(f.Kcal100)))];
+            if (OpenFoodFactsProduct(hit) is { } food)
+                found.Add(food);
+        return found;
+    }
+
+    static async Task<FoodMatch?> OpenFoodFactsProductAsync(string code, CancellationToken ct)
+    {
+        var url = $"https://world.openfoodfacts.org/api/v2/product/{Uri.EscapeDataString(code)}.json?fields=product_name,brands,nutriments,serving_quantity,serving_size";
+        using var response = await Http.GetAsync(url, ct);
+        if (!response.IsSuccessStatusCode)
+            return null;
+        await using var stream = await response.Content.ReadAsStreamAsync(ct);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+        return doc.RootElement.TryGetProperty("product", out var product) ? OpenFoodFactsProduct(product) : null;
+    }
+
+    /// <summary>A product with its nutrition filled in, or null.</summary>
+    static FoodMatch? OpenFoodFactsProduct(JsonElement p)
+    {
+        var name = Text(p, "product_name")?.Trim();
+        if (string.IsNullOrEmpty(name) || !p.TryGetProperty("nutriments", out var n) || n.ValueKind != JsonValueKind.Object)
+            return null;
+        var kcal = Number(n, "energy-kcal_100g") ?? Number(n, "energy-kj_100g") / 4.184;
+        var protein = Number(n, "proteins_100g");
+        var carbs = Number(n, "carbohydrates_100g");
+        var fat = Number(n, "fat_100g");
+        if (kcal is not { } k || k < 0 || k > 950 || protein == null || carbs == null || fat == null)
+            return null;
+        var brand = p.TryGetProperty("brands", out var brands) && brands.ValueKind == JsonValueKind.Array
+            ? brands.EnumerateArray().Select(b => b.ValueKind == JsonValueKind.String ? b.GetString() : null).FirstOrDefault(b => !string.IsNullOrWhiteSpace(b))
+            : Text(p, "brands")?.Split(',')[0];
+        var serving = Number(p, "serving_quantity");
+        return new FoodMatch(name, brand?.Trim(), k, protein.Value, carbs.Value, fat.Value, "100 g", 100,
+            serving is > 0 and < 2000 ? serving : null, Text(p, "serving_size"), "Open Food Facts");
     }
 
     static string? Text(JsonElement e, string name) =>
@@ -103,7 +253,7 @@ public class FoodSearchService
         : null;
 
     static FoodMatch F(string name, double kcal, double protein, double carbs, double fat, double? servingG = null, string? serving = null) =>
-        new(name, null, kcal, protein, carbs, fat, servingG, serving);
+        new(name, null, kcal, protein, carbs, fat, "100 g", 100, servingG, serving, "Typical");
 
     /// <summary>Everyday foods with typical values per 100 g (from USDA FoodData Central), and a usual serving.</summary>
     static readonly FoodMatch[] CommonFoods =

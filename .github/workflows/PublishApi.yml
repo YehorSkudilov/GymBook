@@ -69,6 +69,11 @@ jobs:
             OpenAI__ReasoningEffort=${{ vars.OPENAI_REASONING_EFFORT || 'low' }}
             OpenAI__TimeoutSeconds=90
 
+            # Food search databases (leave a secret unset to leave that database out)
+            Usda__ApiKey=${{ secrets.USDA_API_KEY }}
+            FatSecret__ClientId=${{ secrets.FATSECRET_CLIENT_ID }}
+            FatSecret__ClientSecret=${{ secrets.FATSECRET_CLIENT_SECRET }}
+
             # Email for password reset and email change codes (leave SMTP_HOST unset to turn them off)
             Smtp__Host=${{ vars.SMTP_HOST }}
             Smtp__Port=${{ vars.SMTP_PORT || '587' }}

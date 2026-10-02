@@ -25,7 +25,22 @@ export default function PrivacyPage() {
       <p>
         Everything you enter is saved on your device: your profile (name, goal, experience, training days, units, body weight, and
         optionally your age, body fat percentage and how long you&apos;ve trained), your training plans, workouts and sets, custom
-        exercises and body weight history. Without an account, this data never leaves your device.
+        exercises, body weight history, the food you log with its calories and macros, foods you save to My foods, creatine doses and
+        your nutrition goals. Without an account, this data never leaves your device.
+      </p>
+
+      <h2>Health data from Samsung Health and Health Connect</h2>
+      <p>
+        On Android, you can choose to let Gym Book read health data through Health Connect, from the apps you pick (Samsung Health, for
+        example). Only with your permission, given in Health Connect and changeable there at any time, Gym Book reads: calories burned
+        (total, active and resting), steps, food logged in other apps (each food&apos;s name, meal, time, calories, protein, carbohydrates
+        and fat), weight, body fat, lean body mass, bone mass, body water mass, basal metabolic rate and height. Gym Book only reads; it
+        never writes to or changes your health data.
+      </p>
+      <p>
+        This data is used only to show your nutrition, energy balance, activity and body composition in the app and to suggest nutrition
+        goals. It&apos;s saved in the app like the rest of your data and, if you have an account, synced to it. Health data is never used
+        for advertising, never sold, and never shared with anyone, including the AI features.
       </p>
 
       <h2>Data we collect when you create an account</h2>
@@ -72,6 +87,12 @@ export default function PrivacyPage() {
           generate an answer: your training profile (goal, experience, days, session length, equipment, and age, body weight and training
           years if set), the plan, what you type or attach, and for AI suggestions a summary of your recent sets on the plan. Your name and
           email are not sent. They are used only when you use these features.
+        </li>
+        <li>
+          <strong>Food search:</strong> the words you search for, or a barcode you scan, are sent to Open Food Facts (the free, open food
+          database) and to our server, which looks them up in the USDA&apos;s FoodData Central and in FatSecret without keeping them.
+          Nothing else is sent with them. Barcodes are read on your device by Google&apos;s code scanner (Google Play services), which gives
+          Gym Book only the number, not your camera.
         </li>
         <li>
           <strong>Email:</strong> password reset and email change codes are sent through our email provider, which receives the address

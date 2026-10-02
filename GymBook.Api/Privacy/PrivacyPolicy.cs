@@ -54,10 +54,14 @@ public static class PrivacyPolicy
         the app like the rest of your data and, if you have an account, synced to it so they appear on your other devices. Health data
         is never used for advertising, never sold, and never shared with anyone, including the AI features. Disconnecting stops
         further reading; deleting your account deletes what was synced.</p>
-        <h2>Food search</h2>
+        <h2>Food search and barcodes</h2>
         <p>When you search for a food to log, the words you type are sent to Open Food Facts (openfoodfacts.org), the free, open food
-        database, to find matching foods and their nutrition. Nothing else is sent with them: no account, health data or other
-        personal information.</p>
+        database, and to GymBook's server, which looks them up in the USDA's FoodData Central and in FatSecret and keeps neither
+        the search nor who made it. A barcode you scan is looked up the same way. Nothing else is sent with them: no account, health
+        data or other personal information. Everyday foods built into the app and the foods you save to My foods are searched on
+        your device; My foods are saved and synced with your profile.</p>
+        <p>Barcodes are scanned with Google's code scanner, part of Google Play services, which reads the barcode on your device and
+        hands GymBook only its number; GymBook doesn't get access to your camera or its pictures.</p>
 
         <h2>Data we collect when you create an account</h2>
         <ul>

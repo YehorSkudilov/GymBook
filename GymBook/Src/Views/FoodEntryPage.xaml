@@ -17,13 +17,22 @@
 
             <!-- Search: foods with their nutrition filled in; pick one and say how much -->
             <VerticalStackLayout Spacing="8" IsVisible="{Binding IsEditing, Converter={StaticResource Not}}">
-                <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                        <Entry Text="{Binding SearchText}" Placeholder="Search foods (chicken breast, oats, a brand…)" ReturnType="Search" />
-                        <ActivityIndicator Grid.Column="1" IsRunning="{Binding IsSearching}" IsVisible="{Binding IsSearching}"
-                                           WidthRequest="20" HeightRequest="20" Color="{StaticResource Accent}" />
-                    </Grid>
-                </Border>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <Entry Text="{Binding SearchText}" Placeholder="Search foods (chicken breast, oats, a brand…)" ReturnType="Search" />
+                            <ActivityIndicator Grid.Column="1" IsRunning="{Binding IsSearching}" IsVisible="{Binding IsSearching}"
+                                               WidthRequest="20" HeightRequest="20" Color="{StaticResource Accent}" />
+                        </Grid>
+                    </Border>
+                    <!-- Scan a package's barcode -->
+                    <Border Grid.Column="1" Style="{StaticResource InputBox}" WidthRequest="52" HeightRequest="52" Padding="0" IsVisible="{Binding CanScan}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ScanBarcodeCommand}" />
+                        </Border.GestureRecognizers>
+                        <Image Source="{StaticResource IconBarcode}" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                </Grid>
                 <Label Text="{Binding SearchMessage}" Style="{StaticResource Caption}" FontSize="12" IsVisible="{Binding HasSearchMessage}" />
                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding SearchResults}" Spacing="8">
                     <BindableLayout.ItemTemplate>
@@ -32,14 +41,30 @@
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding SelectCommand}" />
                                 </Border.GestureRecognizers>
-                                <VerticalStackLayout>
-                                    <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="14" LineBreakMode="TailTruncation" />
-                                    <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
-                                </VerticalStackLayout>
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                    <VerticalStackLayout>
+                                        <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="14" LineBreakMode="TailTruncation" />
+                                        <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                        <Label Text="{Binding Source}" Style="{StaticResource Caption}" FontSize="11" TextColor="{StaticResource TextTertiary}" />
+                                    </VerticalStackLayout>
+                                    <!-- Saved by the user: can be taken out of My foods -->
+                                    <Image Grid.Column="1" Source="{StaticResource IconClose}" WidthRequest="20" HeightRequest="20" VerticalOptions="Center"
+                                           IsVisible="{Binding CanRemove}">
+                                        <Image.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding RemoveCommand}" />
+                                        </Image.GestureRecognizers>
+                                    </Image>
+                                </Grid>
                             </Border>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
+                <Label Text="Powered by FatSecret" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End"
+                       IsVisible="{Binding PoweredByFatSecret}">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenFatSecretCommand}" />
+                    </Label.GestureRecognizers>
+                </Label>
                 <Label Text="{Binding PickedText}" TextColor="{StaticResource Success}" FontSize="13" FontFamily="OpenSansSemibold"
                        IsVisible="{Binding HasPicked}" />
             </VerticalStackLayout>
@@ -91,6 +116,15 @@
             <Label Text="{Binding CaloriesHint}" Style="{StaticResource Caption}" FontSize="12" />
             <Label Text="Amounts are per serving. Leave calories empty to work them out from the macros."
                    Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource TextTertiary}" />
+
+            <!-- Keep it to find in the search next time -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Margin="0,6,0,0">
+                <VerticalStackLayout VerticalOptions="Center">
+                    <Label Text="Save to My foods" FontFamily="OpenSansSemibold" FontSize="14" />
+                    <Label Text="Find it in the search next time, one serving's amounts." Style="{StaticResource Caption}" FontSize="12" />
+                </VerticalStackLayout>
+                <Switch Grid.Column="1" IsToggled="{Binding SaveToMyFoods}" VerticalOptions="Center" />
+            </Grid>
 
             <Button Text="Save" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCommand}" Margin="0,10,0,0" />
             <Button Text="Delete" Style="{StaticResource DangerButton}" Command="{Binding DeleteCommand}" IsVisible="{Binding IsEditing}" />

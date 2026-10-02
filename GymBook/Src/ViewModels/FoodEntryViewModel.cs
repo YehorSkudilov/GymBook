@@ -11,8 +11,8 @@ namespace GymBook.ViewModels;
 /// Logs something eaten, or edits or deletes it: <c>food?id=…</c> edits, <c>food?date=yyyy-MM-dd&amp;meal=Lunch</c> adds.
 /// Amounts are per serving, times the servings eaten; calories left empty are worked out from the macros.
 /// </summary>
-public partial class FoodEntryViewModel(DataStore store, NutritionService nutrition, FoodSearchService search, DialogService dialogs)
-    : BaseViewModel, IQueryAttributable
+public partial class FoodEntryViewModel(DataStore store, NutritionService nutrition, FoodSearchService search, IBarcodeScanner scanner,
+    DialogService dialogs) : BaseViewModel, IQueryAttributable
 {
     CancellationTokenSource? _search;
 
@@ -40,6 +40,11 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasSearchMessage))] string searchMessage = "";
     /// <summary>What was picked from the search and how much: "150 g of Chicken breast, cooked".</summary>
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasPicked))] string pickedText = "";
+    /// <summary>FatSecret's foods are in the results: its terms ask for "Powered by FatSecret" with them.</summary>
+    [ObservableProperty] bool poweredByFatSecret;
+    /// <summary>Save what's logged to My foods too, to find it in the search next time.</summary>
+    [ObservableProperty] bool saveToMyFoods;
+    public bool CanScan => scanner.IsAvailable;
     public bool HasSearchMessage => SearchMessage.Length > 0;
     public bool HasPicked => PickedText.Length > 0;
 
@@ -80,6 +85,8 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         SearchResults = [];
         SearchMessage = "";
         PickedText = "";
+        PoweredByFatSecret = false;
+        SaveToMyFoods = false;
         Recent = IsEditing ? [] : [.. nutrition.RecentFoods(12).Select(f => new RecentFoodItem
         {
             Name = f.Name,
@@ -101,6 +108,7 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         {
             SearchResults = [];
             SearchMessage = "";
+            PoweredByFatSecret = false;
             IsSearching = false;
             return;
         }
@@ -112,8 +120,11 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
             var found = await search.SearchAsync(text, cts.Token);
             if (cts.IsCancellationRequested)
                 return;
-            SearchResults = [.. found.Select(f => new FoodMatchItem(f, new AsyncRelayCommand(() => Pick(f))))];
-            SearchMessage = found.Count == 0 ? "Nothing found. Try other words, or fill it in below." : "";
+            SearchResults = [.. found.Foods.Select(Item)];
+            PoweredByFatSecret = found.PoweredByFatSecret;
+            SearchMessage = found.Foods.Count == 0
+                ? found.Offline ? "Nothing found offline. Connect to search more foods, or fill it in below." : "Nothing found. Try other words, or fill it in below."
+                : found.Offline ? "Offline: only built-in foods and My foods." : "";
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)
         {
@@ -128,12 +139,35 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
             IsSearching = false;
     }
 
-    /// <summary>A food from the search: how much was eaten (a serving, or in grams), then its amounts fill the form.</summary>
+    FoodMatchItem Item(FoodMatch f) => new(f, new AsyncRelayCommand(() => Pick(f)),
+        f.Source == "My food" ? new RelayCommand(() => Forget(f)) : null);
+
+    void Forget(FoodMatch food)
+    {
+        search.Forget(food.Name);
+        SearchResults = [.. SearchResults.Where(i => i.Food != food)];
+    }
+
+    /// <summary>
+    /// A food from the search or a scan: how much was eaten (in grams, starting at its usual serving; or in servings when
+    /// only a serving's amounts are known), then its amounts fill the form.
+    /// </summary>
     async Task Pick(FoodMatch food)
     {
-        var start = food.ServingG ?? 100;
-        var grams = await Views.NumberPadSheet.Show(start.ToString("0.#", CultureInfo.InvariantCulture), start, 5, 5, 1000, "g", decimals: true);
-        if (grams is not { } g || double.IsNaN(g) || g <= 0)
+        double? picked;
+        string amountText;
+        if (food.ByWeight)
+        {
+            var start = food.ServingG ?? 100;
+            picked = await Views.NumberPadSheet.Show(start.ToString("0.#", CultureInfo.InvariantCulture), start, 5, 5, 1000, "g", decimals: true);
+            amountText = $"{picked?.ToString("0.#", CultureInfo.CurrentCulture)} g";
+        }
+        else
+        {
+            picked = await Views.NumberPadSheet.Show("1", 1, 0.5, 0.5, 20, "×", decimals: true);
+            amountText = picked == 1 ? food.PerText : $"{picked?.ToString("0.#", CultureInfo.CurrentCulture)} × {food.PerText}";
+        }
+        if (picked is not { } g || double.IsNaN(g) || g <= 0)
             return;
         var (kcal, protein, carbs, fat) = food.For(g);
         Name = food.Title.Length > SyncLimits.NameLength ? food.Title[..SyncLimits.NameLength] : food.Title;
@@ -142,12 +176,54 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         Carbs = Number(carbs);
         Fat = Number(fat);
         Servings = "1";
-        PickedText = $"{g.ToString("0.#", CultureInfo.CurrentCulture)} g of {food.Title}";
+        PickedText = $"{amountText} of {food.Title}";
         _search?.Cancel();
         SearchText = "";
         SearchResults = [];
         SearchMessage = "";
+        PoweredByFatSecret = false;
         IsSearching = false;
+    }
+
+    /// <summary>FatSecret's terms: the credit links to it.</summary>
+    [RelayCommand]
+    static Task OpenFatSecret() => Launcher.Default.OpenAsync("https://www.fatsecret.com");
+
+    /// <summary>Scans a package's barcode and looks it up (Open Food Facts, then USDA's branded foods).</summary>
+    [RelayCommand]
+    async Task ScanBarcode()
+    {
+        if (!scanner.IsAvailable || IsSearching)
+            return;
+        string? code;
+        try
+        {
+            code = await scanner.ScanAsync();
+        }
+        catch (Exception e)
+        {
+            await dialogs.Alert("Couldn't scan", e.Message);
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(code))
+            return;
+        IsSearching = true;
+        SearchMessage = "";
+        FoodMatch? found;
+        try
+        {
+            found = await search.BarcodeAsync(code.Trim(), CancellationToken.None);
+        }
+        finally
+        {
+            IsSearching = false;
+        }
+        if (found == null)
+        {
+            await dialogs.Alert("Not found", $"No food with barcode {code} is known yet. Search by name, or fill it in below.");
+            return;
+        }
+        await Pick(found);
     }
 
     void Fill(FoodEntry f)
@@ -223,6 +299,9 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         entry.FatG = Math.Round(fat, 1);
         if (_editing == null)
             store.Data.FoodEntries.Add(entry);
+        // What one serving has, so it's found again in the search.
+        if (SaveToMyFoods && name.Length > 0)
+            search.Save(name, kcal / count, protein / count, carbs / count, fat / count);
         store.Save();
         await GoBack();
     }
@@ -238,14 +317,19 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
     }
 }
 
-/// <summary>A search result: name, the usual serving and its amounts per 100 g.</summary>
-public class FoodMatchItem(FoodMatch food, ICommand select)
+/// <summary>A search result: name, its amounts (per 100 g or per serving), the usual serving and where it's from.</summary>
+public class FoodMatchItem(FoodMatch food, ICommand select, ICommand? remove)
 {
+    public FoodMatch Food => food;
     public string Title => food.Title;
     public string Detail =>
-        $"{NutritionService.Kcal(food.Kcal100)} kcal · P {food.Protein100:0.#} · C {food.Carbs100:0.#} · F {food.Fat100:0.#} per 100 g"
-        + (food.ServingG is { } g ? $" · {food.ServingText ?? "serving"}{(food.ServingText?.Contains('g') == true ? "" : $" {g:0} g")}" : "");
+        $"{NutritionService.Kcal(food.Kcal)} kcal · P {food.Protein:0.#} · C {food.Carbs:0.#} · F {food.Fat:0.#} per {food.PerText}"
+        + (food.ServingG is { } g ? $" · {food.ServingText ?? "serving"} ({g:0} g)" : "");
+    public string Source => food.Source;
     public ICommand SelectCommand => select;
+    /// <summary>Takes a saved food out of My foods; null for the rest.</summary>
+    public ICommand? RemoveCommand => remove;
+    public bool CanRemove => remove != null;
 }
 
 public class RecentFoodItem

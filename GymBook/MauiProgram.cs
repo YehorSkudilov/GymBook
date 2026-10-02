@@ -55,8 +55,10 @@ public static class MauiProgram
 #if ANDROID
         // Samsung Health and Health Connect, both through Android's Health Connect.
         builder.Services.AddSingleton<GymBook.Services.Health.IHealthPlatform, HealthConnectPlatform>();
+        builder.Services.AddSingleton<IBarcodeScanner, GoogleBarcodeScanner>();
 #else
         builder.Services.AddSingleton<GymBook.Services.Health.IHealthPlatform, GymBook.Services.Health.NoHealthPlatform>();
+        builder.Services.AddSingleton<IBarcodeScanner, NoBarcodeScanner>();
 #endif
         builder.Services.AddSingleton<GymBook.Services.Health.HealthSyncService>();
         builder.Services.AddTransient<HealthSettingsViewModel>();

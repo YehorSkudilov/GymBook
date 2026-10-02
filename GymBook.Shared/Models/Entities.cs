@@ -280,6 +280,23 @@ public class FoodEntry : ISyncEntity
     public bool IsDeleted { get; set; }
 }
 
+/// <summary>A food saved to "My foods": its name and what one serving has. Kept in <see cref="UserProfile.MyFoods"/>.</summary>
+public class SavedFood
+{
+    public const int Max = 500;
+
+    [MaxLength(SyncLimits.NameLength)]
+    public string Name { get; set; } = "";
+    [Range(0, 20000)]
+    public double Calories { get; set; }
+    [Range(0, 2000)]
+    public double ProteinG { get; set; }
+    [Range(0, 2000)]
+    public double CarbsG { get; set; }
+    [Range(0, 2000)]
+    public double FatG { get; set; }
+}
+
 /// <summary>
 /// A supplement taken (creatine): how much, on which day and when. Logged with one tap on the Nutrition tab.
 /// </summary>
@@ -378,6 +395,9 @@ public class UserProfile
     public List<string>? HealthApps { get; set; }
     /// <summary>Food logged in the health app is counted with what's logged in Gym Book.</summary>
     public bool ImportHealthFood { get; set; } = true;
+    /// <summary>Foods the user saved to find again in the food search ("My foods"), each with its amounts for one serving.</summary>
+    [MaxItems(SavedFood.Max)]
+    public List<SavedFood> MyFoods { get; set; } = [];
     /// <summary>The usual creatine dose, logged with one tap.</summary>
     [Range(0.5, 50)]
     public double CreatineDoseG { get; set; } = 5;

@@ -118,6 +118,10 @@ builder.Services.AddRateLimiter(o =>
     o.AddPolicy(RateLimits.Sync, ctx => RateLimitPartition.GetTokenBucketLimiter(
         ctx.User.FindFirst("sub")?.Value ?? ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
         _ => new TokenBucketRateLimiterOptions { TokenLimit = 30, TokensPerPeriod = 30, ReplenishmentPeriod = TimeSpan.FromMinutes(1) }));
+    // Food search: anyone may use it (no account needed), so per address; generous for typing as you search.
+    o.AddPolicy(RateLimits.Foods, ctx => RateLimitPartition.GetTokenBucketLimiter(
+        ctx.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new TokenBucketRateLimiterOptions { TokenLimit = 60, TokensPerPeriod = 60, ReplenishmentPeriod = TimeSpan.FromMinutes(1) }));
 });
 
 builder.Services.AddScoped<TokenService>();
@@ -129,6 +133,10 @@ builder.Services.AddHttpClient<OpenAiPlanGenerator>(c =>
     c.BaseAddress = new Uri(openAi.BaseUrl);
     c.Timeout = TimeSpan.FromSeconds(openAi.TimeoutSeconds);
 });
+// Food databases that need a key (see Foods/FoodDatabases.cs); each is left out of the search while its key is unset.
+builder.Services.AddSingleton(builder.Configuration.GetSection("Usda").Get<GymBook.Api.Foods.UsdaOptions>() ?? new GymBook.Api.Foods.UsdaOptions());
+builder.Services.AddSingleton(builder.Configuration.GetSection("FatSecret").Get<GymBook.Api.Foods.FatSecretOptions>() ?? new GymBook.Api.Foods.FatSecretOptions());
+builder.Services.AddHttpClient<GymBook.Api.Foods.FoodDatabases>(c => c.Timeout = TimeSpan.FromSeconds(10));
 // Fetches links to import plans from; the handler keeps it off private networks.
 builder.Services.AddHttpClient<LinkFetcher>(c => c.Timeout = TimeSpan.FromSeconds(15))
     .ConfigurePrimaryHttpMessageHandler(LinkFetcher.CreateHandler);
@@ -203,5 +211,6 @@ namespace GymBook.Api
     {
         public const string Auth = "auth";
         public const string Sync = "sync";
+        public const string Foods = "foods";
     }
 }
