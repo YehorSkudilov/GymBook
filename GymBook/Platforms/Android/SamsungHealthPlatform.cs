@@ -65,6 +65,18 @@ public class SamsungHealthPlatform : IHealthPlatform, IHealthWriter
         ct.ThrowIfCancellationRequested();
         // The height on Samsung Health's profile.
         double? height = allowed.Contains(SamsungHealthData.Profile) ? await _samsung.ReadHeightAsync() : null;
+        // Sleep, by the day it ended; a failure there (an older Samsung Health) doesn't lose the rest.
+        if (allowed.Contains(SamsungHealthData.Sleep))
+        {
+            try
+            {
+                days = HealthSleep.Merge(days, await _samsung.ReadSleepAsync(from, to));
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine($"Samsung Health sleep couldn't be read: {e.Message}");
+            }
+        }
         return new HealthReadResult(days, body, height, foods);
     }
 

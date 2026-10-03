@@ -33,6 +33,9 @@
                     <!-- From a calendar day, its Before | After toggle; from the Workout tab, a slider from now -->
                     <views:RecoveryMomentView BindingContext="{Binding Moment}" />
                     <Label Text="{Binding Summary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                    <!-- The night before, from Samsung Health or Health Connect: short nights slow recovery, long ones speed it up -->
+                    <Label Text="{Binding SleepText}" IsVisible="{Binding HasSleep}" Style="{StaticResource Caption}" FontSize="12"
+                           TextColor="{StaticResource TextTertiary}" HorizontalTextAlignment="Center" />
                 </VerticalStackLayout>
             </Border>
 

@@ -354,6 +354,12 @@ public class HealthDay : ISyncEntity
     public double? FoodCarbsG { get; set; }
     [Range(0, 5000)]
     public double? FoodFatG { get; set; }
+    /// <summary>
+    /// Minutes asleep in the sleep that ended this day (the night woken up from on it, naps included), as the health
+    /// apps recorded it. Used to work out recovery.
+    /// </summary>
+    [Range(0, 1440)]
+    public int? SleepMinutes { get; set; }
     [MaxLength(SyncLimits.NameLength)]
     public string? Source { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
