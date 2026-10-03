@@ -183,25 +183,59 @@ public partial class NutritionViewModel(
     }
 
     /// <summary>
-    /// The range's days before <paramref name="date"/> (only finished days with food and a burn), plus that day's own
-    /// surplus or deficit (so far, for today), and the two together.
+    /// What came before <paramref name="date"/>, plus that day's own surplus or deficit (so far, for today), and the two
+    /// together. Before it: on Trends the range's finished days; on Day the run since the last day that went the other
+    /// way (the surplus since the last deficit, or the deficit since the last surplus).
     /// </summary>
     void ShowRunningTotal(DateTime date)
     {
-        var prior = nutrition.Balance(_rangeDays, date);
+        var (priorTotal, priorLabel) = IsTrends ? RangeTotal() : RunTotal();
         var day = nutrition.Day(date).Balance;
-        HasRunningTotal = prior != null || day != null;
+        HasRunningTotal = priorTotal != null || day != null;
         if (!HasRunningTotal)
             return;
-        var range = RangeChips.FirstOrDefault(c => c.IsSelected)?.Title ?? $"{_rangeDays} days";
-        RunningPriorLabel = $"Previous {range}";
-        (RunningPriorText, RunningPriorColor) = Signed(prior?.TotalBalance);
+        RunningPriorLabel = priorLabel;
+        (RunningPriorText, RunningPriorColor) = Signed(priorTotal);
         RunningDayLabel = date == DateTime.Today ? "Today so far" : date == DateTime.Today.AddDays(-1) ? "Yesterday" : date.ToString("ddd d MMM", CultureInfo.CurrentCulture);
         (RunningDayText, RunningDayColor) = Signed(day);
         RunningTotalLabel = "Total";
-        (RunningTotalText, RunningTotalColor) = Signed((prior?.TotalBalance ?? 0) + (day ?? 0));
+        (RunningTotalText, RunningTotalColor) = Signed((priorTotal ?? 0) + (day ?? 0));
 
         static (string, Color) Signed(double? kcal) => kcal is { } k ? (NutritionService.Signed(k), k > 0 ? Orange : Accent) : ("–", Secondary);
+
+        (double?, string) RangeTotal()
+        {
+            var range = RangeChips.FirstOrDefault(c => c.IsSelected)?.Title ?? $"{_rangeDays} days";
+            return (nutrition.Balance(_rangeDays, date)?.TotalBalance, $"Previous {range}");
+        }
+
+        // Back from the day before, adding up days that went the same way as the latest one, until one went the other
+        // way. Days without food or a burn are skipped, but a fortnight of them ends it (and a year at most).
+        (double?, string) RunTotal()
+        {
+            double? total = null;
+            int sign = 0, gap = 0;
+            DateTime? since = null;
+            for (var d = date.AddDays(-1); d > date.AddDays(-366) && gap < 14; d = d.AddDays(-1))
+            {
+                if (nutrition.Day(d).Balance is not { } b || b == 0)
+                {
+                    gap++;
+                    continue;
+                }
+                gap = 0;
+                if (sign == 0)
+                    sign = Math.Sign(b);
+                else if (Math.Sign(b) != sign)
+                    break;
+                total = (total ?? 0) + b;
+                since = d;
+            }
+            if (since is not { } start)
+                return (null, "Before");
+            var what = sign > 0 ? "Surplus" : "Deficit";
+            return (total, start == date.AddDays(-1) ? $"{what} the day before" : $"{what} since {start.ToString("d MMM", CultureInfo.CurrentCulture)}");
+        }
     }
 
     /// <summary>
