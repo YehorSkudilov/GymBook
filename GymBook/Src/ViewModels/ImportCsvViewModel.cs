@@ -28,6 +28,8 @@ public partial class ImportCsvViewModel : ObservableObject
     List<ImportedPlan>? _plans;
     List<ImportedWorkout>? _workouts;
     List<ExerciseMapping> _mappings = [];
+    // A row for every exercise in the file; Mappings shows those in the workouts being imported (see ShowMappings).
+    List<MappingItem> _allItems = [];
     // Importing workouts for one plan only: those matching its days. Null: every workout.
     Models.WorkoutPlan? _onlyPlan;
 
@@ -82,6 +84,37 @@ public partial class ImportCsvViewModel : ObservableObject
     /// <summary>How many of the file's workouts match the chosen plan's days.</summary>
     int Matching => _workouts == null || _onlyPlan == null ? 0 : _workouts.Count(w => CsvImporter.DayIn(_onlyPlan, w) != null);
 
+    /// <summary>The workouts that will be imported: those matching the chosen plan's days, or all.</summary>
+    List<ImportedWorkout> Importing => _workouts == null ? [] : _onlyPlan == null ? _workouts : [.. _workouts.Where(w => CsvImporter.DayIn(_onlyPlan, w) != null)];
+
+    static string WorkoutsSummary(List<ImportedWorkout> workouts)
+    {
+        if (workouts.Count == 0)
+            return "No workouts";
+        var sets = workouts.Sum(w => w.Exercises.Sum(e => e.Sets.Count));
+        return $"{Count(workouts.Count, "workout")} from {workouts.Min(w => w.StartedAt):d MMM yyyy} to {workouts.Max(w => w.StartedAt):d MMM yyyy} · {Count(sets, "set")}";
+    }
+
+    /// <summary>
+    /// The exercises of the workouts being imported (for one plan: only its workouts), each with how often it's used in
+    /// them. Changes made to one stay when another plan is picked.
+    /// </summary>
+    void ShowMappings()
+    {
+        var uses = (Kind == CsvImportKind.Workouts ? Importing.SelectMany(w => w.Exercises).Select(e => e.Exercise.Key) : _allItems.Select(i => i.Source))
+            .GroupBy(k => k).ToDictionary(g => g.Key, g => g.Count());
+        Mappings.Clear();
+        foreach (var item in _allItems)
+        {
+            if (Kind == CsvImportKind.Workouts && !uses.ContainsKey(item.Source))
+                continue;
+            if (Kind == CsvImportKind.Workouts)
+                item.SetUses(uses[item.Source]);
+            Mappings.Add(item);
+        }
+        UpdateMappingSummary();
+    }
+
     void UpdatePlanFilter()
     {
         ShowPlanFilter = Kind == CsvImportKind.Workouts && _workouts != null && _importer.Plans.Count > 0;
@@ -91,6 +124,11 @@ public partial class ImportCsvViewModel : ObservableObject
             : Matching == 0
                 ? $"None of the workouts match a day of {_onlyPlan.Name} (by workout name, or day number when the file names this plan)."
                 : $"{Count(Matching, "workout")} of {_workouts!.Count} match a day of {_onlyPlan.Name} and are imported for it; the rest are left out.";
+        if (_workouts != null)
+        {
+            Summary = _onlyPlan == null ? WorkoutsSummary(_workouts) : $"{WorkoutsSummary(Importing)} for {_onlyPlan.Name} (of {_workouts.Count} in the file)";
+        }
+        ShowMappings();
         OnPropertyChanged(nameof(CanImport));
         ImportCommand.NotifyCanExecuteChanged();
     }
@@ -164,10 +202,7 @@ public partial class ImportCsvViewModel : ObservableObject
             else
             {
                 _workouts = CsvExportFormat.ParseWorkouts(text);
-                var first = _workouts.Min(w => w.StartedAt);
-                var last = _workouts.Max(w => w.StartedAt);
-                var sets = _workouts.Sum(w => w.Exercises.Sum(e => e.Sets.Count));
-                Summary = $"{Count(_workouts.Count, "workout")} from {first:d MMM yyyy} to {last:d MMM yyyy} · {Count(sets, "set")}";
+                Summary = WorkoutsSummary(_workouts);
                 used = _workouts.SelectMany(w => w.Exercises).Select(e => e.Exercise).ToList();
             }
         }
@@ -190,9 +225,7 @@ public partial class ImportCsvViewModel : ObservableObject
         // Another file was picked, or this one removed, while matching.
         if (FileName != name)
             return;
-        foreach (var mapping in _mappings)
-            Mappings.Add(new MappingItem(mapping, Change));
-        UpdateMappingSummary();
+        _allItems = [.. _mappings.Select(m => new MappingItem(m, Change))];
         IsReady = true;
         UpdatePlanFilter();
     }
@@ -208,6 +241,7 @@ public partial class ImportCsvViewModel : ObservableObject
         _workouts = null;
         _mappings = [];
         _onlyPlan = null;
+        _allItems = [];
         ShowPlanFilter = false;
         Mappings.Clear();
         FileName = Summary = MappingSummary = "";
@@ -223,12 +257,14 @@ public partial class ImportCsvViewModel : ObservableObject
 
     void UpdateMappingSummary()
     {
-        var matched = _mappings.Count(m => m.Target != null);
+        // Of the exercises shown: those in the workouts being imported.
+        var shown = Mappings.Select(i => i.Mapping).ToList();
+        var matched = shown.Count(m => m.Target != null);
         var check = Mappings.Count(m => m.Status == "Check");
         var chosen = Mappings.Count(m => m.IsChosen);
-        var created = _mappings.Count - matched;
-        var byAi = _mappings.Count(m => m.Match.Source == MatchSource.Ai && m.Target == m.Match.Exercise);
-        MappingSummary = $"{Count(_mappings.Count, "exercise")}: {matched} matched to the app's" +
+        var created = shown.Count - matched;
+        var byAi = shown.Count(m => m.Match.Source == MatchSource.Ai && m.Target == m.Match.Exercise);
+        MappingSummary = $"{Count(shown.Count, "exercise")}: {matched} matched to the app's" +
             (byAi > 0 ? $" ({byAi} by AI)" : "") +
             (check > 0 ? $" ({check} worth a check)" : "") + (created > 0 ? $", {created} added as new" : "") +
             (chosen > 0 ? $", {chosen} chosen by you" : "") + ". Tap one to change it." +
@@ -326,7 +362,17 @@ public partial class MappingItem : ObservableObject
     public bool IsChosen { get; private set; }
 
     public string Source => Mapping.Source.Key;
-    public string Uses => $"{Mapping.Uses}×";
+
+    int? _uses;
+
+    /// <summary>How often it's used in the workouts being imported (all of the file's, until one plan is picked).</summary>
+    public string Uses => $"{_uses ?? Mapping.Uses}×";
+
+    public void SetUses(int uses)
+    {
+        _uses = uses;
+        OnPropertyChanged(nameof(Uses));
+    }
 
     public string Target => Mapping.Target?.Name ?? $"New: {CsvImporter.Name(Mapping.Source)}";
 
