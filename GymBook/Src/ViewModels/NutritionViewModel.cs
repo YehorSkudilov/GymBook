@@ -146,10 +146,9 @@ public partial class NutritionViewModel(
     public override async Task OnAppearingAsync()
     {
         IsShowing = false;
-        if (ModeChips.Count == 0)
+        ShowModeChips();
+        if (RangeChips.Count == 0)
         {
-            ModeChips.Add(new ChipItem("Day", false, SelectMode) { IsSelected = !IsTrends });
-            ModeChips.Add(new ChipItem("Trends", true, SelectMode) { IsSelected = IsTrends });
             foreach (var (label, days) in new[] { ("7 days", 7), ("30 days", 30), ("90 days", 90), ("1 year", 365), ("Custom", 0) })
                 RangeChips.Add(new ChipItem(label, days, SelectRange) { IsSelected = days == _rangeDays });
         }
@@ -197,10 +196,20 @@ public partial class NutritionViewModel(
 
     void SelectMode(ChipItem chip)
     {
-        foreach (var c in ModeChips)
-            c.IsSelected = c == chip;
         IsTrends = (bool)chip.Value!;
+        ShowModeChips();
         Refresh();
+    }
+
+    /// <summary>
+    /// Day | Trends, the chosen one lit. Made afresh from <see cref="IsTrends"/> each time (on a choice, and whenever the tab
+    /// shows) rather than recoloured in place, which didn't always redraw: the lit chip could stay on Day while Trends showed.
+    /// </summary>
+    void ShowModeChips()
+    {
+        ModeChips.Clear();
+        ModeChips.Add(new ChipItem("Day", false, SelectMode) { IsSelected = !IsTrends });
+        ModeChips.Add(new ChipItem("Trends", true, SelectMode) { IsSelected = IsTrends });
     }
 
     void SelectRange(ChipItem chip)
