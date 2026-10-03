@@ -544,6 +544,25 @@ public static partial class ExerciseLibrary
             ],
             Video = new("8hzVLzu-RJk"),
         },
+        new("neutral_grip_pulldown", "Neutral-Grip Lat Pulldown", Back, Cable, Compound)
+        {
+            Secondary = [Biceps],
+            Summary = "A pulldown on a bar with parallel handles about shoulder-width apart, palms facing each other, a shoulder-friendly grip that lets the lats pull through a long range.",
+            Steps =
+            [
+                "Attach a neutral-grip (parallel-handle) bar, lock your thighs under the pad and take the shoulder-width handles with palms facing in.",
+                "Sit tall with a slight lean back and your arms straight overhead.",
+                "Pull the handles to your upper chest, driving your elbows down and slightly back toward your sides.",
+                "Let them rise slowly until your arms are straight and your lats stretch.",
+            ],
+            Tips =
+            [
+                "Think of pulling your elbows into your back pockets; your hands are just hooks.",
+                "Keep your chest up and the lean small; don't rock back to move the weight.",
+                "Don't let the shoulders shrug up at the top; start each rep by pulling them down.",
+            ],
+            Video = new("aoHXhJ2x2BQ"),
+        },
         new("reverse_grip_pulldown", "Underhand Lat Pulldown", Back, Cable, Compound)
         {
             Secondary = [Biceps],
