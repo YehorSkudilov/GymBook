@@ -13,10 +13,15 @@ namespace GymBook;
 
 /// <summary>
 /// Keeps the Wear OS app's copy of the workout current: rewrites the <see cref="WearPaths.Workout"/> data item whenever the
-/// data changes. Ticks coming back from the watch arrive in <see cref="WatchListenerService"/>.
+/// data changes. Ticks coming back from the watch arrive in <see cref="WatchListenerService"/>. And once a change made
+/// here (or pulled from elsewhere) is synced to the account, tells the watch to sync too (<see cref="WearPaths.SyncNow"/>),
+/// so plans, history and everything else on it follow the phone without opening the watch app or signing it in by hand.
 /// </summary>
-public class WatchSync(DataStore store, WatchLink link)
+public class WatchSync(DataStore store, WatchLink link, SyncService sync)
 {
+    // Data changed since the watch was last told; it's told once that change is on the account.
+    bool _changed = true;
+
     static readonly JsonTypeInfo<WearWorkout> WorkoutJson = (JsonTypeInfo<WearWorkout>)GymBookJson.Options.GetTypeInfo(typeof(WearWorkout));
 
     byte[]? _last;
@@ -25,8 +30,39 @@ public class WatchSync(DataStore store, WatchLink link)
 
     public void Start()
     {
-        store.Changed += (_, _) => Push();
+        store.Changed += (_, _) =>
+        {
+            _changed = true;
+            Push();
+        };
+        sync.StatusChanged += (_, _) =>
+        {
+            if (sync.State == SyncState.UpToDate && _changed)
+            {
+                _changed = false;
+                _ = TellWatchToSyncAsync();
+            }
+        };
         Push();
+    }
+
+    /// <summary>Asks every connected watch to sync (its PhoneListenerService does, signing in through the phone if need be). Best effort.</summary>
+    static async Task TellWatchToSyncAsync()
+    {
+        try
+        {
+            var context = Android.App.Application.Context;
+            var nodes = await WearableClass.GetNodeClient(context).GetConnectedNodes().AsAsync<JavaList>();
+            var messages = WearableClass.GetMessageClient(context);
+            foreach (var node in nodes.OfType<Java.Lang.Object>().Select(n => n.JavaCast<INode>()))
+                if (node?.Id != null)
+                    await messages.SendMessage(node.Id, WearPaths.SyncNow, []).AsAsync<Java.Lang.Object>();
+        }
+        catch (Exception e)
+        {
+            // No watch, or no Wear OS API on this phone.
+            System.Diagnostics.Debug.WriteLine($"Couldn't ask the watch to sync: {e.Message}");
+        }
     }
 
     void Push() => MainThread.BeginInvokeOnMainThread(async () =>
