@@ -100,4 +100,7 @@ public static class GymBookJson
 [JsonSerializable(typeof(CopyPlanResponse))]
 [JsonSerializable(typeof(List<RankReportRow>))]
 [JsonSerializable(typeof(SetRankHiddenRequest))]
+[JsonSerializable(typeof(SubscriptionStatusResponse))]
+[JsonSerializable(typeof(VerifyPurchaseRequest))]
+[JsonSerializable(typeof(MicrosoftStoreTicketResponse))]
 internal partial class SharedJsonContext : JsonSerializerContext;

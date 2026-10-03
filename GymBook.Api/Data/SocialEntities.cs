@@ -97,3 +97,31 @@ public class PlanShareMembership
     public string? PlanId { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }
+
+/// <summary>
+/// A store subscription to Gym Book Pro, checked with its store (see Billing/). One row per purchase: the same
+/// purchase can't be claimed by two accounts.
+/// </summary>
+public class StoreSubscription
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string UserId { get; set; } = "";
+    public GymBook.Contracts.SubscriptionStore Store { get; set; }
+    /// <summary>
+    /// What identifies the purchase in its store, for checking it again: Google Play's purchase token, Apple's original
+    /// transaction id, the Microsoft Store recurrence id.
+    /// </summary>
+    public string PurchaseKey { get; set; } = "";
+    /// <summary>Microsoft Store only: the purchase ID key (valid 90 days) the recurrence is looked up with.</summary>
+    public string? RefreshToken { get; set; }
+    /// <summary>App Store only: "Production" or "Sandbox" (TestFlight and test accounts), where to check it again.</summary>
+    public string? Environment { get; set; }
+    public string ProductId { get; set; } = "";
+    public DateTimeOffset ExpiresAt { get; set; }
+    public bool AutoRenewing { get; set; }
+    public bool InTrial { get; set; }
+    /// <summary>Refunded or revoked by the store: never active again.</summary>
+    public bool Revoked { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset CheckedAt { get; set; }
+}

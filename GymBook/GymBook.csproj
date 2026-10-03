@@ -127,6 +127,8 @@
 		<AndroidLibrary Include="Platforms\Android\Libs\samsung-health-data-api-1.1.0.aar" Bind="false" />
 		<PackageReference Include="GoogleGson" Version="2.13.1.1" />
 		<PackageReference Include="Xamarin.Kotlin.Parcelize.Runtime" Version="2.4.0.1" />
+		<!-- Gym Book Pro subscriptions through Google Play Billing (Platforms/Android/PlayBilling.cs). -->
+		<PackageReference Include="Xamarin.Android.Google.BillingClient" Version="9.1.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>

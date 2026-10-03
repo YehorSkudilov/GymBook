@@ -13,7 +13,8 @@ namespace GymBook.ViewModels;
 /// plan (opened with ?regenerate=id, it starts from that plan's answers and replaces the plan when saved). Signed-in
 /// users also get the AI's follow-up questions before the plan is built, and can chat with the AI to change it.
 /// </summary>
-public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, AiPlanService ai)
+public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, AiPlanService ai,
+    GymBook.Services.Billing.SubscriptionService subscriptions)
     : BaseViewModel, IQueryAttributable
 {
     enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, Neck, BuildWith, Programs, Questions, Result }
@@ -257,7 +258,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
                 Title = "How should we build your plan?";
                 Subtitle = "AI tailors the plan to you after a few more questions. Signature Programs are proven routines, ready instantly.";
                 AddOptions([true, false], useAi => useAi ? "Build with AI" : "Signature Programs", useAi => useAi
-                    ? (ai.Quota is { } q ? $"A few more questions, then a plan made for you. {AiPlanService.Describe(q)}" : "A few more questions, then a plan made for you")
+                    ? (!subscriptions.IsActive ? $"A few more questions, then a plan made for you. Needs {SubscriptionProducts.Name}: try it free"
+                        : ai.Quota is { } q ? $"A few more questions, then a plan made for you. {AiPlanService.Describe(q)}" : "A few more questions, then a plan made for you")
                     : "Programs from legendary lifters and coaches, ranked for your answers", _useAi);
                 break;
             case Step.Programs:
@@ -274,6 +276,20 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
                 _ = BuildPlanAsync();
                 break;
         }
+    }
+
+    /// <summary>"Build with AI" needs Gym Book Pro: without it the sheet offers it, and closing it goes back to Signature Programs.</summary>
+    async Task RequireProAsync()
+    {
+        if (await ProViewModel.RequireAsync(subscriptions, $"AI plans need {SubscriptionProducts.Name}. Start with a free trial."))
+        {
+            // The quota line comes with Pro.
+            await ai.RefreshQuotaAsync();
+            return;
+        }
+        _useAi = false;
+        foreach (var o in Options)
+            o.IsSelected = o.Value is false;
     }
 
     void AddOptions<T>(IEnumerable<T> values, Func<T, string> title, Func<T, string> subtitle, T selected) where T : notnull
@@ -294,7 +310,11 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             case int i when _steps[_index] == Step.Days: _days = i; break;
             case int m: _minutes = m; break;
             case bool neck when _steps[_index] == Step.Neck: _neck = neck; break;
-            case bool useAi: _useAi = useAi; break;
+            case bool useAi:
+                _useAi = useAi;
+                if (useAi)
+                    _ = RequireProAsync();
+                break;
         }
     }
 

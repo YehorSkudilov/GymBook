@@ -110,6 +110,8 @@ public class PlanQuotaResponse
     public string Period { get; set; } = "";
     /// <summary>When the oldest generation in the window expires, freeing up another; null when none are used.</summary>
     public DateTimeOffset? NextAvailableAt { get; set; }
+    /// <summary>The user has Gym Book Pro (see SubscriptionProducts), which the AI features need.</summary>
+    public bool Subscribed { get; set; }
 }
 
 public class GeneratedWorkout

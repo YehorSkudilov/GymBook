@@ -44,6 +44,17 @@ public static class MauiProgram
         builder.Services.AddSingleton<IGoogleSignIn, NoGoogleSignIn>();
 #endif
         builder.Services.AddSingleton<AccountService>();
+        // Gym Book Pro, which the AI features need, bought through this platform's store.
+#if ANDROID
+        builder.Services.AddSingleton<GymBook.Services.Billing.IStoreBilling, PlayBilling>();
+#elif IOS
+        builder.Services.AddSingleton<GymBook.Services.Billing.IStoreBilling, AppStoreBilling>();
+#elif WINDOWS
+        builder.Services.AddSingleton<GymBook.Services.Billing.IStoreBilling, GymBook.WinUI.MicrosoftStoreBilling>();
+#else
+        builder.Services.AddSingleton<GymBook.Services.Billing.IStoreBilling, GymBook.Services.Billing.NoStoreBilling>();
+#endif
+        builder.Services.AddSingleton<GymBook.Services.Billing.SubscriptionService>();
         builder.Services.AddSingleton<AiPlanService>();
         builder.Services.AddSingleton<GymBook.Services.Import.CsvImporter>();
         builder.Services.AddSingleton<WatchLink>();
@@ -100,6 +111,7 @@ public static class MauiProgram
         AddPage<RanksPage, RanksViewModel>(builder.Services);
         AddPage<PlanSharePage, PlanShareViewModel>(builder.Services);
         AddPage<SharedPlanPage, SharedPlanViewModel>(builder.Services);
+        AddPage<ProPage, ProViewModel>(builder.Services);
 
 #if ANDROID
         // Drag reordering (plan exercises from their grip, days with a long-press), so swipes elsewhere still scroll.

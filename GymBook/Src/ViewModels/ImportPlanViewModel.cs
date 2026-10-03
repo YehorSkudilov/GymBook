@@ -36,10 +36,14 @@ public partial class ImportPlanViewModel : BaseViewModel
     readonly DataStore store;
     readonly AiPlanService ai;
 
-    public ImportPlanViewModel(DataStore store, AiPlanService ai, CsvImporter importer, ExercisePickerService picker, DialogService dialogs)
+    readonly GymBook.Services.Billing.SubscriptionService subscriptions;
+
+    public ImportPlanViewModel(DataStore store, AiPlanService ai, CsvImporter importer, ExercisePickerService picker, DialogService dialogs,
+        GymBook.Services.Billing.SubscriptionService subscriptions)
     {
         this.store = store;
         this.ai = ai;
+        this.subscriptions = subscriptions;
         Tabs =
         [
             new("Paste", ImportMode.Paste, SelectMode),
@@ -208,6 +212,8 @@ public partial class ImportPlanViewModel : BaseViewModel
             Error = "Importing with AI needs an account. Sign in from the Profile tab.";
             return;
         }
+        if (!await ProViewModel.RequireAsync(subscriptions, $"Importing with AI needs {GymBook.Contracts.SubscriptionProducts.Name}. Start with a free trial. (Importing a CSV from another app doesn't.)"))
+            return;
         IsImporting = true;
         try
         {

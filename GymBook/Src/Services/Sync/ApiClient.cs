@@ -181,6 +181,18 @@ public class ApiClient(HttpClient http, AuthSession session)
         await EnsureSuccessAsync(response);
     }
 
+    // ---- Gym Book Pro (the API's SubscriptionsController) ----
+
+    public Task<SubscriptionStatusResponse> GetSubscriptionAsync(CancellationToken ct = default) =>
+        GetAuthorizedAsync<SubscriptionStatusResponse>("api/subscriptions", ct);
+
+    /// <summary>A store purchase for the API to check with its store and record for the account.</summary>
+    public Task<SubscriptionStatusResponse> VerifyPurchaseAsync(VerifyPurchaseRequest request, CancellationToken ct = default) =>
+        SendAuthorizedAsync<VerifyPurchaseRequest, SubscriptionStatusResponse>("api/subscriptions/verify", request, ct);
+
+    public Task<MicrosoftStoreTicketResponse> GetMicrosoftStoreTicketAsync(CancellationToken ct = default) =>
+        GetAuthorizedAsync<MicrosoftStoreTicketResponse>("api/subscriptions/microsoft-ticket", ct);
+
     // ---- Social: public profile, ranks, friends (the API's SocialController) ----
 
     public Task<MyPublicProfile> GetMyPublicProfileAsync(CancellationToken ct = default) => GetAuthorizedAsync<MyPublicProfile>("api/social/me", ct);

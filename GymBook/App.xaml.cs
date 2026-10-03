@@ -50,6 +50,8 @@ public partial class App : Application
             _ = SignInGate.ShowIfNeededAsync(_services, resumed: true);
             _ = VerifyEmailPage.ShowIfNeededAsync(_services);
             // The weekly AI look at the active plan; does nothing most of the time.
+            // Gym Book Pro kept up to date with the store (purchases completed meanwhile, the Microsoft Store key).
+            _ = _services.GetRequiredService<GymBook.Services.Billing.SubscriptionService>().SyncQuietlyAsync();
             _ = _services.GetRequiredService<AiPlanService>().CheckActivePlanAsync();
         };
         // In the background the live connection goes (the battery); coming back reconnects and catches up.
@@ -65,6 +67,8 @@ public partial class App : Application
             _ = _services.GetRequiredService<LiveSync>().StartAsync();
             _ = SignInGate.ShowIfNeededAsync(_services, resumed: true);
             _ = VerifyEmailPage.ShowIfNeededAsync(_services);
+            // Gym Book Pro kept up to date with the store (purchases completed meanwhile, the Microsoft Store key).
+            _ = _services.GetRequiredService<GymBook.Services.Billing.SubscriptionService>().SyncQuietlyAsync();
             _ = _services.GetRequiredService<AiPlanService>().CheckActivePlanAsync();
         };
         return window;

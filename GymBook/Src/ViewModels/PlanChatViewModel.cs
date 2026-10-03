@@ -13,7 +13,8 @@ namespace GymBook.ViewModels;
 /// replies, changing the plan when asked. It only talks about the plan. Opened from the wizard's result (the plan
 /// isn't saved yet, so changes just show up there) and from a saved plan (changes are saved straight away).
 /// </summary>
-public partial class PlanChatViewModel(DataStore store, AiPlanService ai) : BaseViewModel, IQueryAttributable
+public partial class PlanChatViewModel(DataStore store, AiPlanService ai, GymBook.Services.Billing.SubscriptionService subscriptions)
+    : BaseViewModel, IQueryAttributable
 {
     WorkoutPlan? _plan;
     UserProfile? _answers;
@@ -80,6 +81,9 @@ public partial class PlanChatViewModel(DataStore store, AiPlanService ai) : Base
     async Task Send()
     {
         if (_plan == null || _answers == null || !CanSend)
+            return;
+        // The AI coach needs Gym Book Pro.
+        if (!await ProViewModel.RequireAsync(subscriptions, $"The AI coach needs {GymBook.Contracts.SubscriptionProducts.Name}. Start with a free trial."))
             return;
         var text = Draft.Trim();
         if (text.Length > PlanLimits.ChatMessageLength)

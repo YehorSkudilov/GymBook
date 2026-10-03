@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:SheetPage
+    x:Class="GymBook.Views.ProPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:ProViewModel"
+    Shell.PresentationMode="ModalNotAnimated"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
+
+    <!-- Gym Book Pro: what it unlocks, the store's plans and their free trial, restoring, and managing it once subscribed. -->
+    <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0"
+            VerticalOptions="End">
+        <ScrollView>
+            <VerticalStackLayout Padding="20,16,20,28" Spacing="16">
+                <Grid ColumnDefinitions="*,Auto">
+                    <HorizontalStackLayout Spacing="10">
+                        <Image WidthRequest="26" HeightRequest="26" VerticalOptions="Center">
+                            <Image.Source>
+                                <FontImageSource FontFamily="OutlinedIcons" Glyph="auto_awesome" Color="{StaticResource Accent}" Size="32" />
+                            </Image.Source>
+                        </Image>
+                        <Label Text="{Binding Name}" Style="{StaticResource H2}" VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                    <Button Grid.Column="1" Text="Close" Style="{StaticResource GhostButton}" Command="{Binding CloseCommand}" />
+                </Grid>
+
+                <Label Text="{Binding Reason}" Style="{StaticResource Caption}" IsVisible="{Binding HasReason}" />
+
+                <!-- What it unlocks -->
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="✓  AI plans built for your goal, schedule and equipment" />
+                    <Label Text="✓  Import any plan from text, a link, a photo or a PDF" />
+                    <Label Text="✓  An AI coach to change your plan by chatting" />
+                    <Label Text="✓  Weekly AI reviews of how your plan is going" />
+                    <Label Text="✓  Smarter exercise matching when importing from other apps" />
+                </VerticalStackLayout>
+
+                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HeightRequest="32" />
+
+                <!-- Subscribed -->
+                <Border Style="{StaticResource Card}" BackgroundColor="{StaticResource SuccessSoft}" IsVisible="{Binding IsActive}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="You have Gym Book Pro" FontFamily="OpenSansSemibold" TextColor="{StaticResource Success}" />
+                        <Label Text="{Binding ActiveText}" Style="{StaticResource Caption}" />
+                        <Button Text="Manage subscription" Style="{StaticResource SecondaryButton}" Command="{Binding ManageCommand}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- The plans -->
+                <Label Text="{Binding OffersError}" Style="{StaticResource Caption}" IsVisible="{Binding HasOffersError}" />
+                <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Offers}" IsVisible="{Binding CanBuy}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ProOfferItem">
+                            <Border Style="{StaticResource Card}">
+                                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding BuyCommand}" /></Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                    <VerticalStackLayout Spacing="2">
+                                        <HorizontalStackLayout Spacing="8">
+                                            <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="16" />
+                                            <Border BackgroundColor="{StaticResource AccentSoft}" StrokeShape="RoundRectangle 8" StrokeThickness="0" Padding="8,2"
+                                                    IsVisible="{Binding HasBadge}" VerticalOptions="Center">
+                                                <Label Text="{Binding Badge}" TextColor="{StaticResource Accent}" FontSize="11" FontFamily="OpenSansSemibold" />
+                                            </Border>
+                                        </HorizontalStackLayout>
+                                        <Label Text="{Binding Price}" Style="{StaticResource Caption}" />
+                                        <Label Text="{Binding Trial}" TextColor="{StaticResource Success}" FontSize="13" IsVisible="{Binding HasTrial}" />
+                                    </VerticalStackLayout>
+                                    <Image Grid.Column="1" Source="{StaticResource IconChevronRight}" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HeightRequest="24" />
+
+                <Button Text="Restore purchase" Style="{StaticResource GhostButton}" Command="{Binding RestoreCommand}" IsVisible="{Binding IsActive, Converter={StaticResource Not}}" />
+                <Label Style="{StaticResource Caption}" FontSize="11" HorizontalTextAlignment="Center"
+                       Text="Renews automatically until cancelled. Cancel at least a day before the trial or period ends to not be charged; manage or cancel any time in your store account." />
+                <HorizontalStackLayout Spacing="20" HorizontalOptions="Center">
+                    <Label Text="Terms" TextColor="{StaticResource Accent}" FontSize="12">
+                        <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenTermsCommand}" /></Label.GestureRecognizers>
+                    </Label>
+                    <Label Text="Privacy" TextColor="{StaticResource Accent}" FontSize="12">
+                        <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenPrivacyCommand}" /></Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Border>
+</views:SheetPage>

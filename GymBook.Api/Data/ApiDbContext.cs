@@ -77,6 +77,7 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
     public DbSet<RankReport> RankReports => Set<RankReport>();
     public DbSet<PlanShare> PlanShares => Set<PlanShare>();
     public DbSet<PlanShareMembership> PlanShareMembers => Set<PlanShareMembership>();
+    public DbSet<StoreSubscription> Subscriptions => Set<StoreSubscription>();
 
     /// <summary>Read by the query filters on every query; null (no signed-in user) matches nothing.</summary>
     string? CurrentUserId => currentUser.UserId;
@@ -206,6 +207,18 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
             b.HasIndex(m => m.UserId);
             b.HasOne<PlanShare>().WithMany().HasForeignKey(m => m.ShareId).OnDelete(DeleteBehavior.Cascade);
             b.HasOne<AppUser>().WithMany().HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<StoreSubscription>(b =>
+        {
+            b.ToTable("subscriptions");
+            b.Property(s => s.PurchaseKey).HasMaxLength(512);
+            b.Property(s => s.RefreshToken).HasMaxLength(8192);
+            b.Property(s => s.Environment).HasMaxLength(16);
+            b.Property(s => s.ProductId).HasMaxLength(64);
+            b.HasIndex(s => new { s.Store, s.PurchaseKey }).IsUnique();
+            b.HasIndex(s => new { s.UserId, s.ExpiresAt });
+            b.HasOne<AppUser>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 

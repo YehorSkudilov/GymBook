@@ -143,18 +143,21 @@ builder.Services.AddHttpClient<GymBook.Api.Foods.FoodDatabases>(c => c.Timeout =
 // Fetches links to import plans from; the handler keeps it off private networks.
 builder.Services.AddHttpClient<LinkFetcher>(c => c.Timeout = TimeSpan.FromSeconds(15))
     .ConfigurePrimaryHttpMessageHandler(LinkFetcher.CreateHandler);
-// Each AI plan and plan chat message is a paid OpenAI call: a limit per user in any window (e.g. 2 per 1d, 5 per 30d),
-// counted in the database so it survives restarts.
-builder.Services.AddSingleton(new PlanQuotaSettings
-{
-    Plan = PlanQuotaOptions.Parse(
-        builder.Configuration.GetValue("RateLimiting:PlanGenerationsLimit", 10),
-        builder.Configuration["RateLimiting:PlanGenerationsWindow"] ?? "1h"),
-    Chat = PlanQuotaOptions.Parse(
-        builder.Configuration.GetValue("RateLimiting:PlanChatLimit", 30),
-        builder.Configuration["RateLimiting:PlanChatWindow"] ?? "1d"),
-});
+// Each AI plan and plan chat message is a paid OpenAI call: a limit per user in any window, set in code
+// (PlanQuotaSettings.Default) and counted in the database so it survives restarts.
+builder.Services.AddSingleton(PlanQuotaSettings.Default);
 builder.Services.AddScoped<PlanQuota>();
+// Gym Book Pro: store purchases checked with Google Play, the App Store and the Microsoft Store (see Billing/). Each
+// store is left out while its settings are unset. Singletons, so their store tokens are kept between requests.
+builder.Services.AddSingleton(builder.Configuration.GetSection("GooglePlay").Get<GymBook.Api.Billing.GooglePlayOptions>() ?? new GymBook.Api.Billing.GooglePlayOptions());
+builder.Services.AddSingleton(builder.Configuration.GetSection("AppStore").Get<GymBook.Api.Billing.AppStoreOptions>() ?? new GymBook.Api.Billing.AppStoreOptions());
+builder.Services.AddSingleton(builder.Configuration.GetSection("MicrosoftStore").Get<GymBook.Api.Billing.MicrosoftStoreOptions>() ?? new GymBook.Api.Billing.MicrosoftStoreOptions());
+var billingHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<GymBook.Api.Billing.GooglePlayVerifier>(sp, billingHttp));
+builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<GymBook.Api.Billing.AppStoreVerifier>(sp, billingHttp));
+builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<GymBook.Api.Billing.MicrosoftStoreVerifier>(sp, billingHttp));
+builder.Services.AddScoped<GymBook.Api.Billing.Subscriptions>();
+builder.Services.AddHostedService<GymBook.Api.Billing.SubscriptionRefresher>();
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers(o =>
     {

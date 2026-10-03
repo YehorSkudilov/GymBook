@@ -270,6 +270,10 @@ public partial class ProfileViewModel(
     [RelayCommand]
     Task OpenPublicProfile() => GoTo(Routes.PublicProfile);
 
+    /// <summary>Gym Book Pro: what it unlocks, subscribing or managing it.</summary>
+    [RelayCommand]
+    Task OpenPro() => ProViewModel.ShowAsync();
+
     /// <summary>Strength ranks, leaderboards and friends.</summary>
     [RelayCommand]
     Task OpenRanks() => GoTo(Routes.Ranks);

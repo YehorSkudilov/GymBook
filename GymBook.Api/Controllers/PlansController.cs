@@ -9,11 +9,14 @@ namespace GymBook.Api.Controllers;
 /// <summary>
 /// AI plans (ChatGPT): follow-up questions, generating, importing, and chatting about a plan. Signed-in users only.
 /// Every paid call is counted against the user's quota: plans and imports share one, chat messages have their own.
+/// Every one needs Gym Book Pro (see Billing/Subscriptions.cs); without it the API answers 402, which the app shows
+/// its subscription page for.
 /// </summary>
 [ApiController]
 [Route("api/plans")]
 [EnableRateLimiting(RateLimits.Sync)]
-public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, LinkFetcher links, ICurrentUser currentUser) : ControllerBase
+public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, LinkFetcher links, ICurrentUser currentUser,
+    GymBook.Api.Billing.Subscriptions subscriptions) : ControllerBase
 {
     /// <summary>A photo or PDF of a plan, base64-encoded, plus the exercise list.</summary>
     const long MaxImportBytes = 12 * 1024 * 1024;
@@ -22,7 +25,12 @@ public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, Lin
 
     /// <summary>How many AI plans the user has left, for the Plans tab.</summary>
     [HttpGet("quota")]
-    public Task<PlanQuotaResponse> Quota(CancellationToken ct) => quota.GetAsync(UserId, QuotaKind.Plan, ct);
+    public async Task<PlanQuotaResponse> Quota(CancellationToken ct)
+    {
+        var left = await quota.GetAsync(UserId, QuotaKind.Plan, ct);
+        left.Subscribed = await subscriptions.IsActiveAsync(UserId, ct);
+        return left;
+    }
 
     /// <summary>
     /// Follow-up questions for the wizard's answers, asked before the plan is generated. They don't count against the
@@ -33,6 +41,8 @@ public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, Lin
     {
         if (!generator.IsConfigured)
             return Unavailable();
+        if (!await subscriptions.IsActiveAsync(UserId, ct))
+            return NeedsSubscription();
         var left = await quota.GetAsync(UserId, QuotaKind.Plan, ct);
         if (left.Remaining == 0)
             return UsedUp(left, "AI plans");
@@ -80,6 +90,8 @@ public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, Lin
     {
         if (!generator.IsConfigured)
             return Unavailable();
+        if (!await subscriptions.IsActiveAsync(UserId, ct))
+            return NeedsSubscription();
         try
         {
             return await generator.MatchAsync(request, ct);
@@ -108,6 +120,8 @@ public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, Lin
     {
         if (!generator.IsConfigured)
             return Unavailable();
+        if (!await subscriptions.IsActiveAsync(UserId, ct))
+            return NeedsSubscription();
         if (await quota.TryReserveAsync(UserId, kind, ct) is not { } reservation)
             return UsedUp(await quota.GetAsync(UserId, kind, ct), what);
 
@@ -124,9 +138,15 @@ public class PlansController(OpenAiPlanGenerator generator, PlanQuota quota, Lin
                 return Problem(statusCode: StatusCodes.Status502BadGateway, title: e.Message);
             throw;
         }
-        withQuota(result, await quota.GetAsync(UserId, kind, ct));
+        // Only reached with Gym Book Pro.
+        var left = await quota.GetAsync(UserId, kind, ct);
+        left.Subscribed = true;
+        withQuota(result, left);
         return result;
     }
+
+    ObjectResult NeedsSubscription() =>
+        Problem(statusCode: StatusCodes.Status402PaymentRequired, title: $"AI features need {SubscriptionProducts.Name}. Start a free trial to use them.");
 
     ObjectResult Unavailable() => Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "AI plans aren't available right now.");
 

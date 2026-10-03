@@ -87,17 +87,24 @@ jobs:
             # iOS OAuth client ID: the iOS app's tokens are addressed to it (leave unset without iOS sign-in)
             Google__IosClientId=${{ vars.GOOGLE_IOS_CLIENT_ID }}
 
+            # Gym Book Pro subscriptions, checked with each store (a store stays off while its settings are empty)
+            GooglePlay__PackageName=${{ vars.ANDROID_PACKAGE_NAME || 'com.yehorskudilov.gymbook' }}
+            GooglePlay__ServiceAccountJson=${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+            GooglePlay__NotificationToken=${{ secrets.GOOGLE_PLAY_NOTIFICATION_TOKEN }}
+            AppStore__BundleId=${{ vars.IOS_BUNDLE_ID || 'com.yehorskudilov.gymbook' }}
+            AppStore__IssuerId=${{ vars.APP_STORE_ISSUER_ID }}
+            AppStore__KeyId=${{ vars.APP_STORE_KEY_ID }}
+            AppStore__PrivateKey=${{ secrets.APP_STORE_PRIVATE_KEY_BASE64 }}
+            AppStore__NotificationToken=${{ secrets.APP_STORE_NOTIFICATION_TOKEN }}
+            MicrosoftStore__TenantId=${{ vars.MICROSOFT_STORE_TENANT_ID }}
+            MicrosoftStore__ClientId=${{ vars.MICROSOFT_STORE_CLIENT_ID }}
+            MicrosoftStore__ClientSecret=${{ secrets.MICROSOFT_STORE_CLIENT_SECRET }}
+
             # Admin app: accounts made SuperAdmin at startup (comma-separated; sign up in the app first)
             Admin__BootstrapEmails=${{ vars.ADMIN_BOOTSTRAP_EMAILS }}
 
             # Rate limits
             RateLimiting__AuthPerMinute=10
-            # AI plans per user: LIMIT per WINDOW (90m, 12h, 1d, 30d, 1w)
-            RateLimiting__PlanGenerationsLimit=${{ vars.PLAN_GENERATIONS_LIMIT || '10' }}
-            RateLimiting__PlanGenerationsWindow=${{ vars.PLAN_GENERATIONS_WINDOW || '1h' }}
-            # AI plan chat messages per user: LIMIT per WINDOW
-            RateLimiting__PlanChatLimit=${{ vars.PLAN_CHAT_LIMIT || '30' }}
-            RateLimiting__PlanChatWindow=${{ vars.PLAN_CHAT_WINDOW || '1d' }}
 
             # Host-side port the reverse proxy forwards to (consumed by docker-compose.yml)
             API_PORT=${{ vars.API_PORT }}

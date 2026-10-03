@@ -20,7 +20,7 @@ public class ExerciseMapping(ImportedExerciseRef source, int uses, ExerciseMatch
 /// history, with each exercise mapped to one of the app's (<see cref="ExerciseMapping"/>). Everything imported is
 /// saved like anything made in the app, so it syncs to the account. Importing the same file again adds nothing twice.
 /// </summary>
-public class CsvImporter(DataStore store, AiPlanService ai)
+public class CsvImporter(DataStore store, AiPlanService ai, Billing.SubscriptionService subscriptions)
 {
     const int RestSeconds = 120;
 
@@ -38,7 +38,8 @@ public class CsvImporter(DataStore store, AiPlanService ai)
 
         var unsure = groups.Where(g => g.Match.Confidence != MatchConfidence.Sure).ToList();
         var aiChecked = unsure.Count == 0;
-        if (unsure.Count > 0 && ai.IsAvailable)
+        // With Gym Book Pro the AI matches what the word matcher wasn't sure of; without it, its results stand.
+        if (unsure.Count > 0 && ai.IsAvailable && subscriptions.IsActive)
         {
             try
             {

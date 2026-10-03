@@ -40,6 +40,16 @@ public class PlanQuotaOptions
 /// <summary>The limits of each <see cref="QuotaKind"/>.</summary>
 public class PlanQuotaSettings
 {
+    /// <summary>
+    /// The limits, set here rather than in settings: each AI plan (generated or imported) and each plan chat message is a
+    /// paid OpenAI call. Per user, in any window.
+    /// </summary>
+    public static PlanQuotaSettings Default { get; } = new()
+    {
+        Plan = PlanQuotaOptions.Parse(10, "1h"),
+        Chat = PlanQuotaOptions.Parse(30, "1d"),
+    };
+
     public required PlanQuotaOptions Plan { get; init; }
     public required PlanQuotaOptions Chat { get; init; }
 

@@ -30,6 +30,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(Routes.Ranks, typeof(RanksPage));
         Routing.RegisterRoute(Routes.PlanShare, typeof(PlanSharePage));
         Routing.RegisterRoute(Routes.SharedPlan, typeof(SharedPlanPage));
+        Routing.RegisterRoute(Routes.Pro, typeof(ProPage));
     }
 }
 
@@ -58,4 +59,5 @@ public static class Routes
     public const string Ranks = "ranks";
     public const string PlanShare = "planshare";
     public const string SharedPlan = "sharedplan";
+    public const string Pro = "pro";
 }

@@ -12,7 +12,8 @@ namespace GymBook.ViewModels;
 /// The AI's suggestions for a plan, from the workouts logged on it: a short verdict, then suggestions that each say
 /// why and what they'd change, and can be applied with one tap. Opened from the plan's page.
 /// </summary>
-public partial class PlanReviewViewModel(DataStore store, AiPlanService ai) : BaseViewModel, IQueryAttributable
+public partial class PlanReviewViewModel(DataStore store, AiPlanService ai, GymBook.Services.Billing.SubscriptionService subscriptions)
+    : BaseViewModel, IQueryAttributable
 {
     string? _id;
     bool _loaded;
@@ -70,6 +71,8 @@ public partial class PlanReviewViewModel(DataStore store, AiPlanService ai) : Ba
     async Task Load()
     {
         if (Plan is not { } plan || IsLoading)
+            return;
+        if (!await ProViewModel.RequireAsync(subscriptions, $"AI reviews need {GymBook.Contracts.SubscriptionProducts.Name}. Start with a free trial."))
             return;
         Error = "";
         IsLoading = true;

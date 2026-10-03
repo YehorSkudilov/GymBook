@@ -9,7 +9,7 @@ namespace GymBook.Services;
 /// them, and a chat that changes a plan. Only for signed-in users; the wizard falls back to <see cref="PlanGenerator"/>
 /// otherwise, or when this fails.
 /// </summary>
-public class AiPlanService(ApiClient api, AccountService account, DataStore store, StatsService stats)
+public class AiPlanService(ApiClient api, AccountService account, DataStore store, StatsService stats, Billing.SubscriptionService subscriptions)
 {
     // The active plan is looked at again once a week, and only when there's something new to look at.
     static readonly TimeSpan CheckInterval = TimeSpan.FromDays(7);
@@ -55,6 +55,8 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     /// <summary>"9/10 AI plans left · resets in 45 min" (when the oldest one used frees up again).</summary>
     public static string Describe(PlanQuotaResponse q, string what = "AI plans")
     {
+        if (!q.Subscribed)
+            return $"Needs {SubscriptionProducts.Name} · try it free";
         var text = $"{q.Remaining}/{q.Limit} {what} left";
         return q.NextAvailableAt is { } next && q.Remaining < q.Limit ? $"{text} · resets {Until(next)}" : text;
     }
@@ -274,7 +276,8 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     {
         await account.EnsureLoadedAsync();
         // Unverified accounts are refused by the API anyway.
-        if (_checking || !IsAvailable || account.NeedsEmailVerification || store.ActivePlan is not { } plan)
+        // Reviews are a Gym Book Pro feature: none without it.
+        if (_checking || !IsAvailable || account.NeedsEmailVerification || !subscriptions.IsActive || store.ActivePlan is not { } plan)
             return;
         if (_lastTry.TryGetValue(plan.Id, out var tried) && DateTime.Now - tried < RetryInterval)
             return;
