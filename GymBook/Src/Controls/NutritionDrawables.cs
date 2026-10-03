@@ -15,7 +15,7 @@ public class CalorieBarDrawable(double eaten, double? burned, double? goal, Colo
     const float BarHeight = 16, Knob = 30, LabelHeight = 20;
 
     /// <summary>The goal's on-target range: within a tenth of it either way.</summary>
-    public const double Range = 0.1;
+    public const double Range = NutritionService.TargetRange;
 
     public float Reveal { get; set; } = 1;
 

@@ -128,6 +128,49 @@
                 </VerticalStackLayout>
             </Border>
     
+            <!-- Streaks: days in a row with food logged and on target, the longest of each, the last week as dots, and a nudge -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasStreaks}">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Streak" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                            <Label Text="{Binding StreakTitle}" Style="{StaticResource H3}" />
+                            <Label Text="{Binding StreakMessage}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <Border Style="{StaticResource InnerCard}" Padding="12,10">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="LOGGED" Style="{StaticResource Overline}" FontSize="10" />
+                                <Label Text="{Binding LoggingStreakText}" Style="{StaticResource StatValue}" FontSize="20" />
+                                <Label Text="{Binding LoggingBestText}" Style="{StaticResource Caption}" FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource InnerCard}" Padding="12,10">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Text="ON TARGET" Style="{StaticResource Overline}" FontSize="10" />
+                                <Label Text="{Binding TargetStreakText}" Style="{StaticResource StatValue}" FontSize="20" />
+                                <Label Text="{Binding TargetBestText}" Style="{StaticResource Caption}" FontSize="12" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                    <!-- The last seven days: green on target, blue logged, today ringed until something's logged -->
+                    <FlexLayout BindableLayout.ItemsSource="{Binding StreakDays}" JustifyContent="SpaceBetween" Direction="Row">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:StreakDayItem">
+                                <VerticalStackLayout Spacing="4">
+                                    <Border WidthRequest="28" HeightRequest="28" StrokeShape="RoundRectangle 14" StrokeThickness="2"
+                                            Stroke="{Binding Ring}" BackgroundColor="{Binding Fill}" />
+                                    <Label Text="{Binding Letter}" TextColor="{Binding LetterColor}" FontSize="11" HorizontalOptions="Center" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                    <Label Text="Green: on target (calories in range, protein near its goal) · Blue: food logged" Style="{StaticResource Caption}"
+                           FontSize="11" TextColor="{StaticResource TextTertiary}" />
+                </VerticalStackLayout>
+            </Border>
+
             <!-- No goals yet: where to set them -->
             <Border Style="{StaticResource Card}" IsVisible="{Binding HasNoGoals}" BackgroundColor="{StaticResource AccentSoft}">
                 <Border.GestureRecognizers>

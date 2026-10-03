@@ -124,6 +124,16 @@ public partial class NutritionViewModel(
     [ObservableProperty] string importedFoodText = "";
     [ObservableProperty] string importedFoodCalories = "";
 
+    // Streaks: days in a row logged and on target, the last week, and a nudge.
+    [ObservableProperty] bool hasStreaks;
+    [ObservableProperty] string streakTitle = "";
+    [ObservableProperty] string streakMessage = "";
+    [ObservableProperty] string loggingStreakText = "";
+    [ObservableProperty] string loggingBestText = "";
+    [ObservableProperty] string targetStreakText = "";
+    [ObservableProperty] string targetBestText = "";
+    [ObservableProperty] List<StreakDayItem> streakDays = [];
+
     // Creatine on the day
     [ObservableProperty] bool creatineTaken;
     [ObservableProperty] string creatineText = "";
@@ -181,6 +191,7 @@ public partial class NutritionViewModel(
         }
         var day = nutrition.Day(_date);
         ShowDay(day);
+        ShowStreaks();
         ShowCreatine();
     }
 
@@ -500,6 +511,55 @@ public partial class NutritionViewModel(
     IEnumerable<SupplementDose> Creatine(DateTime date) =>
         store.Data.Supplements.Where(d => d.Name == SupplementDose.Creatine && d.Date.Date == date.Date);
 
+    /// <summary>
+    /// The streaks as they stand now (whatever day is shown): days in a row with food logged and on target, the longest
+    /// of each, the last seven days as dots, and a line to keep going: what keeps the streak alive today, how close the
+    /// best is, a milestone reached.
+    /// </summary>
+    void ShowStreaks()
+    {
+        var s = nutrition.Streaks();
+        HasStreaks = s.BestLogging > 0;
+        if (!HasStreaks)
+            return;
+        static string Days(int n) => n == 1 ? "1 day" : $"{n} days";
+        StreakTitle = s.Logging == 0 ? "No streak yet" : $"{s.Logging}-day streak";
+        LoggingStreakText = Days(s.Logging);
+        LoggingBestText = $"Best {Days(s.BestLogging)}";
+        TargetStreakText = s.HasTarget ? Days(s.OnTarget) : "–";
+        TargetBestText = s.HasTarget ? $"Best {Days(s.BestOnTarget)}" : "Set a calorie goal";
+        StreakMessage = Nudge(s);
+        StreakDays = [.. s.LastWeek.Select(d => new StreakDayItem(
+            d.Date.ToString("ddd", CultureInfo.CurrentCulture)[..1],
+            d.Mark switch { StreakMark.OnTarget => Green, StreakMark.Logged => Accent, _ => Color.FromArgb("#262A35") },
+            d.Date == DateTime.Today && d.Mark == StreakMark.None ? Accent : Colors.Transparent,
+            d.Date == DateTime.Today))];
+
+        static string Nudge(NutritionStreaks s)
+        {
+            var (n, best) = (s.Logging, s.BestLogging);
+            if (!s.TodayLogged)
+                return n > 0 ? $"Log something today to keep your {n}-day streak going."
+                    : $"Log a meal to start a new streak. Your best is {Days(best)}.";
+            if (s.HasTarget && !s.TodayOnTarget && s.OnTarget > 0)
+                return $"Land in your target range today to make it {s.OnTarget + 1} days on target.";
+            if (n is 3 or 7 or 14 or 21 or 30 or 50 or 75 or 100 or 150 or 200 or 365 or 500 or 1000)
+                return n switch
+                {
+                    7 => "A full week logged. Keep it up!",
+                    14 => "Two weeks in a row. This is a habit now.",
+                    30 => "A month of logging every day. Impressive!",
+                    365 => "A whole year logged every day. Amazing!",
+                    _ => $"{n} days in a row. Keep it up!",
+                };
+            if (n >= best && n > 1)
+                return "Your longest streak yet!";
+            if (best > n && best - n <= 3)
+                return best - n + 1 == 1 ? "One more day to beat your best!" : $"{best - n + 1} more days to beat your best ({Days(best)}).";
+            return s.HasTarget && s.TodayOnTarget ? "On target today. Nice work!" : "Logged today. Every day counts!";
+        }
+    }
+
     void ShowCreatine()
     {
         var dose = store.Profile.CreatineDoseG;
@@ -635,6 +695,12 @@ public class FoodItem
 }
 
 public record StatItem(string Label, string Value);
+
+/// <summary>A day of the streaks' last week: its letter, filled green on target or blue logged, ringed when it's today with nothing yet.</summary>
+public record StreakDayItem(string Letter, Color Fill, Color Ring, bool IsToday)
+{
+    public Color LetterColor => IsToday ? Color.FromArgb("#F4F6FB") : Color.FromArgb("#9AA3B5");
+}
 
 /// <summary>A macro in the trend split's legend: its name and colour, its share of the range's calories, and the share aimed for.</summary>
 public record MacroLegendItem(string Name, string Share, string Aim, Color Color);
