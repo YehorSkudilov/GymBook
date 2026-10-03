@@ -31,12 +31,6 @@
                                              Command="{Binding OptionsCommand}" />
                             </Grid>
                             <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="17" />
-                            <!-- A finished workout: the plan it's linked to, or none; tap to link or change it -->
-                            <Label Text="{Binding PlanLink}" TextColor="{Binding PlanLinkColor}" FontSize="14" IsVisible="{Binding HasStats}">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding ChangePlanLinkCommand}" />
-                                </Label.GestureRecognizers>
-                            </Label>
                             <Label Text="{Binding Meta}" Style="{StaticResource Caption}" FontSize="17" />
                             <Label Text="{Binding When}" IsVisible="{Binding HasWhen}" Style="{StaticResource Caption}" FontSize="17" />
                         </VerticalStackLayout>

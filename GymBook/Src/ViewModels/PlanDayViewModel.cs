@@ -107,9 +107,6 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
 
     [ObservableProperty] string dayName = "";
     [ObservableProperty] string subtitle = "";
-    /// <summary>A finished workout: the plan it's linked to (tap to change), or that it's linked to none.</summary>
-    [ObservableProperty] string planLink = "";
-    [ObservableProperty] Color planLinkColor = Colors.Transparent;
     [ObservableProperty] string meta = "";
     [ObservableProperty] string when = "";
     [ObservableProperty] bool hasWhen;
@@ -145,7 +142,6 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
 
         var workout = progress.Days[_day];
         HasStats = false;
-        PlanLink = "";
         _finished = null;
         CanDiscard = false;
         CanEdit = false;
@@ -297,9 +293,8 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var plan = store.GetPlan(session.PlanId);
         var logged = session.Exercises.Where(e => e.Sets.Count > 0).ToList();
         DayName = session.Name;
-        Subtitle = plan == null ? "Workout" : session.PlanWeek is { } week ? $"{plan.Name} · Week {week}" : plan.Name;
-        PlanLink = $"{SessionItem.PlanLink(session, plan)} · {(plan == null ? "Link to a plan" : "Change")}";
-        PlanLinkColor = plan == null ? Color.FromArgb("#FFB020") : Color.FromArgb("#3F7DFF");
+        // The plan it counts toward, or that it's linked to none (linking is in the ···).
+        Subtitle = plan == null ? SessionItem.PlanLink(session, null) : session.PlanWeek is { } week ? $"{plan.Name} · Week {week}" : plan.Name;
         IsDone = true;
         IsSkipped = false;
         IsNext = false;
@@ -561,10 +556,6 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     }
 
     // ---------- Linking a finished workout to a plan ----------
-
-    /// <summary>The plan line under a finished workout tapped: link it to a plan, or change which.</summary>
-    [RelayCommand]
-    Task ChangePlanLink() => _finished is { } session ? LinkToPlan(session) : Task.CompletedTask;
 
     /// <summary>
     /// Links a finished workout to a plan (or another one): the plan, then the day of it the workout was, then the week it
