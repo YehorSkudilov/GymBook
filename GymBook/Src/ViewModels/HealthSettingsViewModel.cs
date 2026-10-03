@@ -81,6 +81,7 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
                     Status = IsBusy ? "Reading…"
                         : health.LastError is { } error ? $"Couldn't read: {error}"
                         : health.IsReadingHistory ? "Reading your older data…"
+                        : !health.HasReadHistory ? "Older data not read yet: tap Sync now"
                         : health.LastSyncedAt is { } at ? $"Up to date · read {Ago(at)}"
                         : "Connected";
                     ActionText = "Sync now";

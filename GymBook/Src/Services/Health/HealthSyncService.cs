@@ -25,6 +25,12 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
     /// <summary>"source|apps|oldest day read so far (ticks)", so reading the history carries on where it got to.</summary>
     const string HistoryKey = "health.history";
 
+    /// <summary>
+    /// "source|apps" once its whole history was read on this device. Missing (connected before history was read, a new
+    /// install, deleted health data): the next sync reads it.
+    /// </summary>
+    const string HistoryDoneKey = "health.history.done";
+
     static readonly TimeSpan MinInterval = TimeSpan.FromMinutes(10);
 
     readonly SemaphoreSlim _gate = new(1, 1);
@@ -163,8 +169,15 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
     /// <summary>The history is being read (in the background, after a sync).</summary>
     public bool IsReadingHistory { get; private set; }
 
+    /// <summary>The whole history of the source and apps read now was read on this device.</summary>
+    public bool HasReadHistory => Preferences.Default.Get(HistoryDoneKey, "") == HistorySignature;
+
     /// <summary>The next sync reads the whole history again (after the health data was deleted, say).</summary>
-    public void ReadHistoryAgain() => Preferences.Default.Remove(HistoryKey);
+    public void ReadHistoryAgain()
+    {
+        Preferences.Default.Remove(HistoryKey);
+        Preferences.Default.Remove(HistoryDoneKey);
+    }
 
     string HistorySignature => $"{store.Profile.HealthSource}|{string.Join(",", Apps ?? [])}";
 
@@ -175,7 +188,7 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
     /// </summary>
     async Task ReadHistoryAsync()
     {
-        if (IsReadingHistory)
+        if (IsReadingHistory || HasReadHistory)
             return;
         IsReadingHistory = true;
         try
@@ -208,6 +221,9 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
                     _gate.Release();
                 }
             }
+            // Only once every chunk was read: until then each sync carries on with it.
+            Preferences.Default.Set(HistoryDoneKey, signature);
+            Preferences.Default.Remove(HistoryKey);
         }
         catch (Exception e)
         {
