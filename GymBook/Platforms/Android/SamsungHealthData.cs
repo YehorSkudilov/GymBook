@@ -30,7 +30,8 @@ sealed class SamsungHealthData
     const string DualTime = Request + "ReadDataRequest$DualTimeBuilder";
 
     // What's read: the DataTypes field and its DataType class.
-    public const string Activity = "ACTIVITY_SUMMARY", Steps = "STEPS", Nutrition = "NUTRITION", Body = "BODY_COMPOSITION", Profile = "USER_PROFILE";
+    public const string Activity = "ACTIVITY_SUMMARY", Steps = "STEPS", Nutrition = "NUTRITION", Body = "BODY_COMPOSITION", Profile = "USER_PROFILE",
+        Sleep = "SLEEP";
 
     static readonly (string Kind, string Type)[] Kinds =
     [
@@ -39,6 +40,7 @@ sealed class SamsungHealthData
         (Nutrition, "DataType$NutritionType"),
         (Body, "DataType$BodyCompositionType"),
         (Profile, "DataType$UserProfileDataType"),
+        (Sleep, "DataType$SleepType"),
     ];
 
     // The SDK's error codes (com.samsung.android.sdk.health.data.error.ErrorCode).
@@ -181,6 +183,29 @@ sealed class SamsungHealthData
                 ordered.Select(m => value(m)).LastOrDefault(v => v != null);
             return new BodyReading(day.Key, Last(m => m.Item2), Last(m => m.Item3), Last(m => m.Item4), null, Last(m => m.Item5), Last(m => m.Item6));
         })];
+    }
+
+    /// <summary>
+    /// Minutes asleep each day between the two local times, by the day the sleep ended on (the night woken up from, plus
+    /// any naps): each sleep's time asleep (its DURATION, without the time awake in it), else its length.
+    /// </summary>
+    public async Task<Dictionary<DateTime, int>> ReadSleepAsync(DateTime from, DateTime to)
+    {
+        const string type = "DataType$SleepType";
+        var duration = Field(type, "DURATION");
+        var days = new Dictionary<DateTime, int>();
+        // From the day before: a night that began then ends on the first day.
+        foreach (var point in await ReadAsync(Sleep, type, from.AddDays(-1), to))
+        {
+            if (EndTime(point) is not { } end || end < from || end >= to)
+                continue;
+            var minutes = Value(point, duration)?.JavaCast<Java.Time.Duration>()?.ToMinutes() is long asleep && asleep > 0
+                ? (int)asleep
+                : StartTime(point) is { } start ? (int)(end - start).TotalMinutes : 0;
+            if (minutes > 0)
+                days[end.Date] = Math.Min(1440, days.GetValueOrDefault(end.Date) + minutes);
+        }
+        return days;
     }
 
     /// <summary>The height on Samsung Health's profile, in cm.</summary>
@@ -427,6 +452,12 @@ sealed class SamsungHealthData
         Value(point, field)?.JavaCast<Java.Lang.Number>()?.DoubleValue();
 
     /// <summary>When a record was measured or eaten, in the phone's local time.</summary>
+    /// <summary>When a record ended (a sleep, say), in the phone's local time.</summary>
+    static DateTime? EndTime(Java.Lang.Object point) =>
+        CallOrNull(point, Sdk + "data/HealthDataPoint", "getEndLocalDateTime", "()Ljava/time/LocalDateTime;")?.JavaCast<Java.Time.LocalDateTime>() is { } t
+            ? new DateTime(t.Year, t.MonthValue, t.DayOfMonth, t.Hour, t.Minute, t.Second)
+            : null;
+
     static DateTime? StartTime(Java.Lang.Object point) =>
         CallOrNull(point, Sdk + "data/HealthDataPoint", "getStartLocalDateTime", "()Ljava/time/LocalDateTime;")?.JavaCast<Java.Time.LocalDateTime>() is { } t
             ? new DateTime(t.Year, t.MonthValue, t.DayOfMonth, t.Hour, t.Minute, t.Second)

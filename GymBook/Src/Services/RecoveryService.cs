@@ -7,19 +7,66 @@ public record MuscleRecovery(MuscleGroup Muscle, double Recovery, DateTime? Read
 
 /// <summary>
 /// Estimates how recovered each muscle is (0 = just trained hard, 1 = fully fresh) from recent sets.
-/// More sets means a longer recovery window: 24h base plus 8h per set, capped at 96h. Works for any moment:
-/// in the past it only counts workouts finished by then, in the future it lets today's fatigue wear off.
+/// More sets means a longer recovery window (see <see cref="HoursToRecover"/>), and sleep stretches or shortens it: short
+/// nights after a workout slow recovery down, long ones speed it up a little (<see cref="SleepFactor"/>, from the sleep
+/// Samsung Health or Health Connect recorded). Works for any moment: in the past it only counts workouts finished by
+/// then, in the future it lets today's fatigue wear off.
 /// </summary>
 public class RecoveryService(DataStore store)
 {
-    // How far back workouts still count (recovery takes three days at most), and how far ahead the previews look.
-    const double MaxHours = 96;
+    // How far back workouts still count (recovery takes three days at most, a little more after short nights), and how
+    // far ahead the previews look.
+    const double MaxHours = 100;
+
+    /// <summary>Around this much sleep a night, recovery runs at its usual speed.</summary>
+    public const double TypicalSleepHours = 7.5;
+
+    /// <summary>
+    /// How much longer (above 1) or shorter (below) recovery from a workout that ended at <paramref name="ended"/> takes,
+    /// looked at from <paramref name="at"/>: by the nights slept since (or, before the first, the night before it), about
+    /// a tenth longer for each hour under <see cref="TypicalSleepHours"/> and shorter for each hour over, between 0.85
+    /// and 1.35. 1 without sleep recorded.
+    /// </summary>
+    public double SleepFactor(DateTime ended, DateTime at) => SleepFactor(SleepByDay(), ended, at);
+
+    static double SleepFactor(Dictionary<DateTime, int> nights, DateTime ended, DateTime at)
+    {
+        var after = nights.Where(n => n.Key > ended.Date && n.Key <= at.Date).Select(n => n.Value).ToList();
+        if (after.Count == 0 && nights.TryGetValue(ended.Date, out var before))
+            after.Add(before);
+        return after.Count == 0 ? 1 : FactorFor(after.Average() / 60);
+    }
+
+    static double FactorFor(double hours) => Math.Clamp(1 + (TypicalSleepHours - hours) * 0.1, 0.85, 1.35);
+
+    /// <summary>Minutes slept each day (the night woken up from on it), from the health apps.</summary>
+    Dictionary<DateTime, int> SleepByDay() =>
+        store.Data.HealthDays.Where(h => h.SleepMinutes is > 0).GroupBy(h => h.Date.Date).ToDictionary(g => g.Key, g => g.First().SleepMinutes!.Value);
+
+    /// <summary>
+    /// The latest night slept by <paramref name="at"/> and what it does to recovery, for showing: "Last night: 6 h 10 min
+    /// of sleep · recovery about 13% slower". Null without sleep recorded in the last two days.
+    /// </summary>
+    public string? SleepNote(DateTime at)
+    {
+        var nights = SleepByDay();
+        if (nights.Where(n => n.Key <= at.Date && n.Key >= at.Date.AddDays(-1)).OrderByDescending(n => n.Key).Select(n => (DateTime?)n.Key).FirstOrDefault() is not { } night)
+            return null;
+        var minutes = nights[night];
+        var when = night == DateTime.Today ? "Last night" : night == DateTime.Today.AddDays(-1) ? "The night before" : $"Night to {night:ddd d MMM}";
+        var factor = FactorFor(minutes / 60.0);
+        var effect = factor > 1.02 ? $"recovery about {(factor - 1) * 100:0}% slower"
+            : factor < 0.98 ? $"recovery about {(1 - factor) * 100:0}% faster"
+            : "recovery at its usual pace";
+        return $"{when}: {minutes / 60} h {minutes % 60:00} min of sleep · {effect}";
+    }
 
     public Dictionary<MuscleGroup, double> Compute(DateTime at) => Details(at).ToDictionary(r => r.Muscle, r => r.Recovery);
 
     public List<MuscleRecovery> Details(DateTime at)
     {
         var result = Enum.GetValues<MuscleGroup>().ToDictionary(m => m, m => new MuscleRecovery(m, 1, null, null, 0));
+        var nights = SleepByDay();
 
         // Workouts that ended by then, and one still going on at that moment, counted by the sets done so far (so a
         // look through a workout shows the fatigue building exercise by exercise).
@@ -27,9 +74,10 @@ public class RecoveryService(DataStore store)
         {
             var during = at < session.EndedAt!.Value;
             var hours = during ? 0 : (at - session.EndedAt!.Value).TotalHours;
+            var sleep = SleepFactor(nights, session.EndedAt!.Value, at);
             foreach (var (muscle, sets) in SetsPerMuscle(session, during ? at : null))
             {
-                var needed = HoursToRecover(muscle, sets);
+                var needed = HoursToRecover(muscle, sets) * sleep;
                 var recovered = RecoveredAfter(hours / needed);
                 if (recovered < result[muscle].Recovery)
                     result[muscle] = new MuscleRecovery(muscle, recovered, session.EndedAt!.Value.AddHours(needed), session, sets);
@@ -88,12 +136,14 @@ public class RecoveryService(DataStore store)
     public Dictionary<SubMuscle, double> PartRecovery(DateTime at)
     {
         var result = Enum.GetValues<SubMuscle>().ToDictionary(m => m, _ => 1.0);
+        var nights = SleepByDay();
         foreach (var session in store.History.Where(s => s.StartedAt <= at).TakeWhile(s => (at - s.EndedAt!.Value).TotalHours < MaxHours))
         {
             var during = at < session.EndedAt!.Value;
             var hours = during ? 0 : (at - session.EndedAt!.Value).TotalHours;
+            var sleep = SleepFactor(nights, session.EndedAt!.Value, at);
             foreach (var (part, sets) in PartSets(session, during ? at : null))
-                result[part] = Math.Min(result[part], RecoveredAfter(hours / HoursToRecover(part.Group(), sets)));
+                result[part] = Math.Min(result[part], RecoveredAfter(hours / (HoursToRecover(part.Group(), sets) * sleep)));
         }
         return result;
     }

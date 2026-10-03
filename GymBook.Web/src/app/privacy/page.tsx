@@ -35,7 +35,8 @@ export default function PrivacyPage() {
         (from every app, or only the apps you pick). Only with your permission, given in Samsung Health or Health Connect and
         changeable there at any time, Gym Book reads: calories burned (total, active and resting), steps, food logged in other apps
         (each food&apos;s name, meal, time, calories, protein, carbohydrates and fat), weight, body fat, lean body mass, bone mass, body
-        water mass, basal metabolic rate and height. When you first connect, Gym Book reads all of this that&apos;s available, including
+        water mass, basal metabolic rate, height and sleep (when each sleep started and ended, and how long you were asleep). When you
+        first connect, Gym Book reads all of this that&apos;s available, including
         data recorded before you connected (in Health Connect, older than 30 days only if you allow access to past data); after that it
         keeps the last 30 days up to date.
       </p>
@@ -46,7 +47,7 @@ export default function PrivacyPage() {
       </p>
       <p>
         This data is used only to show your nutrition, energy balance, activity and body composition in the app, to suggest nutrition
-        goals, and to keep your health app up to date with your training and food. It&apos;s saved in the app like the rest of your data
+        goals, to estimate how quickly your muscles recover (sleep), and to keep your health app up to date with your training and food. It&apos;s saved in the app like the rest of your data
         and, if you have an account, synced to it. Health data is never used for advertising, never sold, and never shared with anyone,
         including the AI features.
       </p>

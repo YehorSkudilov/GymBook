@@ -15,7 +15,8 @@ public record HealthDayReading(
     double? FoodKcal,
     double? FoodProteinG,
     double? FoodCarbsG,
-    double? FoodFatG);
+    double? FoodFatG,
+    int? SleepMinutes = null);
 
 /// <summary>A day's body measurements, the last of each kind that day.</summary>
 public record BodyReading(

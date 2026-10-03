@@ -38,6 +38,9 @@ public partial class RecoveryViewModel : BaseViewModel, IQueryAttributable
 
     [ObservableProperty] IDrawable map = MuscleMapDrawable.Empty;
     [ObservableProperty] string summary = "";
+    /// <summary>The night slept before the moment shown and what it does to recovery; empty without sleep recorded.</summary>
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasSleep))] string sleepText = "";
+    public bool HasSleep => SleepText.Length > 0;
     [ObservableProperty] List<MuscleRecoveryItem> majorMuscles = [];
     [ObservableProperty] List<MuscleRecoveryItem> supportingMuscles = [];
 
@@ -61,6 +64,8 @@ public partial class RecoveryViewModel : BaseViewModel, IQueryAttributable
 
         var tired = details.Count(d => d.Recovery < 0.9);
         Summary = tired == 0 ? "Every muscle is fresh." : $"{tired} of {details.Count} muscle groups still recovering.";
+        // Sleep stretches or shortens recovery: say how the last night did.
+        SleepText = recovery.SleepNote(at) ?? "";
         (MajorMuscles, SupportingMuscles) = Lists(details, at);
     }
 

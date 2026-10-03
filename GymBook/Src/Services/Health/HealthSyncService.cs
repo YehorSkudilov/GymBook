@@ -279,7 +279,8 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
             var basal = Kcal(reading.BasalBurnedKcal);
             var food = Kcal(reading.FoodKcal);
             var steps = reading.Steps is > 0 and <= 1_000_000 ? reading.Steps : null;
-            if (total == null && active == null && basal == null && food == null && steps == null)
+            var sleep = reading.SleepMinutes is > 0 and <= 1440 ? reading.SleepMinutes : null;
+            if (total == null && active == null && basal == null && food == null && steps == null && sleep == null)
                 continue;
 
             var day = data.HealthDays.FirstOrDefault(h => h.Date == reading.Date.Date);
@@ -299,6 +300,11 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
             if (day.Steps != steps)
             {
                 day.Steps = steps;
+                changed = true;
+            }
+            if (day.SleepMinutes != sleep)
+            {
+                day.SleepMinutes = sleep;
                 changed = true;
             }
             if (day.Source != sourceName)

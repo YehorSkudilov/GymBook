@@ -41,7 +41,11 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
         "android.permission.health.READ_BONE_MASS",
         "android.permission.health.READ_BODY_WATER_MASS",
         "android.permission.health.READ_HEIGHT",
+        // Sleep, for recovery.
+        ReadSleepPermission,
     ];
+
+    const string ReadSleepPermission = "android.permission.health.READ_SLEEP";
 
     /// <summary>
     /// Reading what was recorded more than 30 days before access was first given (without it, Health Connect shares no
@@ -336,7 +340,56 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
                 : [];
             ct.ThrowIfCancellationRequested();
             var foods = Granted(HealthPermissions.ReadNutrition) ? await ReadFoodsAsync(from, to) : null;
+            ct.ThrowIfCancellationRequested();
+            // Sleep, by the day it ended: a failure there doesn't lose the rest.
+            if (Granted(ReadSleepPermission))
+            {
+                try
+                {
+                    days = HealthSleep.Merge(days, await ReadSleepAsync(from, to));
+                }
+                catch (InvalidOperationException e)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Health Connect sleep couldn't be read: {e.Message}");
+                }
+            }
             return new HealthReadResult(days, body, heights.Count > 0 ? heights.MaxBy(h => h.Time).Value : null, foods);
+        }
+
+        /// <summary>
+        /// Minutes asleep each day between the two local times, by the day each sleep ended on, from every sleep
+        /// session recorded (by the apps picked): overlapping ones from different apps count once.
+        /// </summary>
+        async Task<Dictionary<DateTime, int>> ReadSleepAsync(DateTime from, DateTime to)
+        {
+            var sleeps = new List<(DateTime Start, DateTime End)>();
+            long? page = null;
+            for (var i = 0; i < 20; i++)
+            {
+                // From the day before: a night that began then ends on the first day.
+                var builder = new ReadRecordsRequestUsingFilters.Builder(Java.Lang.Class.FromType(typeof(SleepSessionRecord)))
+                    .SetTimeRangeFilter(new TimeInstantRangeFilter.Builder()
+                        .SetStartTime(Instant(from.AddDays(-1)))
+                        .SetEndTime(Instant(to))
+                        .Build())!
+                    .SetPageSize(1000)!;
+                foreach (var origin in Origins)
+                    builder.AddDataOrigins(origin);
+                if (page is { } token)
+                    builder.SetPageToken(token);
+
+                var result = await Call(receiver => _manager.ReadRecords(builder.Build()!, Context.MainExecutor!, receiver));
+                var response = result.JavaCast<ReadRecordsResponse>()!;
+                foreach (var record in response.Records)
+                    if (record is Java.Lang.Object o && o.JavaCast<SleepSessionRecord>() is { } r)
+                        sleeps.Add((LocalTime(r.StartTime), LocalTime(r.EndTime)));
+                if (response.NextPageToken == -1)
+                    break;
+                page = response.NextPageToken;
+            }
+            return HealthSleep.ByWakeDay(sleeps, from, to);
+
+            static DateTime LocalTime(Java.Time.Instant t) => DateTimeOffset.FromUnixTimeMilliseconds(t.ToEpochMilli()).LocalDateTime;
         }
 
         /// <summary>Each food logged between the two local times, with the meal it was logged under.</summary>
