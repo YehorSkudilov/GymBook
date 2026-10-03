@@ -1817,6 +1817,25 @@
  },
  {
   "file": "ExerciseLibrary.Back.cs",
+  "id": "neutral_grip_pulldown",
+  "name": "Neutral-Grip Lat Pulldown",
+  "primary": "Back",
+  "equipment": "Cable",
+  "mechanic": "Compound",
+  "secondary": [
+   "Biceps"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "aoHXhJ2x2BQ",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
   "id": "reverse_grip_pulldown",
   "name": "Underhand Lat Pulldown",
   "primary": "Back",
