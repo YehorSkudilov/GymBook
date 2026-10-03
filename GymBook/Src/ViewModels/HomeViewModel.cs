@@ -435,7 +435,7 @@ public partial class HomeViewModel(
         var at = DateTime.Now.AddHours(RecoveryHours);
         var details = recovery.Details(at);
         var rec = details.ToDictionary(d => d.Muscle, d => d.Recovery);
-        MuscleMap = MuscleMapDrawable.ForRecovery(rec);
+        MuscleMap = MuscleMapDrawable.ForRecovery(rec, recovery.PartRecovery(at));
         (MajorMuscles, SupportingMuscles) = RecoveryViewModel.Lists(details, at);
         RecoveryWhen = RecoveryService.PreviewLabel(RecoveryHours);
         IsRecoveryPreview = RecoveryHours != 0;

@@ -150,7 +150,7 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
         var at = RecoveryAt;
         var details = recovery.Details(at);
         var rec = details.ToDictionary(d => d.Muscle, d => d.Recovery);
-        RecoveryMap = MuscleMapDrawable.ForRecovery(rec);
+        RecoveryMap = MuscleMapDrawable.ForRecovery(rec, recovery.PartRecovery(at));
         (MajorMuscles, SupportingMuscles) = RecoveryViewModel.Lists(details, at);
         RecoveryTitle = !IsAfterDay ? "Muscle recovery going into the day"
             : LastWorkoutEnd is { } end ? $"Muscle recovery after the last workout ({end:HH:mm})"

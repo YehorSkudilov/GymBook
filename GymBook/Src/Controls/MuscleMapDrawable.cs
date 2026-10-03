@@ -15,13 +15,22 @@ public class MuscleMapDrawable : IDrawable
     static readonly Color Groove = Color.FromArgb("#1B1E26");
 
     readonly Func<MuscleGroup, Color> _fill;
+    // For shapes that show only part of a muscle (the front view's delts, the back view's rear delts, lats and upper
+    // back): their colour from those parts, when it's known. Otherwise the whole group's.
+    readonly Func<SubMuscle[], Color>? _partFill;
 
-    MuscleMapDrawable(Func<MuscleGroup, Color> fill) => _fill = fill;
+    MuscleMapDrawable(Func<MuscleGroup, Color> fill, Func<SubMuscle[], Color>? partFill = null) => (_fill, _partFill) = (fill, partFill);
 
     public static MuscleMapDrawable Empty { get; } = new(_ => Neutral);
 
-    public static MuscleMapDrawable ForRecovery(IReadOnlyDictionary<MuscleGroup, double> recovery) =>
-        new(m => RecoveryService.ColorFor(recovery.GetValueOrDefault(m, 1)));
+    /// <summary>
+    /// Each muscle by how recovered it is; with <paramref name="parts"/> (see RecoveryService.PartRecovery), the shapes
+    /// that show only part of a muscle by that part: a push day's front and side delts don't redden the back view's rear
+    /// delts.
+    /// </summary>
+    public static MuscleMapDrawable ForRecovery(IReadOnlyDictionary<MuscleGroup, double> recovery, IReadOnlyDictionary<SubMuscle, double>? parts = null) =>
+        new(m => RecoveryService.ColorFor(recovery.GetValueOrDefault(m, 1)),
+            parts == null ? null : shown => RecoveryService.ColorFor(shown.Min(p => parts.GetValueOrDefault(p, 1))));
 
     public static MuscleMapDrawable ForExercise(Exercise ex)
     {
@@ -95,7 +104,7 @@ public class MuscleMapDrawable : IDrawable
         c.StrokeColor = Groove;
         foreach (var shape in view.Shapes)
         {
-            c.FillColor = shape.Muscle is { } m ? _fill(m) : Neutral;
+            c.FillColor = shape.Parts is { } parts && _partFill != null ? _partFill(parts) : shape.Muscle is { } m ? _fill(m) : Neutral;
             c.StrokeSize = 0.35f;
             Mirrored(c, () =>
             {
@@ -127,8 +136,11 @@ public class MuscleMapDrawable : IDrawable
         c.RestoreState();
     }
 
-    /// <summary>A muscle and the fibre lines drawn inside it. Muscles outside the tracked groups have no group and stay neutral.</summary>
-    readonly record struct Shape(MuscleGroup? Muscle, PathF Path, PathF[] Fibres);
+    /// <summary>
+    /// A muscle and the fibre lines drawn inside it, and the parts of it the shape shows (null: the whole group). Muscles
+    /// outside the tracked groups have no group and stay neutral.
+    /// </summary>
+    readonly record struct Shape(MuscleGroup? Muscle, PathF Path, PathF[] Fibres, SubMuscle[]? Parts = null);
 
     /// <summary>
     /// One side of the body, as its left half on a 70 x 200 figure: the filled body, its outline (open along the centre line),
@@ -138,6 +150,10 @@ public class MuscleMapDrawable : IDrawable
 
     static Shape S(MuscleGroup? muscle, string path, params string[] fibres) =>
         new(muscle, PathBuilder.Build(path), fibres.Select(PathBuilder.Build).ToArray());
+
+    /// <summary>A shape showing only <paramref name="parts"/> of its muscle.</summary>
+    static Shape P(SubMuscle[] parts, string path, params string[] fibres) =>
+        new(parts[0].Group(), PathBuilder.Build(path), fibres.Select(PathBuilder.Build).ToArray(), parts);
 
     // Generated from the traced reference chart; edit the paths as a set so the grooves between muscles stay even.
     static readonly View Front = new(
@@ -169,7 +185,8 @@ public class MuscleMapDrawable : IDrawable
         [
             S(MuscleGroup.Neck, "M 28.5 26.7 C 30 28.7 32.3 30 35 30.3 L 35 38.4 C 32.3 37.1 29.7 34.7 27.9 31.7 C 28.3 30.3 28.5 28.4 28.5 26.7 Z"),
             S(MuscleGroup.Traps, "M 27.4 32.4 C 25 33.7 21.7 34.8 18 35.7 C 15.7 36.3 13.7 36.6 12.1 37.1 C 16 36.7 20 36.7 24.1 37.1 C 25.4 35.7 26.6 34.1 27.4 32.4 Z"),
-            S(MuscleGroup.Shoulders, "M 23.7 37.9 C 20.3 40 17.7 42.8 16.3 45.7 C 15.5 47.9 15.5 50.1 15.9 52.4 C 14.3 53.5 12.3 53.9 10.3 53.8 C 9 53.7 7.9 53.5 7.1 53.1 C 6.5 50.7 6.5 47.7 6.7 45 C 7.3 41.7 9 39.3 11.7 38.3 C 15 37.3 19.7 37.3 23.7 37.9 Z", "M 13 38.7 C 10.7 42.3 9.4 46.7 9 52"),
+            // From the front: the front and side delts.
+            P([SubMuscle.FrontDelts, SubMuscle.SideDelts], "M 23.7 37.9 C 20.3 40 17.7 42.8 16.3 45.7 C 15.5 47.9 15.5 50.1 15.9 52.4 C 14.3 53.5 12.3 53.9 10.3 53.8 C 9 53.7 7.9 53.5 7.1 53.1 C 6.5 50.7 6.5 47.7 6.7 45 C 7.3 41.7 9 39.3 11.7 38.3 C 15 37.3 19.7 37.3 23.7 37.9 Z", "M 13 38.7 C 10.7 42.3 9.4 46.7 9 52"),
             S(MuscleGroup.Chest, "M 35 39.6 C 31.3 39 28 38.7 25 38.5 C 21.7 40.8 18.7 43.5 17.2 46.5 C 16.6 49.2 16.9 51.9 18.3 53.8 C 20.6 55.9 24.1 56.5 27.7 56.1 C 30.3 55.9 33 55.3 35 54.7 Z", "M 33.7 42.7 C 28.3 43.2 23 44.7 18 47.7", "M 33.7 49 C 28.3 49.6 23 50.3 18.2 51.7"),
             S(MuscleGroup.Triceps, "M 7 54.8 C 8 55.2 8.7 56.4 8.9 58.4 C 8.7 62.7 8.9 67.3 9.5 71.9 C 8.5 72.7 7.6 72.7 6.9 72.1 C 7.1 67.3 7.1 60.7 7 54.8 Z"),
             S(MuscleGroup.Biceps, "M 10.7 54.7 C 13.3 54.3 15.7 54.9 16.7 57.1 C 17 61.3 16.9 66.7 16.6 71.3 C 15.2 72.9 12.7 73.2 10.7 72.3 C 9.8 68 9.4 62.7 9.5 58 C 9.7 56.4 10.1 55.3 10.7 54.7 Z"),
@@ -231,9 +248,12 @@ public class MuscleMapDrawable : IDrawable
         [
             S(MuscleGroup.Neck, "M 29.2 24.4 C 31 23.5 33 23 35 22.7 L 35 30.9 C 32.9 30.7 30.9 30.3 29.3 29.7 C 29.3 27.9 29.3 26.1 29.2 24.4 Z"),
             S(MuscleGroup.Traps, "M 35 31.9 L 35 70.3 C 32.7 66.3 30 61 27.7 55.7 C 25.7 51 23.7 45.7 21.3 41.7 C 19.7 39.9 17.7 38.6 15.7 37.5 C 19.3 36.3 23 34.7 26.3 32.3 C 27.2 31.7 27.9 31.3 28.5 31.1 C 30.7 31.5 32.8 31.7 35 31.9 Z", "M 29 30.7 C 30.7 32.7 32.7 34 34.7 34.7"),
-            S(MuscleGroup.Shoulders, "M 15.1 38.5 C 17.3 39.4 19.3 40.7 20.7 42.6 C 20.4 45 19.3 47 17.5 48.7 C 15.6 50.3 13.3 51.7 11 52.9 C 9.3 53.6 7.9 53.9 6.8 53.9 C 6.7 50.7 6.7 47.5 7.4 45.1 C 8.2 42.5 9.7 40.5 11.7 39.3 C 12.9 38.7 14 38.5 15.1 38.5 Z", "M 12 40.7 C 11 44 10.7 47.7 11 51.7"),
-            S(MuscleGroup.Back, "M 21.9 43.6 C 23.3 45.9 24.8 48.7 25.6 51.1 C 24 51.5 21.7 51.5 19.8 51 C 18.5 50.6 17.7 50.1 17.2 49.7 C 18.9 47.9 20.6 45.9 21.9 43.6 Z"),
-            S(MuscleGroup.Back, "M 16.9 53.2 C 19.1 52.7 21.3 52.3 23.3 51.7 C 24.3 51.5 25 51.9 25.5 52.7 C 27.1 56 28.9 59.3 31 63.3 C 31.7 65.3 31.6 67.7 30.7 69.7 C 29 72.7 26.7 75 24.3 76.1 C 23.3 76.3 22.7 76 22.2 75.3 C 21 71.3 19.9 67.3 19 63.3 C 18.3 60 17.5 56.7 16.9 53.2 Z", "M 20 57.3 C 23.3 60.7 26 64.7 28 69.3"),
+            // From the back: the rear delts.
+            P([SubMuscle.RearDelts], "M 15.1 38.5 C 17.3 39.4 19.3 40.7 20.7 42.6 C 20.4 45 19.3 47 17.5 48.7 C 15.6 50.3 13.3 51.7 11 52.9 C 9.3 53.6 7.9 53.9 6.8 53.9 C 6.7 50.7 6.7 47.5 7.4 45.1 C 8.2 42.5 9.7 40.5 11.7 39.3 C 12.9 38.7 14 38.5 15.1 38.5 Z", "M 12 40.7 C 11 44 10.7 47.7 11 51.7"),
+            // Teres and infraspinatus, by the shoulder blade: the upper back.
+            P([SubMuscle.UpperBack], "M 21.9 43.6 C 23.3 45.9 24.8 48.7 25.6 51.1 C 24 51.5 21.7 51.5 19.8 51 C 18.5 50.6 17.7 50.1 17.2 49.7 C 18.9 47.9 20.6 45.9 21.9 43.6 Z"),
+            // The lats.
+            P([SubMuscle.Lats], "M 16.9 53.2 C 19.1 52.7 21.3 52.3 23.3 51.7 C 24.3 51.5 25 51.9 25.5 52.7 C 27.1 56 28.9 59.3 31 63.3 C 31.7 65.3 31.6 67.7 30.7 69.7 C 29 72.7 26.7 75 24.3 76.1 C 23.3 76.3 22.7 76 22.2 75.3 C 21 71.3 19.9 67.3 19 63.3 C 18.3 60 17.5 56.7 16.9 53.2 Z", "M 20 57.3 C 23.3 60.7 26 64.7 28 69.3"),
             S(MuscleGroup.Abs, "M 21.7 77.7 C 22.5 78.1 23.5 78.4 24.7 78.4 C 23.9 80.3 23 82.1 22.2 83.9 C 21.7 84.7 21.3 85.3 20.8 85.9 C 21.1 83.3 21.3 80.7 21.3 78.3 Z"),
             S(MuscleGroup.LowerBack, "M 35 71.9 L 35 87.6 C 31.3 87.3 27.7 86.7 24.1 85.7 C 23.1 85.4 22.7 84.7 22.8 84.1 C 23.8 82 25.1 79.7 26.5 78.1 C 28.4 76.1 30.4 73.7 31.9 71.8 C 32.9 71.3 34 71.3 35 71.9 Z", "M 31.3 76.7 C 30.7 80 30.7 83.3 31.3 86.7"),
             S(MuscleGroup.Triceps, "M 7 55.3 C 9 54.9 11.2 54.3 13.1 53.6 C 13.5 57.3 13.5 62 13.4 66 C 13.3 68 13.1 69.7 12.7 71 C 10.7 72 8 72.1 5.6 71.3 C 5.5 66.7 5.7 60.7 7 55.3 Z", "M 9.7 56 C 10 60.7 10 65.3 9.5 69.3"),

@@ -350,7 +350,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         // Fatigue the moment it ended: the map, and each muscle it worked with when it'll be fresh.
         var at = session.EndedAt ?? session.StartedAt;
         var details = recovery.Details(at);
-        FatigueMap = MuscleMapDrawable.ForRecovery(details.ToDictionary(d => d.Muscle, d => d.Recovery));
+        FatigueMap = MuscleMapDrawable.ForRecovery(details.ToDictionary(d => d.Muscle, d => d.Recovery), recovery.PartRecovery(at));
         var worked = session.Exercises.Select(e => store.GetExercise(e.ExerciseId)).OfType<Exercise>()
             .SelectMany(ex => ex.SecondaryMuscles.Prepend(ex.PrimaryMuscle)).ToHashSet();
         FatigueMuscles = [.. details.Where(d => worked.Contains(d.Muscle) && d.Recovery < 1).OrderBy(d => d.Recovery).Select(d => new MuscleRecoveryItem
