@@ -1163,10 +1163,12 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         switch (choice)
         {
             case "Set one weight for all":
-                var text = await _parent.Dialogs.Prompt("Weight for all", $"In {Units.Label}, for every set still to do", open[0].WeightText, Keyboard.Numeric, "Apply");
-                if (text != null && Units.TryParse(text, out var kg))
-                    foreach (var s in open)
-                        s.WeightText = Units.Format(kg);
+                // The same number pad as one set's weight.
+                if (await Views.NumberPadSheet.Show(open[0].WeightText, Units.ToDisplay(open[0].Model.WeightKg), Units.Increment(Exercise), 0,
+                        Units.Unit == WeightUnit.Kg ? 500 : 1100, Units.Label, decimals: true) is not { } weight)
+                    return;
+                foreach (var s in open)
+                    s.WeightText = weight.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
                 break;
             case "Same as the last set done":
                 if (Sets.LastOrDefault(s => s.IsCompleted && !s.Model.IsWarmup) is { } last)
@@ -1205,7 +1207,10 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             null => null,
             _ when choice.StartsWith("Bottom") => Model.RepMin,
             _ when choice.StartsWith("Top") => Model.RepMax,
-            _ => int.TryParse(await _parent.Dialogs.Prompt("Reps for all", "For every set still to do", open[0].RepsText, Keyboard.Numeric, "Apply"), out var r) && r > 0 ? r : null,
+            // The same number pad as one set's reps.
+            _ => await Views.NumberPadSheet.Show(open[0].RepsText, open[0].Model.Reps > 0 ? open[0].Model.Reps : Model.RepMin, 1, 0, 100, "reps") is { } r && r >= 1
+                ? (int)r
+                : null,
         };
         if (reps is not { } value)
             return;

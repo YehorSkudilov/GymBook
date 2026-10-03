@@ -7,7 +7,9 @@ namespace GymBook.Views;
 /// A number (weight, reps, RIR) picked without the phone's keyboard: a wheel of values to swipe through, which settles on
 /// the one in the middle (or tap one), above the app's own number pad for typing any value. The first key pressed replaces
 /// the number; after that keys add to it. Typing turns the wheel to the nearest value, and turning it shows the value it
-/// lands on. The check saves; Cancel, the dimmed area or back leaves it as it was.
+/// lands on. The check saves what's shown; Cancel, the dimmed area or back leaves it as it was.
+/// Tapping a value or typing jumps the wheel there at once (no animation to wait for), and the scroll events of a turn
+/// made by code are ignored until it gets there, so they can't put a value it passed on the way back in its place.
 /// </summary>
 public class NumberPadSheet : SheetPage
 {
@@ -25,6 +27,9 @@ public class NumberPadSheet : SheetPage
     string _text;
     bool _fresh = true;
     bool _turningByCode;
+    // A turn made by code: the value it's going to, and since when. Scroll events on the way there aren't the user's.
+    int _target = -1;
+    DateTime _targetSince;
     int _centered = -1;
     int _settleId;
     bool _closing;
@@ -67,7 +72,7 @@ public class NumberPadSheet : SheetPage
                     VerticalOptions = LayoutOptions.Center,
                 },
             };
-            item.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => _ = TurnTo(index, animate: true)) });
+            item.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => _ = TurnTo(index, animate: false)) });
             _items.Add(item);
             column.Add(item);
         }
@@ -213,7 +218,7 @@ public class NumberPadSheet : SheetPage
         _fresh = false;
         ShowText();
         if (Parse(_text) is { } typed)
-            _ = TurnTo(Nearest(typed), animate: true, fromTyping: true);
+            _ = TurnTo(Nearest(typed), animate: false, fromTyping: true);
     }
 
     void ShowText()
@@ -248,6 +253,12 @@ public class NumberPadSheet : SheetPage
             _fresh = true;
             ShowText();
         }
+        // Already there: no scroll will come to clear it.
+        if (Math.Abs(_wheel.ScrollY - index * ItemHeight) > 1)
+        {
+            _target = index;
+            _targetSince = DateTime.Now;
+        }
         await _wheel.ScrollToAsync(0, index * ItemHeight, animate);
         _turningByCode = false;
     }
@@ -271,6 +282,17 @@ public class NumberPadSheet : SheetPage
     // Swiped: the value in the middle shows as it passes, and once it stops it settles exactly on one.
     async void OnWheelScrolled(object? sender, ScrolledEventArgs e)
     {
+        // A turn made by code, on its way: not the user's, even when the event comes after the turn's task ended (it
+        // can, and its position is one it passed). Over once it gets there, or after a moment in case it never does.
+        if (_target >= 0)
+        {
+            var reached = Math.Abs(e.ScrollY - _target * ItemHeight) <= 1;
+            var stale = DateTime.Now - _targetSince > TimeSpan.FromMilliseconds(700);
+            if (reached || stale)
+                _target = -1;
+            if (!stale)
+                return;
+        }
         if (_turningByCode)
             return;
         var index = Math.Clamp((int)Math.Round(e.ScrollY / ItemHeight), 0, _values.Count - 1);
@@ -289,8 +311,8 @@ public class NumberPadSheet : SheetPage
             }
         }
         var id = ++_settleId;
-        await Task.Delay(140);
-        if (id == _settleId && !_turningByCode && Math.Abs(_wheel.ScrollY - index * ItemHeight) > 1)
+        await Task.Delay(90);
+        if (id == _settleId && !_turningByCode && _target < 0 && !_closing && Math.Abs(_wheel.ScrollY - index * ItemHeight) > 1)
             await TurnTo(index, animate: true);
     }
 
