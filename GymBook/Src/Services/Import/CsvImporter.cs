@@ -132,6 +132,9 @@ public class CsvImporter(DataStore store, AiPlanService ai)
     {
         var resolve = Resolver(mappings);
         var added = 0;
+        // What each plan had before (its workouts done in the app, and the one in progress), and what's imported for it.
+        var before = store.Data.Sessions.Where(s => !s.IsDeleted && s.PlanId != null).ToList();
+        var imported = new List<WorkoutSession>();
         foreach (var source in workouts.OrderBy(w => w.StartedAt))
         {
             if (store.Data.Sessions.Any(s => !s.IsDeleted && s.Name == source.Name && Math.Abs((s.StartedAt - source.StartedAt).TotalMinutes) < 1))
@@ -182,10 +185,16 @@ public class CsvImporter(DataStore store, AiPlanService ai)
                 session.Exercises.Add(se);
             }
             store.Data.Sessions.Add(session);
+            if (session.PlanId != null)
+                imported.Add(session);
             added++;
         }
         if (added > 0)
         {
+            foreach (var group in imported.GroupBy(s => s.PlanId))
+                if (store.GetPlan(group.Key) is { } plan)
+                    PlaceWeeks(plan, [.. group], [.. before.Where(s => s.PlanId == plan.Id && s.EndedAt != null),
+                        .. store.Data.ActiveSession is { } active && active.PlanId == plan.Id ? new[] { active } : []]);
             // Each plan picks up after the newest workout imported for it.
             foreach (var plan in store.Data.Plans.Where(p => !p.IsDeleted && p.Workouts.Count > 0))
                 if (store.History.FirstOrDefault(s => s.PlanId == plan.Id) is { } last
@@ -194,6 +203,44 @@ public class CsvImporter(DataStore store, AiPlanService ai)
             store.Save();
         }
         return added;
+    }
+
+    /// <summary>
+    /// Numbers <paramref name="plan"/>'s weeks again once workouts are imported into it. The file's weeks and the app's
+    /// are numbered separately (both start at week 1), so taken as they are they'd land in the same weeks: workouts done
+    /// in the app would sit beside old imported ones, and an old imported week with a day missing would become the
+    /// current week. Instead each week of each kind (imported, or done in the app along with its rest days) is placed by
+    /// the date of its first workout and numbered 1, 2, 3… in that order. Then, in the imported weeks before the last
+    /// week, the days without a workout are marked skipped: that week was moved on from, so it isn't left open.
+    /// </summary>
+    static void PlaceWeeks(WorkoutPlan plan, List<WorkoutSession> imported, List<WorkoutSession> existing)
+    {
+        var progress = new PlanProgress(plan, []);
+        var blocks = imported.GroupBy(s => progress.WeekOf(s)).Select(g => (Imported: true, Week: g.Key, First: g.Min(s => s.StartedAt)))
+            .Concat(existing.GroupBy(s => progress.WeekOf(s)).Select(g => (Imported: false, Week: g.Key, First: g.Min(s => s.StartedAt))))
+            .ToList();
+        // App weeks with only rest days marked: just after the app week before them (or first).
+        foreach (var week in (plan.RestDaysDone ?? []).Select(k => k / 1000).Distinct().Where(w => !blocks.Any(b => !b.Imported && b.Week == w)).ToList())
+        {
+            var earlier = blocks.Where(b => !b.Imported && b.Week < week).Select(b => b.First).DefaultIfEmpty(DateTime.MinValue).Max();
+            blocks.Add((false, week, earlier.AddTicks(1)));
+        }
+        var order = blocks.OrderBy(b => b.First).ThenBy(b => b.Imported ? 0 : 1).ThenBy(b => b.Week).ToList();
+        var number = order.Select((b, i) => (b, i)).ToDictionary(x => (x.b.Imported, x.b.Week), x => x.i + 1);
+        foreach (var s in imported)
+            s.PlanWeek = number[(true, progress.WeekOf(s))];
+        foreach (var s in existing)
+            s.PlanWeek = number[(false, progress.WeekOf(s))];
+        plan.RestDaysDone = plan.RestDaysDone?.Select(k => number[(false, k / 1000)] * 1000 + k % 1000).ToList();
+
+        // Imported weeks that are behind: the days not done there were skipped.
+        var last = order.Count;
+        var days = PlanSchedule.Days(plan);
+        var all = imported.Concat(existing).ToList();
+        foreach (var week in imported.Select(s => s.PlanWeek!.Value).Distinct().Where(w => w < last))
+            for (var day = 0; day < days.Count; day++)
+                if (days[day] is { } workout && !all.Any(s => s.PlanWorkoutId == workout.Id && s.PlanWeek == week))
+                    PlanProgress.SetSkipped(plan, day, week, true);
     }
 
     /// <summary>The app's exercise for each of the other app's: the mapped one, or a custom exercise made once per import.</summary>
