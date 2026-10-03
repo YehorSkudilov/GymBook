@@ -47,6 +47,17 @@ public record PeriodBalance(int Days, double TotalBalance, double AverageEaten, 
     public double WeightChangeKg => TotalBalance / NutritionService.KcalPerKg;
 }
 
+/// <summary>A day in the nutrition streaks: nothing logged, food logged, or food logged and on target.</summary>
+public enum StreakMark { None, Logged, OnTarget }
+
+/// <summary>
+/// Days in a row with food logged (<see cref="Logging"/>) and on target (<see cref="OnTarget"/>: calories in the goal's
+/// range, and protein near its goal when there is one), now and at their longest; whether today counts yet; and the last
+/// seven days, oldest first. Today doesn't break a streak until it's over.
+/// </summary>
+public record NutritionStreaks(int Logging, int BestLogging, int OnTarget, int BestOnTarget, bool HasTarget, bool TodayLogged,
+    bool TodayOnTarget, IReadOnlyList<(DateTime Date, StreakMark Mark)> LastWeek);
+
 /// <summary>A direction for <see cref="NutritionService.Suggest"/>.</summary>
 public enum NutritionAim { LoseFat, Maintain, GainMuscle }
 
@@ -57,6 +68,71 @@ public class NutritionService(DataStore store)
 {
     /// <summary>Roughly the energy in a kilogram of body fat.</summary>
     public const double KcalPerKg = 7700;
+
+    /// <summary>A day is on target within this share of the calorie goal, either way (the calorie bar's hatched range).</summary>
+    public const double TargetRange = 0.1;
+
+    /// <summary>Protein counts as reached from this share of its goal.</summary>
+    public const double ProteinReached = 0.9;
+
+    /// <summary>
+    /// The nutrition streaks (see <see cref="NutritionStreaks"/>) over everything logged. A day is logged when it has any
+    /// food, here or from the health app, and on target when there's a calorie goal and it's met as above.
+    /// </summary>
+    public NutritionStreaks Streaks()
+    {
+        var p = Profile;
+        var today = DateTime.Today;
+        var foods = store.Data.FoodEntries.GroupBy(f => f.Date.Date).ToDictionary(g => g.Key, g => g.ToList());
+        // Days read as one total from the health app, before foods were read one by one (as Day counts them).
+        var totals = store.Data.HealthDays.Where(h => h.FoodKcal > 0).GroupBy(h => h.Date.Date).ToDictionary(g => g.Key, g => g.First());
+        var hasTarget = p.CalorieGoal is > 0;
+
+        StreakMark Mark(DateTime d)
+        {
+            var list = foods.GetValueOrDefault(d) ?? [];
+            var asTotal = totals.TryGetValue(d, out var h) && !list.Any(f => f.Source != null);
+            var kcal = list.Sum(f => f.Calories) + (asTotal ? h!.FoodKcal ?? 0 : 0);
+            if (kcal <= 0)
+                return StreakMark.None;
+            var protein = list.Sum(f => f.ProteinG) + (asTotal ? h!.FoodProteinG ?? 0 : 0);
+            var onTarget = p.CalorieGoal is { } goal && goal > 0 && Math.Abs(kcal - goal) <= goal * TargetRange
+                && (p.ProteinGoalG is not > 0 || protein >= p.ProteinGoalG.Value * ProteinReached);
+            return onTarget ? StreakMark.OnTarget : StreakMark.Logged;
+        }
+
+        var first = foods.Keys.Concat(totals.Keys).Where(d => d <= today).DefaultIfEmpty(today).Min();
+        var marks = new Dictionary<DateTime, StreakMark>();
+        for (var d = first; d <= today; d = d.AddDays(1))
+            marks[d] = Mark(d);
+
+        int Current(Func<StreakMark, bool> counts)
+        {
+            // Today joins once it counts; until then the streak runs to yesterday.
+            var d = counts(marks[today]) ? today : today.AddDays(-1);
+            var n = 0;
+            for (; marks.TryGetValue(d, out var m) && counts(m); d = d.AddDays(-1))
+                n++;
+            return n;
+        }
+
+        int Best(Func<StreakMark, bool> counts)
+        {
+            var (best, run) = (0, 0);
+            foreach (var m in marks.OrderBy(x => x.Key).Select(x => x.Value))
+            {
+                run = counts(m) ? run + 1 : 0;
+                best = Math.Max(best, run);
+            }
+            return best;
+        }
+
+        static bool Logged(StreakMark m) => m != StreakMark.None;
+        static bool OnTarget(StreakMark m) => m == StreakMark.OnTarget;
+        return new NutritionStreaks(Current(Logged), Best(Logged), Current(OnTarget), Best(OnTarget), hasTarget,
+            Logged(marks[today]), OnTarget(marks[today]),
+            [.. Enumerable.Range(0, 7).Select(i => today.AddDays(i - 6)).Select(d => (d, marks.GetValueOrDefault(d)))]);
+    }
 
     UserProfile Profile => store.Profile;
 
