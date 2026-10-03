@@ -464,8 +464,118 @@ public class DialogSheet : SheetPage
             : null;
     }
 
-    // A day in the calendar: its number in a circle (filled when picked), a dot under it when it has data.
-    static View DayCell(DateTime date, bool picked, bool today, bool future, bool hasData, Color accent)
+    /// <summary>
+    /// A month calendar to pick a range of days, no later than <paramref name="max"/>: tap the first day, then the last
+    /// (everything between them fills in), a third tap starts again; Done takes it (one day tapped: that day alone).
+    /// ‹ › change the month, with a dot under each day that <paramref name="hasData"/>. Null when cancelled.
+    /// </summary>
+    public static async Task<(DateTime Start, DateTime End)?> RangeCalendar(string title, DateTime initialStart, DateTime initialEnd, DateTime max,
+        Func<DateTime, bool> hasData)
+    {
+        var culture = System.Globalization.CultureInfo.CurrentCulture;
+        var accent = Resource<Color>("Accent");
+        DateTime? start = initialStart.Date, end = initialEnd.Date;
+        var month = new DateTime(initialEnd.Year, initialEnd.Month, 1);
+        var firstDay = culture.DateTimeFormat.FirstDayOfWeek;
+        var monthLabel = new Label { FontFamily = "OpenSansSemibold", FontSize = 17, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+        var picked = new Label { Style = Resource<Style>("Caption"), FontSize = 14, HorizontalOptions = LayoutOptions.Center };
+        var days = new Grid { RowSpacing = 2, ColumnSpacing = 0 };
+        for (var c = 0; c < 7; c++)
+            days.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        Button? next = null, done = null;
+
+        var result = await Show(new DialogSheet(title, null, s =>
+        {
+            var layout = new VerticalStackLayout { Spacing = 10 };
+            layout.Add(picked);
+
+            var prev = new Button { Text = "‹", Style = Resource<Style>("StepButton") };
+            next = new Button { Text = "›", Style = Resource<Style>("StepButton") };
+            prev.Clicked += (_, _) => { month = month.AddMonths(-1); Fill(); };
+            next.Clicked += (_, _) => { if (month.AddMonths(1) <= max) { month = month.AddMonths(1); Fill(); } };
+            var top = new Grid { ColumnDefinitions = [new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto)] };
+            top.Add(prev, 0);
+            top.Add(monthLabel, 1);
+            top.Add(next, 2);
+            layout.Add(top);
+
+            var names = new Grid();
+            for (var c = 0; c < 7; c++)
+            {
+                names.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                names.Add(new Label { Text = culture.DateTimeFormat.ShortestDayNames[((int)firstDay + c) % 7], Style = Resource<Style>("Caption"),
+                    FontSize = 12, HorizontalOptions = LayoutOptions.Center }, c);
+            }
+            layout.Add(names);
+            layout.Add(days);
+
+            var buttons = new Grid { ColumnSpacing = 10, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
+            var cancel = s.Button("Cancel", "SecondaryButton", null);
+            done = new Button { Text = "Done", Style = Resource<Style>("PrimaryButton") };
+            done.Clicked += (_, _) =>
+            {
+                if (start is not { } a)
+                    return;
+                var b = end ?? a;
+                s.Choose($"{a:yyyy-MM-dd}|{b:yyyy-MM-dd}");
+            };
+            cancel.HeightRequest = done.HeightRequest = 48;
+            buttons.Add(cancel, 0);
+            buttons.Add(done, 1);
+            layout.Add(buttons);
+
+            Fill();
+            return layout;
+
+            void Tap(DateTime date)
+            {
+                // First tap, or a third: a new range from here. Second: its other end (either way round).
+                if (start == null || end != null)
+                    (start, end) = (date, null);
+                else if (date < start)
+                    (start, end) = (date, start);
+                else
+                    end = date;
+                Fill();
+            }
+
+            void Fill()
+            {
+                picked.Text = start is not { } a ? "Tap the first day"
+                    : end is not { } b ? $"{a.ToString("d MMM yyyy", culture)} – tap the last day"
+                    : a == b ? a.ToString("d MMM yyyy", culture)
+                    : $"{a.ToString("d MMM", culture)} – {b.ToString("d MMM yyyy", culture)} · {(b - a).Days + 1} days";
+                done!.Opacity = start != null ? 1 : 0.4;
+                monthLabel.Text = month.ToString("MMMM yyyy", culture);
+                next!.Opacity = month.AddMonths(1) <= max ? 1 : 0.3;
+                days.Children.Clear();
+                days.RowDefinitions.Clear();
+                var offset = ((int)month.DayOfWeek - (int)firstDay + 7) % 7;
+                var count = DateTime.DaysInMonth(month.Year, month.Month);
+                for (var r = 0; r < (offset + count + 6) / 7; r++)
+                    days.RowDefinitions.Add(new RowDefinition(46));
+                for (var d = 1; d <= count; d++)
+                {
+                    var date = new DateTime(month.Year, month.Month, d);
+                    var isEnd = date == start || date == end;
+                    var between = start is { } from && end is { } to && date > from && date < to;
+                    var cell = DayCell(date, isEnd, date == DateTime.Today, date > max.Date, hasData(date), accent, between);
+                    if (date <= max.Date)
+                        cell.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => Tap(date)) });
+                    var index = offset + d - 1;
+                    days.Add(cell, index % 7, index / 7);
+                }
+            }
+        }));
+        if (result?.Split('|') is not [var first, var last])
+            return null;
+        var invariant = System.Globalization.CultureInfo.InvariantCulture;
+        return (DateTime.ParseExact(first, "yyyy-MM-dd", invariant), DateTime.ParseExact(last, "yyyy-MM-dd", invariant));
+    }
+
+    // A day in the calendar: its number in a circle (filled when picked, tinted when inside a picked range), a dot under
+    // it when it has data.
+    static View DayCell(DateTime date, bool picked, bool today, bool future, bool hasData, Color accent, bool inRange = false)
     {
         var number = new Border
         {
@@ -474,7 +584,7 @@ public class DialogSheet : SheetPage
             StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 17 },
             StrokeThickness = today && !picked ? 1.5 : 0,
             Stroke = accent,
-            BackgroundColor = picked ? accent : Colors.Transparent,
+            BackgroundColor = picked ? accent : inRange ? accent.WithAlpha(0.3f) : Colors.Transparent,
             HorizontalOptions = LayoutOptions.Center,
             Content = new Label
             {

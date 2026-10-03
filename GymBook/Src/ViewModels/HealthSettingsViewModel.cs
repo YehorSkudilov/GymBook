@@ -16,7 +16,7 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
 {
     [ObservableProperty] string title = "";
     [ObservableProperty] string status = "";
-    /// <summary>The first row's action: Connect, or Read now once connected.</summary>
+    /// <summary>The first row's action: Connect, or Sync now once connected.</summary>
     [ObservableProperty] string actionText = "";
     /// <summary>This phone can read health data (Samsung Health, or Health Connect on Android 14+): the rows that do something show.</summary>
     [ObservableProperty] bool isAvailable;
@@ -82,7 +82,7 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
                         : health.LastError is { } error ? $"Couldn't read: {error}"
                         : health.LastSyncedAt is { } at ? $"Up to date · read {Ago(at)}"
                         : "Connected";
-                    ActionText = "Read now";
+                    ActionText = "Sync now";
                 }
                 break;
         }
@@ -94,7 +94,7 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
         return minutes < 1 ? "just now" : minutes < 60 ? $"{minutes} min ago" : $"at {at.ToLocalTime():t}";
     }
 
-    /// <summary>Connect when not connected (to Samsung Health or Health Connect); read now when connected.</summary>
+    /// <summary>Connect when not connected (to Samsung Health or Health Connect); sync now when connected (read, then send back if on).</summary>
     [RelayCommand]
     async Task Action()
     {

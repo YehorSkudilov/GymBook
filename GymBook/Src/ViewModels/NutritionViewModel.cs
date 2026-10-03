@@ -62,6 +62,12 @@ public partial class NutritionViewModel(
     [ObservableProperty] Color balanceTargetColor = Secondary;
     [ObservableProperty] bool hasBalanceTarget;
     [ObservableProperty] IDrawable? balanceTargetBar;
+    [ObservableProperty] bool hasBalanceTargetBar;
+
+    /// <summary>Within this much of even, a day counts as maintenance rather than a surplus or deficit.</summary>
+    public const double MaintenanceBand = 100;
+
+    static bool IsMaintenance(double balance) => Math.Abs(balance) <= MaintenanceBand;
 
     // Day | Trends: one day at a time, or a range of days with its totals and charts.
     public System.Collections.ObjectModel.ObservableCollection<ChipItem> ModeChips { get; } = [];
@@ -69,6 +75,14 @@ public partial class NutritionViewModel(
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsDay))] bool isTrends;
     public bool IsDay => !IsTrends;
     int _rangeDays = 7;
+    /// <summary>The range's last day: today for the presets, any day for a custom range.</summary>
+    DateTime _rangeEnd = DateTime.Today;
+    bool _customRange;
+
+    /// <summary>"7 days", or a custom range's dates: "3 Sep – 20 Sep".</summary>
+    string RangeName => _customRange
+        ? $"{_rangeEnd.AddDays(1 - _rangeDays).ToString("d MMM", CultureInfo.CurrentCulture)} – {_rangeEnd.ToString("d MMM", CultureInfo.CurrentCulture)}"
+        : RangeChips.FirstOrDefault(c => c.IsSelected)?.Title ?? $"{_rangeDays} days";
 
     // The running total, on both: the range's days before the day (finished days, for Trends), plus the day, makes the total.
     [ObservableProperty] bool hasRunningTotal;
@@ -126,7 +140,7 @@ public partial class NutritionViewModel(
         {
             ModeChips.Add(new ChipItem("Day", false, SelectMode) { IsSelected = !IsTrends });
             ModeChips.Add(new ChipItem("Trends", true, SelectMode) { IsSelected = IsTrends });
-            foreach (var (label, days) in new[] { ("7 days", 7), ("30 days", 30), ("90 days", 90), ("1 year", 365) })
+            foreach (var (label, days) in new[] { ("7 days", 7), ("30 days", 30), ("90 days", 90), ("1 year", 365), ("Custom", 0) })
                 RangeChips.Add(new ChipItem(label, days, SelectRange) { IsSelected = days == _rangeDays });
         }
         if (!_visible)
@@ -162,7 +176,7 @@ public partial class NutritionViewModel(
         if (IsTrends)
         {
             ShowTrends();
-            ShowRunningTotal(DateTime.Today);
+            ShowRunningTotal(_rangeEnd);
             return;
         }
         var day = nutrition.Day(_date);
@@ -180,7 +194,34 @@ public partial class NutritionViewModel(
 
     void SelectRange(ChipItem chip)
     {
+        if ((int)chip.Value! == 0)
+        {
+            _ = PickRange(chip);
+            return;
+        }
         _rangeDays = (int)chip.Value!;
+        _rangeEnd = DateTime.Today;
+        _customRange = false;
+        foreach (var c in RangeChips)
+            c.IsSelected = c == chip;
+        Refresh();
+    }
+
+    /// <summary>A range of one's own, picked on one calendar (first day, last day, Done; dots on days with data). Up to two years.</summary>
+    async Task PickRange(ChipItem chip)
+    {
+        var data = store.Data;
+        var days = data.FoodEntries.Select(f => f.Date.Date)
+            .Concat(data.HealthDays.Where(h => h.TotalBurnedKcal != null || h.FoodKcal != null).Select(h => h.Date.Date))
+            .ToHashSet();
+        if (await dialogs.RangeCalendar("Pick a range", _rangeEnd.AddDays(1 - _rangeDays), _rangeEnd, DateTime.Today, days.Contains) is not { } picked)
+            return;
+        var (start, end) = picked;
+        if ((end - start).Days >= 731)
+            start = end.AddDays(-730);
+        _rangeDays = (end - start).Days + 1;
+        _rangeEnd = end.Date;
+        _customRange = true;
         foreach (var c in RangeChips)
             c.IsSelected = c == chip;
         Refresh();
@@ -206,10 +247,14 @@ public partial class NutritionViewModel(
 
         static (string, Color) Signed(double? kcal) => kcal is { } k ? (NutritionService.Signed(k), k > 0 ? Orange : Accent) : ("–", Secondary);
 
+        // The range's other days, before its last.
         (double?, string) RangeTotal()
         {
-            var range = RangeChips.FirstOrDefault(c => c.IsSelected)?.Title ?? $"{_rangeDays} days";
-            return (nutrition.Balance(_rangeDays, date)?.TotalBalance, $"Previous {range}");
+            if (_rangeDays <= 1)
+                return (null, "Before");
+            var first = date.AddDays(1 - _rangeDays);
+            var label = $"{first.ToString("d MMM", CultureInfo.CurrentCulture)} – {date.AddDays(-1).ToString("d MMM", CultureInfo.CurrentCulture)}";
+            return (nutrition.Balance(_rangeDays - 1, date)?.TotalBalance, label);
         }
     }
 
@@ -220,14 +265,15 @@ public partial class NutritionViewModel(
     void ShowTrends()
     {
         var p = store.Profile;
-        var title = RangeChips.FirstOrDefault(c => c.IsSelected)?.Title ?? $"{_rangeDays} days";
-        TrendTitle = $"Last {title}";
-        var days = nutrition.LastDays(_rangeDays);
-        var period = nutrition.Balance(_rangeDays);
+        TrendTitle = _customRange ? RangeName : $"Last {RangeName}";
+        var days = nutrition.LastDays(_rangeDays, _rangeEnd);
+        // Finished days only: a range up to today leaves today out, it isn't over.
+        var endsToday = _rangeEnd >= DateTime.Today;
+        var period = endsToday ? nutrition.Balance(_rangeDays - 1) : nutrition.Balance(_rangeDays, _rangeEnd.AddDays(1));
         HasTrend = period != null;
         TrendSummary = period == null
             ? "Log food on days with calories burned from your health data to see your surplus or deficit add up."
-            : $"Over {(period.Days == 1 ? "1 day" : $"{period.Days} days")} with food and calories burned (today not counted).";
+            : $"Over {(period.Days == 1 ? "1 day" : $"{period.Days} days")} with food and calories burned{(endsToday ? " (today not counted)" : "")}.";
         TrendStats = period == null ? [] :
         [
             new("Average a day", NutritionService.Signed(period.AverageBalance)),
@@ -289,8 +335,10 @@ public partial class NutritionViewModel(
             : "";
         var soFar = day.IsToday ? " so far" : "";
         (BalanceLine, BalanceColor) = day.Balance is { } balance
-            // No sign: the word says which ("101 deficit", not "−101").
-            ? ($"{NutritionService.Kcal(Math.Abs(balance))} {(balance > 0 ? "surplus" : "deficit")}{soFar}", balance > 0 ? Orange : Accent)
+            // Within the maintenance band it's maintenance, not a sliver of surplus or deficit; outside it no sign: the
+            // word says which ("101 deficit", not "−101").
+            ? IsMaintenance(balance) ? ($"Maintenance{soFar}", Green)
+                : ($"{NutritionService.Kcal(Math.Abs(balance))} {(balance > 0 ? "surplus" : "deficit")}{soFar}", balance > 0 ? Orange : Accent)
             : goal is { } g
                 ? day.EatenKcal <= g ? ($"{NutritionService.Kcal(g - day.EatenKcal)} left", Secondary) : ($"{NutritionService.Kcal(day.EatenKcal - g)} over", Red)
                 : ("", Secondary);
@@ -300,15 +348,27 @@ public partial class NutritionViewModel(
         BurnedCaption = day.BurnSource != BurnSource.Measured ? "No health data"
             : string.Join(" · ", new[] { day.IsToday ? "So far" : null, day.StepsCounted ? "resting + steps" : null }.OfType<string>());
 
-        // The surplus or deficit aimed for (Goals), under the day's: a small bar filling toward it, and the target in words.
-        HasBalanceTarget = p.EnergyBalanceGoal is not null && day.Balance is not null;
+        // The surplus or deficit aimed for (Goals), under the day's: a small bar filling toward it and the target in words,
+        // only when the day went the target's way (a deficit day against a deficit target, a surplus one against a
+        // surplus target). A maintenance target is met within the band, and shows no bar.
+        HasBalanceTarget = HasBalanceTargetBar = false;
         if (p.EnergyBalanceGoal is { } target && day.Balance is { } b)
         {
-            BalanceTargetBar = new BalanceTargetDrawable(b, target, Accent, Orange, Green);
-            var aim = target == 0 ? "maintenance" : $"{NutritionService.Kcal(Math.Abs(target))} {(target < 0 ? "deficit" : "surplus")}";
-            var onTarget = Math.Abs(b - target) <= BalanceTargetDrawable.Near;
-            BalanceTargetText = onTarget ? $"On target · {aim}" : $"Target {aim}";
-            BalanceTargetColor = onTarget ? Green : Secondary;
+            if (target == 0)
+            {
+                HasBalanceTarget = IsMaintenance(b);
+                BalanceTargetText = "On target · maintenance";
+                BalanceTargetColor = Green;
+            }
+            else if (Math.Sign(b) == Math.Sign(target) && !IsMaintenance(b))
+            {
+                HasBalanceTarget = HasBalanceTargetBar = true;
+                BalanceTargetBar = new BalanceTargetDrawable(b, target, Accent, Orange, Green);
+                var aim = $"{NutritionService.Kcal(Math.Abs(target))} {(target < 0 ? "deficit" : "surplus")}";
+                var onTarget = Math.Abs(b - target) <= BalanceTargetDrawable.Near;
+                BalanceTargetText = onTarget ? $"On target · {aim}" : $"Target {aim}";
+                BalanceTargetColor = onTarget ? Green : Secondary;
+            }
         }
 
         HasNoGoals = p.CalorieGoal is null && p.ProteinGoalG is null;
@@ -408,7 +468,8 @@ public partial class NutritionViewModel(
     void ShowCreatineTrend()
     {
         var taken = store.Data.Supplements.Where(d => d.Name == SupplementDose.Creatine).Select(d => d.Date.Date).ToHashSet();
-        var today = DateTime.Today;
+        // Up to the range's last day (today, unless it's a custom range in the past).
+        var today = _rangeEnd;
         var first = today.AddDays(1 - Math.Max(_rangeDays, 28));
         var monday = first.AddDays(-(((int)first.DayOfWeek + 6) % 7));
         CreatineChart = new HeatmapDrawable(monday,
@@ -416,9 +477,9 @@ public partial class NutritionViewModel(
 
         var range = Enumerable.Range(0, _rangeDays).Select(i => today.AddDays(-i)).ToList();
         var count = range.Count(taken.Contains);
-        // The current streak: today doesn't break it until it's over.
+        // The streak at the range's end: today doesn't break it until it's over.
         var streak = 0;
-        for (var d = taken.Contains(today) ? today : today.AddDays(-1); taken.Contains(d); d = d.AddDays(-1))
+        for (var d = taken.Contains(today) || today != DateTime.Today ? today : today.AddDays(-1); taken.Contains(d); d = d.AddDays(-1))
             streak++;
         var longest = 0;
         var run = 0;
@@ -430,7 +491,7 @@ public partial class NutritionViewModel(
         CreatineStats =
         [
             new("Days taken", $"{count} of {_rangeDays}"),
-            new("Current streak", streak == 1 ? "1 day" : $"{streak} days"),
+            new(today == DateTime.Today ? "Current streak" : $"Streak on {today.ToString("d MMM", CultureInfo.CurrentCulture)}", streak == 1 ? "1 day" : $"{streak} days"),
             new("Longest in range", longest == 1 ? "1 day" : $"{longest} days"),
         ];
         CreatineTrendCaption = $"{Grams(store.Profile.CreatineDoseG)} a day · {count * 100 / Math.Max(1, _rangeDays)}% of days";

@@ -146,8 +146,9 @@ public class NutritionService(DataStore store)
             : new PeriodBalance(counted.Count, counted.Sum(d => d.Balance!.Value), counted.Average(d => d.EatenKcal), counted.Average(d => d.BurnedKcal!.Value));
     }
 
-    /// <summary>The last <paramref name="days"/> days, oldest first, today included.</summary>
-    public List<DayNutrition> LastDays(int days) => [.. Enumerable.Range(0, days).Reverse().Select(i => Day(DateTime.Today.AddDays(-i)))];
+    /// <summary>The <paramref name="days"/> days up to <paramref name="end"/> (today by default), oldest first, that day included.</summary>
+    public List<DayNutrition> LastDays(int days, DateTime? end = null) =>
+        [.. Enumerable.Range(0, days).Reverse().Select(i => Day((end ?? DateTime.Today).Date.AddDays(-i)))];
 
     /// <summary>Each of the last <paramref name="days"/> days' balance, oldest first, today included; 0 where there's none.</summary>
     public List<ChartPoint> BalanceHistory(int days) =>

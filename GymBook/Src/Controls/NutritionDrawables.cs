@@ -5,7 +5,8 @@ namespace GymBook.Controls;
 /// <summary>
 /// A day's calories on one bar, from 0 to a little past the most of eaten, burned and goal: eaten fills it in
 /// <paramref name="fill"/>, turning <paramref name="surplus"/> past what was burned; a hatched band is the goal's
-/// on-target range (±10%), a white tick what was burned, and a round <paramref name="marker"/> with a target the goal.
+/// on-target range (±10%), drawn over the fill (which turns the target's blue, <paramref name="marker"/>, inside it); a white
+/// tick is what was burned, and a round <paramref name="marker"/> with a target the goal.
 /// Fills in as it's revealed.
 /// </summary>
 public class CalorieBarDrawable(double eaten, double? burned, double? goal, Color fill, Color surplus, Color marker) : IDrawable, IRevealable
@@ -33,20 +34,6 @@ public class CalorieBarDrawable(double eaten, double? burned, double? goal, Colo
         canvas.FillColor = Track;
         canvas.FillRoundedRectangle(bar, BarHeight / 2);
 
-        // The goal's range, hatched.
-        if (goal is > 0 && goal is { } g)
-        {
-            var from = X(g * (1 - Range));
-            var to = X(g * (1 + Range));
-            canvas.SaveState();
-            canvas.ClipRectangle(from, bar.Top, to - from, bar.Height);
-            canvas.StrokeColor = LabelColor.WithAlpha(0.8f);
-            canvas.StrokeSize = 1.5f;
-            for (var x = from - bar.Height; x < to; x += 5)
-                canvas.DrawLine(x, bar.Bottom, x + bar.Height, bar.Top);
-            canvas.RestoreState();
-        }
-
         // Eaten: up to the burn in the fill colour, past it the surplus.
         var end = bar.Left + (X(eaten) - bar.Left) * grow;
         if (end > bar.Left + 1)
@@ -59,6 +46,36 @@ public class CalorieBarDrawable(double eaten, double? burned, double? goal, Colo
             {
                 canvas.FillColor = surplus;
                 canvas.FillRectangle(X(b), bar.Top, end - X(b), bar.Height);
+            }
+            canvas.RestoreState();
+        }
+
+        // The goal's range, hatched, on top: still there once eaten reaches it, where the fill turns the target's blue.
+        if (goal is > 0 && goal is { } g)
+        {
+            var from = X(g * (1 - Range));
+            var to = X(g * (1 + Range));
+            var reached = Math.Min(end, to);
+            // One clip per saved state (Windows' canvas allows no more): the blue inside the bar's rounded ends, then the
+            // hatching inside the range.
+            if (reached > from)
+            {
+                canvas.SaveState();
+                var path = new PathF();
+                path.AppendRoundedRectangle(bar, BarHeight / 2);
+                canvas.ClipPath(path);
+                canvas.FillColor = marker;
+                canvas.FillRectangle(from, bar.Top, reached - from, bar.Height);
+                canvas.RestoreState();
+            }
+            canvas.SaveState();
+            canvas.ClipRectangle(from, bar.Top, to - from, bar.Height);
+            canvas.StrokeSize = 1.5f;
+            for (var x = from - bar.Height; x < to; x += 5)
+            {
+                // Lighter over the fill, so it shows on the blue.
+                canvas.StrokeColor = x + bar.Height / 2 < reached ? Colors.White.WithAlpha(0.45f) : LabelColor.WithAlpha(0.8f);
+                canvas.DrawLine(x, bar.Bottom, x + bar.Height, bar.Top);
             }
             canvas.RestoreState();
         }

@@ -42,6 +42,10 @@ public class DialogService
     public Task<DateTime?> Calendar(string title, DateTime initial, DateTime max, Func<DateTime, bool> hasData) =>
         DialogSheet.Calendar(title, initial, max, hasData);
 
+    /// <summary>A range of days picked on one month calendar (first day, then last; Done), with data dots; null when cancelled.</summary>
+    public Task<(DateTime Start, DateTime End)?> RangeCalendar(string title, DateTime start, DateTime end, DateTime max, Func<DateTime, bool> hasData) =>
+        DialogSheet.RangeCalendar(title, start, end, max, hasData);
+
     /// <summary>A date and time of day (no later than today); null when cancelled.</summary>
     public Task<DateTime?> DateAndTime(string title, string? message, DateTime initial, string accept = "Save") =>
         DialogSheet.DateAndTime(title, message, initial, accept);

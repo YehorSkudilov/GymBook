@@ -101,7 +101,7 @@
                             <Label Text="{Binding BalanceLine}" TextColor="{Binding BalanceColor}" FontFamily="OpenSansSemibold" FontSize="14"
                                    IsVisible="{Binding HasBalanceLine}" Margin="0,8,0,0" />
                             <GraphicsView Drawable="{Binding BalanceTargetBar}" HeightRequest="18" WidthRequest="140" HorizontalOptions="Start"
-                                          IsVisible="{Binding HasBalanceTarget}" controls:ChartReveal.When="{Binding IsShowing}" />
+                                          IsVisible="{Binding HasBalanceTargetBar}" controls:ChartReveal.When="{Binding IsShowing}" />
                             <Label Text="{Binding BalanceTargetText}" TextColor="{Binding BalanceTargetColor}" FontSize="12" IsVisible="{Binding HasBalanceTarget}" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1" Spacing="12" VerticalOptions="Start" Margin="0,8,0,0">
