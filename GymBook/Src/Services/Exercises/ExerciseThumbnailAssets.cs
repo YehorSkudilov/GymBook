@@ -1,4 +1,4 @@
-// Generated from Resources/Raw/exercises by tools/exercises/thumbs.mjs.
+// Generated from Resources/Raw/exercises by tools/exercises/sync-thumbnail-manifest.mjs.
 namespace GymBook.Services;
 
 public static class ExerciseThumbnailAssets
@@ -435,6 +435,7 @@ public static class ExerciseThumbnailAssets
         "negative_pull_up",
         "neutral_grip_db_press",
         "neutral_grip_pull_up",
+        "neutral_grip_pulldown",
         "nordic_curl",
         "oblique_crunch",
         "one_arm_pull_up",
@@ -812,6 +813,7 @@ public static class ExerciseThumbnailAssets
         "weighted_sit_up",
         "wide_grip_cable_row",
         "wide_grip_pull_up",
+        "wide_grip_pulldown",
         "wide_push_up",
         "windshield_wiper",
         "wrestlers_bridge",
