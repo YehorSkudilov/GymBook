@@ -28,6 +28,8 @@ public partial class ImportCsvViewModel : ObservableObject
     List<ImportedPlan>? _plans;
     List<ImportedWorkout>? _workouts;
     List<ExerciseMapping> _mappings = [];
+    // Importing workouts for one plan only: those matching its days. Null: every workout.
+    Models.WorkoutPlan? _onlyPlan;
 
     public ImportCsvViewModel(CsvImportKind kind, CsvImporter importer, ExercisePickerService picker, DialogService dialogs)
     {
@@ -70,7 +72,43 @@ public partial class ImportCsvViewModel : ObservableObject
     [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
     bool isImporting;
 
-    public bool CanImport => IsReady && !IsImporting;
+    public bool CanImport => IsReady && !IsImporting && (_onlyPlan == null || Matching > 0);
+
+    /// <summary>Workouts: the row to import them for one plan only (when there are plans in the app).</summary>
+    [ObservableProperty] bool showPlanFilter;
+    [ObservableProperty] string planFilterText = "";
+    [ObservableProperty] string planFilterDetail = "";
+
+    /// <summary>How many of the file's workouts match the chosen plan's days.</summary>
+    int Matching => _workouts == null || _onlyPlan == null ? 0 : _workouts.Count(w => CsvImporter.DayIn(_onlyPlan, w) != null);
+
+    void UpdatePlanFilter()
+    {
+        ShowPlanFilter = Kind == CsvImportKind.Workouts && _workouts != null && _importer.Plans.Count > 0;
+        PlanFilterText = _onlyPlan?.Name ?? "Every plan";
+        PlanFilterDetail = _onlyPlan == null
+            ? "Each workout goes with the plan the file names, if it's in the app. Tap to import only one plan's workouts."
+            : Matching == 0
+                ? $"None of the workouts match a day of {_onlyPlan.Name} (by workout name, or day number when the file names this plan)."
+                : $"{Count(Matching, "workout")} of {_workouts!.Count} match a day of {_onlyPlan.Name} and are imported for it; the rest are left out.";
+        OnPropertyChanged(nameof(CanImport));
+        ImportCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>The plan row tapped: every plan, or one plan's workouts only.</summary>
+    [RelayCommand]
+    async Task ChoosePlan()
+    {
+        const string every = "Every plan";
+        var plans = _importer.Plans;
+        // Numbered so plans with the same name stay distinguishable.
+        var labels = plans.Select((p, i) => $"{i + 1}. {p.Name}").ToList();
+        var pick = await _dialogs.ActionSheet("Import workouts for", null, [every, .. labels]);
+        if (pick == null)
+            return;
+        _onlyPlan = pick == every ? null : plans[labels.IndexOf(pick)];
+        UpdatePlanFilter();
+    }
 
     public string ImportText => Kind == CsvImportKind.Plans ? "Import plans" : "Import workouts";
 
@@ -156,6 +194,7 @@ public partial class ImportCsvViewModel : ObservableObject
             Mappings.Add(new MappingItem(mapping, Change));
         UpdateMappingSummary();
         IsReady = true;
+        UpdatePlanFilter();
     }
 
     /// <summary>The AI is matching the file's exercises.</summary>
@@ -168,6 +207,8 @@ public partial class ImportCsvViewModel : ObservableObject
         _plans = null;
         _workouts = null;
         _mappings = [];
+        _onlyPlan = null;
+        ShowPlanFilter = false;
         Mappings.Clear();
         FileName = Summary = MappingSummary = "";
         IsReady = false;
@@ -242,13 +283,14 @@ public partial class ImportCsvViewModel : ObservableObject
             else if (_workouts != null)
             {
                 var workouts = _workouts;
-                added = _importer.ImportWorkouts(workouts, _mappings);
+                added = _importer.ImportWorkouts(workouts, _mappings, _onlyPlan);
                 what = Count(added, "workout");
             }
             else
                 return;
             await _dialogs.Alert(added == 0 ? "Nothing new" : "Imported",
-                added == 0 ? "Everything in this file is already in the app." : $"{what} added. They sync to your account like anything else.");
+                added == 0 ? (_onlyPlan == null ? "Everything in this file is already in the app." : $"The workouts matching {_onlyPlan.Name} are already in the app.")
+                    : $"{what} added. They sync to your account like anything else.");
             if (added > 0)
                 Imported?.Invoke();
         }

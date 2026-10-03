@@ -957,6 +957,25 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         await PlanChatViewModel.OpenAsync(saved, ai.AnswersFor(saved), save: true);
     }
 
+    /// <summary>
+    /// Starts the plan over from its first workout and week, after asking: the workouts done with it are deleted (from
+    /// the calendar, History and stats too) and its rest days and skips unmarked. The plan itself stays.
+    /// </summary>
+    async Task ResetPlan(WorkoutPlan saved, int done)
+    {
+        var what = done switch
+        {
+            0 => "Its rest days and skips are unmarked",
+            1 => "The workout done with it is deleted, from the calendar, History and your stats too, and its rest days and skips are unmarked",
+            _ => $"The {done} workouts done with it are deleted, from the calendar, History and your stats too, and its rest days and skips are unmarked",
+        };
+        if (!await dialogs.Confirm("Reset plan?",
+                $"\"{saved.Name}\" starts again from week 1. {what}. Its workouts and settings stay as they are. This can't be undone.", "Reset"))
+            return;
+        store.ResetPlanHistory(saved);
+        Refresh();
+    }
+
     [RelayCommand]
     async Task More()
     {
@@ -966,8 +985,14 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         if (HasChanges)
             options.AddRange(["Save changes", "Discard changes"]);
         options.AddRange(["Plan settings", "AI", "Regenerate plan", "Rename plan", "Duplicate plan"]);
+        var done = store.History.Count(s => s.PlanId == saved.Id);
+        if (done > 0 || saved.RestDaysDone is { Count: > 0 })
+            options.Add("Reset plan");
         switch (await dialogs.ActionSheet(plan.Name, "Delete plan", [.. options]))
         {
+            case "Reset plan":
+                await ResetPlan(saved, done);
+                break;
             case "Save changes":
                 Save();
                 break;
