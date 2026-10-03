@@ -24,8 +24,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          # Room to wait for the other deploys on the server (see the deploy lock below).
-          command_timeout: 40m
+          command_timeout: 20m
           script: |
             set -e
 
@@ -114,13 +113,6 @@ jobs:
             # can't clash with a Postgres installed on the server itself
             DB_PORT=${{ vars.DB_PORT || '55432' }}
             ENVEOF
-
-            # One Docker deploy at a time on this server, across BudgetBuddy and GymBook: builds pulling the same base
-            # layers and another deploy's image prune at once corrupt each other ("failed commit on ref layer-sha256",
-            # "No such image"). Held until this script ends.
-            echo "Waiting for other deploys on this server..."
-            exec 9>/tmp/server-docker-deploy.lock
-            flock 9
 
             echo "Building latest image..."
             docker compose build --pull
