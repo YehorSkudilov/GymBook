@@ -9,7 +9,12 @@
     x:DataType="vm:PlansViewModel">
 
         <VerticalStackLayout Spacing="16">
-            <Label Text="Plans" Style="{StaticResource Title}" />
+            <!-- The title, and at its far right the workouts linked to no plan. -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <Label Text="Plans" Style="{StaticResource Title}" VerticalOptions="Center" />
+                <Button Grid.Column="1" Text="{Binding UnlinkedText}" Style="{StaticResource GhostButton}" TextColor="{StaticResource Accent}"
+                        FontSize="14" Padding="10,6" VerticalOptions="Center" Command="{Binding OpenUnlinkedCommand}" />
+            </Grid>
 
             <Label Text="ACTIVE PLAN" Style="{StaticResource Overline}" IsVisible="{Binding HasActivePlan}" />
             <!-- The active plan: light drifting across it, this week's progress in a ring, and a chevron to open it.
