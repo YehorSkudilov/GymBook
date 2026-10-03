@@ -526,6 +526,25 @@ public static partial class ExerciseLibrary
             ],
             Video = new("CAwf7n6Luuc", 34.284, 91.633003),
         },
+        new("wide_grip_pulldown", "Wide-Grip Lat Pulldown", Back, Cable, Compound)
+        {
+            Secondary = [Biceps],
+            Summary = "A lat pulldown with an overhand grip out near the ends of the bar, well wider than the shoulders, which shortens the range and puts the emphasis on the lats with less help from the biceps.",
+            Steps =
+            [
+                "Lock your thighs under the pad and grip the bar overhand out at its bends, about one and a half times shoulder width.",
+                "Sit tall with a slight lean back, chest up and arms straight.",
+                "Pull the bar to your upper chest, driving your elbows down and out to your sides.",
+                "Let it rise slowly until your arms are straight and your lats stretch.",
+            ],
+            Tips =
+            [
+                "Pull your shoulder blades down before your arms bend.",
+                "Don't go so wide that the bar stops short of your chest or your shoulders ache.",
+                "Don't lean far back or pull the bar behind your neck.",
+            ],
+            Video = new("lueEJGjTuPQ"),
+        },
         new("close_grip_pulldown", "Close-Grip Lat Pulldown", Back, Cable, Compound)
         {
             Secondary = [Biceps],
