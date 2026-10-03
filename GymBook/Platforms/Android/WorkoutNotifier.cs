@@ -12,6 +12,10 @@ namespace GymBook;
 /// workout's sets done. When rest runs out while the app isn't on screen, this same notification says so with a sound and
 /// a buzz. It can't be put away while the workout's going: swiped off, it comes straight back. Tapping it opens the
 /// workout. Phone only: the watch shows its own.
+///
+/// While resting it keeps itself up to date, not only when the workout page does (the page's timer stops when it's left,
+/// or the app is): the bar goes down each second, and when the rest runs out it turns into "Rest over" with the timer
+/// counting up from then, instead of the system's countdown going below zero over a bar that stopped.
 /// </summary>
 public class WorkoutNotifier : IWorkoutNotifier
 {
@@ -25,10 +29,16 @@ public class WorkoutNotifier : IWorkoutNotifier
     readonly WorkoutService _workouts;
     string? _shown;
     WorkoutStatus? _last;
+    // The rest's own clock: redraws while resting, and switches to "Rest over" when it runs out.
+    readonly Handler _handler = new(Looper.MainLooper!);
+    readonly Java.Lang.Runnable _restTick;
+    // The rest (by when it was due) whose end was already announced with a sound, so it's only announced once.
+    DateTime? _alertedDue;
 
     public WorkoutNotifier(DataStore store, WorkoutService workouts)
     {
         _workouts = workouts;
+        _restTick = new Java.Lang.Runnable(RestTick);
         // A notification can outlive the app (killed mid-workout): gone at start if there's no workout any more.
         if (_workouts.Active == null)
         {
@@ -59,8 +69,44 @@ public class WorkoutNotifier : IWorkoutNotifier
     {
         if (IsAppVisible || _last is not { } last)
             return;
+        var due = last.RestDueAt ?? DateTime.Now;
+        // Already announced by the rest's own clock (RestTick): once is enough.
+        if (_alertedDue == due)
+            return;
+        _alertedDue = due;
         // The same notification, now saying the rest is over, posted once with a sound and a buzz.
-        Post(last with { Phase = WorkoutPhase.RestOver, Next = next, RestDueAt = last.RestDueAt ?? DateTime.Now }, alert: true);
+        Post(last with { Phase = WorkoutPhase.RestOver, Next = next, RestDueAt = due }, alert: true);
+    }
+
+    /// <summary>
+    /// Each second of a rest: the bar redrawn; once it's due, the notification says the rest is over (with a sound and a
+    /// buzz when the app isn't on screen, as when the page says so), with the timer counting the time over.
+    /// </summary>
+    void RestTick()
+    {
+        if (_workouts.Active == null || _last is not { Phase: WorkoutPhase.Resting, RestDueAt: { } due } last)
+            return;
+        if (due > DateTime.Now)
+        {
+            Post(last, alert: false);
+            return;
+        }
+        var alert = !IsAppVisible && _alertedDue != due;
+        if (alert)
+            _alertedDue = due;
+        Post(last with { Phase = WorkoutPhase.RestOver }, alert);
+    }
+
+    /// <summary>While resting, the next <see cref="RestTick"/>: on the next whole second of the rest left, or when it's due.</summary>
+    void ScheduleRestTick(WorkoutStatus status)
+    {
+        _handler.RemoveCallbacks(_restTick);
+        if (status is not { Phase: WorkoutPhase.Resting, RestDueAt: { } due })
+            return;
+        var left = (due - DateTime.Now).TotalMilliseconds;
+        var part = left % 1000;
+        var delay = left <= 0 ? 0 : part > 50 ? part : Math.Min(1000, left);
+        _handler.PostDelayed(_restTick, (long)delay);
     }
 
     /// <summary>Swiped away while the workout's still going: put it straight back.</summary>
@@ -75,11 +121,14 @@ public class WorkoutNotifier : IWorkoutNotifier
     void Post(WorkoutStatus status, bool alert)
     {
         _last = status;
+        ScheduleRestTick(status);
         var now = DateTime.Now;
         var resting = status.Phase == WorkoutPhase.Resting && status.RestDueAt > now;
-        // Redrawn when what it says changes, and while resting every few seconds for the bar.
-        var restLeft = resting ? (int)(status.RestDueAt!.Value - now).TotalSeconds : 0;
-        var key = $"{status.Name}|{status.Phase}|{status.Next}|{status.Progress}|{status.Since:O}|{status.RestDueAt:O}|{restLeft / 3}|{status.SetsDone}/{status.SetsTotal}";
+        // Redrawn when what it says changes, and while resting each second for the bar.
+        var restLeft = resting ? (int)Math.Ceiling((status.RestDueAt!.Value - now).TotalSeconds) : 0;
+        // Past due (whatever phase it was given as): over, not resting, so it's drawn as rest over.
+        var phase = status.Phase == WorkoutPhase.Resting && !resting ? WorkoutPhase.RestOver : status.Phase;
+        var key = $"{status.Name}|{phase}|{status.Next}|{status.Progress}|{status.Since:O}|{status.RestDueAt:O}|{restLeft}|{status.SetsDone}/{status.SetsTotal}";
         if (key == _shown && !alert)
             return;
         var context = Android.App.Application.Context;
@@ -118,7 +167,7 @@ public class WorkoutNotifier : IWorkoutNotifier
                     .SetProgress(Math.Max(1, status.RestSeconds), Math.Clamp(restLeft, 0, Math.Max(1, status.RestSeconds)), false);
                 break;
             case WorkoutPhase.Resting or WorkoutPhase.RestOver:
-                // Counting up how far over the rest is; the bar is the workout's.
+                // Counting up how far over the rest is (from 0:00 when it ran out, never below it); the bar is the workout's.
                 builder.SetContentText($"Rest over · next: {status.Next}")
                     .SetWhen(new DateTimeOffset(status.RestDueAt ?? status.Since).ToUnixTimeMilliseconds())
                     .SetChronometerCountDown(false);
@@ -153,6 +202,8 @@ public class WorkoutNotifier : IWorkoutNotifier
     public void Clear()
     {
         _last = null;
+        _handler.RemoveCallbacks(_restTick);
+        _alertedDue = null;
         var manager = NotificationManagerCompat.From(Android.App.Application.Context);
         manager.Cancel(WorkoutId);
         manager.Cancel(RestOverId);
