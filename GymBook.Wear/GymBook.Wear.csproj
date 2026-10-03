@@ -91,6 +91,7 @@
 		<Compile Include="..\GymBook\Src\Services\PlanTraining.cs" Link="Shared\PlanTraining.cs" />
 		<Compile Include="..\GymBook\Src\Services\StatsService.cs" Link="Shared\StatsService.cs" />
 		<Compile Include="..\GymBook\Src\Services\RecoveryService.cs" Link="Shared\RecoveryService.cs" />
+		<Compile Include="..\GymBook\Src\Services\SubMuscles.cs" Link="Shared\SubMuscles.cs" />
 		<Compile Include="..\GymBook\Src\Services\WorkoutEstimator.cs" Link="Shared\WorkoutEstimator.cs" />
 		<Compile Include="..\GymBook\Src\Services\Sync\ApiClient.cs" Link="Shared\Sync\ApiClient.cs" />
 		<Compile Include="..\GymBook\Src\Services\Sync\ApiConfig.cs" Link="Shared\Sync\ApiConfig.cs" />
