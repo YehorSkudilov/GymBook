@@ -1,10 +1,13 @@
-# Docker builds use the repository root as context (see GymBook.Api/Dockerfile); only the API and Shared are needed.
+# Docker builds use the repository root as context (see GymBook.Api/Dockerfile); only the API, Shared and the app's exercise library are needed.
 **/bin/
 **/obj/
 **/.vs/
 .git/
 .github/
 GymBook/
+# ...except the exercise library, which the API compiles in.
+!GymBook/Src/Services/Exercises/
+!GymBook/Src/Models/ExerciseDetails.cs
 GymBook.LocalData/
 tools/
 **/*.user

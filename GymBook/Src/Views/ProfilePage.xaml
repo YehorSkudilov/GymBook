@@ -76,6 +76,30 @@
                 </Grid>
             </Border>
 
+            <!-- The social side: how others see you, and how you stack up against them. Needs the account. -->
+            <Label Text="COMMUNITY" Style="{StaticResource Overline}" Margin="4,6,0,0" IsVisible="{Binding IsSignedIn}" />
+            <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding IsSignedIn}">
+                <VerticalStackLayout>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenPublicProfileCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Public profile" />
+                            <Label Text="Username, picture and bio others see" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenRanksCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Strength ranks" />
+                            <Label Text="Tiers, leaderboards and friends" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
             <Label Text="ACCOUNT" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding IsSignedIn, Converter={StaticResource Not}}">
                 <Grid Style="{StaticResource Row}">

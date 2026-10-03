@@ -69,10 +69,15 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
         UpdateChoices();
     }
 
-    /// <summary>The daily burn the goals are suggested from, measured by the health apps over the last two weeks.</summary>
+    /// <summary>
+    /// The daily burn the goals are suggested from: measured by the health apps over the last two weeks, else worked out
+    /// from the body (see <see cref="NutritionService.EstimatedDailyBurn"/>).
+    /// </summary>
     string ShowBurn() => BurnText = nutrition.MeasuredDailyBurn() is { } measured
         ? $"You burn about {NutritionService.Kcal(measured)} kcal a day, going by your health data from the last two weeks."
-        : "Your daily burn: N/A. Connect your health data in the Profile tab; once it has a few days of calories burned, goals can be suggested from it.";
+        : nutrition.EstimatedDailyBurn(nutrition.LatestWeightKg()) is { } estimated
+            ? $"You burn about {NutritionService.Kcal(estimated)} kcal a day, estimated from your weight, height, age and activity. Connect a health app in the Profile tab to have it measured."
+            : "Tell us your weight, height and goal and we'll work out your calories and macros.";
 
     /// <summary>What the macro goals add up to, against the calorie goal.</summary>
     public string MacroCheck
@@ -105,11 +110,74 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
         if (choice == null)
             return;
         var aim = choice == lose ? NutritionAim.LoseFat : choice == gain ? NutritionAim.GainMuscle : NutritionAim.Maintain;
-        var goals = nutrition.Suggest(aim);
+        var measured = nutrition.MeasuredDailyBurn() != null;
+
+        // Without a health app's measured burn, it's worked out from the body: sex and how active the days are, once.
+        if (!measured && P.Sex == null)
+        {
+            const string male = "Male", female = "Female";
+            var sex = await dialogs.ActionSheet("Your sex", null, male, female);
+            if (sex == null)
+                return;
+            P.Sex = sex == male ? Sex.Male : Sex.Female;
+        }
+        if (!measured)
+        {
+            string[] levels = ["Mostly sitting", "On my feet some of the day", "On my feet most of the day", "Physical work"];
+            var level = await dialogs.ActionSheet("Outside workouts, your days are", null, levels);
+            if (level == null)
+                return;
+            P.ActivityLevel = (ActivityLevel)Array.IndexOf(levels, level);
+        }
+
+        // Weight, height and age (for the estimate), and where to get to by when.
+        var metric = units.Unit == WeightUnit.Kg;
+        var weightKg = nutrition.LatestWeightKg();
+        var fields = new List<Views.NumberField> { new($"Weight ({units.Label})", (int)Math.Round(units.ToDisplay(weightKg)), 20, 700) };
+        if (!measured)
+        {
+            fields.Add(metric
+                ? new Views.NumberField("Height (cm)", (int)Math.Round(P.HeightCm ?? 175), 100, 250)
+                : new Views.NumberField("Height (in)", (int)Math.Round((P.HeightCm ?? 175) / 2.54), 40, 98));
+            fields.Add(new("Age", P.BirthYear is { } year ? DateTime.Today.Year - year : 30, 14, 90));
+        }
+        var hasGoal = aim != NutritionAim.Maintain;
+        if (hasGoal)
+        {
+            var toward = units.ToDisplay(aim == NutritionAim.LoseFat ? weightKg * 0.93 : weightKg * 1.04);
+            fields.Add(new($"Goal weight ({units.Label})", (int)Math.Round(toward), 20, 700));
+            fields.Add(new("In weeks", 12, 1, 104));
+        }
+        var values = await dialogs.Numbers(choice, measured
+                ? "Your daily burn comes from your health data."
+                : "Your daily burn is worked out from these. Connect a health app in the Profile tab to have it measured instead.",
+            "Suggest", [.. fields]);
+        if (values == null)
+            return;
+
+        var i = 0;
+        weightKg = units.FromDisplay(values[i++]);
+        P.BodyWeightKg = Math.Round(weightKg, 1);
+        if (!measured)
+        {
+            P.HeightCm = metric ? values[i++] : Math.Round(values[i++] * 2.54);
+            P.BirthYear = DateTime.Today.Year - values[i++];
+        }
+        double? goalKg = hasGoal ? units.FromDisplay(values[i++]) : null;
+        int? weeks = hasGoal ? values[i++] : null;
+        if (goalKg is { } g && (aim == NutritionAim.LoseFat ? g >= weightKg : g <= weightKg))
+        {
+            await dialogs.Alert("Check your goal weight",
+                aim == NutritionAim.LoseFat ? "To lose fat, the goal weight should be below your weight now." : "To build muscle, the goal weight should be above your weight now.");
+            return;
+        }
+        store.Save();
+
+        var goals = nutrition.Suggest(aim, weightKg, goalKg, weeks);
         ShowBurn();
         if (goals == null)
         {
-            await dialogs.Alert("No health data yet", "Goals are suggested from the calories you burn, measured by your health apps. Connect them in the Profile tab; after a few days of data, try again.");
+            await dialogs.Alert("Couldn't suggest goals", "Enter your height so your daily burn can be worked out.");
             return;
         }
         CalorieGoal = goals.Calories.ToString(CultureInfo.CurrentCulture);
@@ -119,11 +187,15 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
         _balanceKind = goals.Balance switch { < 0 => BalanceKind.Deficit, > 0 => BalanceKind.Surplus, _ => BalanceKind.Maintain };
         BalanceAmount = goals.Balance != 0 ? Math.Abs(goals.Balance).ToString(CultureInfo.CurrentCulture) : "";
         UpdateChoices();
-        var burn = $"{NutritionService.Kcal(goals.DailyBurn)} kcal measured daily burn";
+        var burn = $"{NutritionService.Kcal(goals.DailyBurn)} kcal {(goals.BurnMeasured ? "measured" : "estimated")} daily burn";
+        var perWeek = units.FormatWithUnit(Math.Abs(goals.Balance) * 7 / NutritionService.KcalPerKg);
+        var timing = goals.Weeks is not { } w ? ""
+            : goals.PaceCapped ? $" That faster pace isn't healthy, so this gets you to {units.FormatWithUnit(goalKg!.Value)} in about {w} weeks instead of {weeks}."
+            : $" That's {units.FormatWithUnit(goalKg!.Value)} in about {w} weeks.";
         SuggestionText = goals.Balance switch
         {
-            < 0 => $"From your {burn}, minus {-goals.Balance} kcal: about {units.FormatWithUnit(-goals.Balance * 7 / NutritionService.KcalPerKg)} a week. High protein keeps your muscle while you lose fat. Save to use these.",
-            > 0 => $"From your {burn}, plus {goals.Balance} kcal: a lean bulk, slow enough to keep fat gain down. Save to use these.",
+            < 0 => $"From your {burn}, minus {-goals.Balance} kcal: about {perWeek} a week.{timing} High protein keeps your muscle while you lose fat. Save to use these.",
+            > 0 => $"From your {burn}, plus {goals.Balance} kcal: about {perWeek} a week, a lean bulk slow enough to keep fat gain down.{timing} Save to use these.",
             _ => $"Your {burn}, with plenty of protein for training. Save to use these.",
         };
         HasSuggestion = true;

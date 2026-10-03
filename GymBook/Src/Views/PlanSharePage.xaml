@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.PlanSharePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PlanShareViewModel"
+    Title="Sharing"
+    Shell.TabBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <Style x:Key="Row" TargetType="Grid">
+            <Setter Property="Padding" Value="16,12" />
+            <Setter Property="ColumnDefinitions" Value="*,Auto" />
+            <Setter Property="ColumnSpacing" Value="10" />
+        </Style>
+        <Style x:Key="Divider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Margin" Value="16,0" />
+            <Setter Property="Color" Value="{StaticResource Surface2}" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid>
+        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" VerticalOptions="Center" HorizontalOptions="Center" />
+
+        <VerticalStackLayout Padding="24" Spacing="12" VerticalOptions="Center" IsVisible="{Binding LoadFailed}">
+            <Label Text="Couldn't load the sharing" Style="{StaticResource H3}" HorizontalTextAlignment="Center" />
+            <Label Text="Sharing needs a connection." Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Button Text="Try again" Style="{StaticResource PrimaryButton}" Command="{Binding RetryCommand}" />
+        </VerticalStackLayout>
+
+        <!-- Not shared yet -->
+        <VerticalStackLayout Padding="24" Spacing="14" VerticalOptions="Center" IsVisible="{Binding NotShared}">
+            <Label Text="{Binding PlanName}" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
+            <Label Text="Share it as a web link anyone can open, even without Gym Book, or with people in the app: as viewers who follow it while you keep it updated, or as editors who change it with you. Anyone you allow can also save their own copy."
+                   Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Button Text="Start sharing" Style="{StaticResource PrimaryButton}" Command="{Binding StartSharingCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+        </VerticalStackLayout>
+
+        <!-- The owner's view -->
+        <ScrollView IsVisible="{Binding IsOwner}">
+            <VerticalStackLayout Padding="10,8,10,24" Spacing="14">
+                <Label Text="{Binding PlanName}" Style="{StaticResource H2}" Margin="4,0" />
+
+                <Label Text="ON THE WEB" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+                <Border Style="{StaticResource Card}" Padding="0">
+                    <VerticalStackLayout>
+                        <Grid Style="{StaticResource Row}">
+                            <VerticalStackLayout VerticalOptions="Center">
+                                <Label Text="Public link" />
+                                <Label Text="Anyone with the link can see the plan, no app or account needed" Style="{StaticResource Caption}" FontSize="12" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding IsPublic}" VerticalOptions="Center" />
+                        </Grid>
+                        <VerticalStackLayout Padding="16,0,16,14" Spacing="10" IsVisible="{Binding HasPublicUrl}">
+                            <Label Text="{Binding PublicUrl}" TextColor="{StaticResource Accent}" FontSize="13" LineBreakMode="MiddleTruncation" />
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                                <Button Text="Copy link" Style="{StaticResource SecondaryButton}" Command="{Binding CopyLinkCommand}" />
+                                <Button Grid.Column="1" Text="Share link" Style="{StaticResource PrimaryButton}" Command="{Binding ShareLinkCommand}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                        <BoxView Style="{StaticResource Divider}" />
+                        <Grid Style="{StaticResource Row}">
+                            <VerticalStackLayout VerticalOptions="Center">
+                                <Label Text="Allow copies" />
+                                <Label Text="People who can see it may save their own version to change" Style="{StaticResource Caption}" FontSize="12" />
+                            </VerticalStackLayout>
+                            <Switch Grid.Column="1" IsToggled="{Binding AllowCopy}" VerticalOptions="Center" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Grid ColumnDefinitions="*,Auto" Margin="4,6,4,0">
+                    <Label Text="PEOPLE" Style="{StaticResource Overline}" VerticalOptions="Center" />
+                    <Label Grid.Column="1" Text="Add person" TextColor="{StaticResource Accent}" FontSize="14">
+                        <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding InviteCommand}" /></Label.GestureRecognizers>
+                    </Label>
+                </Grid>
+                <Label Text="Nobody yet. Add people by their username: editors' changes reach everyone, viewers follow the plan as you keep it up to date. Each keeps their own place in it."
+                       Style="{StaticResource Caption}" Margin="4,0" IsVisible="{Binding HasMembers, Converter={StaticResource Not}}" />
+                <Border Style="{StaticResource Card}" Padding="0,4" IsVisible="{Binding HasMembers}">
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Members}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ShareMemberItem">
+                                <Grid ColumnDefinitions="40,*" ColumnSpacing="12" Padding="14,10">
+                                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}" /></Grid.GestureRecognizers>
+                                    <Border WidthRequest="36" HeightRequest="36" StrokeShape="RoundRectangle 18" StrokeThickness="0" Background="{StaticResource AccentGradient}">
+                                        <Grid>
+                                            <Label Text="{Binding Initial}" TextColor="White" FontFamily="OpenSansSemibold" HorizontalOptions="Center" VerticalOptions="Center"
+                                                   IsVisible="{Binding HasAvatar, Converter={StaticResource Not}}" />
+                                            <Image Source="{Binding AvatarUrl}" Aspect="AspectFill" IsVisible="{Binding HasAvatar}" />
+                                        </Grid>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                        <Label Text="{Binding Username, StringFormat='@{0}'}" FontFamily="OpenSansSemibold" />
+                                        <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </Border>
+
+                <Button Text="Save a copy for myself" Style="{StaticResource SecondaryButton}" Command="{Binding SaveCopyCommand}" Margin="0,8,0,0" />
+                <Button Text="Stop sharing" Style="{StaticResource DangerButton}" Command="{Binding StopSharingCommand}" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- A member's view -->
+        <VerticalStackLayout Padding="24" Spacing="14" VerticalOptions="Center" IsVisible="{Binding IsMember}">
+            <Label Text="{Binding PlanName}" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
+            <Label Text="{Binding MemberNote}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Button Text="Save my own copy" Style="{StaticResource PrimaryButton}" Command="{Binding SaveCopyCommand}" IsVisible="{Binding CanCopy}" />
+            <Button Text="Leave this plan" Style="{StaticResource SecondaryButton}" Command="{Binding LeaveCommand}" />
+        </VerticalStackLayout>
+    </Grid>
+</views:BasePage>

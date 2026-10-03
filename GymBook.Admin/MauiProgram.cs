@@ -33,6 +33,8 @@ public static class MauiProgram
         builder.Services.AddTransient<UsersPage>();
         // A singleton so the dashboard's tiles can open the Users tab on a filter.
         builder.Services.AddSingleton<UsersViewModel>();
+        builder.Services.AddTransient<ReportsPage>();
+        builder.Services.AddTransient<ReportsViewModel>();
         builder.Services.AddTransient<AiUsagePage>();
         builder.Services.AddTransient<AiUsageViewModel>();
         builder.Services.AddTransient<AccountPage>();

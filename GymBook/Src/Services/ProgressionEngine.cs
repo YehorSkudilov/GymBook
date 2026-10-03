@@ -295,11 +295,5 @@ public class ProgressionEngine(DataStore store, Units units)
     }
 
     /// <summary>Estimated one-rep max (Epley), counting reps in reserve as reps you could have done.</summary>
-    public static double E1Rm(double kg, int reps, int? rir)
-    {
-        var r = reps + (rir ?? 0);
-        if (r <= 0 || kg <= 0)
-            return 0;
-        return r == 1 ? kg : kg * (1 + r / 30.0);
-    }
+    public static double E1Rm(double kg, int reps, int? rir) => Ranks.E1Rm(kg, reps, rir);
 }

@@ -70,6 +70,13 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
     public DbSet<UserProfile> Profiles => Set<UserProfile>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PlanGeneration> PlanGenerations => Set<PlanGeneration>();
+    public DbSet<SocialProfile> SocialProfiles => Set<SocialProfile>();
+    public DbSet<Avatar> Avatars => Set<Avatar>();
+    public DbSet<RankedLift> RankedLifts => Set<RankedLift>();
+    public DbSet<Friendship> Friendships => Set<Friendship>();
+    public DbSet<RankReport> RankReports => Set<RankReport>();
+    public DbSet<PlanShare> PlanShares => Set<PlanShare>();
+    public DbSet<PlanShareMembership> PlanShareMembers => Set<PlanShareMembership>();
 
     /// <summary>Read by the query filters on every query; null (no signed-in user) matches nothing.</summary>
     string? CurrentUserId => currentUser.UserId;
@@ -129,6 +136,76 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
             b.Property(g => g.Kind).HasMaxLength(16);
             b.HasIndex(g => new { g.UserId, g.Kind, g.CreatedAt });
             b.HasOne<AppUser>().WithMany().HasForeignKey(g => g.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<SocialProfile>(b =>
+        {
+            b.ToTable("social_profiles");
+            b.HasKey(p => p.UserId);
+            b.Property(p => p.Username).HasMaxLength(GymBook.Contracts.SocialLimits.UsernameMaxLength);
+            b.Property(p => p.UsernameKey).HasMaxLength(GymBook.Contracts.SocialLimits.UsernameMaxLength);
+            b.HasIndex(p => p.UsernameKey).IsUnique();
+            b.Property(p => p.Bio).HasMaxLength(GymBook.Contracts.SocialLimits.BioLength);
+            b.Property(p => p.HomeGym).HasMaxLength(GymBook.Contracts.SocialLimits.HomeGymLength);
+            b.Property(p => p.FriendCode).HasMaxLength(GymBook.Contracts.SocialLimits.FriendCodeLength);
+            b.HasIndex(p => p.FriendCode).IsUnique();
+            b.HasIndex(p => new { p.InRanks, p.RankHidden, p.Score });
+            b.HasOne<AppUser>().WithOne().HasForeignKey<SocialProfile>(p => p.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<Avatar>(b =>
+        {
+            b.ToTable("avatars");
+            b.HasKey(a => a.UserId);
+            b.Property(a => a.ContentType).HasMaxLength(32);
+            b.HasOne<AppUser>().WithOne().HasForeignKey<Avatar>(a => a.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<RankedLift>(b =>
+        {
+            b.ToTable("ranked_lifts");
+            b.HasKey(l => new { l.UserId, l.Lift });
+            b.Property(l => l.Date).HasColumnType(wallClock);
+            b.HasIndex(l => new { l.Lift, l.Score });
+            b.HasOne<AppUser>().WithMany().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<Friendship>(b =>
+        {
+            b.ToTable("friendships");
+            b.HasKey(f => new { f.UserId, f.FriendId });
+            b.HasIndex(f => f.FriendId);
+            b.HasOne<AppUser>().WithMany().HasForeignKey(f => f.UserId).OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<AppUser>().WithMany().HasForeignKey(f => f.FriendId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<RankReport>(b =>
+        {
+            b.ToTable("rank_reports");
+            b.Property(r => r.Reason).HasMaxLength(GymBook.Contracts.SocialLimits.ReportReasonLength);
+            b.HasIndex(r => new { r.TargetId, r.ResolvedAt });
+            b.HasIndex(r => new { r.ReporterId, r.TargetId });
+            b.HasOne<AppUser>().WithMany().HasForeignKey(r => r.ReporterId).OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<AppUser>().WithMany().HasForeignKey(r => r.TargetId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<PlanShare>(b =>
+        {
+            b.ToTable("plan_shares");
+            b.Property(s => s.Id).HasMaxLength(SyncLimits.IdLength);
+            b.Property(s => s.PlanId).HasMaxLength(SyncLimits.IdLength);
+            b.HasIndex(s => new { s.OwnerId, s.PlanId }).IsUnique();
+            b.HasOne<AppUser>().WithMany().HasForeignKey(s => s.OwnerId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<PlanShareMembership>(b =>
+        {
+            b.ToTable("plan_share_members");
+            b.HasKey(m => new { m.ShareId, m.UserId });
+            b.Property(m => m.PlanId).HasMaxLength(SyncLimits.IdLength);
+            b.HasIndex(m => m.UserId);
+            b.HasOne<PlanShare>().WithMany().HasForeignKey(m => m.ShareId).OnDelete(DeleteBehavior.Cascade);
+            b.HasOne<AppUser>().WithMany().HasForeignKey(m => m.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 

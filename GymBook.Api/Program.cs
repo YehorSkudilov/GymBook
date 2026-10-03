@@ -126,6 +126,9 @@ builder.Services.AddRateLimiter(o =>
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<SyncProcessor>();
+// Public profiles, ranks, friends and shared plans (see Social/).
+builder.Services.AddScoped<GymBook.Api.Social.PlanShares>();
+builder.Services.AddScoped<GymBook.Api.Social.RankCalculator>();
 var openAi = builder.Configuration.GetSection("OpenAI").Get<OpenAiOptions>() ?? new OpenAiOptions();
 builder.Services.AddSingleton(openAi);
 builder.Services.AddHttpClient<OpenAiPlanGenerator>(c =>
@@ -202,6 +205,8 @@ app.MapGet("/health", () => Results.Ok()).AllowAnonymous();
 // Public, login-free pages for the store listing and the app: the privacy policy and how to delete an account.
 app.MapGet("/privacy", GymBook.Api.Privacy.PrivacyPolicy.Page).AllowAnonymous().DisableRateLimiting();
 app.MapGet("/delete-account", GymBook.Api.Privacy.DeleteAccountPage.Page).AllowAnonymous().DisableRateLimiting();
+// A plan its owner shared publicly, for anyone to read on the web (see Social/SharedPlanPage.cs).
+app.MapGet("/p/{id}", GymBook.Api.Social.SharedPlanPage.Page).AllowAnonymous().RequireRateLimiting(RateLimits.Foods);
 
 app.Run();
 

@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization.Metadata;
 using GymBook.Contracts;
+using GymBook.Models;
 using GymBook.Serialization;
 
 namespace GymBook.Services.Sync;
@@ -177,6 +178,112 @@ public class ApiClient(HttpClient http, AuthSession session)
     public async Task DeleteAccountAsync(string password, string? googleIdToken = null, CancellationToken ct = default)
     {
         using var response = await SendWithTokenAsync("api/account/delete", new DeleteAccountRequest { Password = password, GoogleIdToken = googleIdToken }, ct);
+        await EnsureSuccessAsync(response);
+    }
+
+    // ---- Social: public profile, ranks, friends (the API's SocialController) ----
+
+    public Task<MyPublicProfile> GetMyPublicProfileAsync(CancellationToken ct = default) => GetAuthorizedAsync<MyPublicProfile>("api/social/me", ct);
+
+    public Task<MyPublicProfile> SavePublicProfileAsync(SavePublicProfileRequest request, CancellationToken ct = default) =>
+        SendAuthorizedAsync<SavePublicProfileRequest, MyPublicProfile>("api/social/me", request, ct);
+
+    public Task<MyPublicProfile> SetAvatarAsync(byte[] image, CancellationToken ct = default) =>
+        SendAuthorizedAsync<SetAvatarRequest, MyPublicProfile>("api/social/me/avatar", new() { ImageBase64 = Convert.ToBase64String(image) }, ct);
+
+    public Task<MyPublicProfile> RemoveAvatarAsync(CancellationToken ct = default) => PostAuthorizedAsync<MyPublicProfile>("api/social/me/avatar/remove", ct);
+
+    public Task<ProfileCard> GetUserAsync(string username, CancellationToken ct = default) =>
+        GetAuthorizedAsync<ProfileCard>("api/social/users/" + Uri.EscapeDataString(username), ct);
+
+    public Task<RankStatusResponse> GetRanksAsync(CancellationToken ct = default) => GetAuthorizedAsync<RankStatusResponse>("api/social/ranks", ct);
+
+    public Task<RankStatusResponse> JoinRanksAsync(Sex sex, CancellationToken ct = default) =>
+        SendAuthorizedAsync<JoinRanksRequest, RankStatusResponse>("api/social/ranks/join", new() { Sex = sex }, ct);
+
+    public Task LeaveRanksAsync(CancellationToken ct = default) => SendEmptyAsync("api/social/ranks/leave", ct);
+
+    /// <summary><paramref name="friendsOnly"/>: the user and their friends; <paramref name="lift"/>: a lift's board, null for overall.</summary>
+    public Task<LeaderboardResponse> GetLeaderboardAsync(bool friendsOnly, RankLift? lift, CancellationToken ct = default) =>
+        GetAuthorizedAsync<LeaderboardResponse>($"api/social/leaderboard?scope={(friendsOnly ? "friends" : "global")}" + (lift is { } l ? $"&lift={l}" : ""), ct);
+
+    public Task<List<ProfileCard>> GetFriendsAsync(CancellationToken ct = default) => GetAuthorizedAsync<List<ProfileCard>>("api/social/friends", ct);
+
+    /// <summary>Adds a friend by their friend code or username.</summary>
+    public Task<ProfileCard> AddFriendAsync(string code, CancellationToken ct = default) =>
+        SendAuthorizedAsync<AddFriendRequest, ProfileCard>("api/social/friends", new() { Code = code }, ct);
+
+    public Task RemoveFriendAsync(string username, CancellationToken ct = default) =>
+        SendEmptyAsync("api/social/friends/remove", new UsernameRequest { Username = username }, ct);
+
+    public Task ReportAsync(ReportRequest request, CancellationToken ct = default) => SendEmptyAsync("api/social/report", request, ct);
+
+    /// <summary>A picture's full address, from a path the API gave (ProfileCard.AvatarPath and the like).</summary>
+    public static string? AvatarUrl(string? path) => path == null ? null : new Uri(ApiConfig.BaseAddress, path).ToString();
+
+    // ---- Shared plans (the API's PlanSharesController) ----
+
+    /// <summary>Shares the plan (or returns its share, when it already is). It must have synced first.</summary>
+    public Task<PlanShareResponse> SharePlanAsync(string planId, CancellationToken ct = default) =>
+        SendAuthorizedAsync<CreatePlanShareRequest, PlanShareResponse>("api/plan-shares", new() { PlanId = planId }, ct);
+
+    public Task<PlanShareResponse> GetPlanShareAsync(string shareId, CancellationToken ct = default) =>
+        GetAuthorizedAsync<PlanShareResponse>(SharePath(shareId), ct);
+
+    public Task<PlanShareResponse> UpdatePlanShareAsync(string shareId, UpdatePlanShareRequest request, CancellationToken ct = default) =>
+        SendAuthorizedAsync<UpdatePlanShareRequest, PlanShareResponse>(SharePath(shareId, "settings"), request, ct);
+
+    public Task<PlanShareResponse> InviteToPlanAsync(string shareId, string username, PlanShareRole role, CancellationToken ct = default) =>
+        SendAuthorizedAsync<ShareInviteRequest, PlanShareResponse>(SharePath(shareId, "invite"), new() { Username = username, Role = role }, ct);
+
+    public Task<PlanShareResponse> SetPlanMemberRoleAsync(string shareId, string username, PlanShareRole role, CancellationToken ct = default) =>
+        SendAuthorizedAsync<ShareInviteRequest, PlanShareResponse>(SharePath(shareId, "members/role"), new() { Username = username, Role = role }, ct);
+
+    public Task<PlanShareResponse> RemovePlanMemberAsync(string shareId, string username, CancellationToken ct = default) =>
+        SendAuthorizedAsync<UsernameRequest, PlanShareResponse>(SharePath(shareId, "members/remove"), new() { Username = username }, ct);
+
+    public Task StopSharingPlanAsync(string shareId, CancellationToken ct = default) => SendEmptyAsync(SharePath(shareId, "stop"), ct);
+
+    public Task<List<PlanShareInvite>> GetPlanInvitesAsync(CancellationToken ct = default) =>
+        GetAuthorizedAsync<List<PlanShareInvite>>("api/plan-shares/incoming", ct);
+
+    public Task<PlanShareResponse> AcceptPlanInviteAsync(string shareId, CancellationToken ct = default) =>
+        PostAuthorizedAsync<PlanShareResponse>(SharePath(shareId, "accept"), ct);
+
+    /// <summary>Declines an invite, or leaves a shared plan (its copy stays, as the user's own).</summary>
+    public Task LeavePlanShareAsync(string shareId, CancellationToken ct = default) => SendEmptyAsync(SharePath(shareId, "leave"), ct);
+
+    public Task<SharedPlanView> ViewSharedPlanAsync(string shareId, CancellationToken ct = default) =>
+        GetAuthorizedAsync<SharedPlanView>(SharePath(shareId, "view"), ct);
+
+    /// <summary>Saves the user's own copy of a shared plan; it arrives with the next sync.</summary>
+    public Task<CopyPlanResponse> CopySharedPlanAsync(string shareId, CancellationToken ct = default) =>
+        PostAuthorizedAsync<CopyPlanResponse>(SharePath(shareId, "copy"), ct);
+
+    static string SharePath(string shareId, string? action = null) =>
+        "api/plan-shares/" + Uri.EscapeDataString(shareId) + (action == null ? "" : "/" + action);
+
+    async Task<T> GetAuthorizedAsync<T>(string path, CancellationToken ct)
+    {
+        using var response = await SendWithTokenAsync(() => new HttpRequestMessage(HttpMethod.Get, path), ct);
+        return await ReadAsync<T>(response);
+    }
+
+    async Task<T> PostAuthorizedAsync<T>(string path, CancellationToken ct)
+    {
+        using var response = await SendWithTokenAsync(() => new HttpRequestMessage(HttpMethod.Post, path), ct);
+        return await ReadAsync<T>(response);
+    }
+
+    async Task SendEmptyAsync(string path, CancellationToken ct)
+    {
+        using var response = await SendWithTokenAsync(() => new HttpRequestMessage(HttpMethod.Post, path), ct);
+        await EnsureSuccessAsync(response);
+    }
+
+    async Task SendEmptyAsync<TRequest>(string path, TRequest body, CancellationToken ct)
+    {
+        using var response = await SendWithTokenAsync(path, body, ct);
         await EnsureSuccessAsync(response);
     }
 

@@ -4,7 +4,7 @@ using AppSkeleton;
 namespace GymBook.Admin.Views;
 
 /// <summary>The tabs, in nav bar (and swipe) order.</summary>
-public enum AdminTab { Dashboard, Users, Ai, Account }
+public enum AdminTab { Dashboard, Users, Reports, Ai, Account }
 
 /// <summary>The app's root, built like the GymBook app's: tabs in a swipeable CView over a CNavBar. Users open through Shell.</summary>
 public partial class MainPage : ContentPage
@@ -15,7 +15,7 @@ public partial class MainPage : ContentPage
     CNavItem? _current;
     bool _visible;
 
-    public MainPage(DashboardPage dashboard, UsersPage users, AiUsagePage ai, AccountPage account)
+    public MainPage(DashboardPage dashboard, UsersPage users, ReportsPage reports, AiUsagePage ai, AccountPage account)
     {
         InitializeComponent();
         var color = (Color)Application.Current!.Resources["TextPrimary"];
@@ -24,6 +24,7 @@ public partial class MainPage : ContentPage
         [
             new() { Glyph = "space_dashboard", PageName = "Dashboard", Page = dashboard, Color = color },
             new() { Glyph = "group", PageName = "Users", Page = users, Color = color },
+            new() { Glyph = "flag", PageName = "Reports", Page = reports, Color = color },
             new() { Glyph = "auto_awesome", PageName = "AI", Page = ai, Color = color },
             new() { Glyph = "person", PageName = "Account", Page = account, Color = color },
         ];

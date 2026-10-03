@@ -98,6 +98,15 @@ public class WorkoutPlan : ISyncEntity
     /// <summary>With <see cref="OwnRest"/>: this plan's rest after a warm-up set.</summary>
     [Range(15, 600)]
     public int? WarmupRestSeconds { get; set; }
+    /// <summary>
+    /// The share this plan is part of (the API's plan_shares): the owner's plan and every member's linked copy carry it,
+    /// and the API keeps their workouts the same. Null for a plan that isn't shared. Set by the API only; what a device
+    /// sends is ignored.
+    /// </summary>
+    [MaxLength(SyncLimits.IdLength)]
+    public string? ShareId { get; set; }
+    /// <summary>This user's part in <see cref="ShareId"/>: a viewer's changes to the workouts aren't kept. Set by the API only.</summary>
+    public PlanShareRole? ShareRole { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
 }

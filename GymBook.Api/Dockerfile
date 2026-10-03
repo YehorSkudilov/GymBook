@@ -17,6 +17,9 @@ RUN dotnet restore "GymBook.Api/GymBook.Api.csproj"
 
 COPY GymBook.Api/ GymBook.Api/
 COPY GymBook.Shared/ GymBook.Shared/
+# The exercise library is compiled in from the app (see GymBook.Api.csproj).
+COPY GymBook/Src/Services/Exercises/ GymBook/Src/Services/Exercises/
+COPY GymBook/Src/Models/ExerciseDetails.cs GymBook/Src/Models/
 RUN dotnet publish "GymBook.Api/GymBook.Api.csproj" -c Release -o /app/publish --no-restore /p:UseAppHost=false
 
 FROM base AS final

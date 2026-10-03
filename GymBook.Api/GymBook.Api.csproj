@@ -22,6 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- The app's exercise library, compiled in as it is, so shared plans show exercise names (see Social/PlanShares.cs). -->
+    <Compile Include="..\GymBook\Src\Services\Exercises\*.cs" Link="Exercises\%(Filename)%(Extension)" />
+    <Compile Include="..\GymBook\Src\Models\ExerciseDetails.cs" Link="Exercises\ExerciseDetails.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- The logo in the emails (see Auth/EmailSender.cs), rendered from the app's splash logo. -->
     <EmbeddedResource Include="Auth\EmailLogo.png" LogicalName="EmailLogo.png" />
   </ItemGroup>

@@ -115,3 +115,19 @@ public record SetRoleRequest(string? Role);
 public record SetDisabledRequest(bool Disabled);
 
 public record SetEmailVerifiedRequest(bool Verified);
+
+/// <summary>A report about someone's ranked lift or public profile, newest first in the admin app.</summary>
+/// <param name="OpenAboutTarget">Open reports about the same user, this one included.</param>
+public record RankReportRow(
+    Guid Id,
+    string Reporter,
+    string TargetUserId,
+    string TargetUsername,
+    string TargetEmail,
+    string? Lift,
+    string Reason,
+    DateTimeOffset CreatedAt,
+    bool TargetHidden,
+    int OpenAboutTarget);
+
+public record SetRankHiddenRequest(bool Hidden);

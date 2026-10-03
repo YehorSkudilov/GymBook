@@ -96,6 +96,10 @@ public static class MauiProgram
         AddPage<RecoveryPage, RecoveryViewModel>(builder.Services);
         AddPage<WorkoutDonePage, WorkoutDoneViewModel>(builder.Services);
         AddPage<PlanWorkoutsPage, PlanWorkoutsViewModel>(builder.Services);
+        AddPage<PublicProfilePage, PublicProfileViewModel>(builder.Services);
+        AddPage<RanksPage, RanksViewModel>(builder.Services);
+        AddPage<PlanSharePage, PlanShareViewModel>(builder.Services);
+        AddPage<SharedPlanPage, SharedPlanViewModel>(builder.Services);
 
 #if ANDROID
         // Drag reordering (plan exercises from their grip, days with a long-press), so swipes elsewhere still scroll.

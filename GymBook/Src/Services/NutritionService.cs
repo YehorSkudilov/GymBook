@@ -61,7 +61,10 @@ public record NutritionStreaks(int Logging, int BestLogging, int OnTarget, int B
 /// <summary>A direction for <see cref="NutritionService.Suggest"/>.</summary>
 public enum NutritionAim { LoseFat, Maintain, GainMuscle }
 
-public record NutritionGoals(int Calories, int ProteinG, int CarbsG, int FatG, int Balance, double DailyBurn, bool BurnMeasured);
+/// <param name="Weeks">How long reaching the goal weight takes at <paramref name="Balance"/>; null without a goal weight.</param>
+/// <param name="PaceCapped">The pace asked for was faster than is healthy, so the balance was eased off and <paramref name="Weeks"/> is longer.</param>
+public record NutritionGoals(int Calories, int ProteinG, int CarbsG, int FatG, int Balance, double DailyBurn, bool BurnMeasured,
+    int? Weeks = null, bool PaceCapped = false);
 
 /// <summary>Calories and macros eaten, calories burned, and the balance between them, from the food log and health data.</summary>
 public class NutritionService(DataStore store)
@@ -253,23 +256,69 @@ public class NutritionService(DataStore store)
     public double LatestWeightKg() => store.Data.BodyWeights.MaxBy(b => b.Date)?.WeightKg ?? Profile.BodyWeightKg;
 
     /// <summary>
-    /// Daily goals for <paramref name="aim"/>: calories from the usual daily burn measured by the health apps and a balance of −500 kcal (about 0.5 kg a week) to lose fat or +300 to gain; protein 1.8–2.2 g
-    /// per kg of body weight, fat a quarter of the calories, carbs the rest. Null when the burn isn't known.
+    /// The usual daily burn worked out from the profile, for when no health app measures it: resting (Mifflin–St Jeor,
+    /// from weight, height, age and sex) times how active the days are outside workouts, plus the workouts themselves
+    /// (strength training at about 4 kcal per kg an hour above resting, for the profile's training days and session
+    /// length). Null without a height, which it can't do without.
     /// </summary>
-    public NutritionGoals? Suggest(NutritionAim aim)
+    public double? EstimatedDailyBurn(double weightKg)
     {
-        // Only from what the health apps measured: no estimate.
-        var measured = MeasuredDailyBurn();
-        if (measured is not { } burn)
+        var p = Profile;
+        if (p.HeightCm is not { } height || weightKg <= 0)
             return null;
+        var age = p.BirthYear is { } year ? Math.Clamp(DateTime.Today.Year - year, 14, 90) : 30;
+        // Without a sex, halfway between the two.
+        var sexTerm = p.Sex switch { Sex.Male => 5, Sex.Female => -161, _ => -78 };
+        var resting = 10 * weightKg + 6.25 * height - 5 * age + sexTerm;
+        var daily = p.ActivityLevel switch
+        {
+            ActivityLevel.Sedentary => 1.2,
+            ActivityLevel.Light => 1.3,
+            ActivityLevel.Moderate => 1.45,
+            _ => 1.6,
+        };
+        var training = 4 * weightKg * p.SessionMinutes / 60.0 * p.DaysPerWeek / 7;
+        return resting * daily + training;
+    }
+
+    /// <summary>The fastest healthy loss a day: about 1% of body weight a week, and never over 1,000 kcal.</summary>
+    static int MaxDeficit(double weightKg) => (int)Math.Min(1000, weightKg * 0.01 * KcalPerKg / 7);
+
+    /// <summary>A lean bulk gains slowly: more than this a day mostly adds fat.</summary>
+    const int MaxSurplus = 500;
+
+    /// <summary>
+    /// Daily goals for <paramref name="aim"/>: calories from the usual daily burn (measured by the health apps, else
+    /// <see cref="EstimatedDailyBurn"/>) and a balance that reaches <paramref name="goalKg"/> in <paramref name="weeks"/>,
+    /// eased off when that's faster than is healthy (<see cref="MaxDeficit"/>, <see cref="MaxSurplus"/>); without a goal
+    /// weight, −500 kcal (about 0.5 kg a week) to lose fat or +300 to gain. Protein 1.8–2.2 g per kg of body weight, fat a
+    /// quarter of the calories, carbs the rest. Null when the burn can't be worked out (no health data and no height).
+    /// </summary>
+    public NutritionGoals? Suggest(NutritionAim aim, double? weightKg = null, double? goalKg = null, int? weeks = null)
+    {
+        var weight = weightKg ?? LatestWeightKg();
+        var measured = MeasuredDailyBurn();
+        if ((measured ?? EstimatedDailyBurn(weight)) is not { } burn)
+            return null;
+
         var balance = aim switch
         {
             NutritionAim.LoseFat => -500,
             NutritionAim.GainMuscle => 300,
             _ => 0,
         };
+        int? weeksToGoal = null;
+        var capped = false;
+        if (aim != NutritionAim.Maintain && goalKg is { } goal && weeks is > 0 && Math.Abs(goal - weight) >= 0.5)
+        {
+            var wanted = (goal - weight) * KcalPerKg / (weeks.Value * 7);
+            var limited = aim == NutritionAim.LoseFat ? Math.Clamp(wanted, -MaxDeficit(weight), -150) : Math.Clamp(wanted, 100, MaxSurplus);
+            capped = Math.Abs(limited) < Math.Abs(wanted) - 1;
+            balance = (int)(Math.Round(limited / 10) * 10);
+            weeksToGoal = (int)Math.Ceiling(Math.Abs(goal - weight) * KcalPerKg / Math.Abs(balance) / 7);
+        }
+
         var calories = (int)Math.Clamp(Math.Round((burn + balance) / 10) * 10, 1200, 6000);
-        var weight = LatestWeightKg();
         var protein = (int)Math.Round(weight * (aim switch
         {
             NutritionAim.LoseFat => 2.2,
@@ -278,7 +327,7 @@ public class NutritionService(DataStore store)
         }));
         var fat = (int)Math.Round(calories * 0.25 / 9);
         var carbs = (int)Math.Max(0, Math.Round((calories - protein * 4 - fat * 9) / 4.0));
-        return new NutritionGoals(calories, protein, carbs, fat, balance, burn, measured != null);
+        return new NutritionGoals(calories, protein, carbs, fat, balance, burn, measured != null, weeksToGoal, capped);
     }
 
     /// <summary>Foods logged before, newest first, each name once: quick to log again.</summary>

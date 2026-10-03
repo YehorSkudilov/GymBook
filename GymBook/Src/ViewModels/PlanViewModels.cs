@@ -4,8 +4,17 @@ using CommunityToolkit.Mvvm.Input;
 using GymBook.Controls;
 using GymBook.Models;
 using GymBook.Services;
+using GymBook.Services.Sync;
 
 namespace GymBook.ViewModels;
+
+/// <summary>A plan someone shared with the user, waiting on the Plans tab to be looked at and accepted.</summary>
+public class PlanInviteItem
+{
+    public required string Title { get; init; }
+    public required string Detail { get; init; }
+    public required IAsyncRelayCommand OpenCommand { get; init; }
+}
 
 public class PlanItem
 {
@@ -322,7 +331,7 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
     }
 }
 
-public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPlanService ai) : BaseViewModel
+public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPlanService ai, ApiClient api, AccountService account) : BaseViewModel
 {
     /// <summary>How many AI plans are left, under "Build a new plan"; empty when signed out.</summary>
     [ObservableProperty]
@@ -336,6 +345,10 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     [ObservableProperty] bool hasOtherPlans;
     /// <summary>Beside the title: the finished workouts linked to no plan, with how many.</summary>
     [ObservableProperty] string unlinkedText = "Unlinked workouts";
+
+    /// <summary>Plans others shared with the user, waiting to be accepted (see SharedPlanViewModel).</summary>
+    [ObservableProperty] List<PlanInviteItem> invites = [];
+    [ObservableProperty] bool hasInvites;
 
     /// <summary>The Plans tab is the one on screen: the active plan card animates only then.</summary>
     [ObservableProperty] bool isShowing;
@@ -379,6 +392,7 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
         UnlinkedText = unlinked > 0 ? $"Unlinked workouts ({unlinked})" : "Unlinked workouts";
         ShowQuota();
         _ = RefreshQuotaAsync();
+        _ = RefreshInvitesAsync();
         return Task.CompletedTask;
     }
 
@@ -391,6 +405,52 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     }
 
     void ShowQuota() => AiQuotaText = !ai.IsAvailable ? "" : ai.Quota is { } q ? AiPlanService.Describe(q) : "";
+
+    /// <summary>Plans shared with the user to accept. Quietly nothing when offline.</summary>
+    async Task RefreshInvitesAsync()
+    {
+        if (!account.IsSignedIn)
+            return;
+        try
+        {
+            var invites = await api.GetPlanInvitesAsync();
+            Invites = [.. invites.Select(i => new PlanInviteItem
+            {
+                Title = i.PlanName,
+                Detail = $"From @{i.Owner} · {i.Workouts} workouts · " + (i.Role == PlanShareRole.Editor ? "you can edit" : "you can follow"),
+                OpenCommand = new AsyncRelayCommand(() => GoTo($"{Routes.SharedPlan}?id={i.ShareId}&invite=1")),
+            })];
+            HasInvites = Invites.Count > 0;
+        }
+        catch (Exception e) when (Online.Message(e) != null)
+        {
+        }
+    }
+
+    /// <summary>A link to a shared plan someone sent (…/p/id): to look at it and save a copy.</summary>
+    [RelayCommand]
+    async Task OpenSharedLink()
+    {
+        string? clip = null;
+        try
+        {
+            clip = Clipboard.Default.HasText ? await Clipboard.Default.GetTextAsync() : null;
+        }
+        catch (Exception)
+        {
+            // No clipboard access: just ask.
+        }
+        var initial = clip != null && SharedPlanViewModel.ShareIdFrom(clip) != null ? clip.Trim() : null;
+        var text = await dialogs.Prompt("Open a shared plan", "Paste the link someone sent you.", initial, Keyboard.Url, "Open");
+        if (text == null)
+            return;
+        if (SharedPlanViewModel.ShareIdFrom(text) is not { } id)
+        {
+            await dialogs.Alert("That's not a plan link", "A shared plan's link ends in /p/ and a code.");
+            return;
+        }
+        await GoTo($"{Routes.SharedPlan}?id={Uri.EscapeDataString(id)}");
+    }
 
     /// <summary>The finished workouts linked to no plan (never, or their plan was deleted), to link or delete them.</summary>
     [RelayCommand]
@@ -462,6 +522,10 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
     [ObservableProperty] bool hasSuggestions;
     [ObservableProperty] string suggestionsTitle = "";
 
+    // A plan shared with others, or by others with the user (see WorkoutPlan.ShareId).
+    [ObservableProperty] bool isShared;
+    [ObservableProperty] string shareNote = "";
+
     public override void OnDisappearing() => ai.SuggestionsChanged -= OnSuggestionsChanged;
 
     void OnSuggestionsChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(() =>
@@ -476,6 +540,10 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         HasSuggestions = count > 0;
         SuggestionsTitle = count == 1 ? "AI found a way to improve this plan" : $"AI found {count} ways to improve this plan";
     }
+
+    /// <summary>The plan's sharing: its link and people for the owner; who shares it and leaving for a member.</summary>
+    [RelayCommand]
+    Task OpenShare() => _id == null ? Task.CompletedTask : GoTo($"{Routes.PlanShare}?plan={_id}");
 
     /// <summary>"Next week" on the suggestions card: hidden until the next weekly check finds something.</summary>
     [RelayCommand]
@@ -520,6 +588,14 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         ai.SuggestionsChanged -= OnSuggestionsChanged;
         ai.SuggestionsChanged += OnSuggestionsChanged;
         ShowSuggestions(saved);
+        IsShared = saved.ShareId != null;
+        ShareNote = saved.ShareRole switch
+        {
+            PlanShareRole.Owner => "You share this plan. Changes you and editors save reach everyone in it.",
+            PlanShareRole.Editor => "Shared with you to edit. Changes you save reach everyone in it.",
+            PlanShareRole.Viewer => "Shared with you to follow. Its owner keeps it up to date; save your own copy to change it.",
+            _ => "",
+        };
         var progress = new PlanProgress(plan, store.History);
         var schedule = progress.Days;
         Meta = $"{plan.Goal.Display()} · {plan.Workouts.Count} training days · {schedule.Count - plan.Workouts.Count} rest";
@@ -634,6 +710,13 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
     {
         if (_draft is not { } draft || store.GetPlan(_id) is not { } saved)
             return;
+        // A viewer's changes would only be put back by the server at the next sync.
+        if (saved.ShareRole == PlanShareRole.Viewer)
+        {
+            Discard();
+            _ = dialogs.Alert("This plan is view only", "Its owner keeps it up to date, so your changes weren't kept. To change it, save your own copy from Sharing in the ··· menu.");
+            return;
+        }
         var copy = LocalJson.Clone(draft);
         saved.Name = copy.Name;
         saved.Description = copy.Description;
@@ -993,6 +1076,8 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         if (HasChanges)
             options.AddRange(["Save changes", "Discard changes"]);
         options.AddRange(["Plan settings", "AI", "Regenerate plan", "Rename plan", "Duplicate plan"]);
+        var sharing = saved.ShareId == null ? "Share plan" : "Sharing";
+        options.Add(sharing);
         var done = store.History.Count(s => s.PlanId == saved.Id);
         var workouts = done == 1 ? "Workouts done (1)" : $"Workouts done ({done})";
         if (done > 0)
@@ -1001,6 +1086,11 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
             options.Add("Reset plan");
         switch (await dialogs.ActionSheet(plan.Name, "Delete plan", [.. options]))
         {
+            case { } choice when choice == sharing:
+                if (!await SettleChangesAsync("Save your changes first?"))
+                    break;
+                await OpenShare();
+                break;
             case { } choice when choice == workouts:
                 // The list of them, to select some (or a range) and delete them.
                 await GoTo($"{Routes.PlanWorkouts}?plan={saved.Id}");
@@ -1043,6 +1133,9 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
                 copy.Name += " (copy)";
                 copy.CreatedAt = DateTime.Now;
                 copy.Workouts.ForEach(w => w.Id = Guid.NewGuid().ToString("N"));
+                // The copy is the user's own, outside any share.
+                copy.ShareId = null;
+                copy.ShareRole = null;
                 store.Data.Plans.Add(copy);
                 store.Save();
                 await GoBack();

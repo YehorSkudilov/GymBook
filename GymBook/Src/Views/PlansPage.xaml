@@ -16,6 +16,29 @@
                         FontSize="14" Padding="10,6" VerticalOptions="Center" Command="{Binding OpenUnlinkedCommand}" />
             </Grid>
 
+            <!-- Plans others shared with the user, to look at and accept or decline. -->
+            <Label Text="SHARED WITH YOU" Style="{StaticResource Overline}" IsVisible="{Binding HasInvites}" />
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Invites}" Spacing="10" IsVisible="{Binding HasInvites}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PlanInviteItem">
+                        <Border Style="{StaticResource Card}" BackgroundColor="{StaticResource AccentSoft}">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}" /></Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Image WidthRequest="22" HeightRequest="22" VerticalOptions="Center">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="group" Color="{StaticResource Accent}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <VerticalStackLayout Grid.Column="1">
+                                    <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" />
+                                    <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
             <Label Text="ACTIVE PLAN" Style="{StaticResource Overline}" IsVisible="{Binding HasActivePlan}" />
             <!-- The active plan: light drifting across it, this week's progress in a ring, and a chevron to open it.
                  No padding on the card itself so the light reaches its edges; the content has it instead. -->
@@ -71,6 +94,7 @@
                     <Button Text="Generate plan" Style="{StaticResource PrimaryButton}" Command="{Binding GenerateCommand}" />
                     <Button Text="Create empty plan" Style="{StaticResource SecondaryButton}" Command="{Binding CreateEmptyCommand}" />
                     <Button Text="Import" Style="{StaticResource SecondaryButton}" Command="{Binding ImportCommand}" />
+                    <Button Text="Open a shared link" Style="{StaticResource SecondaryButton}" Command="{Binding OpenSharedLinkCommand}" />
                 </VerticalStackLayout>
             </Border>
             <VerticalStackLayout BindableLayout.ItemsSource="{Binding OtherPlans}" Spacing="10">

@@ -266,6 +266,14 @@ public partial class ProfileViewModel(
     [RelayCommand]
     Task OpenSyncDetails() => GoTo(Routes.SyncDetails);
 
+    /// <summary>The public profile others see: username, picture, bio and home gym.</summary>
+    [RelayCommand]
+    Task OpenPublicProfile() => GoTo(Routes.PublicProfile);
+
+    /// <summary>Strength ranks, leaderboards and friends.</summary>
+    [RelayCommand]
+    Task OpenRanks() => GoTo(Routes.Ranks);
+
     /// <summary>The exercise library: browse, search and filter every exercise, and make custom ones.</summary>
     [RelayCommand]
     Task OpenExercises() => GoTo(Routes.ExerciseLibrary);

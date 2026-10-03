@@ -84,6 +84,19 @@ public class AdminApi(HttpClient http, AdminSession session)
     /// <summary>SuperAdmin only. Deletes the account and all its data.</summary>
     public Task DeleteUserAsync(string id) => SendAsync(() => new HttpRequestMessage(HttpMethod.Delete, $"api/admin/users/{Uri.EscapeDataString(id)}"));
 
+    public Task<List<RankReportRow>> GetRankReportsAsync(bool all, CancellationToken ct = default) =>
+        GetAsync<List<RankReportRow>>($"api/admin/ranks/reports?all={(all ? "true" : "false")}", ct);
+
+    /// <summary>Closes every open report about the reported user.</summary>
+    public Task ResolveRankReportAsync(Guid id) => SendAsync(() => new HttpRequestMessage(HttpMethod.Post, $"api/admin/ranks/reports/{id}/resolve"));
+
+    public Task SetRankHiddenAsync(string userId, bool hidden) =>
+        PostAsync($"api/admin/ranks/users/{Uri.EscapeDataString(userId)}/hidden", new SetRankHiddenRequest(hidden));
+
+    /// <summary>Clears the user's public bio, home gym and picture.</summary>
+    public Task ClearPublicProfileAsync(string userId) =>
+        SendAsync(() => new HttpRequestMessage(HttpMethod.Post, $"api/admin/ranks/users/{Uri.EscapeDataString(userId)}/clear-profile"));
+
     static string UserPath(string id, string action) => $"api/admin/users/{Uri.EscapeDataString(id)}/{action}";
 
     async Task<T> GetAsync<T>(string path, CancellationToken ct)

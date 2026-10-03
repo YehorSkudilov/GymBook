@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.SharedPlanPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:SharedPlanViewModel"
+    Title="Shared plan"
+    Shell.TabBarIsVisible="False">
+
+    <Grid>
+        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" VerticalOptions="Center" HorizontalOptions="Center" />
+
+        <VerticalStackLayout Padding="24" Spacing="12" VerticalOptions="Center" IsVisible="{Binding HasError}">
+            <Label Text="Couldn't open the plan" Style="{StaticResource H3}" HorizontalTextAlignment="Center" />
+            <Label Text="{Binding Error}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Button Text="Try again" Style="{StaticResource PrimaryButton}" Command="{Binding RetryCommand}" />
+        </VerticalStackLayout>
+
+        <Grid RowDefinitions="*,Auto" IsVisible="{Binding IsLoaded}">
+            <ScrollView>
+                <VerticalStackLayout Padding="10,8,10,24" Spacing="12">
+                    <VerticalStackLayout Margin="4,0" Spacing="4">
+                        <Label Text="{Binding Name}" Style="{StaticResource H2}" />
+                        <Label Text="{Binding Byline}" Style="{StaticResource Caption}" />
+                        <Label Text="{Binding Description}" IsVisible="{Binding HasDescription}" Margin="0,6,0,0" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Workouts}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SharedWorkoutItem">
+                                <Border Style="{StaticResource Card}">
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" />
+                                        <Label Text="{Binding Exercises}" Style="{StaticResource Caption}" FontSize="13" LineHeight="1.3" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <VerticalStackLayout Grid.Row="1" Padding="10,8,10,16" Spacing="8">
+                <Label Text="{Binding InviteText}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" IsVisible="{Binding IsInvite}" />
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10" IsVisible="{Binding IsInvite}">
+                    <Button Text="Decline" Style="{StaticResource SecondaryButton}" Command="{Binding DeclineCommand}" />
+                    <Button Grid.Column="1" Text="Add to my plans" Style="{StaticResource PrimaryButton}" Command="{Binding AcceptCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+                </Grid>
+                <Button Text="Save my own copy" Style="{StaticResource SecondaryButton}" Command="{Binding SaveCopyCommand}" IsVisible="{Binding CanCopy}"
+                        IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+</views:BasePage>

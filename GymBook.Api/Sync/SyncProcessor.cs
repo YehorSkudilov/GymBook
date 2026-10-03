@@ -12,7 +12,7 @@ public class SyncLimitException(string message) : Exception(message);
 /// client hasn't seen. All queries go through <see cref="ApiDbContext"/>'s per-user filter, and ownership is
 /// always taken from the token, never from the request.
 /// </summary>
-public class SyncProcessor(ApiDbContext db, TimeProvider clock)
+public class SyncProcessor(ApiDbContext db, TimeProvider clock, GymBook.Api.Social.PlanShares shares)
 {
     /// <summary>Per-user cap on stored records of each kind, so one account can't fill the database.</summary>
     public const int MaxRecordsPerKind = 20_000;
@@ -25,7 +25,34 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock)
         var accepted = new HashSet<(Type, string)>();
         var rejected = new SyncChanges();
 
-        var wrote = await UpsertAsync(db.Plans, changes.Plans, (to, from) => { to.Workouts = from.Workouts; to.RestDays = from.RestDays; to.RestDaysDone = from.RestDaysDone; }, rejected.Plans);
+        // Which share a plan is in is the API's to say (see PlanShares): a device's copy can't change it, and a device
+        // that has it wrong gets the plan back.
+        var shareCorrected = new List<string>();
+        var wrote = await UpsertAsync(db.Plans, changes.Plans, (to, from) =>
+        {
+            to.Workouts = from.Workouts;
+            to.RestDays = from.RestDays;
+            to.RestDaysDone = from.RestDaysDone;
+            var stored = db.Entry(to).OriginalValues;
+            to.ShareId = stored.GetValue<string?>(nameof(WorkoutPlan.ShareId));
+            to.ShareRole = stored.GetValue<PlanShareRole?>(nameof(WorkoutPlan.ShareRole));
+            if (from.ShareId != to.ShareId || from.ShareRole != to.ShareRole)
+                shareCorrected.Add(to.Id);
+        }, rejected.Plans);
+        foreach (var plan in changes.Plans.Where(p => p.ShareId != null || p.ShareRole != null))
+            if (db.Entry(plan).State == EntityState.Added)
+            {
+                plan.ShareId = null;
+                plan.ShareRole = null;
+                shareCorrected.Add(plan.Id);
+            }
+        shareCorrected.ForEach(id => accepted.Remove((typeof(WorkoutPlan), id)));
+        shares.Reset();
+        if (wrote)
+        {
+            shares.UseVersion(user.Id, version);
+            await shares.AfterSyncAsync(user, version, accepted, ct);
+        }
         // A finished workout is never undone by a copy of it from before it was finished: a device that missed the finish
         // (a watch out of sync, say) still has it in progress, and discarding or carrying on with that copy would replace
         // the finished workout, or delete it, everywhere. Deleting a finished workout from the history (a tombstone with

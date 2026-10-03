@@ -44,7 +44,7 @@ public static class DeleteAccountPage
 
         <h2>What gets deleted</h2>
         <p>Everything stored with your account: your email address and password, your profile (name, body weight, age, body fat and
-        training details), training plans, workouts and sets (including a workout in progress), custom exercises and body weight history,
+        training details), training plans, workouts and sets (including a workout in progress), custom exercises and body weight history, your public profile and picture, ranks, friends and shared plans,
         and your sign-in sessions. Nothing is kept afterwards, apart from server logs, which are kept only briefly for security.</p>
         <p>Data saved only on your own device stays there until you sign out or uninstall GymBook.</p>
 

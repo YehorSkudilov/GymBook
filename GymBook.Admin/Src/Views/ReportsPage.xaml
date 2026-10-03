@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:TabView
+    x:Class="GymBook.Admin.Views.ReportsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Admin.Views"
+    xmlns:vm="clr-namespace:GymBook.Admin.ViewModels"
+    x:DataType="vm:ReportsViewModel">
+
+    <VerticalStackLayout Spacing="14">
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+            <VerticalStackLayout>
+                <Label Text="Reports" Style="{StaticResource Title}" />
+                <Label Text="Users reported for a ranked lift that looks fake, or for their username, picture or bio." Style="{StaticResource Caption}" />
+            </VerticalStackLayout>
+            <Button Grid.Column="1" Text="{Binding ShowLabel}" Style="{StaticResource SecondaryButton}" VerticalOptions="Center" Command="{Binding ToggleAllCommand}" />
+            <ImageButton Grid.Column="2" Style="{StaticResource IconButton}" Source="{StaticResource IconRefresh}" Command="{Binding RefreshCommand}" />
+        </Grid>
+
+        <Label Text="{Binding Error}" TextColor="{StaticResource Danger}" IsVisible="{Binding HasError}" />
+        <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Accent}" HeightRequest="24" />
+        <Label Text="No reports." Style="{StaticResource Caption}" IsVisible="{Binding IsEmpty}" />
+
+        <VerticalStackLayout Spacing="10" BindableLayout.ItemsSource="{Binding Reports}">
+            <BindableLayout.ItemTemplate>
+                <DataTemplate x:DataType="vm:ReportItem">
+                    <Border Style="{StaticResource Card}">
+                        <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}" /></Border.GestureRecognizers>
+                        <VerticalStackLayout Spacing="4">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="{Binding Title}" Style="{StaticResource H3}" />
+                                <Label Grid.Column="1" Text="Hidden" TextColor="{StaticResource Danger}" FontSize="12" IsVisible="{Binding IsHidden}" VerticalOptions="Center" />
+                            </Grid>
+                            <Label Text="{Binding Reason}" />
+                            <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </VerticalStackLayout>
+    </VerticalStackLayout>
+</views:TabView>

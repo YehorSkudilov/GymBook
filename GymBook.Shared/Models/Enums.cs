@@ -134,3 +134,9 @@ public static class EnumDisplay
         _ => e is Equipment.Bodyweight or Equipment.Band,
     };
 }
+
+/// <summary>
+/// Someone's part in a shared plan: the owner made it; an editor's changes reach everyone in it; a viewer follows it but
+/// can't change its workouts.
+/// </summary>
+public enum PlanShareRole { Owner, Editor, Viewer }
