@@ -373,7 +373,6 @@ public partial class ProfileViewModel(
                         "Delete health data"))
                     return;
                 store.ResetHealthData();
-                healthSync.ReadHistoryAgain();
                 await healthSync.SyncAsync(force: true);
                 health.Refresh();
                 break;
