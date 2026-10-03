@@ -26,6 +26,12 @@ public static class WearPaths
 
     /// <summary>Message to the phone: the heart rate the watch just read, in beats per minute, as text ("128").</summary>
     public const string HeartRate = "/gymbook/heart-rate";
+
+    /// <summary>
+    /// Message to the watch, no payload: the phone's data changed and is synced to the account, so sync now (signing in
+    /// through the phone first if the watch isn't signed in), also while the watch app isn't open.
+    /// </summary>
+    public const string SyncNow = "/gymbook/sync-now";
 }
 
 /// <summary>

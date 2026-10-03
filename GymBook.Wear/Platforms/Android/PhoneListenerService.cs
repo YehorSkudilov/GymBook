@@ -11,8 +11,9 @@ namespace GymBook.Wear;
 
 /// <summary>
 /// The phone's news, also while the watch app isn't running (Wear OS starts it for them): a workout started on the
-/// phone opens the app (<see cref="WearPaths.OpenApp"/>, as Google's Data Layer sample does), and every change to the
-/// phone's workout keeps the Ongoing Activity on the watch face right.
+/// phone opens the app (<see cref="WearPaths.OpenApp"/>, as Google's Data Layer sample does), every change to the
+/// phone's workout keeps the Ongoing Activity on the watch face right, and the phone's data having changed syncs the
+/// watch (<see cref="WearPaths.SyncNow"/>), signing it in through the phone first if it isn't.
 /// </summary>
 [Service(Exported = true)]
 [IntentFilter(new[] { "com.google.android.gms.wearable.MESSAGE_RECEIVED" }, DataScheme = "wear", DataHost = "*", DataPathPrefix = "/gymbook")]
@@ -23,6 +24,17 @@ public class PhoneListenerService : WearableListenerService
 
     public override void OnMessageReceived(IMessageEvent message)
     {
+        if (message.Path == WearPaths.SyncNow)
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                if (IPlatformApplication.Current?.Services is not { } services)
+                    return;
+                await services.GetRequiredService<WatchAccount>().TrySignInWithPhoneAsync();
+                services.GetRequiredService<GymBook.Services.Sync.SyncService>().Schedule(TimeSpan.Zero);
+            });
+            return;
+        }
         if (message.Path != WearPaths.OpenApp)
             return;
         try

@@ -52,12 +52,15 @@ public partial class App : Application
         window.Resumed += async (_, _) =>
         {
             await StartPhoneLinkAsync();
+            // Not signed in yet: through the phone, without asking, so its data comes over.
+            await _services.GetRequiredService<WatchAccount>().TrySignInWithPhoneAsync();
             _sync.Schedule(TimeSpan.Zero);
             _ = live.StartAsync();
             if (navigation.CurrentPage is ILivePage page)
                 await page.ResumeAsync();
         };
         _ = StartPhoneLinkAsync();
+        _ = _services.GetRequiredService<WatchAccount>().TrySignInWithPhoneAsync();
         // Changes from the phone, the website or another watch the moment they're made, while the app is open.
         _ = live.StartAsync();
         return window;
