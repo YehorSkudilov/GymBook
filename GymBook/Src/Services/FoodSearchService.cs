@@ -108,33 +108,61 @@ public class FoodSearchService(DataStore store, ApiClient api)
 
     // ---------- My foods ----------
 
-    IEnumerable<FoodMatch> MyFoods() => store.Profile.MyFoods.Select(f =>
-        new FoodMatch(f.Name, null, f.Calories, f.ProteinG, f.CarbsG, f.FatG, "1 serving", null, null, null, "My food"));
+    /// <summary>My foods, as found in the search: a serving's amounts, by weight too when the serving's weight is known.</summary>
+    public IEnumerable<FoodMatch> MyFoods() => store.Profile.MyFoods.Select(Match);
 
-    /// <summary>Saves a food to My foods (replacing one with the same name), with what one serving has.</summary>
-    public void Save(string name, double kcal, double protein, double carbs, double fat)
+    public const string MyFoodSource = "My food";
+
+    static FoodMatch Match(SavedFood f) =>
+        new(f.Name, f.Brand, f.Calories, f.ProteinG, f.CarbsG, f.FatG, f.ServingText ?? "1 serving", null, f.ServingG, f.ServingText, MyFoodSource);
+
+    /// <summary>
+    /// Saves a food to My foods (replacing one with the same name and brand) with what one serving has, what a serving is
+    /// and its weight when known. Returns it as the search finds it.
+    /// </summary>
+    public FoodMatch Save(string name, string? brand, double kcal, double protein, double carbs, double fat, string? servingText = null, double? servingG = null)
     {
-        name = name.Trim();
-        if (name.Length == 0)
-            return;
-        var foods = store.Profile.MyFoods;
-        foods.RemoveAll(f => string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase));
-        foods.Insert(0, new SavedFood
+        static string? Clip(string? text) => text?.Trim() is { Length: > 0 } t ? t.Length > SyncLimits.NameLength ? t[..SyncLimits.NameLength] : t : null;
+        var food = new SavedFood
         {
-            Name = name.Length > SyncLimits.NameLength ? name[..SyncLimits.NameLength] : name,
+            Name = Clip(name) ?? "My food",
+            Brand = Clip(brand),
             Calories = Math.Round(kcal, 1),
             ProteinG = Math.Round(protein, 1),
             CarbsG = Math.Round(carbs, 1),
             FatG = Math.Round(fat, 1),
-        });
+            ServingText = Clip(servingText),
+            ServingG = servingG is > 0 and <= 5000 ? Math.Round(servingG.Value, 1) : null,
+        };
+        var foods = store.Profile.MyFoods;
+        foods.RemoveAll(f => IsSame(f, food.Name, food.Brand));
+        foods.Insert(0, food);
         if (foods.Count > SavedFood.Max)
             foods.RemoveRange(SavedFood.Max, foods.Count - SavedFood.Max);
         store.Save();
+        return Match(food);
     }
 
-    public void Forget(string name)
+    /// <summary>Whether a food by this name (and brand) is in My foods.</summary>
+    public bool IsSaved(string name, string? brand) => store.Profile.MyFoods.Any(f => IsSame(f, name, brand));
+
+    static bool IsSame(SavedFood f, string name, string? brand) =>
+        string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)
+        && string.Equals(f.Brand ?? "", brand?.Trim() ?? "", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>Only what's on the phone (My foods, everyday foods, USDA's generic ones): instant, for filling in as it's typed.</summary>
+    public async Task<List<FoodMatch>> LocalAsync(string query)
     {
-        if (store.Profile.MyFoods.RemoveAll(f => string.Equals(f.Name, name, StringComparison.OrdinalIgnoreCase)) > 0)
+        var words = Words(query.Trim());
+        if (words.Length == 0)
+            return [];
+        return [.. Ranked(MyFoods(), words).Take(LocalMax).Concat(Ranked(CommonFoods, words).Take(8)).Concat(Ranked(await UsdaAsync(), words).Take(LocalMax))];
+    }
+
+    /// <summary>Takes a food out of My foods.</summary>
+    public void Forget(string name, string? brand)
+    {
+        if (store.Profile.MyFoods.RemoveAll(f => IsSame(f, name, brand)) > 0)
             store.Save();
     }
 

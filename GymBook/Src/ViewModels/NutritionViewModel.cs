@@ -17,6 +17,7 @@ public partial class NutritionViewModel(
     DataStore store,
     NutritionService nutrition,
     HealthSyncService health,
+    Units units,
     DialogService dialogs) : BaseViewModel
 {
     public static readonly Color Accent = Color.FromArgb("#3F7DFF");
@@ -60,6 +61,38 @@ public partial class NutritionViewModel(
     [ObservableProperty] string balanceTargetText = "";
     [ObservableProperty] Color balanceTargetColor = Secondary;
     [ObservableProperty] bool hasBalanceTarget;
+
+    // Day | Trends: one day at a time, or a range of days with its totals and charts.
+    public System.Collections.ObjectModel.ObservableCollection<ChipItem> ModeChips { get; } = [];
+    public System.Collections.ObjectModel.ObservableCollection<ChipItem> RangeChips { get; } = [];
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsDay))] bool isTrends;
+    public bool IsDay => !IsTrends;
+    int _rangeDays = 7;
+
+    // The running total, on both: the range's days before the day (finished days, for Trends), plus the day, makes the total.
+    [ObservableProperty] bool hasRunningTotal;
+    [ObservableProperty] string runningPriorLabel = "";
+    [ObservableProperty] string runningPriorText = "";
+    [ObservableProperty] Color runningPriorColor = Secondary;
+    [ObservableProperty] string runningDayLabel = "";
+    [ObservableProperty] string runningDayText = "";
+    [ObservableProperty] Color runningDayColor = Secondary;
+    [ObservableProperty] string runningTotalLabel = "";
+    [ObservableProperty] string runningTotalText = "";
+    [ObservableProperty] Color runningTotalColor = Secondary;
+
+    // Trends over the range
+    [ObservableProperty] string trendTitle = "";
+    [ObservableProperty] bool hasTrend;
+    [ObservableProperty] string trendSummary = "";
+    [ObservableProperty] List<StatItem> trendStats = [];
+    [ObservableProperty] IDrawable? trendBalanceChart;
+    [ObservableProperty] IDrawable? trendEatenChart;
+    [ObservableProperty] string trendEatenCaption = "";
+    [ObservableProperty] IDrawable? trendMacroChart;
+    // Always three (carbs, fat, protein): the legend binds to each by position.
+    [ObservableProperty] List<MacroLegendItem> trendMacroLegend = [new("Carb", "–", "", Carbs), new("Fat", "–", "", Fat), new("Protein", "–", "", Protein)];
+    [ObservableProperty] string trendMacroCaption = "";
     [ObservableProperty] string noGoalsHint = "";
     [ObservableProperty] bool hasNoGoals;
     // Always three (carbs, fat, protein): the tiles bind to each by position.
@@ -84,6 +117,13 @@ public partial class NutritionViewModel(
     public override async Task OnAppearingAsync()
     {
         IsShowing = false;
+        if (ModeChips.Count == 0)
+        {
+            ModeChips.Add(new ChipItem("Day", false, SelectMode) { IsSelected = !IsTrends });
+            ModeChips.Add(new ChipItem("Trends", true, SelectMode) { IsSelected = IsTrends });
+            foreach (var (label, days) in new[] { ("7 days", 7), ("30 days", 30), ("90 days", 90), ("1 year", 365) })
+                RangeChips.Add(new ChipItem(label, days, SelectRange) { IsSelected = days == _rangeDays });
+        }
         if (!_visible)
         {
             _visible = true;
@@ -114,9 +154,108 @@ public partial class NutritionViewModel(
     {
         if (_date > DateTime.Today)
             _date = DateTime.Today;
+        if (IsTrends)
+        {
+            ShowTrends();
+            ShowRunningTotal(DateTime.Today);
+            return;
+        }
         var day = nutrition.Day(_date);
         ShowDay(day);
         ShowCreatine();
+        ShowRunningTotal(_date);
+    }
+
+    void SelectMode(ChipItem chip)
+    {
+        foreach (var c in ModeChips)
+            c.IsSelected = c == chip;
+        IsTrends = (bool)chip.Value!;
+        Refresh();
+    }
+
+    void SelectRange(ChipItem chip)
+    {
+        _rangeDays = (int)chip.Value!;
+        foreach (var c in RangeChips)
+            c.IsSelected = c == chip;
+        Refresh();
+    }
+
+    /// <summary>
+    /// The range's days before <paramref name="date"/> (only finished days with food and a burn), plus that day's own
+    /// surplus or deficit (so far, for today), and the two together.
+    /// </summary>
+    void ShowRunningTotal(DateTime date)
+    {
+        var prior = nutrition.Balance(_rangeDays, date);
+        var day = nutrition.Day(date).Balance;
+        HasRunningTotal = prior != null || day != null;
+        if (!HasRunningTotal)
+            return;
+        var range = RangeChips.FirstOrDefault(c => c.IsSelected)?.Title ?? $"{_rangeDays} days";
+        RunningPriorLabel = $"Previous {range}";
+        (RunningPriorText, RunningPriorColor) = Signed(prior?.TotalBalance);
+        RunningDayLabel = date == DateTime.Today ? "Today so far" : date == DateTime.Today.AddDays(-1) ? "Yesterday" : date.ToString("ddd d MMM", CultureInfo.CurrentCulture);
+        (RunningDayText, RunningDayColor) = Signed(day);
+        RunningTotalLabel = "Total";
+        (RunningTotalText, RunningTotalColor) = Signed((prior?.TotalBalance ?? 0) + (day ?? 0));
+
+        static (string, Color) Signed(double? kcal) => kcal is { } k ? (NutritionService.Signed(k), k > 0 ? Orange : Accent) : ("–", Secondary);
+    }
+
+    /// <summary>
+    /// The range at a glance: its averages and what the surplus or deficit adds up to in body weight, each day's (or,
+    /// over three months and more, each week's) surplus or deficit and calories eaten, and the average macros.
+    /// </summary>
+    void ShowTrends()
+    {
+        var p = store.Profile;
+        var title = RangeChips.FirstOrDefault(c => c.IsSelected)?.Title ?? $"{_rangeDays} days";
+        TrendTitle = $"Last {title}";
+        var days = nutrition.LastDays(_rangeDays);
+        var period = nutrition.Balance(_rangeDays);
+        HasTrend = period != null;
+        TrendSummary = period == null
+            ? "Log food on days with calories burned from your health data to see your surplus or deficit add up."
+            : $"Over {(period.Days == 1 ? "1 day" : $"{period.Days} days")} with food and calories burned (today not counted).";
+        TrendStats = period == null ? [] :
+        [
+            new("Average a day", NutritionService.Signed(period.AverageBalance)),
+            new("Weight it adds up to", $"{(period.WeightChangeKg >= 0 ? "+" : "−")}{units.FormatWithUnit(Math.Abs(period.WeightChangeKg))}"),
+            new("Eaten a day", $"{NutritionService.Kcal(period.AverageEaten)} kcal"),
+            new("Burned a day", $"{NutritionService.Kcal(period.AverageBurned)} kcal"),
+        ];
+
+        // Over three months and more, a bar a week: the week's surplus or deficit added up, its eating averaged.
+        var weekly = _rangeDays > 60;
+        var groups = weekly
+            ? days.GroupBy(d => d.Date.AddDays(-(((int)d.Date.DayOfWeek + 6) % 7))).ToList()
+            : days.GroupBy(d => d.Date).ToList();
+        string Label(DateTime d) => d.ToString(_rangeDays <= 7 ? "ddd" : "d/M", CultureInfo.CurrentCulture);
+        TrendBalanceChart = new BalanceChartDrawable(
+            [.. groups.Select(g => new ChartPoint(Label(g.Key), g.Sum(d => d.Balance ?? 0)))], weekly ? null : p.EnergyBalanceGoal, Orange, Accent);
+        TrendEatenChart = new BarChartDrawable(
+            [.. groups.Select(g => new ChartPoint(Label(g.Key), g.Where(d => d.HasFood).Select(d => d.EatenKcal).DefaultIfEmpty(0).Average()))],
+            Accent, v => v >= 1000 ? $"{v / 1000:0.#}k" : $"{v:0}");
+        var eaten = days.Where(d => d.HasFood).ToList();
+        TrendEatenCaption = eaten.Count == 0 ? "Nothing logged yet"
+            : $"{NutritionService.Kcal(eaten.Average(d => d.EatenKcal))} kcal a day on average{(weekly ? ", by week" : "")}";
+
+        // The macro split over time: a bar a day (or week) in carbs, fat and protein by their share of its calories, with
+        // the split aimed for (the goals, or the usual 55 / 25 / 20) dashed across; the legend gives the range's shares.
+        var hasGoals = p.CarbsGoalG is > 0 && p.FatGoalG is > 0 && p.ProteinGoalG is > 0;
+        var target = hasGoals ? new double[] { p.CarbsGoalG!.Value * 4, p.FatGoalG!.Value * 9, p.ProteinGoalG!.Value * 4 } : new double[] { 55, 25, 20 };
+        TrendMacroChart = new MacroStackChartDrawable(
+            [.. groups.Select(g => new MacroBar(Label(g.Key), g.Sum(d => d.CarbsG) * 4, g.Sum(d => d.FatG) * 9, g.Sum(d => d.ProteinG) * 4))],
+            target, [Carbs, Fat, Protein]);
+        var kcal = new[] { eaten.Sum(d => d.CarbsG) * 4, eaten.Sum(d => d.FatG) * 9, eaten.Sum(d => d.ProteinG) * 4 };
+        var (all, aim) = (kcal.Sum(), target.Sum());
+        TrendMacroLegend = [.. new[] { ("Carb", Carbs), ("Fat", Fat), ("Protein", Protein) }.Select((m, i) => new MacroLegendItem(
+            m.Item1, all > 0 ? $"{kcal[i] / all * 100:0}%" : "–", $"aim {target[i] / aim * 100:0}%", m.Item2))];
+        TrendMacroCaption = hasGoals ? "Each day's split of calories · dashed: your goals" : "Each day's split of calories · dashed: the usual split";
+        if (weekly)
+            TrendMacroCaption = TrendMacroCaption.Replace("Each day's", "Each week's");
     }
 
     void ShowDay(DayNutrition day)
@@ -396,3 +535,6 @@ public class FoodItem
 }
 
 public record StatItem(string Label, string Value);
+
+/// <summary>A macro in the trend split's legend: its name and colour, its share of the range's calories, and the share aimed for.</summary>
+public record MacroLegendItem(string Name, string Share, string Aim, Color Color);

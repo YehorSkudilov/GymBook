@@ -280,7 +280,7 @@ public class FoodEntry : ISyncEntity
     public bool IsDeleted { get; set; }
 }
 
-/// <summary>A food saved to "My foods": its name and what one serving has. Kept in <see cref="UserProfile.MyFoods"/>.</summary>
+/// <summary>A food saved to "My foods" (or made by the user): its name, what one serving has and what a serving is. Kept in <see cref="UserProfile.MyFoods"/>.</summary>
 public class SavedFood
 {
     public const int Max = 500;
@@ -295,6 +295,15 @@ public class SavedFood
     public double CarbsG { get; set; }
     [Range(0, 2000)]
     public double FatG { get; set; }
+    /// <summary>The brand, if any (a food made by the user has none).</summary>
+    [MaxLength(SyncLimits.NameLength)]
+    public string? Brand { get; set; }
+    /// <summary>What a serving is ("1 bar", "1 cup"); null for "1 serving".</summary>
+    [MaxLength(SyncLimits.NameLength)]
+    public string? ServingText { get; set; }
+    /// <summary>A serving's weight in grams, when known: then it can be logged by weight too.</summary>
+    [Range(0, 5000)]
+    public double? ServingG { get; set; }
 }
 
 /// <summary>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="GymBook.Views.FoodRow"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:FoodMatchItem">
+
+    <!-- A food in the search or the lists: its name and where it's from, its calories for the usual amount, and a
+         preview of its macros. Tap to set how much; a food in My foods can be taken out with the ×. -->
+    <Border Style="{StaticResource InnerCard}">
+        <Border.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding SelectCommand}" />
+        </Border.GestureRecognizers>
+        <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="6">
+            <VerticalStackLayout>
+                <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="15" LineBreakMode="TailTruncation" MaxLines="2" />
+                <Label Text="{Binding Source}" Style="{StaticResource Caption}" FontSize="11" TextColor="{StaticResource TextTertiary}" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" VerticalOptions="Start">
+                <Label Text="{Binding Calories}" FontFamily="OpenSansSemibold" FontSize="15" HorizontalOptions="End" />
+                <Label Text="{Binding Amount}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End" MaximumWidthRequest="140"
+                       HorizontalTextAlignment="End" LineBreakMode="TailTruncation" />
+            </VerticalStackLayout>
+            <Image Grid.Column="2" Grid.RowSpan="2" Source="{StaticResource IconClose}" WidthRequest="20" HeightRequest="20" VerticalOptions="Center"
+                   IsVisible="{Binding CanRemove}">
+                <Image.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding RemoveCommand}" />
+                </Image.GestureRecognizers>
+            </Image>
+            <Grid Grid.Row="1" Grid.ColumnSpan="2" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <GraphicsView Drawable="{Binding MacroBar}" HeightRequest="8" VerticalOptions="Center" />
+                <Label Grid.Column="1" Text="{Binding Macros}" Style="{StaticResource Caption}" FontSize="11" />
+            </Grid>
+        </Grid>
+    </Border>
+</ContentView>

@@ -134,16 +134,20 @@ public class NutritionService(DataStore store)
         ?? Profile.BodyWeightKg;
 
     /// <summary>
-    /// The last <paramref name="days"/> finished days (today isn't over, so it isn't counted), only those with food logged
-    /// and a burn known. Null when there are none.
+    /// The <paramref name="days"/> days before <paramref name="before"/> (today by default: today isn't over, so it isn't
+    /// counted), only those with food logged and a burn known. Null when there are none.
     /// </summary>
-    public PeriodBalance? Balance(int days)
+    public PeriodBalance? Balance(int days, DateTime? before = null)
     {
-        var counted = Enumerable.Range(1, days).Select(i => Day(DateTime.Today.AddDays(-i))).Where(d => d.Balance != null).ToList();
+        var end = (before ?? DateTime.Today).Date;
+        var counted = Enumerable.Range(1, days).Select(i => Day(end.AddDays(-i))).Where(d => d.Balance != null).ToList();
         return counted.Count == 0
             ? null
             : new PeriodBalance(counted.Count, counted.Sum(d => d.Balance!.Value), counted.Average(d => d.EatenKcal), counted.Average(d => d.BurnedKcal!.Value));
     }
+
+    /// <summary>The last <paramref name="days"/> days, oldest first, today included.</summary>
+    public List<DayNutrition> LastDays(int days) => [.. Enumerable.Range(0, days).Reverse().Select(i => Day(DateTime.Today.AddDays(-i)))];
 
     /// <summary>Each of the last <paramref name="days"/> days' balance, oldest first, today included; 0 where there's none.</summary>
     public List<ChartPoint> BalanceHistory(int days) =>

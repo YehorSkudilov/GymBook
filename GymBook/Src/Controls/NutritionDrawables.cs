@@ -135,6 +135,90 @@ public class LegendIconDrawable(LegendIcon icon, Color color) : IDrawable
 
 public enum LegendIcon { Target, Range, Tick }
 
+/// <summary>A bar in <see cref="MacroStackChartDrawable"/>: its label and the calories from carbs, fat and protein.</summary>
+public record MacroBar(string Label, double CarbsKcal, double FatKcal, double ProteinKcal)
+{
+    public double Total => CarbsKcal + FatKcal + ProteinKcal;
+}
+
+/// <summary>
+/// The macro split over time: a bar per day (or week), each split top to bottom into carbs, fat and protein by their
+/// share of its calories, all the same height; days with nothing logged leave a gap. A dashed line across marks the
+/// split aimed for between each part. Bars grow up as it's revealed.
+/// </summary>
+public class MacroStackChartDrawable(IReadOnlyList<MacroBar> bars, IReadOnlyList<double> target, IReadOnlyList<Color> colors) : IDrawable, IRevealable
+{
+    static readonly Color Empty = Color.FromArgb("#1D212C"), LabelColor = Color.FromArgb("#626B7E");
+    const float LabelHeight = 18;
+
+    public float Reveal { get; set; } = 1;
+
+    public void Draw(ICanvas canvas, RectF rect)
+    {
+        if (bars.All(b => b.Total <= 0))
+        {
+            canvas.FontColor = LabelColor;
+            canvas.FontSize = 13;
+            canvas.DrawString("Log food to see the split", rect, HorizontalAlignment.Center, VerticalAlignment.Center);
+            return;
+        }
+        var plot = new RectF(rect.X, rect.Y, rect.Width, rect.Height - LabelHeight);
+        var slot = plot.Width / bars.Count;
+        var barW = Math.Min(22, slot * 0.62f);
+        var grow = 1 - MathF.Pow(1 - Math.Clamp(Reveal, 0, 1), 3);
+        var every = Math.Max(1, (int)Math.Ceiling(bars.Count * 40 / Math.Max(1, plot.Width)));
+        canvas.FontSize = 10;
+        for (var i = 0; i < bars.Count; i++)
+        {
+            var bar = bars[i];
+            var cx = plot.Left + slot * (i + 0.5f);
+            var x = cx - barW / 2;
+            if (bar.Total <= 0)
+            {
+                canvas.FillColor = Empty;
+                canvas.FillRoundedRectangle(x, plot.Bottom - 4, barW, 4, 2);
+            }
+            else
+            {
+                // Clipped to the rounded bar, then filled part by part from the bottom: protein, fat, carbs on top.
+                var height = plot.Height * grow;
+                canvas.SaveState();
+                var path = new PathF();
+                path.AppendRoundedRectangle(x, plot.Bottom - height, barW, height, Math.Min(6, barW / 2));
+                canvas.ClipPath(path);
+                var y = plot.Bottom;
+                foreach (var (kcal, color) in new[] { (bar.ProteinKcal, colors[2]), (bar.FatKcal, colors[1]), (bar.CarbsKcal, colors[0]) })
+                {
+                    var h = (float)(kcal / bar.Total) * height;
+                    canvas.FillColor = color;
+                    canvas.FillRectangle(x, y - h, barW, h + 0.5f);
+                    y -= h;
+                }
+                canvas.RestoreState();
+            }
+            if (i % every == 0 || i == bars.Count - 1)
+            {
+                canvas.FontColor = LabelColor;
+                canvas.DrawString(bar.Label, cx - 30, plot.Bottom + 3, 60, LabelHeight - 3, HorizontalAlignment.Center, VerticalAlignment.Top);
+            }
+        }
+
+        // The split aimed for: where protein would end and where fat would, dashed across.
+        var total = target.Sum();
+        if (total > 0 && grow > 0.95f)
+        {
+            canvas.StrokeColor = Colors.White.WithAlpha(0.55f);
+            canvas.StrokeSize = 1;
+            canvas.StrokeDashPattern = [3, 3];
+            var protein = (float)(target[2] / total);
+            var fat = (float)(target[1] / total);
+            foreach (var share in new[] { protein, protein + fat })
+                canvas.DrawLine(plot.Left, plot.Bottom - share * plot.Height, plot.Right, plot.Bottom - share * plot.Height);
+            canvas.StrokeDashPattern = null;
+        }
+    }
+}
+
 /// <summary>
 /// How the day's calories split between carbs, fat and protein: a bar of the three in proportion with their shares
 /// above, and under it thin bars of the split aimed for (the goals, or a usual one) with theirs below.
@@ -271,5 +355,37 @@ public class BalanceChartDrawable(IReadOnlyList<ChartPoint> points, double? targ
                 canvas.DrawString(points[i].Label, cx - 30, rect.Bottom - LabelHeight + 3, 60, LabelHeight - 3, HorizontalAlignment.Center, VerticalAlignment.Top);
             }
         }
+    }
+}
+
+/// <summary>A thin bar of a food's calories split into carbs, fat and protein, for a search result's preview.</summary>
+public class MacroMiniBarDrawable(double carbsKcal, double fatKcal, double proteinKcal) : IDrawable
+{
+    static readonly Color Carbs = Color.FromArgb("#C58CFF"), Fat = Color.FromArgb("#FF7B72"), Protein = Color.FromArgb("#FFD84D"),
+        Track = Color.FromArgb("#2C3240");
+
+    public void Draw(ICanvas canvas, RectF rect)
+    {
+        var h = Math.Min(rect.Height, 4);
+        var bar = new RectF(rect.X, rect.Center.Y - h / 2, rect.Width, h);
+        var total = carbsKcal + fatKcal + proteinKcal;
+        canvas.SaveState();
+        var path = new PathF();
+        path.AppendRoundedRectangle(bar, h / 2);
+        canvas.ClipPath(path);
+        canvas.FillColor = Track;
+        canvas.FillRectangle(bar);
+        if (total > 0)
+        {
+            var x = bar.Left;
+            foreach (var (kcal, color) in new[] { (carbsKcal, Carbs), (fatKcal, Fat), (proteinKcal, Protein) })
+            {
+                var w = (float)(kcal / total) * bar.Width;
+                canvas.FillColor = color;
+                canvas.FillRectangle(x, bar.Top, w, bar.Height);
+                x += w;
+            }
+        }
+        canvas.RestoreState();
     }
 }
