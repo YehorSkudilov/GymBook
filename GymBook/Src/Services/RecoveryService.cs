@@ -70,15 +70,69 @@ public class RecoveryService(DataStore store)
     /// <summary>
     /// The muscles <paramref name="workout"/> works that aren't recovered enough at <paramref name="at"/>, most tired
     /// first; empty when it's fine to train. Uses the planned sets, weighted like logged ones.
+    /// Judged by the part of each muscle the workout works (see <see cref="SubMuscles"/>): a push day's front and side
+    /// delts don't stop a pull day's face pulls (rear delts), nor flat presses an incline the next day the same way.
     /// </summary>
     public List<MuscleRecovery> NotReady(PlanWorkout workout, DateTime at)
     {
-        var planned = PlannedSets(workout);
-        var recovery = Details(at).ToDictionary(r => r.Muscle);
-        return [.. planned
-            .Where(p => p.Value >= MeaningfulSets && recovery[p.Key].Recovery < ReadyThreshold)
-            .Select(p => recovery[p.Key])
-            .OrderBy(r => r.Recovery)];
+        var planned = PlannedParts(workout);
+        var parts = PartRecovery(at);
+        var tired = planned.Where(p => p.Value >= MeaningfulSets && parts[p.Key] < ReadyThreshold).Select(p => p.Key.Group()).ToHashSet();
+        return [.. Details(at).Where(r => tired.Contains(r.Muscle)).OrderBy(r => r.Recovery)];
+    }
+
+    /// <summary>
+    /// How recovered each part of each muscle is at <paramref name="at"/> (front, side and rear delts, upper chest, lats
+    /// and so on), worked out like <see cref="Details"/> from the sets each part got.
+    /// </summary>
+    public Dictionary<SubMuscle, double> PartRecovery(DateTime at)
+    {
+        var result = Enum.GetValues<SubMuscle>().ToDictionary(m => m, _ => 1.0);
+        foreach (var session in store.History.Where(s => s.StartedAt <= at).TakeWhile(s => (at - s.EndedAt!.Value).TotalHours < MaxHours))
+        {
+            var during = at < session.EndedAt!.Value;
+            var hours = during ? 0 : (at - session.EndedAt!.Value).TotalHours;
+            foreach (var (part, sets) in PartSets(session, during ? at : null))
+                result[part] = Math.Min(result[part], RecoveredAfter(hours / HoursToRecover(part.Group(), sets)));
+        }
+        return result;
+    }
+
+    /// <summary>Like <see cref="SetsPerMuscle"/>, by the part of each muscle each exercise works.</summary>
+    Dictionary<SubMuscle, double> PartSets(WorkoutSession session, DateTime? upTo)
+    {
+        var sets = new Dictionary<SubMuscle, double>();
+        foreach (var se in session.Exercises)
+        {
+            if (store.GetExercise(se.ExerciseId) is not { } ex)
+                continue;
+            var count = se.Sets.Count(s => s.IsCompleted && !s.IsWarmup && (upTo is not { } cutoff || (s.CompletedAt ?? session.EndedAt ?? session.StartedAt) <= cutoff));
+            if (count > 0)
+                AddParts(sets, ex, count);
+        }
+        return sets;
+    }
+
+    /// <summary>Like <see cref="PlannedSets"/>, by the part of each muscle each exercise works.</summary>
+    Dictionary<SubMuscle, double> PlannedParts(PlanWorkout workout)
+    {
+        var sets = new Dictionary<SubMuscle, double>();
+        foreach (var pe in workout.Exercises)
+            if (store.GetExercise(pe.ExerciseId) is { } ex)
+                AddParts(sets, ex, pe.Sets);
+        return sets;
+    }
+
+    // A set for the part of its primary muscle, half a set for the part of each secondary one.
+    static void AddParts(Dictionary<SubMuscle, double> sets, Exercise ex, double count)
+    {
+        var primary = SubMuscles.For(ex, ex.PrimaryMuscle);
+        sets[primary] = sets.GetValueOrDefault(primary) + count;
+        foreach (var m in ex.SecondaryMuscles)
+        {
+            var part = SubMuscles.For(ex, m);
+            sets[part] = sets.GetValueOrDefault(part) + count * 0.5;
+        }
     }
 
     /// <summary>
@@ -87,10 +141,10 @@ public class RecoveryService(DataStore store)
     /// </summary>
     public PlanWorkout? FreshAlternative(WorkoutPlan plan, PlanWorkout instead, DateTime at)
     {
-        var recovery = Compute(at);
+        var recovery = PartRecovery(at);
         return plan.Workouts
             .Where(w => w != instead && w.Exercises.Count > 0 && NotReady(w, at).Count == 0)
-            .Select(w => (Workout: w, Sets: PlannedSets(w)))
+            .Select(w => (Workout: w, Sets: PlannedParts(w)))
             .Where(x => x.Sets.Count > 0)
             .OrderByDescending(x => x.Sets.Sum(s => s.Value * recovery[s.Key]) / x.Sets.Sum(s => s.Value))
             .Select(x => x.Workout)
@@ -103,11 +157,12 @@ public class RecoveryService(DataStore store)
     /// </summary>
     public double Readiness(PlanWorkout workout, DateTime at)
     {
-        var sets = PlannedSets(workout);
+        // By the parts of the muscles it works, like NotReady.
+        var sets = PlannedParts(workout);
         var total = sets.Sum(s => s.Value);
         if (total <= 0)
             return 1;
-        var recovery = Compute(at);
+        var recovery = PartRecovery(at);
         return sets.Sum(s => s.Value * recovery[s.Key]) / total;
     }
 
