@@ -986,10 +986,17 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
             options.AddRange(["Save changes", "Discard changes"]);
         options.AddRange(["Plan settings", "AI", "Regenerate plan", "Rename plan", "Duplicate plan"]);
         var done = store.History.Count(s => s.PlanId == saved.Id);
+        var workouts = done == 1 ? "Workouts done (1)" : $"Workouts done ({done})";
+        if (done > 0)
+            options.Add(workouts);
         if (done > 0 || saved.RestDaysDone is { Count: > 0 })
             options.Add("Reset plan");
         switch (await dialogs.ActionSheet(plan.Name, "Delete plan", [.. options]))
         {
+            case { } choice when choice == workouts:
+                // The list of them, to select some (or a range) and delete them.
+                await GoTo($"{Routes.PlanWorkouts}?plan={saved.Id}");
+                break;
             case "Reset plan":
                 await ResetPlan(saved, done);
                 break;

@@ -20,13 +20,32 @@ public class SessionItem
     public bool HasThumbnails => Thumbnails.Count > 0;
     public bool HasMore => More.Length > 0;
     public string Time { get; init; } = "";
+    /// <summary>The plan it counts toward ("PPL · Week 3"), or that it's linked to none.</summary>
+    public string PlanText { get; init; } = "";
+    public bool IsLinked { get; init; }
+    public Color PlanColor => IsLinked ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#FFB020");
+
+    /// <summary>
+    /// The plan <paramref name="s"/> counts toward, with its week and day ("PPL · Week 3 · Push"), or that it isn't
+    /// linked to one (never was, or its plan was deleted).
+    /// </summary>
+    public static string PlanLink(WorkoutSession s, WorkoutPlan? plan)
+    {
+        if (plan == null)
+            return s.PlanId == null ? "Not linked to a plan" : "Not linked (its plan was deleted)";
+        var day = plan.Workouts.FirstOrDefault(w => w.Id == s.PlanWorkoutId)?.Name;
+        return string.Join(" · ", new[] { plan.Name, s.PlanWeek is { } week ? $"Week {week}" : null, day != null && day != s.Name ? day : null }.OfType<string>());
+    }
 
     /// <summary><paramref name="open"/>: what tapping it does; by default the finished-workout sheet.</summary>
     public static SessionItem Create(WorkoutSession s, DataStore store, StatsService stats, Units units, ICommand? open = null)
     {
         var photos = s.Exercises.Select(e => ExerciseLibrary.Thumbnail(e.ExerciseId)).OfType<string>().ToList();
+        var plan = store.GetPlan(s.PlanId);
         return new()
         {
+            PlanText = PlanLink(s, plan),
+            IsLinked = plan != null,
             Id = s.Id,
             Name = s.Name,
             DateText = s.StartedAt.ToString("ddd, d MMM · HH:mm"),
