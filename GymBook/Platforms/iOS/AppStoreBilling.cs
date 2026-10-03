@@ -38,7 +38,7 @@ public class AppStoreBilling : IStoreBilling
         if (!SKPaymentQueue.CanMakePayments)
             throw new StoreBillingException("Purchases are turned off on this device (Settings › Screen Time › Content & Privacy Restrictions).");
         var done = new TaskCompletionSource<SKProduct[]>();
-        var request = new SKProductsRequest(new NSSet<NSString>([.. SubscriptionProducts.All.Select(id => new NSString(id))]))
+        var request = new SKProductsRequest(new NSSet<NSString>(SubscriptionProducts.All.Select(id => new NSString(id)).ToArray()))
         {
             Delegate = new ProductsDelegate(done),
         };

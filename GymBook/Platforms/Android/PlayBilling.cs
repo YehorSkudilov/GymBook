@@ -54,7 +54,7 @@ public class PlayBilling : IStoreBilling
         foreach (var id in SubscriptionProducts.All)
         {
             var product = details.ProductDetailsList.FirstOrDefault(d => d.ProductId == id);
-            var options = product?.SubscriptionOfferDetails;
+            var options = product?.GetSubscriptionOfferDetails();
             if (product == null || options == null || options.Count == 0)
                 continue;
             // The free trial offer when Play offers it (only to users who haven't had it), else the base plan.
