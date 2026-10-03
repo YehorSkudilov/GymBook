@@ -43,6 +43,12 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
         "android.permission.health.READ_HEIGHT",
     ];
 
+    /// <summary>
+    /// Reading what was recorded more than 30 days before access was first given (without it, Health Connect shares no
+    /// further back than that). Asked for along with the rest, where Health Connect knows it; on its own it reads nothing.
+    /// </summary>
+    const string ReadHistoryPermission = "android.permission.health.READ_HEALTH_DATA_HISTORY";
+
     static Context Context => Android.App.Application.Context;
 
     public HealthSource Source => HealthSource.HealthConnect;
@@ -248,7 +254,7 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
     sealed class HealthReadPermissions : Permissions.BasePlatformPermission
     {
         public override (string androidPermission, bool isRuntime)[] RequiredPermissions =>
-            [.. ReadPermissions.Select(p => (p, true))];
+            [.. ReadPermissions.Append(ReadHistoryPermission).Select(p => (p, true))];
     }
 
     [SupportedOSPlatform("android34.0")]
@@ -468,8 +474,8 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
         {
             var values = new List<(DateTime, double)>();
             long? page = null;
-            // A few pages at most: a month of even several weigh-ins a day is far under one.
-            for (var i = 0; i < 10; i++)
+            // A few pages at most: months of even several weigh-ins a day are far under one.
+            for (var i = 0; i < 20; i++)
             {
                 var builder = new ReadRecordsRequestUsingFilters.Builder(Java.Lang.Class.FromType(typeof(T)))
                     .SetTimeRangeFilter(new TimeInstantRangeFilter.Builder()

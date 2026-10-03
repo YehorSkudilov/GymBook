@@ -23,6 +23,9 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
     [ObservableProperty] bool isConnected;
     [ObservableProperty] string appsText = "";
     [ObservableProperty] bool isBusy;
+    /// <summary>The history is being read: a bar under the status shows how far it got.</summary>
+    [ObservableProperty] bool showHistoryProgress;
+    [ObservableProperty] double historyProgress;
 
     // Sending Gym Book's workouts, food and weights to the health app
     [ObservableProperty] bool showSendBack;
@@ -41,6 +44,8 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
         var availability = source == HealthSource.None && health.CanReadSamsungHealth ? HealthAvailability.Available : platform.Availability;
         IsAvailable = availability == HealthAvailability.Available;
         IsConnected = health.IsConnected;
+        ShowHistoryProgress = health.IsConnected && health.IsReadingHistory;
+        HistoryProgress = health.HistoryProgress;
         AppsText = source == HealthSource.SamsungHealth ? "Samsung Health" : health.Apps == null ? "Health Connect" : health.SourceName;
         var writeBack = health.WriteBack;
         ShowSendBack = health.IsConnected && writeBack.IsAvailable;
@@ -80,6 +85,9 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
                     Title = $"Reading {health.SourceName}";
                     Status = IsBusy ? "Reading…"
                         : health.LastError is { } error ? $"Couldn't read: {error}"
+                        : health.IsReadingHistory ? $"Reading your older data… {health.HistoryProgress:P0}"
+                        : health.HistoryError is { } historyError ? $"Older data {health.HistoryProgress:P0} read, then couldn't read: {historyError}. Tap Sync now to carry on."
+                        : !health.HasReadHistory ? $"Older data {health.HistoryProgress:P0} read: tap Sync now to read the rest"
                         : health.LastSyncedAt is { } at ? $"Up to date · read {Ago(at)}"
                         : "Connected";
                     ActionText = "Sync now";

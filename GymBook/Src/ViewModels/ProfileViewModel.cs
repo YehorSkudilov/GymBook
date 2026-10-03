@@ -67,6 +67,7 @@ public partial class ProfileViewModel(
         sync.StatusChanged += OnSyncChanged;
         store.Changed += OnSyncChanged;
         account.Changed += OnSyncChanged;
+        healthSync.HistoryChanged += OnSyncChanged;
         Refresh();
         return Task.CompletedTask;
     }
@@ -76,6 +77,7 @@ public partial class ProfileViewModel(
         sync.StatusChanged -= OnSyncChanged;
         store.Changed -= OnSyncChanged;
         account.Changed -= OnSyncChanged;
+        healthSync.HistoryChanged -= OnSyncChanged;
     }
 
     void OnSyncChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(Refresh);
@@ -369,10 +371,11 @@ public partial class ProfileViewModel(
             case DeleteHealth:
                 if (!await dialogs.Confirm("Delete health data?",
                         $"Calories burned, steps, and food and body measurements read from Samsung Health or Health Connect are deleted{where}. Food and weights you logged in Gym Book stay."
-                        + (healthSync.IsConnected ? " While connected, the last 30 days are read again." : ""),
+                        + (healthSync.IsConnected ? " While connected, it's all read again." : ""),
                         "Delete health data"))
                     return;
                 store.ResetHealthData();
+                healthSync.ReadHistoryAgain();
                 await healthSync.SyncAsync(force: true);
                 health.Refresh();
                 break;

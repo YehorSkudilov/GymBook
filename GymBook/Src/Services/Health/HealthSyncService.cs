@@ -11,8 +11,25 @@ namespace GymBook.Services.Health;
 /// </summary>
 public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> platforms, HealthWriteBack writeBack)
 {
-    /// <summary>How far back each read goes. Health Connect only shares the last 30 days with an app by default.</summary>
+    /// <summary>How far back each regular read goes (and what's sent back, see <see cref="HealthWriteBack"/>).</summary>
     public const int Days = 30;
+
+    /// <summary>
+    /// Where reading the history stops: once per source on each device (see <see cref="ReadHistoryAsync"/>), everything
+    /// back to here is read, a few months at a time, newest first. Samsung Health (S Health) began in 2012.
+    /// </summary>
+    static readonly DateTime HistoryStart = new(2010, 1, 1);
+
+    const int HistoryChunkDays = 180;
+
+    /// <summary>"source|apps|oldest day read so far (ticks)", so reading the history carries on where it got to.</summary>
+    const string HistoryKey = "health.history";
+
+    /// <summary>
+    /// "source|apps" once its whole history was read on this device. Missing (connected before history was read, a new
+    /// install, deleted health data): the next sync reads it.
+    /// </summary>
+    const string HistoryDoneKey = "health.history.done";
 
     static readonly TimeSpan MinInterval = TimeSpan.FromMinutes(10);
 
@@ -104,13 +121,15 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
     {
         store.Profile.HealthSource = HealthSource.None;
         store.Save();
+        ReadHistoryAgain();
         LastSyncedAt = null;
         LastError = null;
     }
 
     /// <summary>
     /// Reads the last <see cref="Days"/> days and merges them in, at most every few minutes unless <paramref name="force"/>.
-    /// Returns whether anything changed. Call on the UI thread.
+    /// The first time (for this source and apps, on this device), everything older is then read too, in the background
+    /// (<see cref="ReadHistoryAsync"/>). Returns whether anything changed. Call on the UI thread.
     /// </summary>
     public async Task<bool> SyncAsync(bool force = false)
     {
@@ -133,6 +152,7 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
             // Then the other way: what was done in Gym Book, to the health app.
             Watch();
             await MainThread.InvokeOnMainThreadAsync(writeBack.SendAsync);
+            _ = ReadHistoryAsync();
             return changed;
         }
         catch (Exception e)
@@ -143,6 +163,107 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
         finally
         {
             _gate.Release();
+        }
+    }
+
+    /// <summary>The history is being read (in the background, after a sync).</summary>
+    public bool IsReadingHistory { get; private set; }
+
+    /// <summary>How much of the history was read, 0 to 1 (by time, back to <see cref="HistoryStart"/>); 1 once done.</summary>
+    public double HistoryProgress
+    {
+        get
+        {
+            if (HasReadHistory)
+                return 1;
+            var oldest = HistoryOldest(HistorySignature) ?? DateTime.Today.AddDays(1 - Days);
+            var span = (DateTime.Today - HistoryStart).TotalDays;
+            return span <= 0 ? 1 : Math.Clamp((DateTime.Today - oldest).TotalDays / span, 0, 1);
+        }
+    }
+
+    /// <summary>Why reading the history stopped short, or null. Kept until it's tried again (the next sync).</summary>
+    public string? HistoryError { get; private set; }
+
+    /// <summary>Reading the history started, got further, finished or failed. Raised on the UI thread.</summary>
+    public event EventHandler? HistoryChanged;
+
+    void OnHistoryChanged() => MainThread.BeginInvokeOnMainThread(() => HistoryChanged?.Invoke(this, EventArgs.Empty));
+
+    /// <summary>The oldest day read so far for <paramref name="signature"/>, or null when its history wasn't started.</summary>
+    static DateTime? HistoryOldest(string signature)
+    {
+        var saved = Preferences.Default.Get(HistoryKey, "");
+        return saved.StartsWith(signature + "|", StringComparison.Ordinal) && long.TryParse(saved[(signature.Length + 1)..], out var ticks)
+            ? new DateTime(ticks)
+            : null;
+    }
+
+    /// <summary>The whole history of the source and apps read now was read on this device.</summary>
+    public bool HasReadHistory => Preferences.Default.Get(HistoryDoneKey, "") == HistorySignature;
+
+    /// <summary>The next sync reads the whole history again (after the health data was deleted, say).</summary>
+    public void ReadHistoryAgain()
+    {
+        Preferences.Default.Remove(HistoryKey);
+        Preferences.Default.Remove(HistoryDoneKey);
+        HistoryError = null;
+    }
+
+    string HistorySignature => $"{store.Profile.HealthSource}|{string.Join(",", Apps ?? [])}";
+
+    /// <summary>
+    /// Everything older than the regular read, back to <see cref="HistoryStart"/>: a chunk of a few months at a time,
+    /// newest first, each merged in as it comes, and where it got to remembered, so a read that's cut short (the app
+    /// closed, a failed read) carries on from there next time. A different source or apps starts again.
+    /// </summary>
+    async Task ReadHistoryAsync()
+    {
+        if (IsReadingHistory || HasReadHistory)
+            return;
+        IsReadingHistory = true;
+        HistoryError = null;
+        OnHistoryChanged();
+        try
+        {
+            var signature = HistorySignature;
+            var oldest = HistoryOldest(signature) ?? DateTime.Today.AddDays(1 - Days);
+            while (oldest > HistoryStart)
+            {
+                await _gate.WaitAsync();
+                try
+                {
+                    // Disconnected, or another source or apps chosen, meanwhile: that one reads its own.
+                    if (!IsConnected || HistorySignature != signature)
+                        return;
+                    var to = oldest;
+                    var from = to.AddDays(-HistoryChunkDays) > HistoryStart ? to.AddDays(-HistoryChunkDays) : HistoryStart;
+                    var name = SourceName;
+                    var result = await Platform.ReadAsync(from, to, Apps);
+                    // Not the height: the profile follows the latest, which the regular read has.
+                    await MainThread.InvokeOnMainThreadAsync(() => Apply(result with { HeightCm = null }, name) | ApplyFoods(result.Foods, from, to));
+                    oldest = from;
+                    Preferences.Default.Set(HistoryKey, $"{signature}|{oldest.Ticks}");
+                    OnHistoryChanged();
+                }
+                finally
+                {
+                    _gate.Release();
+                }
+            }
+            // Only once every chunk was read: until then each sync carries on with it.
+            Preferences.Default.Set(HistoryDoneKey, signature);
+            Preferences.Default.Remove(HistoryKey);
+        }
+        catch (Exception e)
+        {
+            // Not marked done: the next sync carries on from where it got to.
+            HistoryError = e.Message;
+        }
+        finally
+        {
+            IsReadingHistory = false;
+            OnHistoryChanged();
         }
     }
 
