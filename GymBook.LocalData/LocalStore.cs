@@ -305,9 +305,14 @@ public sealed class LocalStore
         }
     }
 
-    /// <summary>Finished sessions plus the workout in progress: every session record that's stored and synced.</summary>
-    static List<WorkoutSession> WithActive(AppData data) =>
-        data.ActiveSession is { } active && data.Sessions.All(s => s.Id != active.Id) ? [.. data.Sessions, active] : [.. data.Sessions];
+    /// <summary>Finished and paused sessions plus the workout in progress: every session record that's stored and synced.</summary>
+    static List<WorkoutSession> WithActive(AppData data)
+    {
+        List<WorkoutSession> all = [.. data.Sessions, .. data.PausedSessions.Where(p => data.Sessions.All(s => s.Id != p.Id))];
+        if (data.ActiveSession is { } active && all.All(s => s.Id != active.Id))
+            all.Add(active);
+        return all;
+    }
 
     /// <summary>
     /// Sorts <paramref name="all"/> into the finished sessions and the workout in progress. The one already in progress
@@ -316,9 +321,11 @@ public sealed class LocalStore
     /// </summary>
     static void SplitActive(AppData data, List<WorkoutSession> all)
     {
-        var running = all.Where(s => s.EndedAt == null).OrderByDescending(s => s.StartedAt).ToList();
+        var running = all.Where(s => s.EndedAt == null && s.PausedAt == null).OrderByDescending(s => s.StartedAt).ToList();
         data.Sessions.Clear();
         data.Sessions.AddRange(all.Where(s => s.EndedAt != null));
+        data.PausedSessions.Clear();
+        data.PausedSessions.AddRange(all.Where(s => s.IsPaused).OrderByDescending(s => s.PausedAt));
         var current = running.FirstOrDefault(s => s.Id == data.ActiveSession?.Id) ?? running.FirstOrDefault();
         data.ActiveSession = current;
         foreach (var other in running.Where(s => s != current))

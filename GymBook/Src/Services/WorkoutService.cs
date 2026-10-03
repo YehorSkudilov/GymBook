@@ -111,14 +111,7 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         session.EndedAt = DateTime.Now;
         // A rest still running ends with the workout.
         SetTimes.EndRest(session, session.EndedAt.Value);
-        foreach (var e in session.Exercises)
-        {
-            // Sets not done by the end count as skipped, for the finished workout and the exercise's history.
-            e.SkippedWarmups += e.Sets.Count(s => s.IsWarmup && !s.IsCompleted);
-            e.SkippedSets += e.Sets.Count(s => !s.IsWarmup && !s.IsCompleted);
-            e.Sets.RemoveAll(s => !s.IsCompleted);
-        }
-        session.Exercises.RemoveAll(e => e.Sets.Count == 0);
+        Settle(session);
 
         store.Data.ActiveSession = null;
         if (session.Exercises.Count > 0)
@@ -128,6 +121,51 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         }
         store.Save();
         return session.Exercises.Count > 0 ? session : null;
+    }
+
+    /// <summary>
+    /// A workout as it's kept once finished: sets not done count as skipped (for the finished workout and the exercise's
+    /// history) and are left out, as are exercises with nothing left. Undone by <see cref="Unsettle"/>.
+    /// </summary>
+    public static void Settle(WorkoutSession session)
+    {
+        foreach (var e in session.Exercises)
+        {
+            e.SkippedWarmups += e.Sets.Count(s => s.IsWarmup && !s.IsCompleted);
+            e.SkippedSets += e.Sets.Count(s => !s.IsWarmup && !s.IsCompleted);
+            e.Sets.RemoveAll(s => !s.IsCompleted);
+        }
+        session.Exercises.RemoveAll(e => e.Sets.Count == 0);
+    }
+
+    /// <summary>
+    /// A finished workout opened as a workout again (to change it, or to carry on with it): each set it counted as
+    /// skipped is back as a skipped set, like the one before it of its kind, so it can be done after all.
+    /// </summary>
+    public static void Unsettle(WorkoutSession session)
+    {
+        foreach (var e in session.Exercises)
+        {
+            AddSkipped(e, warmup: true, e.SkippedWarmups);
+            AddSkipped(e, warmup: false, e.SkippedSets);
+            (e.SkippedWarmups, e.SkippedSets) = (0, 0);
+        }
+
+        static void AddSkipped(SessionExercise e, bool warmup, int count)
+        {
+            var like = e.Sets.LastOrDefault(s => s.IsWarmup == warmup) ?? e.Sets.LastOrDefault();
+            // Warm-ups first, then the working sets.
+            var at = warmup ? e.Sets.FindLastIndex(s => s.IsWarmup) + 1 : e.Sets.Count;
+            for (var i = 0; i < count; i++)
+                e.Sets.Insert(at + i, new SetEntry
+                {
+                    WeightKg = like?.WeightKg ?? 0,
+                    Reps = like?.Reps ?? e.RepMin,
+                    Rir = warmup ? null : like?.Rir,
+                    IsWarmup = warmup,
+                    IsSkipped = true,
+                });
+        }
     }
 
     void AdvancePlan(WorkoutSession session)
@@ -144,6 +182,51 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
     {
         store.Data.ActiveSession = null;
         store.Save();
+    }
+
+    /// <summary>
+    /// Puts the workout in progress aside, unfinished: everything logged stays, it stops being the workout in progress,
+    /// and it doesn't count as done until it's resumed and finished.
+    /// </summary>
+    public WorkoutSession? Pause()
+    {
+        var session = Active;
+        if (session == null)
+            return null;
+        session.PausedAt = DateTime.Now;
+        // A rest still running stops with it.
+        SetTimes.EndRest(session, session.PausedAt.Value);
+        store.Data.ActiveSession = null;
+        store.Data.PausedSessions.RemoveAll(s => s.Id == session.Id);
+        store.Data.PausedSessions.Insert(0, session);
+        store.Save();
+        return session;
+    }
+
+    /// <summary>
+    /// Makes <paramref name="session"/> (paused or finished) the workout in progress again. Its times move up to now, so
+    /// the clock carries on from where it stopped rather than counting the time it was put aside. A workout already in
+    /// progress is paused first.
+    /// </summary>
+    public WorkoutSession Resume(WorkoutSession session)
+    {
+        if (Active is { } current && current.Id != session.Id)
+            Pause();
+        var now = DateTime.Now;
+        var stoppedAt = session.EndedAt ?? session.PausedAt ?? now;
+        if (stoppedAt < now)
+            SetTimes.Shift(session, now - stoppedAt);
+        if (session.EndedAt != null)
+        {
+            Unsettle(session);
+            session.EndedAt = null;
+            // Tells the server this is on purpose, not a stale copy from before the finish.
+            session.ReopenedAt = now;
+        }
+        session.PausedAt = null;
+        store.Data.Sessions.RemoveAll(s => s.Id == session.Id);
+        store.Data.PausedSessions.RemoveAll(s => s.Id == session.Id);
+        return Begin(session);
     }
 
     /// <summary>

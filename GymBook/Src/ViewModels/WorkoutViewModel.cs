@@ -6,6 +6,10 @@ using GymBook.Services;
 
 namespace GymBook.ViewModels;
 
+/// <summary>
+/// The workout in progress, or a finished one opened again (?session=, see <see cref="IsReviewing"/>) to change what was
+/// logged: the same view, without the clock, rests or notification.
+/// </summary>
 public partial class WorkoutViewModel(
     DataStore store,
     WorkoutService workouts,
@@ -15,8 +19,21 @@ public partial class WorkoutViewModel(
     ExercisePickerService picker,
     WatchLink watch,
     IWorkoutNotifier notifier,
-    WorkoutEstimator estimator) : BaseViewModel
+    WorkoutEstimator estimator) : BaseViewModel, IQueryAttributable
 {
+    /// <summary>The finished workout opened (?session=), rather than the one in progress.</summary>
+    string? _reviewId;
+
+    /// <summary>
+    /// A finished workout is open, not the one in progress: no clock, rest or set timer, and ticking a set just logs it.
+    /// Every change is saved as it's made. Its ··· has its start, length, renaming, resuming it and deleting it.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTimingSet))]
+    bool isReviewing;
+
+    public void ApplyQueryAttributes(IDictionary<string, object> query) =>
+        _reviewId = query.TryGetValue("session", out var id) ? id?.ToString() : null;
     /// <summary>The user's pace from their recent workouts, for the time left (worked out once per workout).</summary>
     WorkoutEstimator.LivePace? _pace;
     /// <summary>When the set under way began, while not resting (for the time left).</summary>
@@ -66,7 +83,7 @@ public partial class WorkoutViewModel(
     /// <summary>The "finish now?" popup was offered for this run of all sets done; it comes again only after they're all done again.</summary>
     bool _offeredFinish;
 
-    public bool IsTimingSet => !IsResting && !IsEmpty && !AllSetsDone;
+    public bool IsTimingSet => !IsResting && !IsEmpty && !AllSetsDone && !IsReviewing;
 
     /// <summary>The exercise on screen; the page and the photo strip both follow it.</summary>
     [ObservableProperty] int currentIndex;
@@ -178,7 +195,7 @@ public partial class WorkoutViewModel(
             _saveTimer.IsRepeating = false;
             _saveTimer.Tick += (_, _) =>
             {
-                if (_session != null && workouts.Active == _session)
+                if (_session != null && (workouts.Active == _session || IsReviewing))
                     workouts.Save();
             };
         }
@@ -199,6 +216,18 @@ public partial class WorkoutViewModel(
             catch (Exception)
             {
             }
+        }
+        // A finished workout opened again: shown as it was, until it's resumed (then it's the workout in progress).
+        if (_reviewId != null && workouts.Active?.Id != _reviewId)
+        {
+            await ShowFinishedAsync(_reviewId);
+            return;
+        }
+        if (_reviewId != null)
+        {
+            _reviewId = null;
+            IsReviewing = false;
+            _session = null;
         }
         var active = workouts.Active;
         if (active == null)
@@ -244,8 +273,72 @@ public partial class WorkoutViewModel(
         watch.LiveEnded = EndedFromWatch;
     }
 
+    /// <summary>Opens the finished workout <paramref name="id"/> for changing; closes when it's gone (deleted meanwhile).</summary>
+    async Task ShowFinishedAsync(string id)
+    {
+        var session = store.Data.Sessions.FirstOrDefault(s => s.Id == id);
+        if (session == null)
+        {
+            await GoBack();
+            return;
+        }
+        IsReviewing = true;
+        if (_session != session)
+        {
+            _session = session;
+            // Its skipped sets come back as skipped rows, so they can be logged after all; leaving counts them again.
+            WorkoutService.Unsettle(session);
+            Name = session.Name;
+            Exercises.Clear();
+            foreach (var se in session.Exercises)
+                AddExerciseVm(se);
+            IsEmpty = Exercises.Count == 0;
+            CurrentIndex = 0;
+            OnCurrentIndexChanged(CurrentIndex);
+            AllSetsDone = !IsEmpty && NextSet() == null;
+            _offeredFinish = true;
+            IsResting = false;
+        }
+        OnPropertyChanged(nameof(UnitLabel));
+        OnPropertyChanged(nameof(TrackRir));
+        UpdateProgress();
+        Tick();
+    }
+
+    /// <summary>The header of a finished workout: how long it took, and when.</summary>
+    void ShowFinishedTimes()
+    {
+        if (_session is not { } session)
+            return;
+        Elapsed = Units.Clock(session.Duration);
+        var start = session.StartedAt;
+        var day = start.Date == DateTime.Today ? "Today" : start.Date == DateTime.Today.AddDays(-1) ? "Yesterday" : $"{start:ddd d MMM}";
+        EstimateText = session.EndedAt is { } end ? $"{day} · {start:t}–{end:t}" : $"{day} · {start:t}";
+    }
+
+    /// <summary>When a set ticked now counts as done: now, or for a finished workout, when it ended (it can't be later).</summary>
+    internal DateTime Now => IsReviewing && _session?.EndedAt is { } end ? end : DateTime.Now;
+
+    /// <summary>The page is still open under another one (a sheet over it), rather than closed.</summary>
+    bool IsStillOpen()
+    {
+        var navigation = Shell.Current?.Navigation;
+        return navigation != null && navigation.ModalStack.Concat(navigation.NavigationStack).Any(p => p?.BindingContext == this);
+    }
+
     public override void OnDisappearing()
     {
+        if (IsReviewing)
+        {
+            _saveTimer?.Stop();
+            // Closed: what wasn't done counts as skipped again, as when it was finished. Not while a sheet is over it, nor
+            // with nothing done at all (that would leave nothing of it).
+            if (_session is { } session && !IsStillOpen() && store.Data.Sessions.Contains(session)
+                && session.Exercises.Any(e => e.Sets.Any(s => s.IsCompleted)))
+                WorkoutService.Settle(session);
+            store.Save();
+            return;
+        }
         _timer?.Stop();
         if (watch.LiveCompleteSet == (Func<SetEntry, double?, int?, bool>)CompleteFromWatch)
             watch.LiveCompleteSet = null;
@@ -287,6 +380,11 @@ public partial class WorkoutViewModel(
 
     void Tick()
     {
+        if (IsReviewing)
+        {
+            ShowFinishedTimes();
+            return;
+        }
         var now = DateTime.Now;
         if (_session != null)
             Elapsed = Units.Clock(now - _session.StartedAt);
@@ -484,13 +582,13 @@ public partial class WorkoutViewModel(
     internal void OnSetToggled(WorkoutExerciseViewModel exercise, SetRowViewModel set)
     {
         // When it began and ended (the rest before it, if still going, ends now), and the rest after it starts: every set
-        // done is followed by one, until the next set is started.
+        // done is followed by one, until the next set is started. Not in a finished workout: it's only logged.
         if (_session != null && set.IsCompleted)
         {
-            var now = set.Model.CompletedAt ?? DateTime.Now;
+            var now = set.Model.CompletedAt ?? Now;
             SetTimes.Complete(_session, set.Model, now);
             // The last set: no rest after it, the workout's done.
-            if (NextSet() != null)
+            if (NextSet() != null && !IsReviewing)
             {
                 var seconds = set.Model.IsWarmup ? Warmups.RestSeconds : exercise.Model.RestSeconds;
                 SetTimes.StartRest(_session, set.Model, now, now.AddSeconds(Math.Max(0, seconds)));
@@ -505,7 +603,7 @@ public partial class WorkoutViewModel(
         UpdateProgress();
         Tick();
         OfferFinishWhenDone();
-        if (set.IsCompleted && !set.Model.IsWarmup && exercise.IsDone)
+        if (set.IsCompleted && !set.Model.IsWarmup && exercise.IsDone && !IsReviewing)
             ExerciseFinished?.Invoke(exercise, CanFinish);
         // Its last set done: move straight on to the next exercise (the rest timer keeps running over it).
         if (set.IsCompleted && exercise.IsDone && Exercises.IndexOf(exercise) == CurrentIndex)
@@ -584,7 +682,7 @@ public partial class WorkoutViewModel(
         var done = planned.Count(s => s.IsCompleted);
         ProgressText = $"{done}/{planned.Count} sets";
         Progress = planned.Count == 0 ? 0 : (double)done / planned.Count;
-        CanFinish = sets.Count > 0 && sets.All(s => s.IsSettled);
+        CanFinish = !IsReviewing && sets.Count > 0 && sets.All(s => s.IsSettled);
     }
 
     /// <summary>−15 / +15 on the rest: moves when it's due. Taking it back above zero makes it say "rest over" again when it gets there.</summary>
@@ -630,6 +728,7 @@ public partial class WorkoutViewModel(
     Task WorkoutMenu() => GoTo(Routes.WorkoutMenu, new Dictionary<string, object> { ["workout"] = this });
 
     internal DateTime? StartedAt => _session?.StartedAt;
+    internal string? PlanId => _session?.PlanId;
 
     /// <summary>
     /// Moves the workout's start to <paramref name="start"/>, and every time logged in it with it (a running rest too).
@@ -766,6 +865,69 @@ public partial class WorkoutViewModel(
         _session = null;
         await GoBack();
     }
+
+    /// <summary>
+    /// Puts the workout aside unfinished: everything logged stays, and it's resumed from the Workout tab (or a finished
+    /// workout's sheet) when it suits. Another workout can be started meanwhile.
+    /// </summary>
+    [RelayCommand]
+    async Task Pause()
+    {
+        if (_session == null || IsReviewing)
+            return;
+        IsResting = false;
+        _finishing = true;
+        workouts.Pause();
+        _session = null;
+        notifier.Clear();
+        await GoBack();
+    }
+
+    /// <summary>
+    /// The finished workout on show becomes the workout in progress again: its clock carries on from where it ended,
+    /// with rests and the set timer. A workout already in progress is paused for it (after asking).
+    /// </summary>
+    [RelayCommand]
+    async Task Resume()
+    {
+        if (_session is not { } session || !IsReviewing)
+            return;
+        if (workouts.Active is { } current && !await dialogs.Confirm($"Pause \"{current.Name}\"?",
+                "It's still in progress. It's paused, with everything logged in it, and can be resumed from the Workout tab.", "Pause and resume this"))
+            return;
+        workouts.Resume(session);
+        // Shown again as the workout in progress.
+        await OnAppearingAsync();
+    }
+
+    /// <summary>The finished workout on show is removed from the history (it can be brought back from Recently deleted).</summary>
+    [RelayCommand]
+    async Task Delete()
+    {
+        if (_session is not { } session || !IsReviewing
+            || !await dialogs.Confirm("Delete workout?", "It's removed from your history and statistics. It can be brought back from Recently deleted for a while.", "Delete"))
+            return;
+        store.Data.Sessions.Remove(session);
+        store.CompactPlanWeeks();
+        store.Save();
+        await GoBack();
+    }
+
+    /// <summary>How long a finished workout took, in minutes: its end moves, its start stays. Null when done, else why not.</summary>
+    internal string? ChangeLength(int minutes)
+    {
+        if (_session is not { EndedAt: not null } session)
+            return null;
+        var end = session.StartedAt.AddMinutes(minutes);
+        if (end > DateTime.Now)
+            return "The workout would end in the future. Pick fewer minutes, or an earlier start time.";
+        session.EndedAt = end;
+        store.Save();
+        Tick();
+        return null;
+    }
+
+    internal TimeSpan? Length => _session?.EndedAt is { } end ? end - _session.StartedAt : null;
 
     [RelayCommand]
     Task Minimize() => GoBack();
@@ -980,7 +1142,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     /// </summary>
     internal async Task ToggleAsync(SetRowViewModel row)
     {
-        var now = DateTime.Now;
+        var now = _parent.Now;
         if (!row.IsCompleted)
         {
             if (row.Model.Reps <= 0)

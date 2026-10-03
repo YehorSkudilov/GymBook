@@ -29,9 +29,11 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock)
         // A finished workout is never undone by a copy of it from before it was finished: a device that missed the finish
         // (a watch out of sync, say) still has it in progress, and discarding or carrying on with that copy would replace
         // the finished workout, or delete it, everywhere. Deleting a finished workout from the history (a tombstone with
-        // its end) still goes through. The device gets the finished one back.
+        // its end) still goes through. The device gets the finished one back. A workout reopened on purpose after it was
+        // finished (Resume) carries when that was, so it goes through.
         wrote |= await UpsertAsync(db.Sessions, changes.Sessions, (to, from) => to.Exercises = from.Exercises, rejected.Sessions,
-            keep: (current, item) => current is { IsDeleted: false, EndedAt: not null } && item.EndedAt == null);
+            keep: (current, item) => current is { IsDeleted: false, EndedAt: not null } && item.EndedAt == null
+                && !(item.ReopenedAt > current.EndedAt));
         wrote |= await UpsertAsync(db.CustomExercises, changes.CustomExercises, (to, from) => to.SecondaryMuscles = from.SecondaryMuscles, rejected.CustomExercises);
         wrote |= await UpsertAsync(db.BodyWeights, changes.BodyWeights, (_, _) => { }, rejected.BodyWeights);
         wrote |= await UpsertAsync(db.FoodEntries, changes.FoodEntries, (_, _) => { }, rejected.FoodEntries);
