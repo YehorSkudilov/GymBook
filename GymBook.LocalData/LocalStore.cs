@@ -100,6 +100,20 @@ public sealed class LocalStore
         Save();
     }
 
+    /// <summary>
+    /// The workouts that were deleted (here, or on another device and synced), as they were when deleted, most recently
+    /// deleted first. A deletion keeps the record as a tombstone so the deletion can sync, which also means it can be
+    /// brought back: put it in <see cref="AppData.Sessions"/> again and save.
+    /// </summary>
+    public List<WorkoutSession> DeletedSessions()
+    {
+        lock (_gate)
+        {
+            using var db = NewDb();
+            return [.. db.Sessions.AsNoTracking().Where(s => s.IsDeleted).AsEnumerable().OrderByDescending(s => s.UpdatedAt)];
+        }
+    }
+
     /// <summary>Removes all data from this device only (sign-out). Nothing is sent to the server.</summary>
     public void WipeDevice()
     {
