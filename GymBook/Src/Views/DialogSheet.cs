@@ -853,12 +853,20 @@ public class DialogSheet : SheetPage
         return true;
     }
 
-    // Closed some other way (e.g. the page under it navigated away): treat it as cancelled.
+    // Closed some other way (e.g. the page under it navigated away): treat it as cancelled. Not when it's only covered
+    // by a sheet opened from it (the number pad, tapping a number): it's still open underneath, and cancelling it then
+    // left it on screen with Save and Cancel doing nothing, no way out.
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        if (_choice == null)
+        if (_choice == null && !IsStillOpen())
             _result.TrySetResult(null);
+    }
+
+    bool IsStillOpen()
+    {
+        var navigation = Shell.Current?.Navigation ?? Application.Current?.Windows.FirstOrDefault()?.Page?.Navigation;
+        return navigation?.ModalStack.Contains(this) == true;
     }
 
     static async Task<string?> Show(DialogSheet sheet)
