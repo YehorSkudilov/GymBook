@@ -111,6 +111,10 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     public void Start(bool onboarding)
     {
         IsOnboarding = onboarding;
+        // Signing in from the welcome screen without a finished profile stays here: the link goes.
+        if (onboarding)
+            IPlatformApplication.Current!.Services.GetRequiredService<GymBook.Services.Sync.AccountService>().Changed +=
+                (_, _) => MainThread.BeginInvokeOnMainThread(UpdateShowSignIn);
         // Ready by the last steps, so a used-up quota skips straight to the signature programs.
         _ = ai.RefreshQuotaAsync();
         var p = store.Profile;
@@ -177,6 +181,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         Progress = (_index + 1.0) / _steps.Count;
         CanGoBack = _index > 0;
         IsWelcome = step == Step.Welcome;
+        UpdateShowSignIn();
         IsAbout = step == Step.About;
         IsQuestions = step == Step.Questions;
         IsResult = step == Step.Result;
@@ -525,7 +530,20 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             _index++;
         while (_index < _steps.Count - 1 && Skipped(_steps[_index]));
         Show();
+        // Past the welcome screen, which holds the account back: a new user makes one.
+        if (step == Step.Welcome)
+            _ = Views.SignInGate.AskAsync(IPlatformApplication.Current!.Services, register: true);
     }
+
+    /// <summary>On the welcome screen: someone coming back signs in, which can skip the wizard (see <see cref="App.ShowMainShellIfOnboarded"/>).</summary>
+    [RelayCommand]
+    Task SignIn() => Views.SignInGate.AskAsync(IPlatformApplication.Current!.Services, register: false);
+
+    /// <summary>The welcome screen's "I already have an account", while there's no account on the device.</summary>
+    [ObservableProperty] bool showSignIn;
+
+    void UpdateShowSignIn() =>
+        ShowSignIn = IsWelcome && !IPlatformApplication.Current!.Services.GetRequiredService<GymBook.Services.Sync.AccountService>().IsSignedIn;
 
     [RelayCommand]
     async Task Back()

@@ -171,11 +171,9 @@
                                 <HorizontalStackLayout.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding SkipNextCommand}" />
                                 </HorizontalStackLayout.GestureRecognizers>
-                                <Image WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="skip_next" Color="{StaticResource TextPrimary}" Size="18" />
-                                    </Image.Source>
-                                </Image>
+                                <!-- The glyph as text, not a FontImageSource: Windows draws that as a small bitmap, soft and off-centre. -->
+                                <Label Text="skip_next" FontFamily="OutlinedIcons" FontSize="20" TextColor="{StaticResource TextPrimary}"
+                                       VerticalOptions="Center" VerticalTextAlignment="Center" />
                                 <Label Text="Skip" FontSize="14" FontFamily="OpenSansSemibold" TextColor="{StaticResource TextPrimary}" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </skeleton:AcrylicView>

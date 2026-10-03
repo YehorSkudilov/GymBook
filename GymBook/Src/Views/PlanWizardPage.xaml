@@ -244,6 +244,9 @@
 
         <VerticalStackLayout Grid.Row="2" Spacing="6">
             <Button Text="{Binding NextText}" Style="{StaticResource PrimaryButton}" Command="{Binding NextCommand}"
-                    IsEnabled="{Binding IsGenerating, Converter={StaticResource Not}}" />        </VerticalStackLayout>
+                    IsEnabled="{Binding IsGenerating, Converter={StaticResource Not}}" />
+            <Button Text="I already have an account" Style="{StaticResource GhostButton}" Command="{Binding SignInCommand}"
+                    HorizontalOptions="Center" IsVisible="{Binding ShowSignIn}" />
+        </VerticalStackLayout>
     </Grid>
 </views:BasePage>
