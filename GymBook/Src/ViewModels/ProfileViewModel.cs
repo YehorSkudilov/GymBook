@@ -380,6 +380,29 @@ public partial class ProfileViewModel(
                 health.Refresh();
                 break;
             case DeleteHistory:
+                // Everything, or one plan's workouts (that plan starts over).
+                var plans = store.Data.Plans.Where(p => store.History.Any(h => h.PlanId == p.Id)).ToList();
+                var plan = (WorkoutPlan?)null;
+                if (plans.Count > 0)
+                {
+                    const string all = "Every workout";
+                    // Numbered so plans with the same name stay distinguishable.
+                    var labels = plans.Select((p, i) => $"{i + 1}. {p.Name}").ToList();
+                    var pick = await dialogs.ActionSheet("Delete workouts of", null, [all, .. labels]);
+                    if (pick == null)
+                        return;
+                    plan = pick == all ? null : plans[labels.IndexOf(pick)];
+                }
+                if (plan != null)
+                {
+                    var count = store.History.Count(h => h.PlanId == plan.Id);
+                    if (!await dialogs.Confirm($"Delete {plan.Name}'s workouts?",
+                            $"{(count == 1 ? "Its workout is" : $"Its {count} workouts are")} deleted{where}, and the plan starts again from week 1 with its rest days and skips unmarked. Other workouts and the plan itself stay.",
+                            "Delete workouts"))
+                        return;
+                    store.ResetPlanHistory(plan);
+                    break;
+                }
                 if (!await dialogs.Confirm("Delete workout history?",
                         $"Every finished workout is deleted{where}. Plans stay and start again from their first workout.", "Delete history"))
                     return;

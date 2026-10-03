@@ -63,6 +63,20 @@ public class DataStore
         Save();
     }
 
+    /// <summary>
+    /// Starts <paramref name="plan"/> over: its finished workouts are deleted (from the calendar, History and stats too;
+    /// a workout in progress stays), its rest days and skips unmarked, and it begins again from its first workout and
+    /// week. The plan itself stays as it is. Syncs like any deletion.
+    /// </summary>
+    public void ResetPlanHistory(WorkoutPlan plan)
+    {
+        Data.Sessions.RemoveAll(s => s.EndedAt != null && s.PlanId == plan.Id);
+        plan.RestDaysDone = null;
+        plan.NextWorkoutIndex = 0;
+        CompactPlanWeeks();
+        Save();
+    }
+
     /// <summary>Deletes every plan. Workouts done with them stay in the history.</summary>
     public void ResetPlans()
     {

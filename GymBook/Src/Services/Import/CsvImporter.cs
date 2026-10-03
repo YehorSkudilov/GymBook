@@ -110,11 +110,25 @@ public class CsvImporter(DataStore store, AiPlanService ai)
         return added;
     }
 
+    /// <summary>The plans in the app, to import workouts for one of them.</summary>
+    public List<WorkoutPlan> Plans => [.. store.Data.Plans.Where(p => !p.IsDeleted)];
+
+    /// <summary>
+    /// The day of <paramref name="plan"/> a workout from the file was: the one with its name, else (when the file says it
+    /// was this plan) its day number, which counts rest days too ("Day 5" of Push, Rest, Pull… is the plan's fifth day).
+    /// </summary>
+    public static PlanWorkout? DayIn(WorkoutPlan plan, ImportedWorkout source) =>
+        plan.Workouts.FirstOrDefault(w => w.Name.Equals(source.Name, StringComparison.OrdinalIgnoreCase))
+        ?? (source.Day is { } d && source.PlanName?.Equals(plan.Name, StringComparison.OrdinalIgnoreCase) == true
+            ? PlanSchedule.Days(plan).ElementAtOrDefault(d - 1)
+            : null);
+
     /// <summary>
     /// Adds the workouts not already in the app (by name and start time), linked to their plan, day and week when the
-    /// plan is in the app (import the plans first for that).
+    /// plan is in the app (import the plans first for that). With <paramref name="only"/>, just the workouts that match
+    /// one of its days (see <see cref="DayIn"/>), whatever plan the file says, each linked to it.
     /// </summary>
-    public int ImportWorkouts(List<ImportedWorkout> workouts, List<ExerciseMapping> mappings)
+    public int ImportWorkouts(List<ImportedWorkout> workouts, List<ExerciseMapping> mappings, WorkoutPlan? only = null)
     {
         var resolve = Resolver(mappings);
         var added = 0;
@@ -122,14 +136,14 @@ public class CsvImporter(DataStore store, AiPlanService ai)
         {
             if (store.Data.Sessions.Any(s => !s.IsDeleted && s.Name == source.Name && Math.Abs((s.StartedAt - source.StartedAt).TotalMinutes) < 1))
                 continue;
-            var plan = source.PlanName == null ? null : store.Data.Plans
+            var plan = only ?? (source.PlanName == null ? null : store.Data.Plans
                 .Where(p => !p.IsDeleted && p.Name.Equals(source.PlanName, StringComparison.OrdinalIgnoreCase))
                 .OrderByDescending(p => p.CreatedAt <= source.StartedAt)
                 .ThenByDescending(p => p.CreatedAt)
-                .FirstOrDefault();
-            // By name, else by its day number, which counts rest days too ("Day 5" of Push, Rest, Pull… is the plan's fifth day).
-            var planWorkout = plan?.Workouts.FirstOrDefault(w => w.Name.Equals(source.Name, StringComparison.OrdinalIgnoreCase))
-                ?? (source.Day is { } d && plan != null ? PlanSchedule.Days(plan).ElementAtOrDefault(d - 1) : null);
+                .FirstOrDefault());
+            var planWorkout = plan == null ? null : DayIn(plan, source);
+            if (only != null && planWorkout == null)
+                continue;
             var session = new WorkoutSession
             {
                 Name = source.Name,
