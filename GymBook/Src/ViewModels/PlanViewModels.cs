@@ -334,6 +334,8 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     [ObservableProperty] bool hasActivePlan;
     [ObservableProperty] List<PlanItem> otherPlans = [];
     [ObservableProperty] bool hasOtherPlans;
+    /// <summary>Beside the title: the finished workouts linked to no plan, with how many.</summary>
+    [ObservableProperty] string unlinkedText = "Unlinked workouts";
 
     /// <summary>The Plans tab is the one on screen: the active plan card animates only then.</summary>
     [ObservableProperty] bool isShowing;
@@ -373,6 +375,8 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
         HasActivePlan = ActivePlan != null;
         OtherPlans = items.Where(i => !i.IsActive).ToList();
         HasOtherPlans = OtherPlans.Count > 0;
+        var unlinked = store.History.Count(s => store.GetPlan(s.PlanId) == null);
+        UnlinkedText = unlinked > 0 ? $"Unlinked workouts ({unlinked})" : "Unlinked workouts";
         ShowQuota();
         _ = RefreshQuotaAsync();
         return Task.CompletedTask;
@@ -387,6 +391,10 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     }
 
     void ShowQuota() => AiQuotaText = !ai.IsAvailable ? "" : ai.Quota is { } q ? AiPlanService.Describe(q) : "";
+
+    /// <summary>The finished workouts linked to no plan (never, or their plan was deleted), to link or delete them.</summary>
+    [RelayCommand]
+    Task OpenUnlinked() => GoTo($"{Routes.PlanWorkouts}?plan=none");
 
     [RelayCommand]
     Task Generate() => GoTo(Routes.Wizard);
