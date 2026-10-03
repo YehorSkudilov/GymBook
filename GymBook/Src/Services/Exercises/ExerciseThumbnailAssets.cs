@@ -1,4 +1,4 @@
-// Generated from Resources/Raw/exercises by tools/exercises/sync-thumbnail-manifest.mjs.
+// Generated from Resources/Raw/exercises by tools/exercises/thumbs.mjs.
 namespace GymBook.Services;
 
 public static class ExerciseThumbnailAssets
