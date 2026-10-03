@@ -25,6 +25,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(Routes.Food, typeof(FoodEntryPage));
         Routing.RegisterRoute(Routes.NutritionGoals, typeof(NutritionGoalsPage));
         Routing.RegisterRoute(Routes.ExerciseLibrary, typeof(ExerciseLibraryPage));
+        Routing.RegisterRoute(Routes.PlanWorkouts, typeof(PlanWorkoutsPage));
     }
 }
 
@@ -48,4 +49,5 @@ public static class Routes
     public const string Food = "food";
     public const string NutritionGoals = "nutritiongoals";
     public const string ExerciseLibrary = "exerciselibrary";
+    public const string PlanWorkouts = "planworkouts";
 }

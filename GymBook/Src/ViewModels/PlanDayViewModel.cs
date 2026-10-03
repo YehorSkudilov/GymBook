@@ -107,6 +107,9 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
 
     [ObservableProperty] string dayName = "";
     [ObservableProperty] string subtitle = "";
+    /// <summary>A finished workout: the plan it's linked to (tap to change), or that it's linked to none.</summary>
+    [ObservableProperty] string planLink = "";
+    [ObservableProperty] Color planLinkColor = Colors.Transparent;
     [ObservableProperty] string meta = "";
     [ObservableProperty] string when = "";
     [ObservableProperty] bool hasWhen;
@@ -142,6 +145,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
 
         var workout = progress.Days[_day];
         HasStats = false;
+        PlanLink = "";
         _finished = null;
         CanDiscard = false;
         CanEdit = false;
@@ -206,12 +210,22 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     {
         var plan = store.GetPlan(session.PlanId);
         var day = plan == null ? -1 : PlanSchedule.Days(plan).FindIndex(w => w?.Id == session.PlanWorkoutId);
-        const string startTime = "Change start time", edit = "Edit workout", rename = "Rename", length = "Change length";
-        var options = new List<string> { IsEditing ? "Done editing" : edit, rename, startTime, length };
+        const string startTime = "Change start time", edit = "Edit workout", rename = "Rename", length = "Change length",
+            link = "Link to a plan", relink = "Change plan link", unlink = "Unlink from plan";
+        var options = new List<string> { IsEditing ? "Done editing" : edit, rename, startTime, length, plan == null ? link : relink };
+        if (plan != null)
+            options.Add(unlink);
         if (day >= 0)
             options.Add("Edit in plan");
         switch (await dialogs.ActionSheet(DayName, "Discard workout", [.. options]))
         {
+            case link or relink:
+                await LinkToPlan(session);
+                break;
+            case unlink:
+                store.LinkSession(session, null, null, null);
+                ShowFinishedWorkout(session);
+                break;
             case edit:
                 StartEditing();
                 break;
@@ -284,6 +298,8 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var logged = session.Exercises.Where(e => e.Sets.Count > 0).ToList();
         DayName = session.Name;
         Subtitle = plan == null ? "Workout" : session.PlanWeek is { } week ? $"{plan.Name} · Week {week}" : plan.Name;
+        PlanLink = $"{SessionItem.PlanLink(session, plan)} · {(plan == null ? "Link to a plan" : "Change")}";
+        PlanLinkColor = plan == null ? Color.FromArgb("#FFB020") : Color.FromArgb("#3F7DFF");
         IsDone = true;
         IsSkipped = false;
         IsNext = false;
@@ -542,6 +558,65 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             .. se.Sets.Where(s => !s.IsWarmup).Select(Row),
             .. Enumerable.Range(0, se.SkippedSets).Select(_ => Skipped(false)),
         ];
+    }
+
+    // ---------- Linking a finished workout to a plan ----------
+
+    /// <summary>The plan line under a finished workout tapped: link it to a plan, or change which.</summary>
+    [RelayCommand]
+    Task ChangePlanLink() => _finished is { } session ? LinkToPlan(session) : Task.CompletedTask;
+
+    /// <summary>
+    /// Links a finished workout to a plan (or another one): the plan, then the day of it the workout was, then the week it
+    /// counts toward (by default the first that day isn't done in). Unlinking is in the menu too.
+    /// </summary>
+    async Task LinkToPlan(WorkoutSession session)
+    {
+        var plans = store.Data.Plans.Where(p => p.Workouts.Count > 0).ToList();
+        if (plans.Count == 0)
+        {
+            await dialogs.Alert("No plans", "Make or import a plan first, then link workouts to its days.");
+            return;
+        }
+        const string unlink = "Unlink from plan";
+        var current = store.GetPlan(session.PlanId);
+        // Numbered so plans with the same name stay distinguishable; the one it's linked to marked.
+        var labels = plans.Select((p, i) => $"{i + 1}. {p.Name}{(p == current ? " (linked now)" : "")}").ToList();
+        var pick = await dialogs.ActionSheet("Link to plan", current == null ? null : unlink, [.. labels]);
+        if (pick == null)
+            return;
+        if (pick == unlink)
+        {
+            store.LinkSession(session, null, null, null);
+            ShowFinishedWorkout(session);
+            return;
+        }
+        var plan = plans[labels.IndexOf(pick)];
+
+        // Its days, in order; the one with the workout's name first, as the likely one.
+        var days = plan.Workouts.ToList();
+        var likely = days.FirstOrDefault(w => w.Id == session.PlanWorkoutId && plan == current)
+            ?? days.FirstOrDefault(w => w.Name.Equals(session.Name, StringComparison.OrdinalIgnoreCase));
+        if (likely != null)
+            days = [likely, .. days.Where(w => w != likely)];
+        var dayLabels = days.Select((w, i) => $"{i + 1}. {w.Name}").ToList();
+        var dayPick = await dialogs.ActionSheet($"Which day of {plan.Name}?", null, [.. dayLabels]);
+        if (dayPick == null)
+            return;
+        var workout = days[dayLabels.IndexOf(dayPick)];
+
+        // The week: as if this workout weren't done yet, the first week that day is open in.
+        var others = store.History.Where(s => s.Id != session.Id).ToList();
+        var progress = new PlanProgress(plan, others);
+        var suggested = session.PlanId == plan.Id && session.PlanWorkoutId == workout.Id && session.PlanWeek is { } linkedWeek ? linkedWeek : progress.FirstOpenWeek(workout);
+        if (await dialogs.Numbers("Week", $"The week of {plan.Name} this {workout.Name} counts toward.", "Link",
+                new Views.NumberField("Week", suggested, 1, Views.NumberField.NoLimit)) is not [var week])
+            return;
+        if (progress.SessionFor(workout, week) is { } taken && !await dialogs.Confirm($"Week {week} already has {workout.Name}",
+                $"It was done on {taken.StartedAt:d MMM yyyy}. Link this one too? The later of the two counts for the week.", "Link anyway"))
+            return;
+        store.LinkSession(session, plan, workout, week);
+        ShowFinishedWorkout(session);
     }
 
     // ---------- Editing a finished workout ----------

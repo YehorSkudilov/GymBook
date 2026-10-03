@@ -77,6 +77,44 @@ public class DataStore
         Save();
     }
 
+    /// <summary>
+    /// Deletes these finished workouts (from the calendar, History and stats; syncs like any deletion). The plans they
+    /// were done with close the gaps in their weeks and pick up after their newest workout left.
+    /// </summary>
+    public void DeleteSessions(IReadOnlyCollection<WorkoutSession> sessions)
+    {
+        var plans = sessions.Select(s => GetPlan(s.PlanId)).OfType<WorkoutPlan>().Distinct().ToList();
+        var gone = sessions.ToHashSet();
+        Data.Sessions.RemoveAll(gone.Contains);
+        PlansChanged(plans);
+    }
+
+    /// <summary>
+    /// Links a finished workout to <paramref name="workout"/> of <paramref name="plan"/> in <paramref name="week"/>, or
+    /// unlinks it (all null). Both the plan it leaves and the one it joins close the gaps in their weeks and pick up
+    /// after their newest workout.
+    /// </summary>
+    public void LinkSession(WorkoutSession session, WorkoutPlan? plan, PlanWorkout? workout, int? week)
+    {
+        var plans = new[] { GetPlan(session.PlanId), plan }.OfType<WorkoutPlan>().Distinct().ToList();
+        session.PlanId = workout == null ? null : plan?.Id;
+        session.PlanWorkoutId = plan == null ? null : workout?.Id;
+        session.PlanWeek = plan == null || workout == null ? null : week;
+        PlansChanged(plans);
+    }
+
+    /// <summary>The workouts done with these plans changed: their weeks renumbered, and each picks up after its newest.</summary>
+    void PlansChanged(IEnumerable<WorkoutPlan> plans)
+    {
+        foreach (var plan in plans.Where(p => p.Workouts.Count > 0))
+            plan.NextWorkoutIndex = History.FirstOrDefault(s => s.PlanId == plan.Id) is { } last
+                && plan.Workouts.FindIndex(w => w.Id == last.PlanWorkoutId) is >= 0 and var index
+                    ? (index + 1) % plan.Workouts.Count
+                    : 0;
+        CompactPlanWeeks();
+        Save();
+    }
+
     /// <summary>Deletes every plan. Workouts done with them stay in the history.</summary>
     public void ResetPlans()
     {

@@ -95,12 +95,15 @@ public static class MauiProgram
         AddPage<SyncDetailsPage, SyncDetailsViewModel>(builder.Services);
         AddPage<RecoveryPage, RecoveryViewModel>(builder.Services);
         AddPage<WorkoutDonePage, WorkoutDoneViewModel>(builder.Services);
+        AddPage<PlanWorkoutsPage, PlanWorkoutsViewModel>(builder.Services);
 
 #if ANDROID
         // Drag reordering (plan exercises from their grip, days with a long-press), so swipes elsewhere still scroll.
         builder.ConfigureMauiHandlers(handlers =>
         {
             handlers.AddHandler<Controls.ReorderItem, ReorderItemHandler>();
+            // Selecting workouts by dragging over them (from a checkbox at once, elsewhere with a long-press).
+            handlers.AddHandler<Controls.DragSelectList, DragSelectListHandler>();
             // Sideways strips on a tab (the exercise filter chips) keep their drag from the swiping tabs.
             handlers.AddHandler<Controls.HorizontalDragArea, HorizontalDragAreaHandler>();
             // Maps and charts only draw: a swipe that starts on one scrolls the page.

@@ -13,6 +13,8 @@
             <VerticalStackLayout Spacing="2">
                 <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="16" />
                 <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
+                <!-- The plan it counts toward, or that it's linked to none -->
+                <Label Text="{Binding PlanText}" TextColor="{Binding PlanColor}" FontSize="12" LineBreakMode="TailTruncation" />
                 <Label Text="{Binding Meta}" Style="{StaticResource Caption}" TextColor="{StaticResource TextPrimary}" Margin="0,4,0,0" />
                 <Label Text="{Binding Muscles}" Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource TextTertiary}" />
             </VerticalStackLayout>
