@@ -7,7 +7,7 @@ namespace GymBook.Api.Privacy;
 /// </summary>
 public static class PrivacyPolicy
 {
-    public const string LastUpdated = "2 October 2026";
+    public const string LastUpdated = "3 October 2026";
     public const string ContactEmail = "yskudilov@gmail.com";
 
     public static IResult Page() =>
@@ -44,16 +44,25 @@ public static class PrivacyPolicy
         workouts and sets, custom exercises, body weight history, the food you log with its calories and macros, and your nutrition goals.
         Without an account, this data never leaves your device.</p>
         <h2>Health data from Samsung Health and Health Connect</h2>
-        <p>On Android, you can choose to let GymBook read health data through Health Connect, either Samsung Health's data or every
-        app's. Only with your permission, given in Health Connect and changeable there at any time, GymBook reads: calories burned
-        (total, active and resting), steps, food logged in other apps (each food's name, meal, time, calories, protein, carbohydrates and fat), weight, body fat,
-        lean body mass, bone mass, body water mass, basal metabolic rate and height. GymBook only reads; it never writes to or
-        changes your health data.</p>
+        <p>On Android, you can choose to let GymBook read health data, either from Samsung Health directly or through Health Connect
+        (from every app, or only the apps you pick). Only with your permission, given in Samsung Health or Health Connect and
+        changeable there at any time, GymBook reads: calories burned (total, active and resting), steps, food logged in other apps
+        (each food's name, meal, time, calories, protein, carbohydrates and fat), weight, body fat, lean body mass, bone mass, body
+        water mass, basal metabolic rate and height. When you first connect, GymBook reads all of this that's available, including
+        data recorded before you connected (in Health Connect, older than 30 days only if you allow access to past data); after that
+        it keeps the last 30 days up to date.</p>
+        <p>Only if you turn on sending (it's off by default), GymBook also writes to Samsung Health or Health Connect what you log in
+        GymBook: finished workouts (as strength-training sessions with their time and active calories), the food you log and the
+        weight and body fat you enter. It only changes or deletes the records it wrote itself. Turning sending off stops it.</p>
         <p>This data is used only to show your nutrition, energy balance (calories eaten against burned), activity and body
-        composition in the app, and to estimate and suggest your nutrition goals. Daily totals, foods and body measurements are saved in
-        the app like the rest of your data and, if you have an account, synced to it so they appear on your other devices. Health data
-        is never used for advertising, never sold, and never shared with anyone, including the AI features. Disconnecting stops
-        further reading; deleting your account deletes what was synced.</p>
+        composition in the app, to estimate and suggest your nutrition goals, and to keep your health app up to date with your
+        training and food. Daily totals, foods and body measurements are saved in the app like the rest of your data and, if you
+        have an account, synced to it so they appear on your other devices. Health data is never used for advertising, never sold,
+        and never shared with anyone, including the AI features. Disconnecting stops further reading; deleting your account deletes
+        what was synced.</p>
+        <h2>Heart rate on Wear OS</h2>
+        <p>With your permission, the GymBook app on a Wear OS watch reads your heart rate from the watch's sensor while a workout is
+        on screen, to show it on the watch and, live, on your phone. It isn't stored, synced to your account or shared.</p>
         <h2>Food search and barcodes</h2>
         <p>When you search for a food to log, the words you type are sent to Open Food Facts (openfoodfacts.org), the free, open food
         database, and to GymBook's server, which looks them up in the USDA's FoodData Central and in FatSecret and keeps neither

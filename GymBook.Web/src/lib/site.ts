@@ -8,7 +8,7 @@ export const site = {
     "Gym Book builds your training plan, tracks every set, tells you which muscles are recovered and shows your progress. Works offline, syncs across your phone, watch, Mac and PC.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://gymbook.app",
   contactEmail: "yskudilov@gmail.com",
-  privacyUpdated: "2 October 2026",
+  privacyUpdated: "3 October 2026",
 };
 
 const playStoreUrl =
