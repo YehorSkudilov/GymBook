@@ -80,6 +80,7 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
                     Title = $"Reading {health.SourceName}";
                     Status = IsBusy ? "Reading…"
                         : health.LastError is { } error ? $"Couldn't read: {error}"
+                        : health.IsReadingHistory ? "Reading your older data…"
                         : health.LastSyncedAt is { } at ? $"Up to date · read {Ago(at)}"
                         : "Connected";
                     ActionText = "Sync now";

@@ -359,8 +359,8 @@ sealed class SamsungHealthData
     {
         var points = new List<Java.Lang.Object>();
         string? token = null;
-        // A few pages at most: a month of food or weigh-ins is far under that.
-        for (var page = 0; page < 20; page++)
+        // A few pages at most: months of food or weigh-ins are far under that.
+        for (var page = 0; page < 50; page++)
         {
             var dataType = StaticField(Request + "DataTypes", kind, "L" + Request + type + ";");
             var builder = Call(dataType, Request + type, "getReadDataRequestBuilder", "()L" + DualTime + ";");
