@@ -7,10 +7,10 @@ using Microsoft.Maui.Platform;
 namespace GymBook;
 
 /// <summary>
-/// <see cref="ReorderItem"/> on Android: touching the item's grip starts the drag at once, or, on an item without one,
-/// a long-press. Until then the touch belongs to whatever is under the finger (a tap opens an exercise, a swipe scrolls
-/// the list or the day strip); once it starts, the item takes the touch over and the scrolling parents are told to leave
-/// it alone until the finger lifts.
+/// <see cref="ReorderItem"/> on Android: holding the item (or its grip, if it has one; never a text box in it) starts the
+/// drag, so a swipe that starts on it still scrolls. Until then the touch belongs to whatever is under the finger (a tap
+/// opens an exercise, a swipe scrolls the list or the day strip); once it starts, the item takes the touch over and the
+/// scrolling parents are told to leave it alone until the finger lifts.
 /// </summary>
 public class ReorderItemHandler : ContentViewHandler
 {
@@ -36,7 +36,7 @@ sealed class ReorderViewGroup : ContentViewGroup
         _begin = new Java.Lang.Runnable(Begin);
     }
 
-    // The grip was touched, or the long-press fired with the finger still where it went down: the drag starts.
+    // The long-press fired with the finger still where it went down: the drag starts.
     void Begin()
     {
         if (!_pending)
@@ -74,6 +74,21 @@ sealed class ReorderViewGroup : ContentViewGroup
         return _pending || _dragging;
     }
 
+    /// <summary>A text box (shown) under the screen point <paramref name="x"/>, <paramref name="y"/> inside <paramref name="view"/>.</summary>
+    static bool OnTextField(Android.Views.View view, int x, int y)
+    {
+        var bounds = new Android.Graphics.Rect();
+        if (view.Visibility != ViewStates.Visible || !view.GetGlobalVisibleRect(bounds) || !bounds.Contains(x, y))
+            return false;
+        if (view is Android.Widget.EditText)
+            return true;
+        if (view is ViewGroup group)
+            for (var i = 0; i < group.ChildCount; i++)
+                if (group.GetChildAt(i) is { } child && OnTextField(child, x, y))
+                    return true;
+        return false;
+    }
+
     void Track(MotionEvent e)
     {
         switch (e.ActionMasked)
@@ -84,18 +99,13 @@ sealed class ReorderViewGroup : ContentViewGroup
                 _dragging = false;
                 _pending = false;
                 RemoveCallbacks(_begin);
-                // An item with a grip drags from it at once and leaves every other touch alone (scrolling, taps).
-                // One without is held to drag: a long-press, so a quick swipe still scrolls.
-                if (_item()?.FindHandle()?.Handler?.PlatformView is Android.Views.View handle)
-                {
-                    var hit = new Android.Graphics.Rect();
-                    if (handle.GetGlobalVisibleRect(hit) && hit.Contains((int)e.RawX, (int)e.RawY))
-                    {
-                        _pending = true;
-                        Begin();
-                    }
-                }
-                else
+                // Held to drag (a long-press), so a swipe still scrolls: on an item with a grip, from the grip only; on one
+                // without, from anywhere on it but a text box, where holding selects text.
+                var handle = _item()?.FindHandle()?.Handler?.PlatformView as Android.Views.View;
+                var hit = new Android.Graphics.Rect();
+                if (handle == null
+                        ? !OnTextField(this, (int)e.RawX, (int)e.RawY)
+                        : handle.GetGlobalVisibleRect(hit) && hit.Contains((int)e.RawX, (int)e.RawY))
                 {
                     _pending = true;
                     PostDelayed(_begin, LongPressMs);
