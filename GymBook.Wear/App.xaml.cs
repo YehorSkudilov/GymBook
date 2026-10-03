@@ -71,6 +71,8 @@ public partial class App : Application
     {
         try
         {
+            // Whether the phone is in reach decides companion or on its own (see WatchOwnership.IsWatchs).
+            await _phone.CheckConnectedAsync();
             await _phone.StartAsync();
         }
         catch (Exception e)

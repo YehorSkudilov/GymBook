@@ -1,3 +1,6 @@
+using GymBook.Contracts;
+using GymBook.Models;
+
 namespace GymBook.Wear;
 
 /// <summary>
@@ -20,4 +23,13 @@ public static class WatchOwnership
                 Preferences.Default.Set(Key, value);
         }
     }
+
+    /// <summary>
+    /// Whether <paramref name="active"/>, the workout in progress in the watch's database, is the watch's to show and
+    /// run: one it started itself, or one that came in by syncing while the phone can't be reached (and isn't running
+    /// another). With the phone connected and not running it, it's an out-of-date copy of a workout finished or
+    /// discarded there: not shown (the home, the Tile, the watch face) until a sync brings the phone's version.
+    /// </summary>
+    public static bool IsWatchs(WorkoutSession active, WearWorkout phone, bool phoneConnected) =>
+        active.Id == SessionId || !(phone.IsActive && phone.SessionId != SessionId) && !phoneConnected;
 }

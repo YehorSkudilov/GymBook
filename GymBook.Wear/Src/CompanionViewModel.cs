@@ -6,9 +6,10 @@ using GymBook.Contracts;
 namespace GymBook.Wear;
 
 /// <summary>
-/// The phone's workout, one set at a time: the set to do next, a big Done that asks the phone to tick it, the rest timer
-/// after it, and the heart rate. Everything is worked out from the workout the phone last sent, so the watch and the
-/// phone always agree; a tick shows straight away and is confirmed when the phone sends the workout back.
+/// The phone's workout, one set at a time, driven from the watch: the set to do next with its weight and reps to adjust,
+/// a big Done that asks the phone to tick it at those, the rest timer after it, the heart rate, and finishing or
+/// discarding the workout. Everything is worked out from the workout the phone last sent, so the watch and the phone
+/// always agree; a tick shows straight away and is confirmed when the phone sends the workout back.
 /// </summary>
 public partial class CompanionViewModel : ObservableObject
 {
@@ -24,6 +25,10 @@ public partial class CompanionViewModel : ObservableObject
     (string Session, int Exercise, int Set, DateTimeOffset At)? _pending;
     DateTimeOffset? _restSkippedFor;
     DateTimeOffset? _restAlertedFor;
+    // Weight and reps changed on the watch for the set on screen, sent with its tick; reset when the set changes.
+    (string Session, int Exercise, int Set)? _editing;
+    double? _weight;
+    int? _reps;
 
     public CompanionViewModel(PhoneLink phone, HeartRateMonitor heart)
     {
@@ -45,6 +50,9 @@ public partial class CompanionViewModel : ObservableObject
     [ObservableProperty] string exerciseName = "";
     [ObservableProperty] string setLabel = "";
     [ObservableProperty] string target = "";
+    [ObservableProperty] string weightText = "";
+    [ObservableProperty] string repsText = "";
+    [ObservableProperty] bool hasWeight;
     [ObservableProperty] string next = "";
     [ObservableProperty] string doneText = "Done";
     [ObservableProperty] bool canComplete;
@@ -193,6 +201,7 @@ public partial class CompanionViewModel : ObservableObject
         var active = _workout.IsActive;
         if (!active)
         {
+            Status = "The workout on your phone has ended.";
             Show(waiting: true);
             Ended?.Invoke();
             return;
@@ -205,6 +214,13 @@ public partial class CompanionViewModel : ObservableObject
         var working = _workout.Exercises.SelectMany((e, i) => e.Sets.Select((s, j) => (s, i, j))).Where(x => !x.s.IsWarmup).ToList();
         Progress = $"{working.Count(x => IsDone(x.i, x.j))}/{working.Count} sets";
 
+        if (_workout.Exercises.Count == 0)
+        {
+            // A quick workout before its first exercise: they're added on the phone.
+            Status = "Add exercises on your phone to get going.";
+            Show(waiting: true);
+            return;
+        }
         if (Current() is not { } current)
         {
             Show(finished: true);
@@ -247,6 +263,19 @@ public partial class CompanionViewModel : ObservableObject
     {
         var exercise = _workout.Exercises[current.Exercise];
         var set = exercise.Sets[current.Set];
+        // Another set on screen: what was changed for the last one doesn't carry over (the phone has it by now).
+        var key = (_workout.SessionId, current.Exercise, current.Set);
+        if (_editing != key)
+        {
+            _editing = key;
+            _weight = null;
+            _reps = null;
+        }
+        var weightNow = _weight ?? set.Weight;
+        var repsNow = _reps ?? set.Reps;
+        HasWeight = weightNow > 0 || set.Weight > 0;
+        WeightText = weightNow > 0 ? $"{weightNow.ToString("0.##", CultureInfo.CurrentCulture)} {_workout.Unit}" : "Bodyweight";
+        RepsText = $"{repsNow} reps";
         ExerciseName = exercise.Name;
         var ofKind = exercise.Sets.Where(s => s.IsWarmup == set.IsWarmup).ToList();
         var number = exercise.Sets.Take(current.Set + 1).Count(s => s.IsWarmup == set.IsWarmup);
@@ -255,9 +284,73 @@ public partial class CompanionViewModel : ObservableObject
         Target = set.Reps > 0 ? $"{weight} × {set.Reps}" : weight;
         var nextExercise = _workout.Exercises.Skip(current.Exercise + 1).FirstOrDefault(e => e.Sets.Any(s => !s.IsCompleted));
         Next = current.Set == exercise.Sets.Count - 1 && nextExercise != null ? $"Next: {nextExercise.Name}" : "";
-        CanComplete = _pending == null && set.Reps > 0;
-        DoneText = _pending != null ? "Saving…" : set.Reps > 0 ? "Done" : "Set reps on phone";
+        CanComplete = _pending == null && repsNow > 0;
+        DoneText = _pending != null ? "Saving…" : repsNow > 0 ? "Done" : "Add reps";
     }
+
+    /// <summary>The weight − and +: by the exercise's usual jump (2.5 kg / 5 lb when the phone didn't say).</summary>
+    [RelayCommand]
+    void ChangeWeight(string steps)
+    {
+        if (Current() is not { } current || _pending != null)
+            return;
+        var exercise = _workout.Exercises[current.Exercise];
+        var step = exercise.WeightStep > 0 ? exercise.WeightStep : _workout.Unit == "kg" ? 2.5 : 5;
+        var now = _weight ?? exercise.Sets[current.Set].Weight;
+        _weight = Math.Max(0, Math.Round(now / step) * step + step * int.Parse(steps, CultureInfo.InvariantCulture));
+        Refresh();
+    }
+
+    [RelayCommand]
+    void ChangeReps(string delta)
+    {
+        if (Current() is not { } current || _pending != null)
+            return;
+        var now = _reps ?? _workout.Exercises[current.Exercise].Sets[current.Set].Reps;
+        _reps = Math.Clamp(now + int.Parse(delta, CultureInfo.InvariantCulture), 0, 100);
+        Refresh();
+    }
+
+    /// <summary>The ⋯: finish the workout (the sets done kept) or discard it, on the phone.</summary>
+    [RelayCommand]
+    async Task Options()
+    {
+        if (!_workout.IsActive)
+            return;
+        const string finish = "Finish workout", discard = "Discard workout";
+        var choice = await Page.DisplayActionSheetAsync(_workout.Name, "Cancel", discard, finish);
+        if (choice == finish)
+            await Finish();
+        else if (choice == discard && await Page.DisplayAlertAsync("Discard workout?", "It's deleted on your phone too, with every set done in it.", "Discard", "Keep"))
+            await SendFinish(discard: true);
+    }
+
+    /// <summary>Finishes the workout on the phone, as finishing it there does: the sets done kept, the rest left out.</summary>
+    [RelayCommand]
+    async Task Finish()
+    {
+        var done = _workout.Exercises.SelectMany(e => e.Sets).Count(s => s.IsCompleted && !s.IsWarmup);
+        var title = done == 0 ? "Discard workout?" : "Finish workout?";
+        var text = done == 0 ? "No sets are done yet." : $"{done} sets done. Sets not done are left out.";
+        if (await Page.DisplayAlertAsync(title, text, done == 0 ? "Discard" : "Finish", "Keep going"))
+            await SendFinish(discard: done == 0);
+    }
+
+    async Task SendFinish(bool discard)
+    {
+        try
+        {
+            if (!await _phone.FinishOnPhoneAsync(new WearFinishWorkout(_workout.SessionId, discard)))
+                Message = "Your phone isn't connected.";
+        }
+        catch (Exception)
+        {
+            Message = "Couldn't reach your phone.";
+        }
+        // The page closes when the phone sends that the workout ended.
+    }
+
+    static Page Page => Application.Current!.Windows[0].Page!;
 
     void Show(bool waiting = false, bool lifting = false, bool resting = false, bool finished = false)
     {
@@ -272,7 +365,8 @@ public partial class CompanionViewModel : ObservableObject
     {
         if (Current() is not { } current || _pending != null)
             return;
-        var request = new WearCompleteSet(_workout.SessionId, current.Exercise, current.Set);
+        // At the weight and reps changed here, if they were.
+        var request = new WearCompleteSet(_workout.SessionId, current.Exercise, current.Set, _weight, _reps);
         _pending = (_workout.SessionId, current.Exercise, current.Set, DateTimeOffset.Now);
         _restSkippedFor = null;
         Message = "";

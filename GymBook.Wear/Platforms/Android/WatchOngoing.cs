@@ -27,7 +27,8 @@ public static class WatchOngoing
         {
             var services = IPlatformApplication.Current?.Services;
             var own = services?.GetService<WorkoutService>()?.Active;
-            if (own != null)
+            // Not an out-of-date copy of the phone's (see WatchOwnership.IsWatchs).
+            if (own != null && WatchOwnership.IsWatchs(own, phone, services?.GetService<PhoneLink>()?.IsConnected == true))
                 Show(own.Name, new DateTimeOffset(own.StartedAt), "on your watch");
             else if (phone.IsActive)
                 Show(phone.Name, phone.StartedAt, "on your phone");

@@ -120,6 +120,8 @@ public class WatchSync(DataStore store, WatchLink link, SyncService sync)
 public class WatchListenerService : WearableListenerService
 {
     static readonly JsonTypeInfo<WearCompleteSet> CompleteSetJson = (JsonTypeInfo<WearCompleteSet>)GymBookJson.Options.GetTypeInfo(typeof(WearCompleteSet));
+    static readonly JsonTypeInfo<WearStartWorkout> StartJson = (JsonTypeInfo<WearStartWorkout>)GymBookJson.Options.GetTypeInfo(typeof(WearStartWorkout));
+    static readonly JsonTypeInfo<WearFinishWorkout> FinishJson = (JsonTypeInfo<WearFinishWorkout>)GymBookJson.Options.GetTypeInfo(typeof(WearFinishWorkout));
     static readonly JsonTypeInfo<WearSession> SessionJson = (JsonTypeInfo<WearSession>)GymBookJson.Options.GetTypeInfo(typeof(WearSession));
 
     public override void OnMessageReceived(IMessageEvent message)
@@ -128,6 +130,12 @@ public class WatchListenerService : WearableListenerService
         {
             case WearPaths.CompleteSet:
                 CompleteSet(message.GetData());
+                break;
+            case WearPaths.StartWorkout:
+                Handle(message.GetData(), StartJson, (link, request) => link.Start(request));
+                break;
+            case WearPaths.FinishWorkout:
+                Handle(message.GetData(), FinishJson, (link, request) => link.Finish(request));
                 break;
             case WearPaths.RequestSession when message.SourceNodeId is { } watch:
                 _ = SendSessionAsync(watch);
@@ -138,6 +146,24 @@ public class WatchListenerService : WearableListenerService
                     MainThread.BeginInvokeOnMainThread(() => link.ReportHeartRate(bpm));
                 break;
         }
+    }
+
+    /// <summary>A request from the watch, read and handed to <see cref="WatchLink"/> on the main thread; unreadable ones are ignored.</summary>
+    static void Handle<T>(byte[]? data, JsonTypeInfo<T> json, Action<WatchLink, T> act) where T : class
+    {
+        if (data == null)
+            return;
+        T? request;
+        try
+        {
+            request = JsonSerializer.Deserialize(data, json);
+        }
+        catch (JsonException)
+        {
+            return;
+        }
+        if (request != null && IPlatformApplication.Current?.Services.GetService<WatchLink>() is { } link)
+            MainThread.BeginInvokeOnMainThread(() => act(link, request));
     }
 
     static void CompleteSet(byte[]? data)

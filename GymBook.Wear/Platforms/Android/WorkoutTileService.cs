@@ -91,7 +91,10 @@ public class WorkoutTileService : TileService
         if (store == null || workouts == null)
             return ("GYM BOOK", "Start a workout", "Tap to open", Primary);
 
-        if (workouts.Active is { } active)
+        // The watch's own workout (not an out-of-date copy of the phone's: see WatchOwnership.IsWatchs).
+        if (workouts.Active is { } active
+            && services?.GetService<PhoneLink>() is var link
+            && WatchOwnership.IsWatchs(active, link?.Workout ?? GymBook.Contracts.WearWorkout.None, link?.IsConnected == true))
         {
             var working = active.Exercises.SelectMany(e => e.Sets).Where(s => !s.IsWarmup).ToList();
             return ("IN PROGRESS", active.Name, $"{working.Count(s => s.IsCompleted)}/{working.Count} sets · tap to resume", Success);

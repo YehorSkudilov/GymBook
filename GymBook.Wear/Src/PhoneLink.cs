@@ -22,6 +22,59 @@ public class PhoneLink : Java.Lang.Object, DataClient.IOnDataChangedListener, Me
 
     static readonly JsonTypeInfo<WearWorkout> WorkoutJson = (JsonTypeInfo<WearWorkout>)GymBookJson.Options.GetTypeInfo(typeof(WearWorkout));
     static readonly JsonTypeInfo<WearCompleteSet> CompleteSetJson = (JsonTypeInfo<WearCompleteSet>)GymBookJson.Options.GetTypeInfo(typeof(WearCompleteSet));
+    static readonly JsonTypeInfo<WearStartWorkout> StartJson = (JsonTypeInfo<WearStartWorkout>)GymBookJson.Options.GetTypeInfo(typeof(WearStartWorkout));
+    static readonly JsonTypeInfo<WearFinishWorkout> FinishJson = (JsonTypeInfo<WearFinishWorkout>)GymBookJson.Options.GetTypeInfo(typeof(WearFinishWorkout));
+
+    /// <summary>
+    /// The phone could be reached the last time it was checked (<see cref="CheckConnectedAsync"/>). While it can, the
+    /// watch is the phone's companion: workouts start and run on the phone, the watch follows and drives them.
+    /// </summary>
+    public bool IsConnected { get; private set; }
+
+    /// <summary>Whether a phone can be reached now (remembered in <see cref="IsConnected"/>). False without Google Play services.</summary>
+    public async Task<bool> CheckConnectedAsync()
+    {
+        try
+        {
+            var nodes = await WearableClass.GetNodeClient(Context).GetConnectedNodes().AsAsync<JavaList>();
+            IsConnected = nodes.OfType<Java.Lang.Object>().Any(n => n.JavaCast<INode>()?.Id != null);
+        }
+        catch (Exception)
+        {
+            IsConnected = false;
+        }
+        return IsConnected;
+    }
+
+    /// <summary>Asks the phone to start a workout. False when no phone could be reached.</summary>
+    public Task<bool> StartOnPhoneAsync(WearStartWorkout request) =>
+        SendToPhonesAsync(WearPaths.StartWorkout, JsonSerializer.SerializeToUtf8Bytes(request, StartJson));
+
+    /// <summary>Asks the phone to finish or discard its workout. False when no phone could be reached.</summary>
+    public Task<bool> FinishOnPhoneAsync(WearFinishWorkout request) =>
+        SendToPhonesAsync(WearPaths.FinishWorkout, JsonSerializer.SerializeToUtf8Bytes(request, FinishJson));
+
+    /// <summary>Waits for the phone to send a workout in progress (after asking it to start one); false when none comes in time.</summary>
+    public async Task<bool> WaitForPhoneWorkoutAsync(TimeSpan timeout)
+    {
+        if (Workout.IsActive)
+            return true;
+        var arrived = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        void OnChanged(WearWorkout w)
+        {
+            if (w.IsActive)
+                arrived.TrySetResult(true);
+        }
+        WorkoutChanged += OnChanged;
+        try
+        {
+            return await Task.WhenAny(arrived.Task, Task.Delay(timeout)) == arrived.Task;
+        }
+        finally
+        {
+            WorkoutChanged -= OnChanged;
+        }
+    }
 
     static Android.Content.Context Context => Android.App.Application.Context;
 
