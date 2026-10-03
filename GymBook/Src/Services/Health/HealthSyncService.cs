@@ -15,12 +15,15 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
     public const int Days = 30;
 
     /// <summary>
-    /// Where reading stops: each sync, after the last <see cref="Days"/> days, everything older back to here is read too
-    /// (see <see cref="ReadOlderAsync"/>), a few months at a time. Samsung Health (S Health) began in 2012.
+    /// Where reading the history stops: once per source on each device (see <see cref="ReadHistoryAsync"/>), everything
+    /// back to here is read, a few months at a time, newest first. Samsung Health (S Health) began in 2012.
     /// </summary>
     static readonly DateTime HistoryStart = new(2010, 1, 1);
 
     const int HistoryChunkDays = 180;
+
+    /// <summary>"source|apps|oldest day read so far (ticks)", so reading the history carries on where it got to.</summary>
+    const string HistoryKey = "health.history";
 
     static readonly TimeSpan MinInterval = TimeSpan.FromMinutes(10);
 
@@ -112,14 +115,15 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
     {
         store.Profile.HealthSource = HealthSource.None;
         store.Save();
+        ReadHistoryAgain();
         LastSyncedAt = null;
         LastError = null;
     }
 
     /// <summary>
     /// Reads the last <see cref="Days"/> days and merges them in, at most every few minutes unless <paramref name="force"/>.
-    /// Everything older is then read again too, in the background (<see cref="ReadOlderAsync"/>), so changes and
-    /// deletions made there to older days come in as well. Returns whether the recent days changed. Call on the UI thread.
+    /// The first time (for this source and apps, on this device), everything older is then read too, in the background
+    /// (<see cref="ReadHistoryAsync"/>). Returns whether anything changed. Call on the UI thread.
     /// </summary>
     public async Task<bool> SyncAsync(bool force = false)
     {
@@ -142,7 +146,7 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
             // Then the other way: what was done in Gym Book, to the health app.
             Watch();
             await MainThread.InvokeOnMainThreadAsync(writeBack.SendAsync);
-            _ = ReadOlderAsync();
+            _ = ReadHistoryAsync();
             return changed;
         }
         catch (Exception e)
@@ -156,36 +160,48 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
         }
     }
 
-    /// <summary>Everything older than the last <see cref="Days"/> days is being read (in the background, after a sync).</summary>
+    /// <summary>The history is being read (in the background, after a sync).</summary>
     public bool IsReadingHistory { get; private set; }
+
+    /// <summary>The next sync reads the whole history again (after the health data was deleted, say).</summary>
+    public void ReadHistoryAgain() => Preferences.Default.Remove(HistoryKey);
+
+    string HistorySignature => $"{store.Profile.HealthSource}|{string.Join(",", Apps ?? [])}";
 
     /// <summary>
     /// Everything older than the regular read, back to <see cref="HistoryStart"/>: a chunk of a few months at a time,
-    /// newest first, each merged in as it comes (added, changed to match, and what's no longer there taken out). Runs
-    /// after every sync; stops if the source or apps change meanwhile (the next sync reads those).
+    /// newest first, each merged in as it comes, and where it got to remembered, so a read that's cut short (the app
+    /// closed, a failed read) carries on from there next time. A different source or apps starts again.
     /// </summary>
-    async Task ReadOlderAsync()
+    async Task ReadHistoryAsync()
     {
         if (IsReadingHistory)
             return;
         IsReadingHistory = true;
         try
         {
-            var signature = Signature;
-            var to = DateTime.Today.AddDays(1 - Days);
-            while (to > HistoryStart)
+            var signature = HistorySignature;
+            var saved = Preferences.Default.Get(HistoryKey, "");
+            var oldest = saved.StartsWith(signature + "|", StringComparison.Ordinal)
+                && long.TryParse(saved[(signature.Length + 1)..], out var ticks)
+                    ? new DateTime(ticks)
+                    : DateTime.Today.AddDays(1 - Days);
+            while (oldest > HistoryStart)
             {
                 await _gate.WaitAsync();
                 try
                 {
-                    if (!IsConnected || Signature != signature)
+                    // Disconnected, or another source or apps chosen, meanwhile: that one reads its own.
+                    if (!IsConnected || HistorySignature != signature)
                         return;
+                    var to = oldest;
                     var from = to.AddDays(-HistoryChunkDays) > HistoryStart ? to.AddDays(-HistoryChunkDays) : HistoryStart;
                     var name = SourceName;
                     var result = await Platform.ReadAsync(from, to, Apps);
                     // Not the height: the profile follows the latest, which the regular read has.
                     await MainThread.InvokeOnMainThreadAsync(() => Apply(result with { HeightCm = null }, name) | ApplyFoods(result.Foods, from, to));
-                    to = from;
+                    oldest = from;
+                    Preferences.Default.Set(HistoryKey, $"{signature}|{oldest.Ticks}");
                 }
                 finally
                 {
@@ -195,7 +211,7 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
         }
         catch (Exception e)
         {
-            // The next sync reads it all again.
+            // Carries on from where it got to on the next sync.
             LastError = e.Message;
         }
         finally
@@ -203,8 +219,6 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
             IsReadingHistory = false;
         }
     }
-
-    string Signature => $"{store.Profile.HealthSource}|{string.Join(",", Apps ?? [])}";
 
     bool Apply(HealthReadResult result, string sourceName)
     {
