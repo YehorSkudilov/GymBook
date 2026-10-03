@@ -57,7 +57,7 @@ public partial class RecoveryViewModel : BaseViewModel, IQueryAttributable
     {
         var at = Moment.At;
         var details = recovery.Details(at);
-        Map = MuscleMapDrawable.ForRecovery(details.ToDictionary(d => d.Muscle, d => d.Recovery));
+        Map = MuscleMapDrawable.ForRecovery(details.ToDictionary(d => d.Muscle, d => d.Recovery), recovery.PartRecovery(at));
 
         var tired = details.Count(d => d.Recovery < 0.9);
         Summary = tired == 0 ? "Every muscle is fresh." : $"{tired} of {details.Count} muscle groups still recovering.";

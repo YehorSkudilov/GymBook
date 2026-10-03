@@ -117,7 +117,7 @@ public partial class RecoveryWarningViewModel(DataStore store, RecoveryService r
             return;
         var at = DateTime.Now.AddHours(Hours);
         var rec = recovery.Compute(at);
-        Map = MuscleMapDrawable.ForRecovery(rec);
+        Map = MuscleMapDrawable.ForRecovery(rec, recovery.PartRecovery(at));
         When = RecoveryService.PreviewLabel(Hours);
         IsPreview = Hours != 0;
 
