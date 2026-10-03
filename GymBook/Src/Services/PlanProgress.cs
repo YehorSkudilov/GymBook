@@ -75,7 +75,7 @@ public class PlanProgress
     }
 
     /// <summary>Sessions from before plan weeks were stored count toward the calendar week they were done in.</summary>
-    int WeekOf(WorkoutSession s) =>
+    public int WeekOf(WorkoutSession s) =>
         s.PlanWeek ?? Math.Max(1, (StatsService.WeekStart(s.StartedAt) - StatsService.WeekStart(_plan.CreatedAt)).Days / 7 + 1);
 
     /// <summary>Every finished session that counts toward <paramref name="week"/>.</summary>
