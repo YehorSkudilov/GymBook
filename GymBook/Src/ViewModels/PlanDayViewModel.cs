@@ -12,6 +12,9 @@ public record PlanDaySetRow(string Number, string First, string Second, string T
     /// <summary>A set that was skipped: dimmed, "Skipped" for its weight and N/A for its E1RM.</summary>
     public bool IsSkipped { get; init; }
     public double RowOpacity => IsSkipped ? 0.45 : 1;
+    /// <summary>Editing a finished workout: tapping the row changes the set. Null otherwise.</summary>
+    public IAsyncRelayCommand? TapCommand { get; init; }
+    public Color ValueColor => TapCommand != null ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#9AA3B5");
 }
 
 /// <summary>A number on a finished workout's sheet, with how it compares with last time (<paramref name="Note"/>, empty the first time).</summary>
@@ -50,15 +53,19 @@ public class PlanDaySheetExercise
     /// <summary>The note typed in during the workout; empty for a plan day.</summary>
     public string Note { get; init; } = "";
     public bool HasNote => Note.Length > 0;
+    /// <summary>Editing a finished workout: its ··· (note, replace, move, remove) and Add set show.</summary>
+    public bool IsEditing { get; init; }
+    public IAsyncRelayCommand? MenuCommand { get; init; }
+    public IAsyncRelayCommand? AddSetCommand { get; init; }
 }
 
 /// <summary>
 /// A single day of a plan week, opened from Home: its exercises with their sets, and the action to start it,
 /// view it or mark the rest day finished. Also a finished workout on its own (?session=, from the calendar), plan or
-/// not: what was done, its stats, and how fatigued each muscle was right after it.
+/// not: what was done, its stats, and how fatigued each muscle was right after it; and editing it (Edit workout).
 /// </summary>
 public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, DialogService dialogs, Units units, ProgressionEngine progression,
-    WorkoutEstimator estimator, RecoveryService recovery, StatsService stats)
+    WorkoutEstimator estimator, RecoveryService recovery, StatsService stats, ExercisePickerService picker)
     : BaseViewModel, IQueryAttributable
 {
     string? _planId;
@@ -75,6 +82,13 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     [ObservableProperty] bool hasStats;
     /// <summary>A finished workout is on show: the Discard workout button.</summary>
     [ObservableProperty] bool canDiscard;
+    /// <summary>A finished workout is on show and not being edited: the Edit workout button.</summary>
+    [ObservableProperty] bool canEdit;
+    /// <summary>
+    /// The finished workout is being edited: tapping a set changes it, each exercise has a ··· and Add set, and exercises
+    /// can be added. Each change is saved as it's made (and syncs like any other).
+    /// </summary>
+    [ObservableProperty] bool isEditing;
     [ObservableProperty] StatTile statTime = StatTile.Empty;
     [ObservableProperty] StatTile statVolume = StatTile.Empty;
     [ObservableProperty] StatTile statSets = StatTile.Empty;
@@ -114,6 +128,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         _justFinished = query.TryGetValue("finished", out var finished) && finished?.ToString() == "1";
         _day = query.TryGetValue("day", out var day) && int.TryParse(day?.ToString(), out var d) ? d : 0;
         _week = query.TryGetValue("week", out var week) && int.TryParse(week?.ToString(), out var w) ? w : 1;
+        IsEditing = false;
     }
 
     public override Task OnAppearingAsync()
@@ -129,6 +144,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         HasStats = false;
         _finished = null;
         CanDiscard = false;
+        CanEdit = false;
         var session = workout == null ? null : progress.SessionFor(workout, _week);
         Subtitle = PlanCycle.Describe(plan, _week) is { } phase ? $"{plan.Name} · Week {_week} · {phase}" : $"{plan.Name} · Week {_week}";
         // A skipped workout isn't finished: it has its own pill.
@@ -190,10 +206,24 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     {
         var plan = store.GetPlan(session.PlanId);
         var day = plan == null ? -1 : PlanSchedule.Days(plan).FindIndex(w => w?.Id == session.PlanWorkoutId);
-        const string startTime = "Change start time";
-        var options = day >= 0 ? new[] { startTime, "Edit in plan" } : [startTime];
-        switch (await dialogs.ActionSheet(DayName, "Discard workout", options))
+        const string startTime = "Change start time", edit = "Edit workout", rename = "Rename", length = "Change length";
+        var options = new List<string> { IsEditing ? "Done editing" : edit, rename, startTime, length };
+        if (day >= 0)
+            options.Add("Edit in plan");
+        switch (await dialogs.ActionSheet(DayName, "Discard workout", [.. options]))
         {
+            case edit:
+                StartEditing();
+                break;
+            case "Done editing":
+                DoneEditing();
+                break;
+            case rename:
+                await Rename(session);
+                break;
+            case length:
+                await ChangeLength(session);
+                break;
             case startTime:
                 // Its end and every set and rest logged move with it, so its length stays the same.
                 if (await dialogs.DateAndTime("Start time", "The end and every set and rest logged move with it.", session.StartedAt) is not { } start)
@@ -248,7 +278,8 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     void ShowFinishedWorkout(WorkoutSession session)
     {
         _finished = session;
-        CanDiscard = !_justFinished;
+        CanDiscard = !_justFinished && !IsEditing;
+        CanEdit = !IsEditing;
         var plan = store.GetPlan(session.PlanId);
         var logged = session.Exercises.Where(e => e.Sets.Count > 0).ToList();
         DayName = session.Name;
@@ -263,7 +294,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         Meta = $"{logged.Count} exercises · {logged.Sum(e => e.Sets.Count)} sets";
         When = session.StartedAt.ToString("dddd d MMM, h:mm tt");
         HasWhen = true;
-        Exercises = logged.Select(Logged).ToList();
+        Exercises = logged.Select((e, i) => Logged(e, i, logged.Count)).ToList();
         ActionText = "";
         HasAction = false;
         ShowFinished(session);
@@ -400,8 +431,11 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         };
     }
 
-    /// <summary>A finished exercise: every logged set with its weight, reps and, for working sets, estimated one-rep max.</summary>
-    PlanDaySheetExercise Logged(SessionExercise se)
+    /// <summary>
+    /// A finished exercise (the <paramref name="index"/>th of <paramref name="count"/> shown): every logged set with its
+    /// weight, reps and, for working sets, estimated one-rep max; while editing, with what changes them.
+    /// </summary>
+    PlanDaySheetExercise Logged(SessionExercise se, int index, int count)
     {
         var ex = store.GetExercise(se.ExerciseId);
         var sets = se.Sets;
@@ -418,6 +452,9 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             SecondHeader = "REPS",
             ThirdHeader = "E1RM",
             Rows = SessionRows(se, ex),
+            IsEditing = IsEditing,
+            MenuCommand = IsEditing ? new AsyncRelayCommand(() => ExerciseMenu(se, ex, index, count)) : null,
+            AddSetCommand = IsEditing ? new AsyncRelayCommand(() => AddSet(se)) : null,
         };
     }
 
@@ -481,18 +518,284 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     List<PlanDaySetRow> SessionRows(SessionExercise se, Exercise? ex)
     {
         var (working, warm) = (0, 0);
-        PlanDaySetRow Row(SetEntry s) => new(
-            s.IsWarmup ? $"W{++warm}" : $"{++working}",
-            ex?.IsBodyweight == true && s.WeightKg <= 0 ? "BW" : units.Format(s.WeightKg),
-            $"{s.Reps}",
-            !s.IsWarmup && ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir) is > 0 and var e1 ? units.Format(e1) : "–");
+        PlanDaySetRow Row(SetEntry s)
+        {
+            var number = s.IsWarmup ? $"W{++warm}" : $"{++working}";
+            return new(
+                number,
+                ex?.IsBodyweight == true && s.WeightKg <= 0 ? "BW" : units.Format(s.WeightKg),
+                $"{s.Reps}",
+                !s.IsWarmup && ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir) is > 0 and var e1 ? units.Format(e1) : "–")
+            {
+                TapCommand = IsEditing ? new AsyncRelayCommand(() => EditSet(se, s, ex, number)) : null,
+            };
+        }
+        PlanDaySetRow Skipped(bool warmup) => new(warmup ? $"W{++warm}" : $"{++working}", "Skipped", "–", "N/A")
+        {
+            IsSkipped = true,
+            TapCommand = IsEditing ? new AsyncRelayCommand(() => EditSkipped(se, warmup)) : null,
+        };
         return
         [
             .. se.Sets.Where(s => s.IsWarmup).Select(Row),
-            .. Enumerable.Range(0, se.SkippedWarmups).Select(_ => new PlanDaySetRow($"W{++warm}", "Skipped", "–", "N/A") { IsSkipped = true }),
+            .. Enumerable.Range(0, se.SkippedWarmups).Select(_ => Skipped(true)),
             .. se.Sets.Where(s => !s.IsWarmup).Select(Row),
-            .. Enumerable.Range(0, se.SkippedSets).Select(_ => new PlanDaySetRow($"{++working}", "Skipped", "–", "N/A") { IsSkipped = true }),
+            .. Enumerable.Range(0, se.SkippedSets).Select(_ => Skipped(false)),
         ];
+    }
+
+    // ---------- Editing a finished workout ----------
+
+    /// <summary>The Edit workout button under a finished workout: its sets and exercises become editable.</summary>
+    [RelayCommand]
+    void StartEditing()
+    {
+        if (_finished is not { } session)
+            return;
+        IsEditing = true;
+        ShowFinishedWorkout(session);
+    }
+
+    /// <summary>The Done button while editing: back to the finished workout as it now is (every change is already saved).</summary>
+    [RelayCommand]
+    void DoneEditing()
+    {
+        IsEditing = false;
+        if (_finished is { } session)
+            ShowFinishedWorkout(session);
+    }
+
+    /// <summary>Keeps a change to the finished workout and shows it, with its stats worked out again.</summary>
+    void Edited(WorkoutSession session)
+    {
+        store.Save();
+        ShowFinishedWorkout(session);
+    }
+
+    /// <summary>Uses RIR: the profile tracks it, and the workout's plan (if any) doesn't turn it off.</summary>
+    bool TrackRir(WorkoutSession session) => store.Profile.TrackRir && store.GetPlan(session.PlanId)?.UseRir != false;
+
+    /// <summary>A logged set, tapped while editing: its weight, reps or RIR, warm-up or working, or deleting it.</summary>
+    async Task EditSet(SessionExercise se, SetEntry set, Exercise? ex, string number)
+    {
+        if (_finished is not { } session)
+            return;
+        var bodyweight = ex?.IsBodyweight == true && set.WeightKg <= 0;
+        string weight = $"Weight · {(bodyweight ? "bodyweight" : units.FormatWithUnit(set.WeightKg))}", reps = $"Reps · {set.Reps}",
+            rir = $"RIR · {(set.Rir is { } r ? r.ToString() : "none")}", kind = set.IsWarmup ? "Make it a working set" : "Make it a warm-up";
+        var options = new List<string> { weight, reps };
+        if (TrackRir(session) || set.Rir != null)
+            options.Add(rir);
+        options.Add(kind);
+        var title = $"{ex?.Name ?? "Set"} · {(set.IsWarmup ? "warm-up " : "set ")}{number.TrimStart('W')}";
+        var choice = await dialogs.ActionSheet(title, "Delete set", [.. options]);
+        if (choice == weight)
+        {
+            var max = units.Unit == WeightUnit.Kg ? 500 : 1100;
+            var step = ex == null ? (units.Unit == WeightUnit.Kg ? 2.5 : 5) : units.Increment(ex);
+            if (await Views.NumberPadSheet.Show(units.Format(set.WeightKg), units.ToDisplay(set.WeightKg), step, 0, max, units.Label, decimals: true) is not { } v)
+                return;
+            set.WeightKg = units.FromDisplay(v);
+        }
+        else if (choice == reps)
+        {
+            if (await Views.NumberPadSheet.Show($"{set.Reps}", set.Reps, 1, 0, 100, "reps") is not { } v)
+                return;
+            set.Reps = (int)v;
+        }
+        else if (choice == rir)
+        {
+            if (await Views.NumberPadSheet.Show(set.Rir?.ToString(), set.Rir ?? se.TargetRir, 1, 0, 10, "RIR", allowEmpty: true) is not { } v)
+                return;
+            set.Rir = double.IsNaN(v) ? null : (int)Math.Min(v, 10);
+        }
+        else if (choice == kind)
+        {
+            set.IsWarmup = !set.IsWarmup;
+            // Kept in the order they're shown: warm-ups, then working sets.
+            se.Sets = [.. se.Sets.Where(s => s.IsWarmup), .. se.Sets.Where(s => !s.IsWarmup)];
+        }
+        else if (choice == "Delete set")
+        {
+            await DeleteSet(session, se, set);
+            return;
+        }
+        else
+            return;
+        Edited(session);
+    }
+
+    /// <summary>
+    /// Deletes a logged set. The exercise's last goes with it (after asking); the workout's very last means discarding it.
+    /// </summary>
+    async Task DeleteSet(WorkoutSession session, SessionExercise se, SetEntry set)
+    {
+        if (se.Sets.Count == 1)
+        {
+            if (session.Exercises.Count(e => e.Sets.Count > 0) == 1)
+            {
+                await DeleteSession(session);
+                return;
+            }
+            var name = store.GetExercise(se.ExerciseId)?.Name ?? "this exercise";
+            if (!await dialogs.Confirm("Remove the exercise?", $"It's the last set of {name}, so {name} is taken out of this workout.", "Remove"))
+                return;
+            session.Exercises.Remove(se);
+        }
+        else
+            se.Sets.Remove(set);
+        Edited(session);
+    }
+
+    /// <summary>A set that was skipped, tapped while editing: logged after all (like the one before it), or taken out.</summary>
+    async Task EditSkipped(SessionExercise se, bool warmup)
+    {
+        if (_finished is not { } session)
+            return;
+        const string log = "Log it as done";
+        switch (await dialogs.ActionSheet(warmup ? "Skipped warm-up" : "Skipped set", "Remove it", log))
+        {
+            case log:
+                if (warmup)
+                    se.SkippedWarmups = Math.Max(0, se.SkippedWarmups - 1);
+                else
+                    se.SkippedSets = Math.Max(0, se.SkippedSets - 1);
+                AddLoggedSet(se, warmup);
+                break;
+            case "Remove it":
+                if (warmup)
+                    se.SkippedWarmups = Math.Max(0, se.SkippedWarmups - 1);
+                else
+                    se.SkippedSets = Math.Max(0, se.SkippedSets - 1);
+                break;
+            default:
+                return;
+        }
+        Edited(session);
+    }
+
+    /// <summary>Add set under an exercise while editing: another working set like its last one, to change from there.</summary>
+    Task AddSet(SessionExercise se)
+    {
+        if (_finished is { } session)
+        {
+            AddLoggedSet(se, warmup: false);
+            Edited(session);
+        }
+        return Task.CompletedTask;
+    }
+
+    /// <summary>A done set, a copy of the last one of its kind (or of any), in its place: warm-ups first, then working sets.</summary>
+    static void AddLoggedSet(SessionExercise se, bool warmup)
+    {
+        var like = se.Sets.LastOrDefault(s => s.IsWarmup == warmup) ?? se.Sets.LastOrDefault();
+        var set = new SetEntry
+        {
+            WeightKg = like?.WeightKg ?? 0,
+            Reps = like?.Reps ?? se.RepMin,
+            Rir = warmup ? null : like?.Rir,
+            IsWarmup = warmup,
+            IsCompleted = true,
+        };
+        var at = warmup ? se.Sets.FindLastIndex(s => s.IsWarmup) + 1 : se.Sets.Count;
+        se.Sets.Insert(at, set);
+    }
+
+    /// <summary>An exercise's ··· while editing: its note, replacing it, moving it, or taking it out.</summary>
+    async Task ExerciseMenu(SessionExercise se, Exercise? ex, int index, int count)
+    {
+        if (_finished is not { } session)
+            return;
+        const string note = "Edit note", replace = "Replace exercise", up = "Move up", down = "Move down";
+        var options = new List<string> { note, replace };
+        if (index > 0)
+            options.Add(up);
+        if (index < count - 1)
+            options.Add(down);
+        var choice = await dialogs.ActionSheet(ex?.Name ?? "Exercise", "Remove exercise", [.. options]);
+        switch (choice)
+        {
+            case note:
+                if (await dialogs.Prompt("Note", "Your note on this exercise in this workout.", se.Note) is not { } text)
+                    return;
+                text = text.Trim();
+                se.Note = text.Length == 0 ? null : text.Length > SyncLimits.TextLength ? text[..SyncLimits.TextLength] : text;
+                break;
+            case replace:
+                if (await picker.PickOneAsync($"Replace {ex?.Name ?? "exercise"}", ex) is not { } replacement)
+                    return;
+                se.ExerciseId = replacement.Id;
+                break;
+            case up or down:
+                // Among the exercises shown (those with sets logged), so it swaps with the one beside it on screen.
+                var shown = session.Exercises.Where(e => e.Sets.Count > 0).ToList();
+                var neighbour = shown[choice == up ? index - 1 : index + 1];
+                var (at, to) = (session.Exercises.IndexOf(se), session.Exercises.IndexOf(neighbour));
+                (session.Exercises[at], session.Exercises[to]) = (session.Exercises[to], session.Exercises[at]);
+                break;
+            case "Remove exercise":
+                if (session.Exercises.Count(e => e.Sets.Count > 0) == 1)
+                {
+                    await DeleteSession(session);
+                    return;
+                }
+                if (!await dialogs.Confirm("Remove the exercise?", $"{ex?.Name ?? "It"} and its sets are taken out of this workout.", "Remove"))
+                    return;
+                session.Exercises.Remove(se);
+                break;
+            default:
+                return;
+        }
+        Edited(session);
+    }
+
+    /// <summary>Add exercise while editing: each picked goes at the end, with one set to change from there.</summary>
+    [RelayCommand]
+    async Task AddExercise()
+    {
+        if (_finished is not { } session)
+            return;
+        var picked = await picker.PickAsync();
+        if (picked.Count == 0)
+            return;
+        foreach (var ex in picked)
+        {
+            // The weight and reps it would be suggested now, as a starting point.
+            var se = workouts.CreateAdHoc(ex, session);
+            var first = se.Sets.FirstOrDefault(s => !s.IsWarmup);
+            se.Sets = [new SetEntry { WeightKg = first?.WeightKg ?? 0, Reps = first?.Reps ?? se.RepMin, IsCompleted = true }];
+            se.Recommendation = null;
+            se.Note = null;
+            se.NotePinned = false;
+            session.Exercises.Add(se);
+        }
+        Edited(session);
+    }
+
+    /// <summary>Renames a finished workout.</summary>
+    async Task Rename(WorkoutSession session)
+    {
+        if (await dialogs.Prompt("Rename workout", "", session.Name) is not { } name || (name = name.Trim()).Length == 0)
+            return;
+        session.Name = name.Length > SyncLimits.NameLength ? name[..SyncLimits.NameLength] : name;
+        Edited(session);
+    }
+
+    /// <summary>How long a finished workout took: its end moves, its start stays.</summary>
+    async Task ChangeLength(WorkoutSession session)
+    {
+        var minutes = (int)Math.Round(session.Duration.TotalMinutes);
+        if (await dialogs.Numbers("Workout length", "Minutes from start to finish. The start stays where it is.", "Save",
+                new Views.NumberField("Minutes", Math.Clamp(minutes, 1, 600), 1, 600)) is not [var value])
+            return;
+        var end = session.StartedAt.AddMinutes(value);
+        if (end > DateTime.Now)
+        {
+            await dialogs.Alert("Too long", "The workout would end in the future. Pick fewer minutes, or an earlier start time.");
+            return;
+        }
+        session.EndedAt = end;
+        Edited(session);
     }
 
     static ExerciseThumb Thumb(Exercise? ex) =>
