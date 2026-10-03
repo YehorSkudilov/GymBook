@@ -270,6 +270,10 @@ public partial class ProfileViewModel(
     [RelayCommand]
     Task OpenExercises() => GoTo(Routes.ExerciseLibrary);
 
+    /// <summary>Workouts deleted, or discarded while in progress, to bring back.</summary>
+    [RelayCommand]
+    Task OpenDeleted() => GoTo($"{Routes.PlanWorkouts}?plan=deleted");
+
     /// <summary>The same public page the store listing links to, served by the API.</summary>
     [RelayCommand]
     Task OpenPrivacy() => Browser.Default.OpenAsync(new Uri(ApiConfig.BaseAddress, "privacy"), BrowserLaunchMode.SystemPreferred);

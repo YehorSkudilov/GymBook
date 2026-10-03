@@ -6,12 +6,15 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>A finished workout in the list of a plan's workouts, which can be selected.</summary>
-public partial class SelectableWorkout(WorkoutSession session, string title, string detail, Action<SelectableWorkout> toggle, Func<SelectableWorkout, Task> open)
+public partial class SelectableWorkout(WorkoutSession session, string title, string detail, Action<SelectableWorkout> toggle, Func<SelectableWorkout, Task> open,
+    bool canOpen = true)
     : ObservableObject
 {
     public WorkoutSession Session { get; } = session;
     public string Title { get; } = title;
     public string Detail { get; } = detail;
+    /// <summary>It can be opened (a deleted workout can't until it's restored).</summary>
+    public bool CanOpen { get; } = canOpen;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CheckBackground), nameof(CheckStroke), nameof(RowBackground))]
@@ -32,6 +35,7 @@ public partial class SelectableWorkout(WorkoutSession session, string title, str
 /// Every finished workout of one plan (?plan=), or those linked to none (?plan=none), newest first, to delete some: tap
 /// rows to select them, drag over rows (from a checkbox, or after a long-press) to select a run of them, pick a range of
 /// dates, or all. Deleting closes the gaps in the plan's weeks (see <see cref="DataStore.DeleteSessions"/>).
+/// With ?plan=deleted, the workouts deleted or discarded before, to select the same way and restore.
 /// </summary>
 public partial class PlanWorkoutsViewModel(DataStore store, DialogService dialogs) : BaseViewModel, IQueryAttributable
 {
@@ -51,7 +55,13 @@ public partial class PlanWorkoutsViewModel(DataStore store, DialogService dialog
     int selectedCount;
 
     public bool HasSelection => SelectedCount > 0;
-    public string DeleteText => SelectedCount == 1 ? "Delete 1 workout" : $"Delete {SelectedCount} workouts";
+    public string DeleteText => IsDeletedList
+        ? SelectedCount == 1 ? "Restore 1 workout" : $"Restore {SelectedCount} workouts"
+        : SelectedCount == 1 ? "Delete 1 workout" : $"Delete {SelectedCount} workouts";
+
+    /// <summary>The list of deleted workouts, to restore: the button restores (in blue) instead of deleting.</summary>
+    public bool IsDeletedList => _planId == "deleted";
+    public Color ActionColor => IsDeletedList ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#FF4D5E");
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) =>
         _planId = query.TryGetValue("plan", out var plan) ? plan?.ToString() : null;
@@ -64,6 +74,13 @@ public partial class PlanWorkoutsViewModel(DataStore store, DialogService dialog
 
     void Load()
     {
+        OnPropertyChanged(nameof(IsDeletedList));
+        OnPropertyChanged(nameof(ActionColor));
+        if (IsDeletedList)
+        {
+            LoadDeleted();
+            return;
+        }
         var plan = _planId == "none" ? null : store.GetPlan(_planId);
         Title = plan?.Name ?? "Not linked to a plan";
         var sessions = store.History.Where(s => plan != null ? s.PlanId == plan.Id : store.GetPlan(s.PlanId) == null).ToList();
@@ -79,6 +96,22 @@ public partial class PlanWorkoutsViewModel(DataStore store, DialogService dialog
         Summary = plan == null
             ? $"{Count(Items.Count)} not linked to any plan. Tap to select, or drag over them from the checkboxes (or after holding one)."
             : $"{Count(Items.Count)} done with this plan. Tap to select, or drag over them from the checkboxes (or after holding one).";
+        UpdateCount();
+    }
+
+    /// <summary>The workouts deleted or discarded before, with when each was done and how it ended up deleted.</summary>
+    void LoadDeleted()
+    {
+        Title = "Recently deleted";
+        Items = [.. store.DeletedWorkouts().Select(s => new SelectableWorkout(s,
+            s.Name,
+            $"{s.StartedAt:ddd d MMM yyyy, HH:mm} · {s.Exercises.Sum(e => e.Sets.Count(x => x.IsCompleted && !x.IsWarmup))} sets · "
+                + (s.EndedAt == null ? "discarded while in progress" : $"deleted {s.UpdatedAt.LocalDateTime:d MMM}"),
+            Toggle, Open, canOpen: false))];
+        IsEmpty = Items.Count == 0;
+        Summary = Items.Count == 0
+            ? "Nothing to restore. Workouts you delete or discard show up here."
+            : $"{Count(Items.Count)} you deleted, or discarded while in progress. Select the ones to bring back.";
         UpdateCount();
     }
 
@@ -149,6 +182,15 @@ public partial class PlanWorkoutsViewModel(DataStore store, DialogService dialog
         var chosen = Items.Where(i => i.IsSelected).Select(i => i.Session).ToList();
         if (chosen.Count == 0)
             return;
+        if (IsDeletedList)
+        {
+            // Back in the history, the calendar and the stats, linked to their plans as they were.
+            store.RestoreSessions(chosen);
+            await dialogs.Alert(chosen.Count == 1 ? "Restored" : $"{chosen.Count} workouts restored",
+                "They're back in your history. One discarded while in progress comes back finished, with the sets you'd done.");
+            Load();
+            return;
+        }
         var (first, last) = (chosen.Min(s => s.StartedAt), chosen.Max(s => s.StartedAt));
         var when = first.Date == last.Date ? $"on {first:d MMM yyyy}" : $"from {first:d MMM yyyy} to {last:d MMM yyyy}";
         if (!await dialogs.Confirm(chosen.Count == 1 ? "Delete 1 workout?" : $"Delete {chosen.Count} workouts?",

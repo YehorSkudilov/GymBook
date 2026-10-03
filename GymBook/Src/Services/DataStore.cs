@@ -115,6 +115,40 @@ public class DataStore
         Save();
     }
 
+    /// <summary>
+    /// Workouts deleted from the history and workouts discarded while in progress, most recently deleted first, that can
+    /// be brought back (see <see cref="RestoreSessions"/>): those with at least one set done.
+    /// </summary>
+    public List<WorkoutSession> DeletedWorkouts() =>
+        [.. _local.DeletedSessions().Where(s => s.Id != Data.ActiveSession?.Id && Data.Sessions.All(x => x.Id != s.Id)
+            && s.Exercises.Any(e => e.Sets.Any(x => x.IsCompleted)))];
+
+    /// <summary>
+    /// Brings deleted workouts back into the history, as they were (syncs like any change). One discarded while in
+    /// progress comes back finished, like finishing it would have: the sets done, the rest counted as skipped, ending
+    /// when the last thing was logged.
+    /// </summary>
+    public void RestoreSessions(IEnumerable<WorkoutSession> sessions)
+    {
+        foreach (var session in sessions)
+        {
+            session.IsDeleted = false;
+            if (session.EndedAt == null)
+            {
+                session.EndedAt = SetTimes.LastLogged(session);
+                foreach (var e in session.Exercises)
+                {
+                    e.SkippedWarmups += e.Sets.Count(s => s.IsWarmup && !s.IsCompleted);
+                    e.SkippedSets += e.Sets.Count(s => !s.IsWarmup && !s.IsCompleted);
+                    e.Sets.RemoveAll(s => !s.IsCompleted);
+                }
+                session.Exercises.RemoveAll(e => e.Sets.Count == 0);
+            }
+            Data.Sessions.Add(session);
+        }
+        PlansChanged([.. sessions.Select(s => GetPlan(s.PlanId)).OfType<WorkoutPlan>().Distinct()]);
+    }
+
     /// <summary>Deletes every plan. Workouts done with them stay in the history.</summary>
     public void ResetPlans()
     {
