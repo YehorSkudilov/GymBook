@@ -1798,6 +1798,25 @@
  },
  {
   "file": "ExerciseLibrary.Back.cs",
+  "id": "wide_grip_pulldown",
+  "name": "Wide-Grip Lat Pulldown",
+  "primary": "Back",
+  "equipment": "Cable",
+  "mechanic": "Compound",
+  "secondary": [
+   "Biceps"
+  ],
+  "category": "Strength",
+  "level": "Beginner",
+  "hold": false,
+  "video": [
+   "lueEJGjTuPQ",
+   null,
+   null
+  ]
+ },
+ {
+  "file": "ExerciseLibrary.Back.cs",
   "id": "close_grip_pulldown",
   "name": "Close-Grip Lat Pulldown",
   "primary": "Back",
