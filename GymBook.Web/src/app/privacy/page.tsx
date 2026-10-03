@@ -31,16 +31,30 @@ export default function PrivacyPage() {
 
       <h2>Health data from Samsung Health and Health Connect</h2>
       <p>
-        On Android, you can choose to let Gym Book read health data through Health Connect, from the apps you pick (Samsung Health, for
-        example). Only with your permission, given in Health Connect and changeable there at any time, Gym Book reads: calories burned
-        (total, active and resting), steps, food logged in other apps (each food&apos;s name, meal, time, calories, protein, carbohydrates
-        and fat), weight, body fat, lean body mass, bone mass, body water mass, basal metabolic rate and height. Gym Book only reads; it
-        never writes to or changes your health data.
+        On Android, you can choose to let Gym Book read health data, either from Samsung Health directly or through Health Connect
+        (from every app, or only the apps you pick). Only with your permission, given in Samsung Health or Health Connect and
+        changeable there at any time, Gym Book reads: calories burned (total, active and resting), steps, food logged in other apps
+        (each food&apos;s name, meal, time, calories, protein, carbohydrates and fat), weight, body fat, lean body mass, bone mass, body
+        water mass, basal metabolic rate and height. When you first connect, Gym Book reads all of this that&apos;s available, including
+        data recorded before you connected (in Health Connect, older than 30 days only if you allow access to past data); after that it
+        keeps the last 30 days up to date.
       </p>
       <p>
-        This data is used only to show your nutrition, energy balance, activity and body composition in the app and to suggest nutrition
-        goals. It&apos;s saved in the app like the rest of your data and, if you have an account, synced to it. Health data is never used
-        for advertising, never sold, and never shared with anyone, including the AI features.
+        Only if you turn on sending (it&apos;s off by default), Gym Book also writes to Samsung Health or Health Connect what you log in
+        Gym Book: finished workouts (as strength-training sessions with their time and active calories), the food you log and the weight
+        and body fat you enter. It only changes or deletes the records it wrote itself. Turning sending off stops it.
+      </p>
+      <p>
+        This data is used only to show your nutrition, energy balance, activity and body composition in the app, to suggest nutrition
+        goals, and to keep your health app up to date with your training and food. It&apos;s saved in the app like the rest of your data
+        and, if you have an account, synced to it. Health data is never used for advertising, never sold, and never shared with anyone,
+        including the AI features.
+      </p>
+
+      <h2>Heart rate on Wear OS</h2>
+      <p>
+        With your permission, the Gym Book app on a Wear OS watch reads your heart rate from the watch&apos;s sensor while a workout is on
+        screen, to show it on the watch and, live, on your phone. It isn&apos;t stored, synced to your account or shared.
       </p>
 
       <h2>Data we collect when you create an account</h2>
