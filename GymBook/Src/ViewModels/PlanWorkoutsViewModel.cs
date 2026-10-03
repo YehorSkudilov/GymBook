@@ -105,8 +105,10 @@ public partial class PlanWorkoutsViewModel(DataStore store, DialogService dialog
         Title = "Recently deleted";
         Items = [.. store.DeletedWorkouts().Select(s => new SelectableWorkout(s,
             s.Name,
-            $"{s.StartedAt:ddd d MMM yyyy, HH:mm} · {s.Exercises.Sum(e => e.Sets.Count(x => x.IsCompleted && !x.IsWarmup))} sets · "
-                + (s.EndedAt == null ? "discarded while in progress" : $"deleted {s.UpdatedAt.LocalDateTime:d MMM}"),
+            DataStore.NothingLogged(s)
+                ? $"{s.StartedAt:ddd d MMM yyyy, HH:mm} · discarded with nothing ticked · restores as planned ({s.Exercises.Sum(e => e.Sets.Count(x => !x.IsWarmup))} sets)"
+                : $"{s.StartedAt:ddd d MMM yyyy, HH:mm} · {s.Exercises.Sum(e => e.Sets.Count(x => x.IsCompleted && !x.IsWarmup))} sets · "
+                    + (s.EndedAt == null ? "discarded while in progress" : $"deleted {s.UpdatedAt.LocalDateTime:d MMM}"),
             Toggle, Open, canOpen: false))];
         IsEmpty = Items.Count == 0;
         Summary = Items.Count == 0
@@ -185,9 +187,11 @@ public partial class PlanWorkoutsViewModel(DataStore store, DialogService dialog
         if (IsDeletedList)
         {
             // Back in the history, the calendar and the stats, linked to their plans as they were.
+            var planned = chosen.Any(DataStore.NothingLogged);
             store.RestoreSessions(chosen);
             await dialogs.Alert(chosen.Count == 1 ? "Restored" : $"{chosen.Count} workouts restored",
-                "They're back in your history. One discarded while in progress comes back finished, with the sets you'd done.");
+                "They're back in your history. One discarded while in progress comes back finished, with the sets you'd done."
+                + (planned ? " One with nothing ticked comes back with its sets done as planned and a guessed length: open it and use Edit workout (and ··· › Change length) to put in what you really did." : ""));
             Load();
             return;
         }
