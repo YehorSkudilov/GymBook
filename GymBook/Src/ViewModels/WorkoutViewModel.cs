@@ -240,31 +240,48 @@ public partial class WorkoutViewModel(
         _timer.Start();
         // Ticks from the Wear OS app go through this page while it's open, so they work like a tap here.
         watch.LiveCompleteSet = CompleteFromWatch;
+        // Finished or discarded from the watch: the page closes, as after finishing here.
+        watch.LiveEnded = EndedFromWatch;
     }
 
     public override void OnDisappearing()
     {
         _timer?.Stop();
-        if (watch.LiveCompleteSet == (Func<SetEntry, bool>)CompleteFromWatch)
+        if (watch.LiveCompleteSet == (Func<SetEntry, double?, int?, bool>)CompleteFromWatch)
             watch.LiveCompleteSet = null;
+        if (watch.LiveEnded == (Action)EndedFromWatch)
+            watch.LiveEnded = null;
         if (workouts.Active != null)
             workouts.Save();
     }
 
-    /// <summary>The Wear OS app ticked <paramref name="set"/>: the same as tapping its tick here, then showing its exercise.</summary>
-    bool CompleteFromWatch(SetEntry set)
+    /// <summary>
+    /// The Wear OS app ticked <paramref name="set"/>, at <paramref name="kg"/> and <paramref name="reps"/> when it changed
+    /// them: typed in as here (a new weight carries on to the sets after it of the same kind still to do), then the same
+    /// as tapping its tick, then showing its exercise.
+    /// </summary>
+    bool CompleteFromWatch(SetEntry set, double? kg, int? reps)
     {
         for (var i = 0; i < Exercises.Count; i++)
         {
-            if (Exercises[i].Sets.FirstOrDefault(r => r.Model == set) is not { } row)
+            var exercise = Exercises[i];
+            if (exercise.Sets.FirstOrDefault(r => r.Model == set) is not { } row)
                 continue;
             CurrentIndex = i;
+            if (reps is { } r)
+                row.RepsText = r.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            if (kg is { } w)
+                foreach (var later in exercise.Sets.SkipWhile(s => s != row).Where(s => !s.IsCompleted && s.Model.IsWarmup == set.IsWarmup))
+                    later.WeightText = units.Format(w);
             if (!row.IsCompleted)
                 row.ToggleCommand.Execute(null);
             return row.IsCompleted;
         }
         return false;
     }
+
+    /// <summary>The workout was finished or discarded from the watch: close, as after finishing here.</summary>
+    void EndedFromWatch() => _ = GoBack();
 
     void OnTick(object? sender, EventArgs e) => Tick();
 

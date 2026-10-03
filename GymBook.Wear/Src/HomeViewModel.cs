@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GymBook.Contracts;
 using GymBook.Models;
 using GymBook.Services;
 using GymBook.Services.Sync;
@@ -89,10 +90,15 @@ public partial class HomeViewModel : ObservableObject
     bool PhoneOwnsWorkout => _phone.Workout.IsActive && _phone.Workout.SessionId != WatchOwnership.SessionId;
 
     /// <summary>
-    /// The watch's own workout in progress. A workout in progress that came in by syncing (the phone's) counts too once
-    /// the phone isn't running it any more, e.g. it was started on the phone and the phone is far away.
+    /// The watch's own workout in progress. A workout in progress that came in by syncing (the phone's) counts too, but
+    /// only while the phone can't be reached, e.g. it was started on the phone and the phone is far away. With the phone
+    /// connected and not running it, that copy is out of date (finished or discarded there): never the watch's to resume
+    /// or discard; a sync brings the phone's version.
     /// </summary>
-    bool HasOwnWorkout => _workouts.Active is { } active && (active.Id == WatchOwnership.SessionId || !PhoneOwnsWorkout);
+    bool HasOwnWorkout => _workouts.Active is { } active && WatchOwnership.IsWatchs(active, _phone.Workout, _phone.IsConnected);
+
+    /// <summary>A workout in progress came in by syncing that the connected phone isn't running: out of date, so sync.</summary>
+    bool HasStaleCopy => _workouts.Active is { } active && active.Id != WatchOwnership.SessionId && !PhoneOwnsWorkout && _phone.IsConnected;
 
     public async Task OnAppearingAsync()
     {
@@ -109,6 +115,8 @@ public partial class HomeViewModel : ObservableObject
             {
             }
         }
+        // Connected to the phone: its companion (workouts start and run there). Not: on its own.
+        await _phone.CheckConnectedAsync();
         Refresh();
         // Catch up: plans and workouts from the phone or the website, and anything done on the watch offline.
         _sync.Schedule(TimeSpan.Zero);
@@ -129,6 +137,8 @@ public partial class HomeViewModel : ObservableObject
     // it's a new one, so backing out of it to the home doesn't bring it straight back at the next tick.
     void OnPhoneWorkoutChanged()
     {
+        // Hearing from the phone means it's connected.
+        _ = _phone.CheckConnectedAsync().ContinueWith(_ => MainThread.BeginInvokeOnMainThread(Refresh));
         Refresh();
         var started = PhoneOwnsWorkout && _phone.Workout.SessionId != _lastPhoneSession;
         _lastPhoneSession = _phone.Workout.IsActive ? _phone.Workout.SessionId : null;
@@ -160,6 +170,8 @@ public partial class HomeViewModel : ObservableObject
 
         var plan = IsSignedIn ? _store.ActivePlan : null;
         CanQuickStart = !HasOwnWorkout && !PhoneOwnsWorkout;
+        if (HasStaleCopy)
+            _sync.Schedule(TimeSpan.Zero);
         CanChangePlan = IsSignedIn && _store.Data.Plans.Count > (plan == null ? 0 : 1);
         HasPlan = plan is { Workouts.Count: > 0 };
         HasNoPlan = IsSignedIn && !HasPlan;
@@ -369,7 +381,7 @@ public partial class HomeViewModel : ObservableObject
 
     async Task StartAsync(WorkoutPlan plan, PlanWorkout workout, int week, bool confirm = false, bool again = false)
     {
-        if (_workouts.Active != null || PhoneOwnsWorkout)
+        if (HasOwnWorkout || PhoneOwnsWorkout)
         {
             Message = "Finish the workout in progress first.";
             return;
@@ -378,8 +390,38 @@ public partial class HomeViewModel : ObservableObject
                 again ? $"It's already done in week {week}." : $"Week {week} · {workout.Exercises.Count} exercises", "Start", "Cancel"))
             return;
         Message = "";
+        if (await StartOnPhoneAsync(new WearStartWorkout(plan.Id, workout.Id, week)))
+            return;
         WatchOwnership.SessionId = _workouts.StartFromPlan(plan, workout, week).Id;
         await ResumeWatchWorkout();
+    }
+
+    /// <summary>
+    /// With the phone connected, the workout starts there and the watch follows it (the companion page): true when it
+    /// did. Without a phone, or if it doesn't answer and the user would rather, false: the watch starts it on its own.
+    /// </summary>
+    async Task<bool> StartOnPhoneAsync(WearStartWorkout request)
+    {
+        if (!await _phone.CheckConnectedAsync())
+            return false;
+        Message = "Starting on your phone…";
+        var sent = false;
+        try
+        {
+            sent = await _phone.StartOnPhoneAsync(request);
+        }
+        catch (Exception)
+        {
+        }
+        if (sent && await _phone.WaitForPhoneWorkoutAsync(TimeSpan.FromSeconds(8)))
+        {
+            // The phone's new workout opens its page by itself (OnPhoneWorkoutChanged).
+            Message = "";
+            return true;
+        }
+        Message = "";
+        // No answer (the phone app missing, say): the watch can run it itself.
+        return !await Page.DisplayAlertAsync("Phone didn't answer", "Start the workout on the watch instead?", "Start here", "Cancel");
     }
 
     /// <summary>A rest day ticked off (or not), as on the phone, so the week can be complete.</summary>
@@ -396,7 +438,9 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand]
     async Task QuickWorkout()
     {
-        if (_workouts.Active != null || PhoneOwnsWorkout)
+        if (HasOwnWorkout || PhoneOwnsWorkout)
+            return;
+        if (await StartOnPhoneAsync(new WearStartWorkout(null, null, null)))
             return;
         WatchOwnership.SessionId = _workouts.StartEmpty().Id;
         await ResumeWatchWorkout();

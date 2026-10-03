@@ -59,7 +59,13 @@ public class PhoneListenerService : WearableListenerService
             try
             {
                 if (JsonSerializer.Deserialize(data, WorkoutJson) is { } workout)
-                    MainThread.BeginInvokeOnMainThread(() => WatchOngoing.Refresh(workout));
+                    MainThread.BeginInvokeOnMainThread(async () =>
+                    {
+                        // Heard from the phone: connected, so a synced copy of its workout isn't the watch's.
+                        if (IPlatformApplication.Current?.Services.GetService<PhoneLink>() is { } link)
+                            await link.CheckConnectedAsync();
+                        WatchOngoing.Refresh(workout);
+                    });
             }
             catch (JsonException)
             {
