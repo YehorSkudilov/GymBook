@@ -119,6 +119,14 @@
 		     It brings AndroidX Activity 1.13, so its -ktx is lifted to match, like the ones above. -->
 		<PackageReference Include="Xamarin.GooglePlayServices.Code.Scanner" Version="116.1.0.17" />
 		<PackageReference Include="Xamarin.AndroidX.Activity.Ktx" Version="1.13.0.1" />
+		<!-- Samsung Health's Data SDK (Platforms/Android/SamsungHealthData.cs), for reading Samsung Health directly:
+		     from developer.samsung.com/health/data, called through JNI rather than bound. It needs Kotlin, kotlinx
+		     coroutines and Gson, which come with the packages above (Gson is named so it stays), and Kotlin's parcelize
+		     runtime, which doesn't (without it, reading crashed: NoClassDefFoundError kotlinx/parcelize/Parceler). -->
+		<AndroidLibrary Remove="Platforms\Android\Libs\samsung-health-data-api-1.1.0.aar" />
+		<AndroidLibrary Include="Platforms\Android\Libs\samsung-health-data-api-1.1.0.aar" Bind="false" />
+		<PackageReference Include="GoogleGson" Version="2.13.1.1" />
+		<PackageReference Include="Xamarin.Kotlin.Parcelize.Runtime" Version="2.4.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>

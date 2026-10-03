@@ -19,6 +19,11 @@
             <Setter Property="HeightRequest" Value="26" />
             <Setter Property="VerticalOptions" Value="Center" />
         </Style>
+        <!-- A figure in the Activity and Body cards -->
+        <Style x:Key="Figure" TargetType="Label">
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="17" />
+        </Style>
     </ContentView.Resources>
 
         <VerticalStackLayout Spacing="14">
@@ -292,5 +297,55 @@
                     </VerticalStackLayout>
                 </VerticalStackLayout>
             </Border>
+
+            <!-- Today's activity, from health data -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasActivity}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Streak" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Activity" Style="{StaticResource H3}" />
+                            <Label Text="{Binding ActivityCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <FlexLayout BindableLayout.ItemsSource="{Binding Activity}" Wrap="Wrap" JustifyContent="Start">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:StatItem">
+                                <VerticalStackLayout FlexLayout.Basis="50%" Padding="0,4">
+                                    <Label Text="{Binding Value}" Style="{StaticResource Figure}" />
+                                    <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+    
+            <!-- Body composition: the latest of each measurement from the health apps, N/A for the rest -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Scale" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" VerticalOptions="Start" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Body" Style="{StaticResource H3}" />
+                            <Label Text="{Binding BodyCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <FlexLayout BindableLayout.ItemsSource="{Binding Body}" Wrap="Wrap" JustifyContent="Start">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:StatItem">
+                                <VerticalStackLayout FlexLayout.Basis="33.3%" Padding="0,4">
+                                    <Label Text="{Binding Value}" Style="{StaticResource Figure}" FontSize="15" />
+                                    <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                    <Label Text="Body fat" Style="{StaticResource Overline}" Margin="0,4,0,0" IsVisible="{Binding HasBodyFatChart}" />
+                    <GraphicsView Drawable="{Binding BodyFatChart}" HeightRequest="140" IsVisible="{Binding HasBodyFatChart}"
+                                  controls:ChartReveal.When="{Binding IsShowing}" />
+                </VerticalStackLayout>
+            </Border>
+    
         </VerticalStackLayout>
 </views:TabView>

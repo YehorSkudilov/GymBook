@@ -388,12 +388,12 @@ public class UserProfile
     /// <summary>Where calories burned, steps and body measurements are read from.</summary>
     public HealthSource HealthSource { get; set; }
     /// <summary>
-    /// The apps whose health data is read (their Android package names), picked by the user; null or empty: every app's
-    /// (or only Samsung Health's with <see cref="HealthSource.SamsungHealth"/>).
+    /// The apps whose health data is read through Health Connect (their Android package names), picked by the user;
+    /// null or empty: every app's. Not used with <see cref="HealthSource.SamsungHealth"/>, which reads Samsung Health itself.
     /// </summary>
     [MaxItems(30)]
     public List<string>? HealthApps { get; set; }
-    /// <summary>Food logged in the health app is counted with what's logged in Gym Book.</summary>
+    /// <summary>No longer used: food logged in the health app always counts with what's logged in Gym Book. Kept for older data.</summary>
     public bool ImportHealthFood { get; set; } = true;
     /// <summary>Foods the user saved to find again in the food search ("My foods"), each with its amounts for one serving.</summary>
     [MaxItems(SavedFood.Max)]

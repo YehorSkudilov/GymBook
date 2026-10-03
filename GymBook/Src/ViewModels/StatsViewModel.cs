@@ -7,7 +7,7 @@ using GymBook.Services;
 
 namespace GymBook.ViewModels;
 
-public partial class StatsViewModel(DataStore store, StatsService stats, Units units, DialogService dialogs) : BaseViewModel
+public partial class StatsViewModel(DataStore store, StatsService stats, Units units, DialogService dialogs, NutritionService nutrition) : BaseViewModel
 {
     static readonly Color Accent = Color.FromArgb("#3F7DFF");
     static readonly Color Violet = Color.FromArgb("#7C5CFF");
@@ -38,6 +38,15 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     [ObservableProperty] List<LineItem> gains = [];
     [ObservableProperty] bool hasGains;
 
+    // Health data (connected in the Profile tab): today's activity, and body composition.
+    [ObservableProperty] bool hasActivity;
+    [ObservableProperty] List<StatItem> activity = [];
+    [ObservableProperty] string activityCaption = "";
+    [ObservableProperty] List<StatItem> body = [];
+    [ObservableProperty] string bodyCaption = "";
+    [ObservableProperty] IDrawable? bodyFatChart;
+    [ObservableProperty] bool hasBodyFatChart;
+
     /// <summary>The tab is on screen: icons animate, and charts, numbers and cards play in each time it comes into view.</summary>
     [ObservableProperty] bool isShowing;
 
@@ -60,6 +69,68 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         ("Legs", Color.FromArgb("#2ED47A"), [MuscleGroup.Quads, MuscleGroup.Hamstrings, MuscleGroup.Glutes, MuscleGroup.Calves]),
         ("Core", Color.FromArgb("#FF8A3D"), [MuscleGroup.Abs, MuscleGroup.LowerBack, MuscleGroup.Neck]),
     ];
+
+    /// <summary>Today's calories burned and steps from the health apps (all four always; N/A for what they haven't recorded).</summary>
+    void ShowActivity(DayNutrition day)
+    {
+        var h = day.Health;
+        ActivityCaption = h?.Source is { } source ? $"Today so far · {source}" : "Today · connect your health data in the Profile tab";
+        static string Kcal(double? v) => v is { } k ? $"{NutritionService.Kcal(k)} kcal" : "N/A";
+        Activity =
+        [
+            new("Total burned", Kcal(day.BurnSource == BurnSource.Measured ? day.BurnedKcal : null)),
+            new("Active", Kcal(h?.ActiveBurnedKcal)),
+            // Samsung Health's own total (read directly) comes without a resting figure: what isn't activity.
+            new("Resting", Kcal(h?.BasalBurnedKcal ?? (h is { TotalBurnedKcal: { } total, ActiveBurnedKcal: { } active } ? total - active : null))),
+            new("Steps", h?.Steps is { } steps ? steps.ToString("#,0", CultureInfo.CurrentCulture) : "N/A"),
+        ];
+        HasActivity = true;
+    }
+
+    void ShowBody()
+    {
+        // Only measurements read from the health apps (not weights logged by hand, nothing estimated); N/A for what
+        // they haven't measured. Fat mass and BMI are worked out from measured values only.
+        var entries = store.Data.BodyWeights.Where(b => b.Source != null).OrderBy(b => b.Date).ToList();
+        var latest = entries.LastOrDefault();
+        double? Latest(Func<BodyWeightEntry, double?> pick) => entries.Select(pick).LastOrDefault(v => v != null);
+        var weight = latest?.WeightKg;
+        var fat = Latest(b => b.BodyFatPercent);
+        var height = store.Profile.HeightCm;
+        string Mass(double? kg) => kg is { } v ? units.FormatWithUnit(v) : "N/A";
+
+        Body =
+        [
+            new("Weight", Mass(weight)),
+            new("Body fat", fat is { } f ? $"{f:0.#}%" : "N/A"),
+            new("Fat mass", Mass(weight * fat / 100)),
+            new("Lean mass", Mass(Latest(b => b.LeanMassKg))),
+            new("Bone mass", Mass(Latest(b => b.BoneMassKg))),
+            new("Body water", Mass(Latest(b => b.BodyWaterKg))),
+            new("BMR", Latest(b => b.BmrKcal) is { } bmr ? $"{NutritionService.Kcal(bmr)} kcal" : "N/A"),
+            new("Height", height is { } cm ? Height(cm) : "N/A"),
+            new("BMI", weight is { } w && height is { } h ? $"{w / Math.Pow(h / 100, 2):0.0}" : "N/A"),
+        ];
+
+        BodyCaption = latest == null
+            ? "No measurements from your health apps yet. Connect your health data in the Profile tab to bring in your scale's and watch's."
+            : $"Last measured {latest.Date:d MMM} · {latest.Source}";
+
+        var fats = entries.Where(b => b.BodyFatPercent != null).TakeLast(12).ToList();
+        HasBodyFatChart = fats.Count >= 2;
+        BodyFatChart = new LineChartDrawable(
+            [.. fats.Select(b => new ChartPoint(b.Date.ToString("d MMM", CultureInfo.CurrentCulture), b.BodyFatPercent!.Value))],
+            Violet, v => $"{v:0.#}%");
+    }
+
+    string Height(double cm)
+    {
+        if (units.Unit == WeightUnit.Kg)
+            return $"{cm:0} cm";
+        var inches = (int)Math.Round(cm / 2.54);
+        return $"{inches / 12}′ {inches % 12}″";
+    }
+
 
     public override void OnDisappearing() => IsShowing = false;
     public System.Collections.ObjectModel.ObservableCollection<ChipItem> LiftChips { get; } = [];
@@ -114,6 +185,8 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         HasRecords = Records.Count > 0;
         ShowStrength();
         ShowHabits(history);
+        ShowActivity(nutrition.Day(DateTime.Today));
+        ShowBody();
         // Last, so everything bound above plays in (charts draw, numbers count, cards rise).
         IsShowing = true;
         return Task.CompletedTask;

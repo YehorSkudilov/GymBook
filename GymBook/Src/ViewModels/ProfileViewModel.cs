@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Models;
 using GymBook.Services;
+using GymBook.Services.Health;
 using GymBook.Services.Sync;
 using GymBook.Views;
 
@@ -14,7 +15,9 @@ public partial class ProfileViewModel(
     AccountService account,
     SyncService sync,
     IServiceProvider services,
-    HealthSettingsViewModel health) : BaseViewModel
+    HealthSettingsViewModel health,
+    HealthSyncService healthSync,
+    DataExport export) : BaseViewModel
 {
     /// <summary>The Health data section: connecting health apps, which to read from, and so on.</summary>
     public HealthSettingsViewModel Health => health;
@@ -259,9 +262,6 @@ public partial class ProfileViewModel(
     Task EditExperience() => Pick("Experience", Enum.GetValues<Experience>(), e => e.Display(), e => P.Experience = e);
 
     [RelayCommand]
-    Task OpenHistory() => GoTo(Routes.History);
-
-    [RelayCommand]
     Task OpenSyncDetails() => GoTo(Routes.SyncDetails);
 
     /// <summary>The exercise library: browse, search and filter every exercise, and make custom ones.</summary>
@@ -339,21 +339,62 @@ public partial class ProfileViewModel(
 
     static void ShowOnboarding() => App.ShowOnboarding();
 
+    /// <summary>Exports one kind of data as a file to share: workouts and plans as importable CSV, the rest as CSV or JSON.</summary>
     [RelayCommand]
     async Task Export()
     {
-        await Share.Default.RequestAsync(new ShareFileRequest("Gym Book data", new ShareFile(store.ExportJson(), "application/json")));
+        var kinds = Enum.GetValues<ExportKind>();
+        var label = await dialogs.ActionSheet("Export", null, [.. kinds.Select(DataExport.Label)]);
+        if (label == null)
+            return;
+        var kind = kinds.First(k => DataExport.Label(k) == label);
+        if (export.Write(kind) is not { } file)
+        {
+            await dialogs.Alert("Nothing to export", "There's nothing of that kind yet.");
+            return;
+        }
+        await Share.Default.RequestAsync(new ShareFileRequest(DataExport.Label(kind), new ShareFile(file.Path, file.ContentType)));
     }
 
+    const string DeleteHealth = "Health data read from other apps", DeleteHistory = "Workout history", DeletePlans = "Plans",
+        DeleteEverything = "Everything";
+
+    /// <summary>Deletes one kind of data (health data read in, workout history, plans), or everything.</summary>
     [RelayCommand]
     async Task Reset()
     {
-        var message = account.IsSignedIn
-            ? "This permanently deletes your plans, workouts and settings from this device and from your account."
-            : "This permanently deletes your plans, workouts and settings.";
-        if (!await dialogs.Confirm("Reset all data?", message, "Delete everything"))
-            return;
-        store.Reset();
-        ShowOnboarding();
+        var where = account.IsSignedIn ? " from this device and your account" : "";
+        switch (await dialogs.ActionSheet("Delete data", DeleteEverything, DeleteHealth, DeleteHistory, DeletePlans))
+        {
+            case DeleteHealth:
+                if (!await dialogs.Confirm("Delete health data?",
+                        $"Calories burned, steps, and food and body measurements read from Samsung Health or Health Connect are deleted{where}. Food and weights you logged in Gym Book stay."
+                        + (healthSync.IsConnected ? " While connected, the last 30 days are read again." : ""),
+                        "Delete health data"))
+                    return;
+                store.ResetHealthData();
+                await healthSync.SyncAsync(force: true);
+                health.Refresh();
+                break;
+            case DeleteHistory:
+                if (!await dialogs.Confirm("Delete workout history?",
+                        $"Every finished workout is deleted{where}. Plans stay and start again from their first workout.", "Delete history"))
+                    return;
+                store.ResetHistory();
+                break;
+            case DeletePlans:
+                if (!await dialogs.Confirm("Delete plans?",
+                        $"Every plan is deleted{where}. Workouts already done stay in the history.", "Delete plans"))
+                    return;
+                store.ResetPlans();
+                break;
+            case DeleteEverything:
+                if (!await dialogs.Confirm("Delete everything?",
+                        $"Your plans, workouts, food, health data and settings are permanently deleted{where}.", "Delete everything"))
+                    return;
+                store.Reset();
+                ShowOnboarding();
+                break;
+        }
     }
 }

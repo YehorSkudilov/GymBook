@@ -216,4 +216,97 @@ public static partial class CsvExportFormat
         }
         return sets;
     }
+
+    // Writing: the same two exports, so Gym Book's own can be imported again (here or in a new account) like the other
+    // app's. Exercises are written by name and equipment, which the importer matches back to the app's.
+
+    /// <summary>A plans export of <paramref name="plans"/>: each plan's days in order, rest days as "Day 3 · Rest".</summary>
+    public static string WritePlans(IEnumerable<GymBook.Models.WorkoutPlan> plans, Func<string, GymBook.Models.Exercise?> exercise)
+    {
+        var csv = new System.Text.StringBuilder();
+        foreach (var plan in plans)
+        {
+            csv.Append(Quote(plan.Name)).Append(';').Append(plan.CreatedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)).Append('\n');
+            var days = PlanSchedule.Days(plan);
+            for (var i = 0; i < days.Count; i++)
+            {
+                csv.Append(Quote($"Day {i + 1} · {days[i]?.Name ?? "Rest"}")).Append('\n');
+                var number = 0;
+                foreach (var pe in days[i]?.Exercises ?? [])
+                    csv.Append(Quote($"{++number}. {Reference(exercise(pe.ExerciseId))}")).Append(';')
+                        .Append(Quote($"{pe.Sets} sets")).Append(';').Append(Quote($"{Reps(pe.RepMin, pe.RepMax)} reps")).Append('\n');
+            }
+            csv.Append('\n');
+        }
+        return csv.ToString();
+    }
+
+    /// <summary>
+    /// A workouts export of <paramref name="sessions"/>: done sets only, weights in <paramref name="unit"/>. A workout of
+    /// a plan still in <paramref name="plans"/> says its day, week and plan; any other is a standalone workout.
+    /// </summary>
+    public static string WriteWorkouts(IEnumerable<GymBook.Models.WorkoutSession> sessions, IReadOnlyCollection<GymBook.Models.WorkoutPlan> plans,
+        Func<string, GymBook.Models.Exercise?> exercise, GymBook.Models.WeightUnit unit)
+    {
+        var pounds = unit == GymBook.Models.WeightUnit.Lbs;
+        string Weight(double kg) => (pounds ? kg / KgPerLb : kg).ToString("0.##", CultureInfo.InvariantCulture);
+        var csv = new System.Text.StringBuilder();
+        foreach (var session in sessions)
+        {
+            var exercises = session.Exercises.Where(e => e.Sets.Any(s => s.IsCompleted && !s.IsWarmup && s.Reps > 0)).ToList();
+            if (exercises.Count == 0)
+                continue;
+
+            var plan = plans.FirstOrDefault(p => p.Id == session.PlanId);
+            var day = plan == null ? -1 : PlanSchedule.Days(plan).FindIndex(w => w != null && w.Id == session.PlanWorkoutId);
+            var title = plan == null || day < 0
+                ? $"{session.Name} · {Standalone}"
+                : $"{session.Name} · Day {day + 1}{(session.PlanWeek is { } week ? $" · Week {week}" : "")} · {plan.Name}";
+            var duration = (session.EndedAt ?? session.StartedAt) - session.StartedAt;
+            csv.Append(Quote(title)).Append(';')
+                .Append(Quote(session.StartedAt.ToString("yyyy-MM-dd h:mm tt", CultureInfo.InvariantCulture).ToLowerInvariant())).Append(';')
+                .Append(Quote(duration.TotalHours >= 1 ? $"{(int)duration.TotalHours}:{duration.Minutes:00} hr" : $"{Math.Max(1, (int)Math.Round(duration.TotalMinutes))} min"))
+                .Append('\n');
+
+            var number = 0;
+            foreach (var se in exercises)
+            {
+                var warmups = se.Sets.Where(s => s.IsWarmup && s.IsCompleted && s.Reps > 0)
+                    .Select((s, i) => $"WU{i + 1} · {Weight(s.WeightKg)} {(pounds ? "lbs" : "kg")} · {s.Reps} reps");
+                csv.Append(Quote($"{++number}. {Reference(exercise(se.ExerciseId))} · {Reps(se.RepMin, se.RepMax)} reps")).Append(';')
+                    .Append(Quote(string.Join("\n", warmups))).Append('\n');
+                csv.Append(pounds ? "#;LB;REPS" : "#;KG;REPS").Append('\n');
+                var set = 0;
+                foreach (var s in se.Sets.Where(s => s.IsCompleted && !s.IsWarmup && s.Reps > 0))
+                    csv.Append(++set).Append(';').Append(Weight(s.WeightKg)).Append(';').Append(s.Reps).Append('\n');
+            }
+            csv.Append('\n');
+        }
+        return csv.ToString();
+    }
+
+    /// <summary>"Incline Bench Press · Dumbbells": the name, and the equipment as the importer reads it back.</summary>
+    static string Reference(GymBook.Models.Exercise? exercise)
+    {
+        if (exercise == null)
+            return "Unknown exercise";
+        var equipment = exercise.Equipment switch
+        {
+            GymBook.Models.Equipment.Barbell => "Barbell",
+            GymBook.Models.Equipment.Dumbbell => "Dumbbells",
+            GymBook.Models.Equipment.Machine => "Machine",
+            GymBook.Models.Equipment.Cable => "Cable",
+            GymBook.Models.Equipment.Bodyweight => "Bodyweight",
+            GymBook.Models.Equipment.Kettlebell => "Kettlebell",
+            GymBook.Models.Equipment.EzBar => "EZ Bar",
+            GymBook.Models.Equipment.Band => "Band",
+            _ => "",
+        };
+        return equipment.Length == 0 ? exercise.Name : $"{exercise.Name} · {equipment}";
+    }
+
+    static string Reps(int min, int max) => min == max ? $"{min}" : $"{Math.Min(min, max)}-{Math.Max(min, max)}";
+
+    /// <summary>A field in quotes, its own quotes doubled.</summary>
+    static string Quote(string text) => $"\"{text.Replace("\"", "\"\"")}\"";
 }

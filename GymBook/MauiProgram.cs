@@ -24,6 +24,7 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<DataStore>();
         builder.Services.AddSingleton<Units>();
+        builder.Services.AddSingleton<DataExport>();
         builder.Services.AddSingleton<ProgressionEngine>();
         builder.Services.AddSingleton<WorkoutEstimator>();
         builder.Services.AddSingleton<RecoveryService>();
@@ -53,8 +54,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<IWorkoutNotifier, NoWorkoutNotifier>();
 #endif
 #if ANDROID
-        // Samsung Health and Health Connect, both through Android's Health Connect.
+        // Health Connect (Android's, for any app) and Samsung Health read directly; Profile › Health data picks one.
         builder.Services.AddSingleton<GymBook.Services.Health.IHealthPlatform, HealthConnectPlatform>();
+        builder.Services.AddSingleton<GymBook.Services.Health.IHealthPlatform, SamsungHealthPlatform>();
         builder.Services.AddSingleton<IBarcodeScanner, GoogleBarcodeScanner>();
 #else
         builder.Services.AddSingleton<GymBook.Services.Health.IHealthPlatform, GymBook.Services.Health.NoHealthPlatform>();

@@ -104,6 +104,32 @@ public class DialogSheet : SheetPage
             return list;
         }, closeButton: switches is { Count: > 0 } || options.Length + (destructive == null ? 0 : 1) >= 7));
 
+    /// <summary>
+    /// On/off <paramref name="switches"/> in a card, then Cancel and <paramref name="accept"/> side by side. The
+    /// switches apply as they're flipped; resolves to true for <paramref name="accept"/>, false when cancelled.
+    /// </summary>
+    public static async Task<bool> Switches(string title, string? message, IReadOnlyList<MenuSwitch> switches, string accept) =>
+        await Show(new DialogSheet(title, message, s =>
+        {
+            var list = new VerticalStackLayout { Spacing = 14 };
+            var toggles = new VerticalStackLayout();
+            for (var i = 0; i < switches.Count; i++)
+            {
+                if (i > 0)
+                    toggles.Add(Divider());
+                toggles.Add(SwitchRow(switches[i]));
+            }
+            list.Add(Card(toggles));
+            var main = s.Button(accept, "PrimaryButton", accept);
+            var other = s.Button("Cancel", "SecondaryButton", null);
+            main.HeightRequest = other.HeightRequest = 48;
+            var row = new Grid { ColumnSpacing = 10, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
+            row.Add(other, 0);
+            row.Add(main, 1);
+            list.Add(row);
+            return list;
+        })) != null;
+
     static BoxView Divider() => new() { HeightRequest = 1, Color = Resource<Color>("Stroke"), Margin = new Thickness(18, 0) };
 
     static Border Card(View content) => new()
@@ -354,6 +380,122 @@ public class DialogSheet : SheetPage
         var day = date.Date ?? initial.Date;
         var at = time.Time ?? initial.TimeOfDay;
         return day.Date + new TimeSpan(at.Hours, at.Minutes, 0);
+    }
+
+    /// <summary>
+    /// A month calendar to pick a day, no later than <paramref name="max"/>: ‹ › change the month, a dot under each day
+    /// that <paramref name="hasData"/>, the picked day filled with the accent and today in it. Null when cancelled.
+    /// </summary>
+    public static async Task<DateTime?> Calendar(string title, DateTime initial, DateTime max, Func<DateTime, bool> hasData)
+    {
+        var accent = Resource<Color>("Accent");
+        var month = new DateTime(initial.Year, initial.Month, 1);
+        var firstDay = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.FirstDayOfWeek;
+        var monthLabel = new Label { FontFamily = "OpenSansSemibold", FontSize = 17, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+        var days = new Grid { RowSpacing = 2, ColumnSpacing = 2 };
+        for (var c = 0; c < 7; c++)
+            days.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+        Button? next = null;
+
+        var result = await Show(new DialogSheet(title, null, s =>
+        {
+            var layout = new VerticalStackLayout { Spacing = 10 };
+
+            var prev = new Button { Text = "‹", Style = Resource<Style>("StepButton") };
+            next = new Button { Text = "›", Style = Resource<Style>("StepButton") };
+            prev.Clicked += (_, _) => { month = month.AddMonths(-1); Fill(); };
+            next.Clicked += (_, _) => { if (month.AddMonths(1) <= max) { month = month.AddMonths(1); Fill(); } };
+            var top = new Grid { ColumnDefinitions = [new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto)] };
+            top.Add(prev, 0);
+            top.Add(monthLabel, 1);
+            top.Add(next, 2);
+            layout.Add(top);
+
+            // The weekdays' initials, starting on the culture's first day.
+            var names = new Grid();
+            for (var c = 0; c < 7; c++)
+            {
+                names.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
+                var name = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortestDayNames[((int)firstDay + c) % 7];
+                names.Add(new Label { Text = name, Style = Resource<Style>("Caption"), FontSize = 12, HorizontalOptions = LayoutOptions.Center }, c);
+            }
+            layout.Add(names);
+            layout.Add(days);
+
+            var buttons = new Grid { ColumnSpacing = 10, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
+            var cancel = s.Button("Cancel", "SecondaryButton", null);
+            var today = s.Button("Today", "PrimaryButton", max.Date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+            cancel.HeightRequest = today.HeightRequest = 48;
+            buttons.Add(cancel, 0);
+            buttons.Add(today, 1);
+            layout.Add(buttons);
+
+            Fill();
+            return layout;
+
+            void Fill()
+            {
+                monthLabel.Text = month.ToString("MMMM yyyy", System.Globalization.CultureInfo.CurrentCulture);
+                next!.Opacity = month.AddMonths(1) <= max ? 1 : 0.3;
+                days.Children.Clear();
+                days.RowDefinitions.Clear();
+                var offset = ((int)month.DayOfWeek - (int)firstDay + 7) % 7;
+                var count = DateTime.DaysInMonth(month.Year, month.Month);
+                var rows = (offset + count + 6) / 7;
+                for (var r = 0; r < rows; r++)
+                    days.RowDefinitions.Add(new RowDefinition(46));
+                for (var d = 1; d <= count; d++)
+                {
+                    var date = new DateTime(month.Year, month.Month, d);
+                    var cell = DayCell(date, date == initial.Date, date == DateTime.Today, date > max.Date, hasData(date), accent);
+                    if (date <= max.Date)
+                        cell.GestureRecognizers.Add(new TapGestureRecognizer
+                        {
+                            Command = new Command(() => s.Choose(date.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture))),
+                        });
+                    var index = offset + d - 1;
+                    days.Add(cell, index % 7, index / 7);
+                }
+            }
+        }));
+        return result is { Length: > 0 } picked
+            && DateTime.TryParseExact(picked, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var day)
+            ? day
+            : null;
+    }
+
+    // A day in the calendar: its number in a circle (filled when picked), a dot under it when it has data.
+    static View DayCell(DateTime date, bool picked, bool today, bool future, bool hasData, Color accent)
+    {
+        var number = new Border
+        {
+            WidthRequest = 34,
+            HeightRequest = 34,
+            StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 17 },
+            StrokeThickness = today && !picked ? 1.5 : 0,
+            Stroke = accent,
+            BackgroundColor = picked ? accent : Colors.Transparent,
+            HorizontalOptions = LayoutOptions.Center,
+            Content = new Label
+            {
+                Text = date.Day.ToString(System.Globalization.CultureInfo.CurrentCulture),
+                FontSize = 15,
+                FontFamily = picked || today ? "OpenSansSemibold" : null,
+                TextColor = picked ? Colors.White : future ? Resource<Color>("TextTertiary") : Resource<Color>("TextPrimary"),
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+            },
+        };
+        var cell = new VerticalStackLayout { Spacing = 2, HorizontalOptions = LayoutOptions.Fill, BackgroundColor = Colors.Transparent };
+        cell.Add(number);
+        cell.Add(new Microsoft.Maui.Controls.Shapes.Ellipse
+        {
+            WidthRequest = 5,
+            HeightRequest = 5,
+            Fill = new SolidColorBrush(hasData ? accent : Colors.Transparent),
+            HorizontalOptions = LayoutOptions.Center,
+        });
+        return cell;
     }
 
     /// <summary>One half of a two-way toggle (Exact | Range, Add | Subtract): tap to pick it.</summary>

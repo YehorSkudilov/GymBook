@@ -2,7 +2,10 @@ using GymBook.Models;
 
 namespace GymBook.Services.Health;
 
-/// <summary>A day's totals from the phone's health data. Null where nothing was recorded or it wasn't allowed.</summary>
+/// <summary>
+/// A day's totals from the phone's health data. Null where nothing was recorded or it wasn't allowed. A total with no
+/// basal (resting) figure is an app's own complete total (Samsung Health's, read from it directly), used as it is.
+/// </summary>
 public record HealthDayReading(
     DateTime Date,
     double? TotalBurnedKcal,
@@ -59,45 +62,61 @@ public enum HealthAvailability
     NeedsNewerAndroid,
     /// <summary>Not Android: no Samsung Health or Health Connect here. Data read on a phone still syncs in.</summary>
     NotSupported,
+    /// <summary>Android, but the app read from (Samsung Health) isn't on this phone, or is too old for it.</summary>
+    NotInstalled,
 }
 
 /// <summary>
-/// The phone's health data: Android's Health Connect (Platforms/Android/HealthConnectPlatform.cs), which Samsung Health
-/// and most fitness apps, scales and watches share their data through. Elsewhere there's none (<see cref="NoHealthPlatform"/>).
+/// Where the phone's health data is read from (<see cref="Source"/>): Samsung Health itself
+/// (Platforms/Android/SamsungHealthPlatform.cs), or Android's Health Connect (Platforms/Android/HealthConnectPlatform.cs),
+/// which most fitness apps, scales and watches share their data through. Elsewhere there's none (<see cref="NoHealthPlatform"/>).
 /// </summary>
 public interface IHealthPlatform
 {
+    HealthSource Source { get; }
+
     HealthAvailability Availability { get; }
 
     /// <summary>Whether reading anything at all has been allowed.</summary>
     bool HasAnyPermission { get; }
 
-    /// <summary>Asks for read access to everything the Nutrition tab uses; true if at least some was allowed.</summary>
+    /// <summary>
+    /// Asks for read access to everything the Nutrition tab uses; true if at least some was allowed. When it can't be
+    /// asked (Samsung Health not sharing yet, say), <see cref="PermissionProblem"/> says why.
+    /// </summary>
     Task<bool> RequestPermissionsAsync();
+
+    /// <summary>Why the last request for access failed, to show; null when it didn't.</summary>
+    string? PermissionProblem { get; }
 
     /// <summary>
     /// Days from <paramref name="from"/> up to (not including) <paramref name="to"/>, both local midnights: only what
-    /// <paramref name="apps"/> recorded (Android package names), or every app's when that's null or empty.
+    /// <paramref name="apps"/> recorded (Android package names), or every app's when that's null or empty. A day's
+    /// total burned with no basal (resting) figure is complete as it is (Samsung Health's own).
     /// </summary>
     Task<HealthReadResult> ReadAsync(DateTime from, DateTime to, IReadOnlyCollection<string>? apps, CancellationToken ct = default);
 
-    /// <summary>The apps that shared any of the data Gym Book reads over the last 30 days, by name.</summary>
+    /// <summary>The apps that shared any of the data Gym Book reads over the last 30 days, by name (Health Connect only).</summary>
     Task<IReadOnlyList<HealthApp>> FindAppsAsync(CancellationToken ct = default);
 
     /// <summary>An app's name as the phone knows it, or its package when it can't say.</summary>
     string AppName(string package);
 
-    /// <summary>Opens Health Connect's own settings, where access can be changed.</summary>
+    /// <summary>Opens where access can be changed: Health Connect's settings, or Samsung Health.</summary>
     void OpenSettings();
 }
 
 public class NoHealthPlatform : IHealthPlatform
 {
+    public HealthSource Source => HealthSource.None;
+
     public HealthAvailability Availability => HealthAvailability.NotSupported;
 
     public bool HasAnyPermission => false;
 
     public Task<bool> RequestPermissionsAsync() => Task.FromResult(false);
+
+    public string? PermissionProblem => null;
 
     public Task<HealthReadResult> ReadAsync(DateTime from, DateTime to, IReadOnlyCollection<string>? apps, CancellationToken ct = default) =>
         Task.FromResult(new HealthReadResult([], [], null));

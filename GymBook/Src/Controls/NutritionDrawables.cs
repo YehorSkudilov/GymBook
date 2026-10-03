@@ -3,58 +3,197 @@ using GymBook.Services;
 namespace GymBook.Controls;
 
 /// <summary>
-/// Calories eaten against the day's goal as a ring that fills clockwise from the top; past the goal, the extra wraps
-/// round again in <paramref name="overColor"/>. The middle shows what's left (or over). Sweeps in as it's revealed.
+/// A day's calories on one bar, from 0 to a little past the most of eaten, burned and goal: eaten fills it in
+/// <paramref name="fill"/>, turning <paramref name="surplus"/> past what was burned; a hatched band is the goal's
+/// on-target range (±10%), a white tick what was burned, and a round <paramref name="marker"/> with a target the goal.
+/// Fills in as it's revealed.
 /// </summary>
-public class CalorieRingDrawable(double eaten, double? goal, Color color, Color overColor, string centerValue, string centerLabel)
-    : IDrawable, IRevealable
+public class CalorieBarDrawable(double eaten, double? burned, double? goal, Color fill, Color surplus, Color marker) : IDrawable, IRevealable
 {
-    static readonly Color Track = Color.FromArgb("#1D212C"), ValueColor = Color.FromArgb("#F4F6FB"), LabelColor = Color.FromArgb("#9AA3B5");
+    static readonly Color Track = Color.FromArgb("#3A3F4B"), Tick = Color.FromArgb("#F4F6FB"), LabelColor = Color.FromArgb("#9AA3B5");
+    const float BarHeight = 16, Knob = 30, LabelHeight = 20;
+
+    /// <summary>The goal's on-target range: within a tenth of it either way.</summary>
+    public const double Range = 0.1;
+
+    public float Reveal { get; set; } = 1;
+
+    /// <summary>Where the bar ends: past the biggest of what's on it, so the marker and fill have room.</summary>
+    public static double Scale(double eaten, double? burned, double? goal) =>
+        Math.Ceiling(Math.Max(Math.Max(eaten, burned ?? 0) * 1.08, (goal ?? 0) * 1.3) / 10) * 10 is var s && s > 0 ? s : 2000;
+
+    public void Draw(ICanvas canvas, RectF rect)
+    {
+        var scale = Scale(eaten, burned, goal);
+        var pad = Knob / 2;
+        var bar = new RectF(rect.X + pad, rect.Y + (Knob - BarHeight) / 2 + 2, rect.Width - pad * 2, BarHeight);
+        float X(double kcal) => bar.Left + (float)Math.Clamp(kcal / scale, 0, 1) * bar.Width;
+        var grow = 1 - MathF.Pow(1 - Math.Clamp(Reveal, 0, 1), 3);
+
+        canvas.FillColor = Track;
+        canvas.FillRoundedRectangle(bar, BarHeight / 2);
+
+        // The goal's range, hatched.
+        if (goal is > 0 && goal is { } g)
+        {
+            var from = X(g * (1 - Range));
+            var to = X(g * (1 + Range));
+            canvas.SaveState();
+            canvas.ClipRectangle(from, bar.Top, to - from, bar.Height);
+            canvas.StrokeColor = LabelColor.WithAlpha(0.8f);
+            canvas.StrokeSize = 1.5f;
+            for (var x = from - bar.Height; x < to; x += 5)
+                canvas.DrawLine(x, bar.Bottom, x + bar.Height, bar.Top);
+            canvas.RestoreState();
+        }
+
+        // Eaten: up to the burn in the fill colour, past it the surplus.
+        var end = bar.Left + (X(eaten) - bar.Left) * grow;
+        if (end > bar.Left + 1)
+        {
+            canvas.SaveState();
+            canvas.ClipRectangle(bar.Left, bar.Top, end - bar.Left, bar.Height);
+            canvas.FillColor = fill;
+            canvas.FillRoundedRectangle(bar, BarHeight / 2);
+            if (burned is { } b && eaten > b)
+            {
+                canvas.FillColor = surplus;
+                canvas.FillRectangle(X(b), bar.Top, end - X(b), bar.Height);
+            }
+            canvas.RestoreState();
+        }
+
+        // Burned: a white tick through the bar.
+        if (burned is > 0 && grow > 0.9f)
+        {
+            canvas.StrokeColor = Tick;
+            canvas.StrokeSize = 3;
+            canvas.StrokeLineCap = LineCap.Round;
+            canvas.DrawLine(X(burned.Value), bar.Top - 5, X(burned.Value), bar.Bottom + 5);
+        }
+
+        // The goal: a round marker with a target in it.
+        if (goal is > 0 && grow > 0.9f)
+            LegendIconDrawable.Target(canvas, X(goal.Value), bar.Center.Y, Knob / 2, marker);
+
+        canvas.FontColor = LabelColor;
+        canvas.FontSize = 13;
+        var labelTop = rect.Y + Knob + 4;
+        canvas.DrawString("0", bar.Left - pad, labelTop, 60, LabelHeight, HorizontalAlignment.Left, VerticalAlignment.Top);
+        canvas.DrawString(NutritionService.Kcal(scale), bar.Right + pad - 80, labelTop, 80, LabelHeight, HorizontalAlignment.Right, VerticalAlignment.Top);
+    }
+}
+
+/// <summary>The little keys beside the calorie bar's figures: the goal's target, the hatched range, the burned tick.</summary>
+public class LegendIconDrawable(LegendIcon icon, Color color) : IDrawable
+{
+    static readonly Color Hatch = Color.FromArgb("#9AA3B5");
+
+    public void Draw(ICanvas canvas, RectF rect)
+    {
+        var r = Math.Min(rect.Width, rect.Height) / 2;
+        switch (icon)
+        {
+            case LegendIcon.Target:
+                Target(canvas, rect.Center.X, rect.Center.Y, r, color);
+                break;
+            case LegendIcon.Range:
+                canvas.SaveState();
+                var path = new PathF();
+                path.AppendCircle(rect.Center.X, rect.Center.Y, r);
+                canvas.ClipPath(path);
+                canvas.FillColor = Hatch.WithAlpha(0.25f);
+                canvas.FillCircle(rect.Center.X, rect.Center.Y, r);
+                canvas.StrokeColor = Hatch;
+                canvas.StrokeSize = 1.5f;
+                for (var x = rect.Left - rect.Height; x < rect.Right; x += 4)
+                    canvas.DrawLine(x, rect.Bottom, x + rect.Height, rect.Top);
+                canvas.RestoreState();
+                break;
+            default:
+                canvas.StrokeColor = color;
+                canvas.StrokeSize = 3;
+                canvas.StrokeLineCap = LineCap.Round;
+                canvas.DrawLine(rect.Center.X, rect.Center.Y - r * 0.8f, rect.Center.X, rect.Center.Y + r * 0.8f);
+                break;
+        }
+    }
+
+    /// <summary>A filled circle with a white target (two rings and a dot) in it.</summary>
+    public static void Target(ICanvas canvas, float cx, float cy, float r, Color color)
+    {
+        canvas.FillColor = color;
+        canvas.FillCircle(cx, cy, r);
+        canvas.StrokeColor = Colors.White;
+        canvas.StrokeSize = Math.Max(1.5f, r * 0.11f);
+        canvas.DrawCircle(cx, cy, r * 0.62f);
+        canvas.DrawCircle(cx, cy, r * 0.32f);
+        canvas.FillColor = Colors.White;
+        canvas.FillCircle(cx, cy, r * 0.1f);
+    }
+}
+
+public enum LegendIcon { Target, Range, Tick }
+
+/// <summary>
+/// How the day's calories split between carbs, fat and protein: a bar of the three in proportion with their shares
+/// above, and under it thin bars of the split aimed for (the goals, or a usual one) with theirs below.
+/// </summary>
+public class MacroSplitDrawable(IReadOnlyList<double> actual, IReadOnlyList<double> target, IReadOnlyList<Color> colors) : IDrawable, IRevealable
+{
+    static readonly Color Well = Color.FromArgb("#1D212C"), LabelColor = Color.FromArgb("#626B7E");
+    const float LabelHeight = 20, BarHeight = 30, Gap = 4, TargetHeight = 4;
 
     public float Reveal { get; set; } = 1;
 
     public void Draw(ICanvas canvas, RectF rect)
     {
-        var size = Math.Min(rect.Width, rect.Height);
-        var thickness = size * 0.1f;
-        var r = size / 2 - thickness / 2 - 2;
-        var box = new RectF(rect.Center.X - r, rect.Center.Y - r, r * 2, r * 2);
-        canvas.StrokeSize = thickness;
-        canvas.StrokeColor = Track;
-        canvas.DrawEllipse(box);
+        var total = actual.Sum();
+        var grow = 1 - MathF.Pow(1 - Math.Clamp(Reveal, 0, 1), 3);
+        var well = new RectF(rect.X, rect.Y + LabelHeight, rect.Width, BarHeight + TargetHeight + 10);
+        canvas.FillColor = Well;
+        canvas.FillRoundedRectangle(well, 10);
 
-        // Without a goal the ring just shows something was eaten.
-        var share = goal is > 0 ? eaten / goal.Value : eaten > 0 ? 1 : 0;
-        var reveal = 1 - MathF.Pow(1 - Math.Clamp(Reveal, 0, 1), 3);
-        canvas.StrokeLineCap = LineCap.Round;
-        var first = (float)Math.Min(share, 1) * 360 * reveal;
-        if (first > 0.5f)
+        var inner = new RectF(well.X + 4, well.Y + 4, well.Width - 8, BarHeight);
+        if (total <= 0)
         {
-            canvas.StrokeColor = color;
-            DrawSweep(canvas, box, first);
+            canvas.FontColor = LabelColor;
+            canvas.FontSize = 12;
+            canvas.DrawString("Log food to see the split", inner, HorizontalAlignment.Center, VerticalAlignment.Center);
         }
-        var over = (float)Math.Min(Math.Max(share - 1, 0), 1) * 360 * reveal;
-        if (over > 0.5f)
-        {
-            canvas.StrokeColor = overColor;
-            DrawSweep(canvas, box, over);
-        }
+        else
+            Segments(canvas, actual, inner, BarHeight, 6, grow, rect.Y, LabelHeight, VerticalAlignment.Bottom, 1);
 
-        canvas.FontColor = ValueColor;
-        canvas.FontSize = size * 0.17f;
-        canvas.DrawString(centerValue, rect.Left, rect.Center.Y - size * 0.15f, rect.Width, size * 0.22f, HorizontalAlignment.Center, VerticalAlignment.Center);
-        canvas.FontColor = LabelColor;
-        canvas.FontSize = size * 0.08f;
-        canvas.DrawString(centerLabel, rect.Left, rect.Center.Y + size * 0.07f, rect.Width, size * 0.12f, HorizontalAlignment.Center, VerticalAlignment.Center);
+        var thin = new RectF(inner.X, inner.Bottom + 4, inner.Width, TargetHeight);
+        Segments(canvas, target, thin, TargetHeight, 2, 1, thin.Bottom + 6, LabelHeight, VerticalAlignment.Top, 0.6f);
     }
 
-    // Degrees counter-clockwise from 3 o'clock: from the top, going clockwise. A whole turn is drawn as a circle.
-    static void DrawSweep(ICanvas canvas, RectF box, float degrees)
+    /// <summary>The shares as segments across <paramref name="area"/>, with each one's percentage at its start (the last at its end).</summary>
+    void Segments(ICanvas canvas, IReadOnlyList<double> values, RectF area, float height, float corner, float grow,
+        float labelTop, float labelHeight, VerticalAlignment align, float alpha)
     {
-        if (degrees >= 359.5f)
-            canvas.DrawEllipse(box);
-        else
-            canvas.DrawArc(box, 90, 90 - degrees, true, false);
+        var total = values.Sum();
+        if (total <= 0)
+            return;
+        var width = area.Width - Gap * (values.Count - 1);
+        var x = area.X;
+        canvas.FontSize = 15;
+        for (var i = 0; i < values.Count; i++)
+        {
+            var share = values[i] / total;
+            var w = (float)share * width;
+            if (w > 0.5f)
+            {
+                canvas.FillColor = colors[i].WithAlpha(alpha);
+                canvas.FillRoundedRectangle(x, area.Y, Math.Max(w * grow, Math.Min(w, corner * 2)), height, corner);
+            }
+            canvas.FontColor = colors[i];
+            var label = $"{share * 100:0}%";
+            var last = i == values.Count - 1;
+            canvas.DrawString(label, last ? area.Right - 80 : x, labelTop, 80, labelHeight,
+                last ? HorizontalAlignment.Right : HorizontalAlignment.Left, align);
+            x += w + Gap;
+        }
     }
 }
 

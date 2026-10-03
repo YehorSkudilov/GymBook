@@ -8,8 +8,8 @@
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:NutritionViewModel">
 
-    <!-- A day's food against its goals and what was burned, the surplus or deficit over time, activity and body
-         measurements (health data is connected in the Profile tab). Charts play in each time the tab comes into view. -->
+    <!-- A day's food against its goals and what was burned (and the surplus or deficit), creatine, meals and macros
+         (health data is connected in the Profile tab; activity and body measurements are on Progress). Charts play in each time the tab comes into view. -->
     <ContentView.Resources>
         <Style x:Key="HeaderIcon" TargetType="controls:StatIconView">
             <Setter Property="WidthRequest" Value="26" />
@@ -24,6 +24,27 @@
             <Setter Property="HeightRequest" Value="1" />
             <Setter Property="Color" Value="{StaticResource Surface2}" />
         </Style>
+        <!-- A macro's tile: its name in its colour, the grams large, the goal under them -->
+        <Style x:Key="MacroTile" TargetType="Border">
+            <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+            <Setter Property="Stroke" Value="{StaticResource Surface2}" />
+            <Setter Property="StrokeThickness" Value="1.5" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="Padding" Value="6,12" />
+        </Style>
+        <Style x:Key="MacroName" TargetType="Label">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="MacroGrams" TargetType="Label">
+            <Setter Property="FontFamily" Value="OpenSansSemibold" />
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="MacroGoal" TargetType="Label">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="HorizontalOptions" Value="Center" />
+        </Style>
     </ContentView.Resources>
 
     <VerticalStackLayout Spacing="14">
@@ -32,50 +53,53 @@
             <Button Grid.Column="1" Text="Goals" Style="{StaticResource SmallButton}" Command="{Binding OpenGoalsCommand}" VerticalOptions="Center" />
         </Grid>
 
-        <!-- The day: back and forward a day at a time; tap the name for today -->
+        <!-- The day in a pill between ‹ and ›: tap it for a calendar, with a dot on each day that has data -->
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
             <Button Text="‹" Style="{StaticResource StepButton}" Command="{Binding PreviousDayCommand}" VerticalOptions="Center" />
-            <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" VerticalOptions="Center">
-                <VerticalStackLayout.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding GoToTodayCommand}" />
-                </VerticalStackLayout.GestureRecognizers>
-                <Label Text="{Binding DateTitle}" Style="{StaticResource H3}" HorizontalOptions="Center" />
-                <Label Text="{Binding DateSubtitle}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
-            </VerticalStackLayout>
+            <Border Grid.Column="1" BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 999" StrokeThickness="0"
+                    Padding="18,10" HorizontalOptions="Fill" Margin="24,0">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding PickDayCommand}" />
+                </Border.GestureRecognizers>
+                <VerticalStackLayout HorizontalOptions="Center">
+                    <Label Text="{Binding DateTitle}" Style="{StaticResource H3}" HorizontalOptions="Center" />
+                    <Label Text="{Binding DateSubtitle}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </Border>
             <Button Grid.Column="2" Text="›" Style="{StaticResource StepButton}" Command="{Binding NextDayCommand}" IsEnabled="{Binding CanGoNext}"
                     Opacity="{Binding NextOpacity}" VerticalOptions="Center" />
         </Grid>
 
-        <!-- Calories: eaten against the goal, burned, and the surplus or deficit between them -->
+        <!-- Calories, as Samsung Health shows them: eaten large with the surplus or deficit under it; the goal, its
+             on-target range and what was burned beside it; then the bar (eaten filling it, orange past the burn, the range
+             hatched, a tick at the burn, a target at the goal) -->
         <Border Style="{StaticResource Card}">
-            <VerticalStackLayout Spacing="14">
-                <Grid ColumnDefinitions="150,*" ColumnSpacing="16">
-                    <GraphicsView Drawable="{Binding CalorieRing}" HeightRequest="150" controls:ChartReveal.When="{Binding IsShowing}" />
-                    <VerticalStackLayout Grid.Column="1" Spacing="10" VerticalOptions="Center">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Label Text="Eaten" Style="{StaticResource Caption}" VerticalOptions="Center" />
-                            <Label Grid.Column="1" Text="{Binding EatenText}" Style="{StaticResource Figure}" />
+            <VerticalStackLayout Spacing="16">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <VerticalStackLayout VerticalOptions="Start">
+                        <Label Text="{Binding EatenText}" FontFamily="OpenSansSemibold" FontSize="48" LineHeight="0.9" />
+                        <Label Text="Cal" FontSize="20" />
+                        <Label Text="{Binding BalanceLine}" TextColor="{Binding BalanceColor}" FontFamily="OpenSansSemibold" FontSize="14"
+                               IsVisible="{Binding HasBalanceLine}" Margin="0,6,0,0" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="12" VerticalOptions="Start" Margin="0,8,0,0">
+                        <Grid ColumnDefinitions="24,Auto" ColumnSpacing="10">
+                            <GraphicsView Drawable="{Binding GoalIcon}" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{Binding GoalText}" Style="{StaticResource Figure}" TextColor="{StaticResource TextSecondary}" />
                         </Grid>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Label Text="Goal" Style="{StaticResource Caption}" VerticalOptions="Center" />
-                            <Label Grid.Column="1" Text="{Binding GoalText}" Style="{StaticResource Figure}" />
+                        <Grid ColumnDefinitions="24,Auto" ColumnSpacing="10" IsVisible="{Binding HasGoal}">
+                            <GraphicsView Drawable="{Binding RangeIcon}" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{Binding GoalRangeText}" Style="{StaticResource Figure}" TextColor="{StaticResource TextSecondary}" />
                         </Grid>
-                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
-                            <Label Text="Burned" Style="{StaticResource Caption}" VerticalOptions="Center" />
-                            <Label Grid.Column="1" Text="{Binding BurnedText}" Style="{StaticResource Figure}" />
-                            <Label Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding BurnedCaption}" Style="{StaticResource Caption}" FontSize="11"
-                                   TextColor="{StaticResource TextTertiary}" HorizontalOptions="End" />
+                        <Grid ColumnDefinitions="24,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10">
+                            <GraphicsView Drawable="{Binding BurnedIcon}" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{Binding BurnedText}" Style="{StaticResource Figure}" TextColor="{StaticResource TextSecondary}" />
+                            <Label Grid.Row="1" Grid.Column="1" Text="{Binding BurnedCaption}" IsVisible="{Binding HasBurnedCaption}"
+                                   Style="{StaticResource Caption}" FontSize="11" TextColor="{StaticResource TextTertiary}" />
                         </Grid>
                     </VerticalStackLayout>
                 </Grid>
-                <BoxView Style="{StaticResource Divider}" />
-                <Grid ColumnDefinitions="*,Auto">
-                    <VerticalStackLayout VerticalOptions="Center">
-                        <Label Text="{Binding BalanceCaption}" Style="{StaticResource H3}" />
-                        <Label Text="Eaten minus burned" Style="{StaticResource Caption}" FontSize="12" />
-                    </VerticalStackLayout>
-                    <Label Grid.Column="1" Text="{Binding BalanceText}" TextColor="{Binding BalanceColor}" Style="{StaticResource StatValue}" VerticalOptions="Center" />
-                </Grid>
+                <GraphicsView Drawable="{Binding CalorieBar}" HeightRequest="58" controls:ChartReveal.When="{Binding IsShowing}" />
                 <Label Text="{Binding BalanceTargetText}" TextColor="{Binding BalanceTargetColor}" FontSize="13" IsVisible="{Binding HasBalanceTarget}" />
             </VerticalStackLayout>
         </Border>
@@ -94,30 +118,7 @@
             </Grid>
         </Border>
 
-        <!-- Macros -->
-        <Border Style="{StaticResource Card}">
-            <VerticalStackLayout Spacing="10">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                    <controls:StatIconView Icon="Pie" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
-                    <Label Grid.Column="1" Text="Macros" Style="{StaticResource H3}" VerticalOptions="Center" />
-                </Grid>
-                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Macros}" Spacing="10">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="vm:MacroItem">
-                            <VerticalStackLayout Spacing="5">
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="14" />
-                                    <Label Grid.Column="1" Text="{Binding Value}" TextColor="{Binding ValueColor}" FontSize="13" />
-                                </Grid>
-                                <ProgressBar controls:SmoothProgress.Value="{Binding Progress}" ProgressColor="{Binding Color}" />
-                            </VerticalStackLayout>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </VerticalStackLayout>
-            </VerticalStackLayout>
-        </Border>
-
-        <!-- Creatine: one tap to log the usual dose, the week at a glance and the streak -->
+        <!-- Creatine on the day shown: one tap to log the usual dose, or when it was taken -->
         <Border Style="{StaticResource Card}">
             <VerticalStackLayout Spacing="12">
                 <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
@@ -128,17 +129,6 @@
                     </VerticalStackLayout>
                     <Button Grid.Column="2" Text="Dose" Style="{StaticResource SmallButton}" Command="{Binding ChangeCreatineDoseCommand}" VerticalOptions="Center" />
                 </Grid>
-                <FlexLayout Direction="Row" JustifyContent="SpaceBetween" BindableLayout.ItemsSource="{Binding CreatineWeek}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="vm:DoseDay">
-                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
-                                <Border WidthRequest="28" HeightRequest="28" StrokeShape="RoundRectangle 14" StrokeThickness="1.5"
-                                        BackgroundColor="{Binding Fill}" Stroke="{Binding Stroke}" />
-                                <Label Text="{Binding Letter}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" />
-                            </VerticalStackLayout>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding CreatineTaken}">
                     <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
                         <Image Source="{StaticResource IconCheckGreen}" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
@@ -154,14 +144,11 @@
             </VerticalStackLayout>
         </Border>
 
-        <!-- Food, by meal -->
+        <!-- Meals, as Samsung Health lays them out: the calories in a circle, the meal and its foods, + to add one.
+             Tapping a meal opens its food (or lists them to pick one, or adds one when it's empty). -->
         <Border Style="{StaticResource Card}">
-            <VerticalStackLayout Spacing="12">
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                    <controls:StatIconView Icon="Target" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
-                    <Label Grid.Column="1" Text="Food" Style="{StaticResource H3}" VerticalOptions="Center" />
-                    <Button Grid.Column="2" Text="Add" Style="{StaticResource SmallButton}" Command="{Binding AddFoodCommand}" VerticalOptions="Center" />
-                </Grid>
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Log meal" Style="{StaticResource H3}" />
 
                 <!-- Food logged in Samsung Health (or another app), counted with what's logged here -->
                 <Border Style="{StaticResource InnerCard}" IsVisible="{Binding HasImportedFood}">
@@ -174,37 +161,33 @@
                     </Grid>
                 </Border>
 
-                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Meals}" Spacing="12">
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Meals}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vm:MealItem">
-                            <VerticalStackLayout Spacing="4">
-                                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
-                                    <Label Text="{Binding Title}" Style="{StaticResource Overline}" VerticalOptions="Center" />
-                                    <Label Grid.Column="1" Text="{Binding Total}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
-                                    <Image Grid.Column="2" Source="{StaticResource IconPlus}" WidthRequest="22" HeightRequest="22" VerticalOptions="Center">
+                            <VerticalStackLayout>
+                                <BoxView Style="{StaticResource Divider}" Margin="68,0,0,0" IsVisible="{Binding ShowDivider}" />
+                                <Grid ColumnDefinitions="52,*,Auto,Auto" ColumnSpacing="14" Padding="0,14">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                                    </Grid.GestureRecognizers>
+                                    <Border WidthRequest="52" HeightRequest="52" StrokeShape="RoundRectangle 26" StrokeThickness="0"
+                                            BackgroundColor="{StaticResource Surface2}" VerticalOptions="Center">
+                                        <VerticalStackLayout VerticalOptions="Center" Spacing="-2">
+                                            <Label Text="{Binding Calories}" FontSize="13" HorizontalOptions="Center" />
+                                            <Label Text="Cal" FontSize="12" TextColor="{StaticResource TextSecondary}" HorizontalOptions="Center" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                        <Label Text="{Binding Title}" FontSize="18" />
+                                        <Label Text="{Binding Names}" Style="{StaticResource Caption}" FontSize="14" IsVisible="{Binding HasFoods}" />
+                                    </VerticalStackLayout>
+                                    <BoxView Grid.Column="2" WidthRequest="1" HeightRequest="28" Color="{StaticResource Surface2}" VerticalOptions="Center" />
+                                    <Image Grid.Column="3" Source="{StaticResource IconPlus}" WidthRequest="26" HeightRequest="26" VerticalOptions="Center">
                                         <Image.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding AddCommand}" />
                                         </Image.GestureRecognizers>
                                     </Image>
                                 </Grid>
-                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Foods}">
-                                    <BindableLayout.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:FoodItem">
-                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,6">
-                                                <Grid.GestureRecognizers>
-                                                    <TapGestureRecognizer Command="{Binding OpenCommand}" />
-                                                </Grid.GestureRecognizers>
-                                                <VerticalStackLayout>
-                                                    <Label Text="{Binding Name}" FontSize="14" LineBreakMode="TailTruncation" />
-                                                    <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
-                                                </VerticalStackLayout>
-                                                <Label Grid.Column="1" Text="{Binding Calories}" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
-                                            </Grid>
-                                        </DataTemplate>
-                                    </BindableLayout.ItemTemplate>
-                                </VerticalStackLayout>
-                                <Label Text="Nothing logged" Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource TextTertiary}"
-                                       IsVisible="{Binding HasFoods, Converter={StaticResource Not}}" />
                             </VerticalStackLayout>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
@@ -212,106 +195,62 @@
             </VerticalStackLayout>
         </Border>
 
-        <!-- The surplus or deficit, day by day and added up -->
+        <!-- Macros: grams of each, then their share of the calories against the split aimed for -->
         <Border Style="{StaticResource Card}">
-            <VerticalStackLayout Spacing="10">
+            <VerticalStackLayout Spacing="12">
                 <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                    <controls:StatIconView Icon="Trend" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
-                    <VerticalStackLayout Grid.Column="1">
-                        <Label Text="Surplus &amp; deficit" Style="{StaticResource H3}" />
-                        <Label Text="Calories eaten minus burned, each day" Style="{StaticResource Caption}" FontSize="12" />
-                    </VerticalStackLayout>
+                    <controls:StatIconView Icon="Pie" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                    <Label Grid.Column="1" Text="Macros" Style="{StaticResource H3}" VerticalOptions="Center" />
                 </Grid>
-                <HorizontalStackLayout BindableLayout.ItemsSource="{Binding PeriodChips}" Spacing="8">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="vm:ChipItem">
-                            <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,7">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding SelectCommand}" />
-                                </Border.GestureRecognizers>
-                                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
-                            </Border>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </HorizontalStackLayout>
-                <GraphicsView Drawable="{Binding BalanceChart}" HeightRequest="170" controls:ChartReveal.When="{Binding IsShowing}" />
-                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8" IsVisible="{Binding HasPeriod}">
-                    <Border Style="{StaticResource InnerCard}">
-                        <VerticalStackLayout>
-                            <Label Text="{Binding PeriodTotalText}" TextColor="{Binding PeriodTotalColor}" Style="{StaticResource Figure}" />
-                            <Label Text="{Binding PeriodTotalCaption}" Style="{StaticResource Caption}" FontSize="11" />
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                    <Border Style="{StaticResource MacroTile}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding Macros[0].Name}" TextColor="{Binding Macros[0].Color}" Style="{StaticResource MacroName}" />
+                            <Label Style="{StaticResource MacroGrams}">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding Macros[0].Grams}" />
+                                        <Span Text=" g" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Text="{Binding Macros[0].GoalText}" TextColor="{Binding Macros[0].GoalColor}" IsVisible="{Binding Macros[0].HasGoal}" Style="{StaticResource MacroGoal}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Column="1" Style="{StaticResource InnerCard}">
-                        <VerticalStackLayout>
-                            <Label Text="{Binding PeriodAverageText}" Style="{StaticResource Figure}" />
-                            <Label Text="A day on average" Style="{StaticResource Caption}" FontSize="11" />
+                    <Border Grid.Column="1" Style="{StaticResource MacroTile}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding Macros[1].Name}" TextColor="{Binding Macros[1].Color}" Style="{StaticResource MacroName}" />
+                            <Label Style="{StaticResource MacroGrams}">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding Macros[1].Grams}" />
+                                        <Span Text=" g" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Text="{Binding Macros[1].GoalText}" TextColor="{Binding Macros[1].GoalColor}" IsVisible="{Binding Macros[1].HasGoal}" Style="{StaticResource MacroGoal}" />
                         </VerticalStackLayout>
                     </Border>
-                    <Border Grid.Column="2" Style="{StaticResource InnerCard}">
-                        <VerticalStackLayout>
-                            <Label Text="{Binding PeriodWeightText}" Style="{StaticResource Figure}" />
-                            <Label Text="Body weight, roughly" Style="{StaticResource Caption}" FontSize="11" />
+                    <Border Grid.Column="2" Style="{StaticResource MacroTile}">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Text="{Binding Macros[2].Name}" TextColor="{Binding Macros[2].Color}" Style="{StaticResource MacroName}" />
+                            <Label Style="{StaticResource MacroGrams}">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding Macros[2].Grams}" />
+                                        <Span Text=" g" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Text="{Binding Macros[2].GoalText}" TextColor="{Binding Macros[2].GoalColor}" IsVisible="{Binding Macros[2].HasGoal}" Style="{StaticResource MacroGoal}" />
                         </VerticalStackLayout>
                     </Border>
                 </Grid>
-                <Label Text="{Binding PeriodSummary}" Style="{StaticResource Caption}" FontSize="12" />
-            </VerticalStackLayout>
-        </Border>
-
-        <Border Style="{StaticResource Card}">
-            <VerticalStackLayout Spacing="8">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                    <controls:StatIconView Icon="Volume" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
-                    <Label Grid.Column="1" Text="Calories eaten" Style="{StaticResource H3}" VerticalOptions="Center" />
-                </Grid>
-                <GraphicsView Drawable="{Binding EatenChart}" HeightRequest="150" controls:ChartReveal.When="{Binding IsShowing}" />
-            </VerticalStackLayout>
-        </Border>
-
-        <!-- The day's activity, from health data -->
-        <Border Style="{StaticResource Card}" IsVisible="{Binding HasActivity}">
-            <VerticalStackLayout Spacing="10">
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                    <controls:StatIconView Icon="Streak" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
-                    <Label Grid.Column="1" Text="Activity" Style="{StaticResource H3}" VerticalOptions="Center" />
-                </Grid>
-                <FlexLayout BindableLayout.ItemsSource="{Binding Activity}" Wrap="Wrap" JustifyContent="Start">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="vm:StatItem">
-                            <VerticalStackLayout FlexLayout.Basis="50%" Padding="0,4">
-                                <Label Text="{Binding Value}" Style="{StaticResource Figure}" />
-                                <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
-                            </VerticalStackLayout>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
-            </VerticalStackLayout>
-        </Border>
-
-        <!-- Body composition: the latest of each measurement from the health apps, N/A for the rest -->
-        <Border Style="{StaticResource Card}">
-            <VerticalStackLayout Spacing="10">
-                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                    <controls:StatIconView Icon="Scale" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" VerticalOptions="Start" />
-                    <VerticalStackLayout Grid.Column="1">
-                        <Label Text="Body" Style="{StaticResource H3}" />
-                        <Label Text="{Binding BodyCaption}" Style="{StaticResource Caption}" FontSize="12" />
-                    </VerticalStackLayout>
-                </Grid>
-                <FlexLayout BindableLayout.ItemsSource="{Binding Body}" Wrap="Wrap" JustifyContent="Start">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="vm:StatItem">
-                            <VerticalStackLayout FlexLayout.Basis="33.3%" Padding="0,4">
-                                <Label Text="{Binding Value}" Style="{StaticResource Figure}" FontSize="15" />
-                                <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
-                            </VerticalStackLayout>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </FlexLayout>
-                <Label Text="Body fat" Style="{StaticResource Overline}" Margin="0,4,0,0" IsVisible="{Binding HasBodyFatChart}" />
-                <GraphicsView Drawable="{Binding BodyFatChart}" HeightRequest="140" IsVisible="{Binding HasBodyFatChart}"
-                              controls:ChartReveal.When="{Binding IsShowing}" />
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="Actual" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                    <GraphicsView Drawable="{Binding MacroSplit}" HeightRequest="92" controls:ChartReveal.When="{Binding IsShowing}" />
+                    <Label Text="{Binding MacroTargetLabel}" FontFamily="OpenSansSemibold" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                </VerticalStackLayout>
             </VerticalStackLayout>
         </Border>
 

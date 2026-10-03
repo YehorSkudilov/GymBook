@@ -38,6 +38,39 @@ public class DataStore
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Deletes what was read from the health apps: each day's calories burned and steps, food logged in them, and
+    /// measurements from scales and watches. Food and weights logged in Gym Book stay. Syncs like any deletion.
+    /// </summary>
+    public void ResetHealthData()
+    {
+        Data.HealthDays.Clear();
+        Data.FoodEntries.RemoveAll(f => f.Source != null);
+        Data.BodyWeights.RemoveAll(b => b.Source != null);
+        Save();
+    }
+
+    /// <summary>
+    /// Deletes every finished workout (not the one in progress). Plans stay, starting again from their first workout
+    /// and week.
+    /// </summary>
+    public void ResetHistory()
+    {
+        Data.Sessions.RemoveAll(s => s.EndedAt != null);
+        foreach (var plan in Data.Plans)
+            plan.NextWorkoutIndex = 0;
+        CompactPlanWeeks();
+        Save();
+    }
+
+    /// <summary>Deletes every plan. Workouts done with them stay in the history.</summary>
+    public void ResetPlans()
+    {
+        Data.Plans.Clear();
+        Data.ActivePlanId = null;
+        Save();
+    }
+
     /// <summary>Removes everything from this device only; used on sign-out.</summary>
     public void WipeDevice()
     {

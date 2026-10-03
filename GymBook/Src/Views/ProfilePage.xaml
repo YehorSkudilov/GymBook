@@ -297,7 +297,7 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Health data through Health Connect (Samsung Health and other apps): connecting, which apps, food from them.
+            <!-- Health data from Samsung Health itself or through Health Connect (other apps): connecting, which, food from them.
                  What's read shows on the Nutrition tab. -->
             <Label Text="HEALTH DATA" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0">
@@ -317,15 +317,6 @@
                         <Label Text="Read from" VerticalOptions="Center" />
                         <Label Grid.Column="1" Text="{Binding Health.AppsText}" Style="{StaticResource RowValue}" MaximumWidthRequest="190" LineBreakMode="TailTruncation" />
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
-                    <Grid Style="{StaticResource Row}" Padding="16,6">
-                        <VerticalStackLayout VerticalOptions="Center">
-                            <Label Text="Count food from health apps" />
-                            <Label Text="Food logged in Samsung Health or another app adds to what's logged here. Turn off if you log the same food in both."
-                                   Style="{StaticResource Caption}" FontSize="12" />
-                        </VerticalStackLayout>
-                        <Switch Grid.Column="2" IsToggled="{Binding Health.ImportFood}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" IsVisible="{Binding Health.IsConnected}" />
                     <Grid Style="{StaticResource Row}" IsVisible="{Binding Health.IsConnected}">
@@ -358,20 +349,22 @@
             <Border Style="{StaticResource Card}" Padding="0">
                 <VerticalStackLayout>
                     <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenHistoryCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Workout history" VerticalOptions="Center" />
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" />
-                    <Grid Style="{StaticResource Row}">
                         <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding ExportCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Export data (JSON)" VerticalOptions="Center" />
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Export data" />
+                            <Label Text="Workouts and plans as CSV you can import again; food, body and activity as CSV; or everything as JSON"
+                                   Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}">
                         <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding ResetCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Reset all data" TextColor="{StaticResource Danger}" VerticalOptions="Center" />
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Delete data" TextColor="{StaticResource Danger}" />
+                            <Label Text="Health data read in, workout history, plans, or everything" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                 </VerticalStackLayout>
             </Border>

@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+	<!-- Samsung Health's Data SDK asks for Android 10; Gym Book runs on 8 and only uses it on 10 and later
+	     (Platforms/Android/SamsungHealthData.cs). With uses-sdk here the build no longer fills in the target SDK, so it's
+	     spelled out: net10.0-android's API 36 (left out, it fell to 29 and Android warned the app was built for an old version). -->
+	<uses-sdk android:targetSdkVersion="36" tools:overrideLibrary="com.samsung.android.sdk.health.data" />
 	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true">
 		<!-- Google's barcode scanner (logging food) is downloaded with the app, not on the first scan. -->
 		<meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />

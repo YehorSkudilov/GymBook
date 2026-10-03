@@ -8,7 +8,7 @@ namespace GymBook.Views;
 /// The tabs, in the order they sit in the nav bar (and swipe): Workout is the big button in the middle. The Exercises tab
 /// is hidden for now (ExercisesPage is still registered; the library is browsed through the exercise picker).
 /// </summary>
-public enum AppTab { Nutrition, Plans, Workout, Progress, Profile }
+public enum AppTab { Plans, Nutrition, Workout, Progress, Profile }
 
 /// <summary>The app's root: the tabs live in a swipeable CView with a CNavBar underneath. Detail pages still push through Shell.</summary>
 public partial class MainPage : ContentPage
@@ -40,8 +40,8 @@ public partial class MainPage : ContentPage
         [
             // Icons with a solid body, so the filled version (selected) looks different from the outline one; line-only
             // icons like format_list_bulleted and insights look the same in both.
-            new() { Glyph = "lunch_dining", PageName = "Nutrition", Page = nutrition, Color = color },
             new() { Glyph = "event_note", PageName = "Plans", Page = plans, Color = color },
+            new() { Glyph = "lunch_dining", PageName = "Nutrition", Page = nutrition, Color = color },
             new()
             {
                 Glyph = "fitness_center", PageName = "Workout", Page = home,

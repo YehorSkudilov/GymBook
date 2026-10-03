@@ -11,13 +11,12 @@ namespace GymBook.ViewModels;
 
 /// <summary>
 /// The Nutrition tab: a day's food against its goals, calories burned (from Samsung Health or Health Connect, or estimated),
-/// the surplus or deficit that leaves, how that adds up over a week or a month, and the latest body measurements.
+/// the surplus or deficit that leaves, creatine and macros (activity and body are on Progress).
 /// </summary>
 public partial class NutritionViewModel(
     DataStore store,
     NutritionService nutrition,
     HealthSyncService health,
-    Units units,
     DialogService dialogs) : BaseViewModel
 {
     public static readonly Color Accent = Color.FromArgb("#3F7DFF");
@@ -27,9 +26,12 @@ public partial class NutritionViewModel(
     public static readonly Color Yellow = Color.FromArgb("#FFB020");
     public static readonly Color Red = Color.FromArgb("#FF4D5E");
     static readonly Color Secondary = Color.FromArgb("#9AA3B5");
+    static readonly Color Text = Color.FromArgb("#F4F6FB");
+    public static readonly Color Carbs = Color.FromArgb("#C58CFF");
+    public static readonly Color Fat = Color.FromArgb("#FF7B72");
+    public static readonly Color Protein = Color.FromArgb("#FFD84D");
 
     DateTime _date = DateTime.Today;
-    int _periodDays = 7;
     bool _visible;
 
     /// <summary>The tab is on screen: charts and numbers play in each time it comes into view.</summary>
@@ -39,20 +41,31 @@ public partial class NutritionViewModel(
     [ObservableProperty] string dateTitle = "Today";
     [ObservableProperty] string dateSubtitle = "";
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(NextOpacity))] bool canGoNext;
-    [ObservableProperty] IDrawable? calorieRing;
+    [ObservableProperty] IDrawable? calorieBar;
+    [ObservableProperty] bool hasGoal;
+    [ObservableProperty] string goalRangeText = "";
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasBalanceLine))] string balanceLine = "";
+    [ObservableProperty] Color balanceColor = Secondary;
+    public bool HasBalanceLine => BalanceLine.Length > 0;
+
+    // The keys beside the figures.
+    public IDrawable GoalIcon { get; } = new LegendIconDrawable(LegendIcon.Target, Accent);
+    public IDrawable RangeIcon { get; } = new LegendIconDrawable(LegendIcon.Range, Secondary);
+    public IDrawable BurnedIcon { get; } = new LegendIconDrawable(LegendIcon.Tick, Text);
     [ObservableProperty] string eatenText = "0";
     [ObservableProperty] string goalText = "";
     [ObservableProperty] string burnedText = "–";
-    [ObservableProperty] string burnedCaption = "";
-    [ObservableProperty] string balanceText = "–";
-    [ObservableProperty] string balanceCaption = "";
-    [ObservableProperty] Color balanceColor = Secondary;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasBurnedCaption))] string burnedCaption = "";
+    public bool HasBurnedCaption => BurnedCaption.Length > 0;
     [ObservableProperty] string balanceTargetText = "";
     [ObservableProperty] Color balanceTargetColor = Secondary;
     [ObservableProperty] bool hasBalanceTarget;
     [ObservableProperty] string noGoalsHint = "";
     [ObservableProperty] bool hasNoGoals;
-    [ObservableProperty] List<MacroItem> macros = [];
+    // Always three (carbs, fat, protein): the tiles bind to each by position.
+    [ObservableProperty] List<MacroItem> macros = [Macro("Carb", 0, null, Carbs), Macro("Fat", 0, null, Fat), Macro("Protein", 0, null, Protein)];
+    [ObservableProperty] IDrawable? macroSplit;
+    [ObservableProperty] string macroTargetLabel = "Recommended";
     [ObservableProperty] List<MealItem> meals = [];
     [ObservableProperty] bool hasImportedFood;
     [ObservableProperty] string importedFoodTitle = "";
@@ -64,43 +77,13 @@ public partial class NutritionViewModel(
     [ObservableProperty] string creatineText = "";
     [ObservableProperty] string creatineCaption = "";
     [ObservableProperty] string takeCreatineText = "";
-    [ObservableProperty] List<DoseDay> creatineWeek = [];
-
-    // Over time
-    [ObservableProperty] IDrawable? balanceChart;
-    [ObservableProperty] string periodTotalText = "";
-    [ObservableProperty] string periodTotalCaption = "";
-    [ObservableProperty] Color periodTotalColor = Secondary;
-    [ObservableProperty] string periodAverageText = "";
-    [ObservableProperty] string periodWeightText = "";
-    [ObservableProperty] string periodSummary = "";
-    [ObservableProperty] bool hasPeriod;
-    [ObservableProperty] IDrawable? eatenChart;
-
-    // Activity on the day (health data only)
-    [ObservableProperty] bool hasActivity;
-    [ObservableProperty] List<StatItem> activity = [];
-
-    // Body
-    [ObservableProperty] List<StatItem> body = [];
-    [ObservableProperty] string bodyCaption = "";
-    [ObservableProperty] IDrawable? bodyFatChart;
-    [ObservableProperty] bool hasBodyFatChart;
-
 
     /// <summary>The next-day arrow dims on today.</summary>
     public double NextOpacity => CanGoNext ? 1 : 0.3;
 
-    public System.Collections.ObjectModel.ObservableCollection<ChipItem> PeriodChips { get; } = [];
-
     public override async Task OnAppearingAsync()
     {
         IsShowing = false;
-        if (PeriodChips.Count == 0)
-        {
-            PeriodChips.Add(new ChipItem("7 days", 7, SelectPeriod) { IsSelected = _periodDays == 7 });
-            PeriodChips.Add(new ChipItem("30 days", 30, SelectPeriod) { IsSelected = _periodDays == 30 });
-        }
         if (!_visible)
         {
             _visible = true;
@@ -134,9 +117,6 @@ public partial class NutritionViewModel(
         var day = nutrition.Day(_date);
         ShowDay(day);
         ShowCreatine();
-        ShowPeriod();
-        ShowActivity(day);
-        ShowBody();
     }
 
     void ShowDay(DayNutrition day)
@@ -146,32 +126,29 @@ public partial class NutritionViewModel(
         DateSubtitle = day.Date.ToString("d MMMM", CultureInfo.CurrentCulture);
         CanGoNext = _date < DateTime.Today;
 
-        // Calories: the ring fills toward the goal, the middle says what's left.
+        // Calories, as Samsung Health shows them: eaten large, the goal and its on-target range beside it, then a bar
+        // from 0 with eaten filling it (orange past what was burned), the range hatched, a tick at the burn and a target
+        // at the goal. Under the number, the surplus or deficit; without a burn, what's left of the goal.
         var goal = p.CalorieGoal;
-        var (center, label) = goal is { } g
-            ? day.EatenKcal <= g ? (NutritionService.Kcal(g - day.EatenKcal), "kcal left") : (NutritionService.Kcal(day.EatenKcal - g), "kcal over")
-            : (NutritionService.Kcal(day.EatenKcal), "kcal eaten");
-        CalorieRing = new CalorieRingDrawable(day.EatenKcal, goal, Accent, Red, center, label);
+        var burnedKcal = day.BurnSource == BurnSource.Measured ? day.BurnedKcal : null;
+        CalorieBar = new CalorieBarDrawable(day.EatenKcal, burnedKcal, goal, Green, Orange, Accent);
         EatenText = NutritionService.Kcal(day.EatenKcal);
-        GoalText = goal is { } goalKcal ? NutritionService.Kcal(goalKcal) : "Not set";
+        HasGoal = goal is > 0;
+        GoalText = goal is { } goalKcal ? $"{NutritionService.Kcal(goalKcal)} Cal" : "No goal";
+        GoalRangeText = goal is { } r
+            ? $"{NutritionService.Kcal(r * (1 - CalorieBarDrawable.Range))} – {NutritionService.Kcal(r * (1 + CalorieBarDrawable.Range))}"
+            : "";
+        var soFar = day.IsToday ? " so far" : "";
+        (BalanceLine, BalanceColor) = day.Balance is { } balance
+            ? ($"{NutritionService.Signed(balance)} {(balance > 0 ? "surplus" : "deficit")}{soFar}", balance > 0 ? Orange : Accent)
+            : goal is { } g
+                ? day.EatenKcal <= g ? ($"{NutritionService.Kcal(g - day.EatenKcal)} left", Secondary) : ($"{NutritionService.Kcal(day.EatenKcal - g)} over", Red)
+                : ("", Secondary);
 
-        BurnedText = day.BurnedKcal is { } burned ? NutritionService.Kcal(burned) : "N/A";
-        BurnedCaption = day.BurnSource == BurnSource.Measured
-            ? (day.IsToday ? "So far · " : "") + (day.StepsCounted ? "resting + steps" : day.Health?.Source ?? "health data")
-            : "No health data";
-
-        if (day.Balance is { } balance)
-        {
-            BalanceText = NutritionService.Signed(balance);
-            BalanceColor = balance > 0 ? Orange : Accent;
-            BalanceCaption = (balance > 0 ? "Surplus" : "Deficit") + (day.IsToday && day.BurnSource == BurnSource.Measured ? " so far" : "");
-        }
-        else
-        {
-            BalanceText = "N/A";
-            BalanceColor = Secondary;
-            BalanceCaption = !day.HasFood ? "Log food to see it" : "Needs calories burned from health data";
-        }
+        BurnedText = day.BurnedKcal is { } burned ? $"{NutritionService.Kcal(burned)} burned" : "Burned: N/A";
+        // Only what qualifies the number: so far today, worked out from steps, or nothing to go on; not the app it came from.
+        BurnedCaption = day.BurnSource != BurnSource.Measured ? "No health data"
+            : string.Join(" · ", new[] { day.IsToday ? "So far" : null, day.StepsCounted ? "resting + steps" : null }.OfType<string>());
 
         HasBalanceTarget = p.EnergyBalanceGoal is not null && day.Balance is not null;
         if (p.EnergyBalanceGoal is { } target && day.Balance is { } b)
@@ -194,12 +171,20 @@ public partial class NutritionViewModel(
         HasNoGoals = p.CalorieGoal is null && p.ProteinGoalG is null;
         NoGoalsHint = "Set calorie and protein goals to see how each day measures up.";
 
+        // Carbs, fat and protein as Samsung Health shows them: grams each, then their share of the calories against the
+        // split aimed for: the goals when all three are set, else a usual one (55% carbs, 25% fat, 20% protein).
         Macros =
         [
-            Macro("Protein", day.ProteinG, p.ProteinGoalG, Green),
-            Macro("Carbs", day.CarbsG, p.CarbsGoalG, Yellow),
-            Macro("Fat", day.FatG, p.FatGoalG, Violet),
+            Macro("Carb", day.CarbsG, p.CarbsGoalG, Carbs),
+            Macro("Fat", day.FatG, p.FatGoalG, Fat),
+            Macro("Protein", day.ProteinG, p.ProteinGoalG, Protein),
         ];
+        var hasGoals = p.CarbsGoalG is > 0 && p.FatGoalG is > 0 && p.ProteinGoalG is > 0;
+        MacroTargetLabel = hasGoals ? "Your goals" : "Recommended";
+        MacroSplit = new MacroSplitDrawable(
+            [day.CarbsG * 4, day.FatG * 9, day.ProteinG * 4],
+            hasGoals ? new double[] { p.CarbsGoalG!.Value * 4, p.FatGoalG!.Value * 9, p.ProteinGoalG!.Value * 4 } : new double[] { 55, 25, 20 },
+            [Carbs, Fat, Protein]);
 
         Meals = [.. Enum.GetValues<MealType>().Select(meal =>
         {
@@ -208,19 +193,17 @@ public partial class NutritionViewModel(
             {
                 Title = meal.ToString(),
                 Total = foods.Count > 0 ? $"{NutritionService.Kcal(foods.Sum(f => f.Calories))} kcal" : "",
+                TotalKcal = foods.Sum(f => f.Calories),
+                ShowDivider = meal != MealType.Breakfast,
                 Foods = [.. foods.Select(f => new FoodItem
                 {
                     Name = string.IsNullOrWhiteSpace(f.Name) ? "Food" : f.Name,
                     Detail = (f.Source != null ? $"{f.Source} · " : "") + $"P {f.ProteinG:0} · C {f.CarbsG:0} · F {f.FatG:0}",
                     Calories = NutritionService.Kcal(f.Calories),
-                    // Read from a health app: changed there, not here (the next read would put it back).
-                    OpenCommand = f.Source == null
-                        ? new AsyncRelayCommand(() => GoTo($"{Routes.Food}?id={f.Id}"))
-                        : new AsyncRelayCommand(() => dialogs.Alert(string.IsNullOrWhiteSpace(f.Name) ? "Food" : f.Name,
-                            $"{NutritionService.Kcal(f.Calories)} kcal · protein {f.ProteinG:0.#} g · carbs {f.CarbsG:0.#} g · fat {f.FatG:0.#} g\n\n"
-                            + $"Logged in {f.Source} at {f.LoggedAt.ToString("t", CultureInfo.CurrentCulture)}. Change or delete it there; it updates here.")),
+                    OpenCommand = new AsyncRelayCommand(() => OpenFoodAsync(f)),
                 })],
                 AddCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Food}?date={_date:yyyy-MM-dd}&meal={meal}")),
+                OpenCommand = new AsyncRelayCommand(() => OpenMealAsync(meal, foods)),
             };
         })];
 
@@ -233,105 +216,47 @@ public partial class NutritionViewModel(
         }
     }
 
+    /// <summary>A food logged here opens to change it; one read from a health app says so (changed there, the next read would put it back).</summary>
+    Task OpenFoodAsync(FoodEntry f) => f.Source == null
+        ? GoTo($"{Routes.Food}?id={f.Id}")
+        : dialogs.Alert(string.IsNullOrWhiteSpace(f.Name) ? "Food" : f.Name,
+            $"{NutritionService.Kcal(f.Calories)} kcal · protein {f.ProteinG:0.#} g · carbs {f.CarbsG:0.#} g · fat {f.FatG:0.#} g\n\n"
+            + $"Logged in {f.Source} at {f.LoggedAt.ToString("t", CultureInfo.CurrentCulture)}. Change or delete it there; it updates here.");
+
+    /// <summary>A meal's row tapped: adds a food to it when empty, opens its food when there's one, else lists them to pick.</summary>
+    async Task OpenMealAsync(MealType meal, List<FoodEntry> foods)
+    {
+        if (foods.Count == 0)
+        {
+            await GoTo($"{Routes.Food}?date={_date:yyyy-MM-dd}&meal={meal}");
+            return;
+        }
+        if (foods.Count == 1)
+        {
+            await OpenFoodAsync(foods[0]);
+            return;
+        }
+        const string add = "Add food";
+        var labels = foods.Select(f => $"{(string.IsNullOrWhiteSpace(f.Name) ? "Food" : f.Name)} · {NutritionService.Kcal(f.Calories)} kcal").ToList();
+        // Two foods can read the same: tell them apart by position.
+        for (var i = 0; i < labels.Count; i++)
+            if (labels.IndexOf(labels[i]) != i)
+                labels[i] += $" ({i + 1})";
+        var picked = await dialogs.ActionSheet(meal.ToString(), null, [.. labels, add]);
+        if (picked == add)
+            await GoTo($"{Routes.Food}?date={_date:yyyy-MM-dd}&meal={meal}");
+        else if (picked != null && labels.IndexOf(picked) is >= 0 and var index)
+            await OpenFoodAsync(foods[index]);
+    }
+
     static MacroItem Macro(string name, double grams, int? goal, Color color) => new()
     {
         Name = name,
-        Value = goal is { } g ? $"{grams:0} / {g} g" : $"{grams:0} g",
-        Progress = goal is > 0 ? Math.Clamp(grams / goal.Value, 0, 1) : 0,
+        Grams = grams.ToString("0.#", CultureInfo.CurrentCulture),
+        GoalText = goal is { } g ? $"of {g} g" : "",
         Color = color,
         IsOver = goal is > 0 && grams > goal.Value * 1.1 && name != "Protein",
     };
-
-    void ShowPeriod()
-    {
-        var target = store.Profile.EnergyBalanceGoal;
-        BalanceChart = new BalanceChartDrawable(nutrition.BalanceHistory(_periodDays), target, Orange, Accent);
-        EatenChart = new BarChartDrawable(nutrition.EatenHistory(_periodDays), Accent, v => v >= 1000 ? $"{v / 1000:0.#}k" : $"{v:0}");
-
-        var period = nutrition.Balance(_periodDays);
-        HasPeriod = period != null;
-        if (period == null)
-        {
-            PeriodSummary = "Log food for a few days to see your surplus or deficit add up.";
-            return;
-        }
-        PeriodTotalText = NutritionService.Signed(period.TotalBalance);
-        PeriodTotalColor = period.TotalBalance > 0 ? Orange : Accent;
-        PeriodTotalCaption = period.TotalBalance > 0 ? "Total surplus" : "Total deficit";
-        PeriodAverageText = NutritionService.Signed(period.AverageBalance);
-        var kg = period.WeightChangeKg;
-        PeriodWeightText = $"{(kg >= 0 ? "+" : "−")}{units.FormatWithUnit(Math.Abs(kg))}";
-        var days = period.Days == 1 ? "1 day" : $"{period.Days} days";
-        PeriodSummary = $"Over {days} with food logged (today not counted): eating {NutritionService.Kcal(period.AverageEaten)} "
-            + $"and burning {NutritionService.Kcal(period.AverageBurned)} kcal a day on average.";
-    }
-
-    void SelectPeriod(ChipItem chip)
-    {
-        _periodDays = (int)chip.Value!;
-        foreach (var c in PeriodChips)
-            c.IsSelected = c == chip;
-        ShowPeriod();
-    }
-
-    void ShowActivity(DayNutrition day)
-    {
-        // Always all four, from the health apps; N/A for what they haven't recorded.
-        var h = day.Health;
-        static string Kcal(double? v) => v is { } k ? $"{NutritionService.Kcal(k)} kcal" : "N/A";
-        Activity =
-        [
-            new("Total burned", Kcal(day.BurnSource == BurnSource.Measured ? day.BurnedKcal : null)),
-            new("Active", Kcal(h?.ActiveBurnedKcal)),
-            new("Resting", Kcal(h?.BasalBurnedKcal)),
-            new("Steps", h?.Steps is { } steps ? steps.ToString("#,0", CultureInfo.CurrentCulture) : "N/A"),
-        ];
-        HasActivity = true;
-    }
-
-    void ShowBody()
-    {
-        // Only measurements read from the health apps (not weights logged by hand, nothing estimated); N/A for what
-        // they haven't measured. Fat mass and BMI are worked out from measured values only.
-        var entries = store.Data.BodyWeights.Where(b => b.Source != null).OrderBy(b => b.Date).ToList();
-        var latest = entries.LastOrDefault();
-        double? Latest(Func<BodyWeightEntry, double?> pick) => entries.Select(pick).LastOrDefault(v => v != null);
-        var weight = latest?.WeightKg;
-        var fat = Latest(b => b.BodyFatPercent);
-        var height = store.Profile.HeightCm;
-        string Mass(double? kg) => kg is { } v ? units.FormatWithUnit(v) : "N/A";
-
-        Body =
-        [
-            new("Weight", Mass(weight)),
-            new("Body fat", fat is { } f ? $"{f:0.#}%" : "N/A"),
-            new("Fat mass", Mass(weight * fat / 100)),
-            new("Lean mass", Mass(Latest(b => b.LeanMassKg))),
-            new("Bone mass", Mass(Latest(b => b.BoneMassKg))),
-            new("Body water", Mass(Latest(b => b.BodyWaterKg))),
-            new("BMR", Latest(b => b.BmrKcal) is { } bmr ? $"{NutritionService.Kcal(bmr)} kcal" : "N/A"),
-            new("Height", height is { } cm ? Height(cm) : "N/A"),
-            new("BMI", weight is { } w && height is { } h ? $"{w / Math.Pow(h / 100, 2):0.0}" : "N/A"),
-        ];
-
-        BodyCaption = latest == null
-            ? "No measurements from your health apps yet. Connect your health data in the Profile tab to bring in your scale's and watch's."
-            : $"Last measured {latest.Date:d MMM} · {latest.Source}";
-
-        var fats = entries.Where(b => b.BodyFatPercent != null).TakeLast(12).ToList();
-        HasBodyFatChart = fats.Count >= 2;
-        BodyFatChart = new LineChartDrawable(
-            [.. fats.Select(b => new ChartPoint(b.Date.ToString("d MMM", CultureInfo.CurrentCulture), b.BodyFatPercent!.Value))],
-            Violet, v => $"{v:0.#}%");
-    }
-
-    string Height(double cm)
-    {
-        if (units.Unit == WeightUnit.Kg)
-            return $"{cm:0} cm";
-        var inches = (int)Math.Round(cm / 2.54);
-        return $"{inches / 12}′ {inches % 12}″";
-    }
 
     IEnumerable<SupplementDose> Creatine(DateTime date) =>
         store.Data.Supplements.Where(d => d.Name == SupplementDose.Creatine && d.Date.Date == date.Date);
@@ -342,26 +267,10 @@ public partial class NutritionViewModel(
         var taken = Creatine(_date).OrderBy(d => d.TakenAt).ToList();
         CreatineTaken = taken.Count > 0;
         TakeCreatineText = $"Took {Grams(dose)}";
+        CreatineCaption = $"{Grams(dose)} a day";
         CreatineText = CreatineTaken
             ? $"{Grams(taken.Sum(d => d.Grams))} at {taken[^1].TakenAt.ToString("t", CultureInfo.CurrentCulture)}"
             : _date == DateTime.Today ? "Not taken yet today" : "Not taken";
-
-        // The streak: days in a row with a dose, up to today (today not counting against it until it's over).
-        var days = store.Data.Supplements.Where(d => d.Name == SupplementDose.Creatine).Select(d => d.Date.Date).ToHashSet();
-        var day = days.Contains(DateTime.Today) ? DateTime.Today : DateTime.Today.AddDays(-1);
-        var streak = 0;
-        while (days.Contains(day))
-        {
-            streak++;
-            day = day.AddDays(-1);
-        }
-        CreatineCaption = $"{Grams(dose)} a day" + (streak > 1 ? $" · {streak}-day streak" : "");
-
-        // The week up to the day shown.
-        CreatineWeek = [.. Enumerable.Range(0, 7).Select(i => _date.AddDays(i - 6)).Select(d => new DoseDay(
-            d.ToString("ddd", CultureInfo.CurrentCulture)[..1],
-            days.Contains(d.Date) ? Green : Color.FromArgb("#262B38"),
-            d == _date))];
     }
 
     static string Grams(double g) => $"{g.ToString("0.#", CultureInfo.CurrentCulture)} g";
@@ -426,24 +335,20 @@ public partial class NutritionViewModel(
         Refresh();
     }
 
+    /// <summary>Picks the day on a calendar (tapping the title), with a dot on each day that has food, calories burned or creatine.</summary>
     [RelayCommand]
-    void GoToToday()
+    async Task PickDay()
     {
-        _date = DateTime.Today;
+        var data = store.Data;
+        var days = data.FoodEntries.Select(f => f.Date.Date)
+            .Concat(data.HealthDays.Where(h => h.TotalBurnedKcal != null || h.FoodKcal != null).Select(h => h.Date.Date))
+            .Concat(data.Supplements.Select(s => s.Date.Date))
+            .ToHashSet();
+        if (await dialogs.Calendar("Pick a day", _date, DateTime.Today, days.Contains) is not { } day || day.Date == _date)
+            return;
+        _date = day.Date;
         Refresh();
     }
-
-    [RelayCommand]
-    Task AddFood() => GoTo($"{Routes.Food}?date={_date:yyyy-MM-dd}&meal={DefaultMeal()}");
-
-    /// <summary>The meal it's time for, or a snack.</summary>
-    static MealType DefaultMeal() => DateTime.Now.Hour switch
-    {
-        < 11 => MealType.Breakfast,
-        < 15 => MealType.Lunch,
-        >= 17 and < 22 => MealType.Dinner,
-        _ => MealType.Snack,
-    };
 
     [RelayCommand]
     Task OpenGoals() => GoTo(Routes.NutritionGoals);
@@ -452,21 +357,34 @@ public partial class NutritionViewModel(
 public class MacroItem
 {
     public required string Name { get; init; }
-    public required string Value { get; init; }
-    public required double Progress { get; init; }
+    /// <summary>Grams eaten, without the unit ("339.7").</summary>
+    public required string Grams { get; init; }
+    /// <summary>"of 180 g" with a goal, else empty.</summary>
+    public required string GoalText { get; init; }
+    public bool HasGoal => GoalText.Length > 0;
     public required Color Color { get; init; }
     /// <summary>Well past the goal (carbs or fat: more protein is fine).</summary>
     public bool IsOver { get; init; }
-    public Color ValueColor => IsOver ? NutritionViewModel.Yellow : Color.FromArgb("#9AA3B5");
+    public Color GoalColor => IsOver ? NutritionViewModel.Yellow : Color.FromArgb("#9AA3B5");
 }
 
+/// <summary>A meal's row, as Samsung Health lays it out: its calories in a circle, its name and foods, and + to add one.</summary>
 public class MealItem
 {
     public required string Title { get; init; }
     public string Total { get; init; } = "";
     public List<FoodItem> Foods { get; init; } = [];
     public bool HasFoods => Foods.Count > 0;
+    /// <summary>The meal's calories as a bare number ("1,098"; "0" with nothing logged).</summary>
+    public string Calories => NutritionService.Kcal(TotalKcal);
+    public double TotalKcal { get; init; }
+    /// <summary>Its foods' names, one after another.</summary>
+    public string Names => string.Join(", ", Foods.Select(f => f.Name));
+    /// <summary>A line above every meal but the first.</summary>
+    public bool ShowDivider { get; init; }
     public required ICommand AddCommand { get; init; }
+    /// <summary>Tapping the row: the food in it, a list of them to pick from, or adding one when there are none.</summary>
+    public required ICommand OpenCommand { get; init; }
 }
 
 public class FoodItem
@@ -478,9 +396,3 @@ public class FoodItem
 }
 
 public record StatItem(string Label, string Value);
-
-/// <summary>A day in the creatine week: its letter, filled when taken, the day shown outlined.</summary>
-public record DoseDay(string Letter, Color Fill, bool IsSelected)
-{
-    public Color Stroke => IsSelected ? Color.FromArgb("#9AA3B5") : Colors.Transparent;
-}

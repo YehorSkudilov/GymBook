@@ -44,6 +44,8 @@ public class HealthConnectPlatform : IHealthPlatform
 
     static Context Context => Android.App.Application.Context;
 
+    public HealthSource Source => HealthSource.HealthConnect;
+
     public HealthAvailability Availability =>
         OperatingSystem.IsAndroidVersionAtLeast(34) ? HealthAvailability.Available : HealthAvailability.NeedsNewerAndroid;
 
@@ -60,6 +62,8 @@ public class HealthConnectPlatform : IHealthPlatform
         await MainThread.InvokeOnMainThreadAsync(() => Permissions.RequestAsync<HealthReadPermissions>());
         return HasAnyPermission;
     }
+
+    public string? PermissionProblem => null;
 
     public Task<HealthReadResult> ReadAsync(DateTime from, DateTime to, IReadOnlyCollection<string>? apps, CancellationToken ct = default)
     {
@@ -80,8 +84,16 @@ public class HealthConnectPlatform : IHealthPlatform
     /// The app's name as Android shows it. Apps that share with Health Connect are visible to us (see the queries in
     /// AndroidManifest.xml); anything else shows its package.
     /// </summary>
-    public string AppName(string package)
+    public string AppName(string package) => Label(package);
+
+    /// <inheritdoc cref="AppName"/>
+    public static string Label(string package)
     {
+        // Health Connect's own data, such as the steps the phone counts itself, comes from a package of its own
+        // (com.android.healthconnect.phone.<id>) with no app name.
+        if (package.StartsWith("com.android.healthconnect", StringComparison.Ordinal)
+            || package.StartsWith("com.google.android.healthconnect", StringComparison.Ordinal))
+            return "This phone";
         try
         {
             var pm = Context.PackageManager!;

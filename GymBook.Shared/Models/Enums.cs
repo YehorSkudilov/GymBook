@@ -22,7 +22,7 @@ public enum Sex { Male, Female }
 /// <summary>Daily activity outside workouts, for estimating calories burned without health data.</summary>
 public enum ActivityLevel { Sedentary, Light, Moderate, VeryActive }
 
-/// <summary>Where health data comes from. Both read through Android's Health Connect; Samsung Health keeps to Samsung's own records.</summary>
+/// <summary>Where health data comes from: Samsung Health itself (its Data SDK), or any app through Android's Health Connect.</summary>
 public enum HealthSource { None, SamsungHealth, HealthConnect }
 
 public static class EnumDisplay

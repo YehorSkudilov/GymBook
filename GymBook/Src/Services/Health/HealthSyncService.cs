@@ -9,7 +9,7 @@ namespace GymBook.Services.Health;
 /// the rest, so other devices see it too. A weight logged in Gym Book itself is never overwritten. The profile's body weight
 /// is left alone: the AI features send it, and health data never goes to them (see the API's privacy policy).
 /// </summary>
-public class HealthSyncService(DataStore store, IHealthPlatform platform)
+public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> platforms)
 {
     /// <summary>How far back each read goes. Health Connect only shares the last 30 days with an app by default.</summary>
     public const int Days = 30;
@@ -18,7 +18,16 @@ public class HealthSyncService(DataStore store, IHealthPlatform platform)
 
     readonly SemaphoreSlim _gate = new(1, 1);
 
-    public IHealthPlatform Platform => platform;
+    readonly IReadOnlyList<IHealthPlatform> _platforms = [.. platforms];
+
+    /// <summary>Where data is read from: the chosen source's platform (Health Connect's before one is chosen).</summary>
+    public IHealthPlatform Platform => PlatformFor(store.Profile.HealthSource == HealthSource.None ? HealthSource.HealthConnect : store.Profile.HealthSource);
+
+    /// <summary>The platform that reads <paramref name="source"/>, or the only one there is (none, off Android).</summary>
+    public IHealthPlatform PlatformFor(HealthSource source) => _platforms.FirstOrDefault(p => p.Source == source) ?? _platforms[0];
+
+    /// <summary>Samsung Health can be read directly on this device.</summary>
+    public bool CanReadSamsungHealth => PlatformFor(HealthSource.SamsungHealth) is { Source: HealthSource.SamsungHealth, Availability: HealthAvailability.Available };
 
     public DateTimeOffset? LastSyncedAt { get; private set; }
 
@@ -27,50 +36,52 @@ public class HealthSyncService(DataStore store, IHealthPlatform platform)
 
     /// <summary>A source is chosen, this device can read it, and reading was allowed.</summary>
     public bool IsConnected =>
-        store.Profile.HealthSource != HealthSource.None && platform.Availability == HealthAvailability.Available && platform.HasAnyPermission;
+        store.Profile.HealthSource != HealthSource.None && Platform.Availability == HealthAvailability.Available && Platform.HasAnyPermission;
 
     /// <summary>
-    /// Connects to <paramref name="source"/>: asks for access, and on success remembers the choice and reads straight away.
-    /// Returns whether any access was given.
+    /// Connects to <paramref name="source"/> (Samsung Health itself, or Health Connect): asks for access, and on success
+    /// remembers the choice and reads straight away. Returns whether any access was given; when not,
+    /// <see cref="IHealthPlatform.PermissionProblem"/> may say why.
     /// </summary>
     public async Task<bool> ConnectAsync(HealthSource source)
     {
-        if (source == HealthSource.None || platform.Availability != HealthAvailability.Available)
+        var platform = PlatformFor(source);
+        if (source == HealthSource.None || platform.Source != source || platform.Availability != HealthAvailability.Available)
             return false;
         if (!await platform.RequestPermissionsAsync())
             return false;
         store.Profile.HealthSource = source;
-        // A fresh choice: Samsung Health alone, or every app (pick some with ChooseApps).
+        // A fresh choice: every app through Health Connect (pick some with ChooseApps).
         store.Profile.HealthApps = null;
         store.Save();
+        LastError = null;
         await SyncAsync(force: true);
         return true;
     }
 
-    /// <summary>The apps read from: the ones picked, Samsung Health with that source, or null for every app.</summary>
+    /// <summary>The apps read from through Health Connect: the ones picked, or null for every app (and for Samsung Health).</summary>
     public IReadOnlyList<string>? Apps =>
-        store.Profile.HealthApps is { Count: > 0 } picked ? picked
-        : store.Profile.HealthSource == HealthSource.SamsungHealth ? [HealthApp.SamsungHealth]
-        : null;
+        store.Profile.HealthSource == HealthSource.HealthConnect && store.Profile.HealthApps is { Count: > 0 } picked ? picked : null;
 
     /// <summary>
-    /// What's read from: "Samsung Health", "Samsung Health, Withings", "Samsung Health + 2 more", or "every app" (names as
-    /// the phone knows them; elsewhere, just how many).
+    /// What's read from: "Samsung Health" (directly), or through Health Connect "Samsung Health, Withings",
+    /// "Samsung Health + 2 more", or "every app" (names as the phone knows them; elsewhere, just how many).
     /// </summary>
-    public string SourceName => Apps switch
+    public string SourceName => store.Profile.HealthSource == HealthSource.SamsungHealth ? "Samsung Health" : Apps switch
     {
         null => "every app",
-        { Count: var n } when platform.Availability != HealthAvailability.Available => n == 1 ? "1 app" : $"{n} apps",
-        { Count: <= 2 } apps => string.Join(", ", apps.Select(platform.AppName)),
-        var apps => $"{platform.AppName(apps[0])} + {apps.Count - 1} more",
+        { Count: var n } when Platform.Availability != HealthAvailability.Available => n == 1 ? "1 app" : $"{n} apps",
+        { Count: <= 2 } apps => string.Join(", ", apps.Select(Platform.AppName)),
+        var apps => $"{Platform.AppName(apps[0])} + {apps.Count - 1} more",
     };
 
-    /// <summary>Reads only from <paramref name="packages"/> from now on (null or empty: every app), and reads again.</summary>
+    /// <summary>Reads through Health Connect, only from <paramref name="packages"/> (null or empty: every app), and reads again.</summary>
     public async Task ChooseAppsAsync(IReadOnlyCollection<string>? packages)
     {
         store.Profile.HealthSource = HealthSource.HealthConnect;
         store.Profile.HealthApps = packages is { Count: > 0 } ? [.. packages] : null;
         store.Save();
+        LastError = null;
         await SyncAsync(force: true);
     }
 
@@ -101,7 +112,7 @@ public class HealthSyncService(DataStore store, IHealthPlatform platform)
             var today = DateTime.Today;
             var from = today.AddDays(1 - Days);
             var to = today.AddDays(1);
-            var result = await platform.ReadAsync(from, to, Apps);
+            var result = await Platform.ReadAsync(from, to, Apps);
             LastSyncedAt = DateTimeOffset.Now;
             LastError = null;
             return await MainThread.InvokeOnMainThreadAsync(() => Apply(result, name) | ApplyFoods(result.Foods, from, to));
@@ -233,7 +244,7 @@ public class HealthSyncService(DataStore store, IHealthPlatform platform)
             var name = string.IsNullOrWhiteSpace(food.Name) ? $"{meal} food" : food.Name.Trim();
             if (name.Length > SyncLimits.NameLength)
                 name = name[..SyncLimits.NameLength];
-            var source = food.Package is { } package ? platform.AppName(package) : "Health Connect";
+            var source = food.Package is { } package ? Platform.AppName(package) : "Health Connect";
             if (source.Length > SyncLimits.NameLength)
                 source = source[..SyncLimits.NameLength];
 

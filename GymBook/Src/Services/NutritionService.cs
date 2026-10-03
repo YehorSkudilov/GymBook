@@ -63,13 +63,13 @@ public class NutritionService(DataStore store)
     public DayNutrition Day(DateTime date)
     {
         date = date.Date;
-        // Foods logged in the health apps are in their meals with the rest (unless they're turned off in the Profile tab).
+        // Foods logged in the health apps are in their meals with the rest.
         var foods = store.Data.FoodEntries
-            .Where(f => f.Date.Date == date && (f.Source == null || Profile.ImportHealthFood))
+            .Where(f => f.Date.Date == date)
             .OrderBy(f => f.Meal).ThenBy(f => f.LoggedAt).ToList();
         var health = store.Data.HealthDays.FirstOrDefault(h => h.Date.Date == date);
         // Read before foods were read one by one: only the day's total from the health app, counted on its own.
-        var asTotal = Profile.ImportHealthFood && health is { FoodKcal: > 0 } && !foods.Any(f => f.Source != null);
+        var asTotal = health is { FoodKcal: > 0 } && !foods.Any(f => f.Source != null);
 
         var (burned, source, stepsCounted) = Burned(health, date);
 
@@ -88,11 +88,21 @@ public class NutritionService(DataStore store)
             asTotal);
     }
 
+    // Where Samsung Health can't be read directly (see SamsungHealthData), Health Connect only has its steps and a
+    // resting burn worked out from the BMR, not its activity calories or the total burned it shows. These two make the
+    // day's burn from what is shared match that total: fitted to whole days in Samsung Health, within some 10 kcal.
+
     /// <summary>
-    /// Net calories walking burns per step for each kilogram of body weight, on top of resting: about 0.5 kcal per kg per
-    /// km, at roughly 1,300 steps a km (some 260 kcal for 10,000 steps at 70 kg).
+    /// Samsung Health's resting calories over the BMR shared with Health Connect: about 1.21 times it. The BMR alone is
+    /// the body lying still; the rest of the day's baseline (digesting food, sitting, standing) comes on top.
     /// </summary>
-    const double WalkKcalPerStepPerKg = 0.0004;
+    const double RestingPerBasal = 1.21;
+
+    /// <summary>
+    /// Activity calories per step for each kilogram of body weight, on top of resting: what Samsung Health's activity
+    /// calories come to, some 430 kcal for 10,000 steps at 70 kg (walking alone is about 0.0004).
+    /// </summary>
+    const double ActivityKcalPerStepPerKg = 0.00062;
 
     /// <summary>
     /// The day's burn from the health apps: resting plus activity. Where an app shares no total of its own, Health
@@ -106,15 +116,16 @@ public class NutritionService(DataStore store)
             return (null, BurnSource.None, false);
         var total = health.TotalBurnedKcal;
         var basal = health.BasalBurnedKcal;
-        var steps = health.Steps is { } s && s > 0 ? s * WalkKcalPerStepPerKg * WeightOn(date) : (double?)null;
+        var steps = health.Steps is { } s && s > 0 ? s * ActivityKcalPerStepPerKg * WeightOn(date) : (double?)null;
         if (basal == null)
         {
-            // No resting figure to build on: the total as it is, or active calories alone aren't a day's burn.
+            // No resting figure to build on: the total as it is (Samsung Health's own, read directly, comes this way), or
+            // active calories alone aren't a day's burn.
             return total is { } t ? (t, BurnSource.Measured, false) : (null, BurnSource.None, false);
         }
         var recorded = Math.Max(health.ActiveBurnedKcal ?? 0, total is { } all ? all - basal.Value : 0);
         var activity = Math.Max(recorded, steps ?? 0);
-        return (basal.Value + activity, BurnSource.Measured, steps is { } walked && walked > recorded);
+        return (basal.Value * RestingPerBasal + activity, BurnSource.Measured, steps is { } walked && walked > recorded);
     }
 
     /// <summary>Body weight on a day: the last weighed by then, else the profile's.</summary>

@@ -21,6 +21,10 @@ public class DialogService
     public Task<string?> ActionSheet(string title, string? destructive, IReadOnlyList<MenuSwitch> switches, params string[] options) =>
         DialogSheet.Menu(title, destructive, options, switches);
 
+    /// <summary>On/off <paramref name="switches"/>, applied as they're flipped, with <paramref name="accept"/> and Cancel; true for <paramref name="accept"/>.</summary>
+    public Task<bool> Switches(string title, string? message, IReadOnlyList<MenuSwitch> switches, string accept = "Save") =>
+        DialogSheet.Switches(title, message, switches, accept);
+
     /// <summary>Whole numbers, each picked on the number pad or stepped with − and +; null when cancelled.</summary>
     public Task<int[]?> Numbers(string title, string? message, string accept, params NumberField[] fields) =>
         DialogSheet.Numbers(title, message, fields, accept);
@@ -33,6 +37,10 @@ public class DialogService
 
     /// <summary>A rest time in seconds, typed as m:ss or stepped by 15 s; null when cancelled.</summary>
     public Task<int?> RestTime(string title, int seconds) => DialogSheet.RestTime(title, seconds);
+
+    /// <summary>A day picked on a month calendar (no later than <paramref name="max"/>), with a dot on days that <paramref name="hasData"/>; null when cancelled.</summary>
+    public Task<DateTime?> Calendar(string title, DateTime initial, DateTime max, Func<DateTime, bool> hasData) =>
+        DialogSheet.Calendar(title, initial, max, hasData);
 
     /// <summary>A date and time of day (no later than today); null when cancelled.</summary>
     public Task<DateTime?> DateAndTime(string title, string? message, DateTime initial, string accept = "Save") =>
