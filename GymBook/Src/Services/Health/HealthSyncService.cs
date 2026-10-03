@@ -9,7 +9,7 @@ namespace GymBook.Services.Health;
 /// the rest, so other devices see it too. A weight logged in Gym Book itself is never overwritten. The profile's body weight
 /// is left alone: the AI features send it, and health data never goes to them (see the API's privacy policy).
 /// </summary>
-public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> platforms)
+public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> platforms, HealthWriteBack writeBack)
 {
     /// <summary>How far back each read goes. Health Connect only shares the last 30 days with an app by default.</summary>
     public const int Days = 30;
@@ -19,6 +19,20 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
     readonly SemaphoreSlim _gate = new(1, 1);
 
     readonly IReadOnlyList<IHealthPlatform> _platforms = [.. platforms];
+
+    /// <summary>Sending Gym Book's workouts, food and weights to the health app (see <see cref="HealthWriteBack"/>).</summary>
+    public HealthWriteBack WriteBack => writeBack;
+
+    bool _watching;
+
+    /// <summary>Changes made in Gym Book go to the health app soon after, while sending is on.</summary>
+    void Watch()
+    {
+        if (_watching)
+            return;
+        _watching = true;
+        store.Saved += (_, _) => writeBack.SendSoon();
+    }
 
     /// <summary>Where data is read from: the chosen source's platform (Health Connect's before one is chosen).</summary>
     public IHealthPlatform Platform => PlatformFor(store.Profile.HealthSource == HealthSource.None ? HealthSource.HealthConnect : store.Profile.HealthSource);
@@ -115,7 +129,11 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
             var result = await Platform.ReadAsync(from, to, Apps);
             LastSyncedAt = DateTimeOffset.Now;
             LastError = null;
-            return await MainThread.InvokeOnMainThreadAsync(() => Apply(result, name) | ApplyFoods(result.Foods, from, to));
+            var changed = await MainThread.InvokeOnMainThreadAsync(() => Apply(result, name) | ApplyFoods(result.Foods, from, to));
+            // Then the other way: what was done in Gym Book, to the health app.
+            Watch();
+            await MainThread.InvokeOnMainThreadAsync(writeBack.SendAsync);
+            return changed;
         }
         catch (Exception e)
         {
@@ -230,6 +248,10 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
         foreach (var food in foods)
         {
             var kcal = InRange(food.Kcal, 0, 20000, 1) ?? 0;
+            // Gym Book's own, sent to the health app (see HealthWriteBack) and read back, or brought into Samsung Health
+            // from Health Connect: already here as logged.
+            if (food.Package == AppInfo.Current.PackageName || IsSentFromHere(food.Time, kcal))
+                continue;
             var protein = InRange(food.ProteinG, 0, 2000, 1) ?? 0;
             var carbs = InRange(food.CarbsG, 0, 2000, 1) ?? 0;
             var fat = InRange(food.FatG, 0, 2000, 1) ?? 0;
@@ -241,7 +263,7 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
             if (!read.Add(id))
                 continue;
             var meal = food.Meal ?? MealAt(food.Time);
-            var name = string.IsNullOrWhiteSpace(food.Name) ? $"{meal} food" : food.Name.Trim();
+            var name = string.IsNullOrWhiteSpace(food.Name) ? $"{meal.Display()} food" : food.Name.Trim();
             if (name.Length > SyncLimits.NameLength)
                 name = name[..SyncLimits.NameLength];
             var source = food.Package is { } package ? Platform.AppName(package) : "Health Connect";
@@ -277,13 +299,21 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
         return changed;
     }
 
+    /// <summary>
+    /// A food logged in Gym Book at that time (or, logged for another day, at noon that day: when it's sent) with those
+    /// calories: one sent to the health app, come back.
+    /// </summary>
+    bool IsSentFromHere(DateTime time, double kcal) => writeBack.IsEnabled && store.Data.FoodEntries.Any(f => f.Source == null
+        && Math.Abs(f.Calories - kcal) < 1.5
+        && Math.Abs(((f.LoggedAt.Date == f.Date.Date ? f.LoggedAt : f.Date.Date.AddHours(12)) - time).TotalMinutes) < 2);
+
     /// <summary>The meal for a food the app didn't put in one, by the time it was eaten.</summary>
     static MealType MealAt(DateTime time) => time.Hour switch
     {
         >= 4 and < 11 => MealType.Breakfast,
         >= 11 and < 15 => MealType.Lunch,
         >= 17 and < 22 => MealType.Dinner,
-        _ => MealType.Snack,
+        _ => EnumDisplay.SnackAt(time),
     };
 
     static double? Kcal(double? v) => InRange(v, 0, 50000, 0) is { } k && k > 0 ? k : null;

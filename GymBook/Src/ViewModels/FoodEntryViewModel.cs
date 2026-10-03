@@ -128,8 +128,8 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         }
         DateText = _date == DateTime.Today ? "Today" : _date.ToString("dddd d MMMM", CultureInfo.CurrentCulture);
         MealChips.Clear();
-        foreach (var meal in Enum.GetValues<MealType>())
-            MealChips.Add(new ChipItem(meal.ToString(), meal, SelectMeal) { IsSelected = meal == _meal });
+        foreach (var meal in EnumDisplay.Meals)
+            MealChips.Add(new ChipItem(meal.Display(), meal, SelectMeal) { IsSelected = meal == _meal });
 
         _search?.Cancel();
         SearchText = "";
@@ -521,7 +521,7 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         if (name.Length > SyncLimits.NameLength)
             name = name[..SyncLimits.NameLength];
         var entry = _editing ?? new FoodEntry { Date = _date, LoggedAt = DateTime.Now };
-        entry.Name = name.Length > 0 ? name : $"{_meal} food";
+        entry.Name = name.Length > 0 ? name : $"{_meal.Display()} food";
         entry.Meal = _meal;
         entry.Calories = Math.Round(kcal, 1);
         entry.ProteinG = Math.Round(protein, 1);

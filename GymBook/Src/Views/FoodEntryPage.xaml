@@ -273,15 +273,16 @@
             <!-- The meal, when logging (not while making a food) -->
             <VerticalStackLayout Spacing="8" IsVisible="{Binding ShowMeal}">
                 <Label Text="MEAL" Style="{StaticResource Overline}" Margin="0,4,0,0" />
-                <FlexLayout BindableLayout.ItemsSource="{Binding MealChips}" Direction="Row">
+                <!-- Three to a row: the meals, then the snacks -->
+                <FlexLayout BindableLayout.ItemsSource="{Binding MealChips}" Direction="Row" Wrap="Wrap">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="vm:ChipItem">
-                            <Border FlexLayout.Grow="1" FlexLayout.Basis="0" Margin="3,0" BackgroundColor="{Binding Background}"
+                            <Border FlexLayout.Grow="1" FlexLayout.Basis="30%" Margin="3,0,3,6" BackgroundColor="{Binding Background}"
                                     StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="0,8">
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding SelectCommand}" />
                                 </Border.GestureRecognizers>
-                                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" HorizontalOptions="Center" />
+                                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="12" FontFamily="OpenSansSemibold" HorizontalOptions="Center" />
                             </Border>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>

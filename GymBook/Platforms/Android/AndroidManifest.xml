@@ -26,6 +26,13 @@
 	<uses-permission android:name="android.permission.health.READ_BONE_MASS" />
 	<uses-permission android:name="android.permission.health.READ_BODY_WATER_MASS" />
 	<uses-permission android:name="android.permission.health.READ_HEIGHT" />
+	<!-- Sending Gym Book's workouts, food and weights back (Src/Services/Health/HealthWriteBack.cs), when it's turned on:
+	     to Health Connect while Samsung Health doesn't take them straight from Gym Book. -->
+	<uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
+	<uses-permission android:name="android.permission.health.WRITE_ACTIVE_CALORIES_BURNED" />
+	<uses-permission android:name="android.permission.health.WRITE_NUTRITION" />
+	<uses-permission android:name="android.permission.health.WRITE_WEIGHT" />
+	<uses-permission android:name="android.permission.health.WRITE_BODY_FAT" />
 	<!-- To show the names of the apps that share health data (Health connect apps declare these), when choosing which to read. -->
 	<queries>
 		<intent>

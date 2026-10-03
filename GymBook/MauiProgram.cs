@@ -62,6 +62,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<GymBook.Services.Health.IHealthPlatform, GymBook.Services.Health.NoHealthPlatform>();
         builder.Services.AddSingleton<IBarcodeScanner, NoBarcodeScanner>();
 #endif
+        builder.Services.AddSingleton<GymBook.Services.Health.HealthWriteBack>();
         builder.Services.AddSingleton<GymBook.Services.Health.HealthSyncService>();
         builder.Services.AddTransient<HealthSettingsViewModel>();
 

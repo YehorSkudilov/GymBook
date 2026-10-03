@@ -42,7 +42,7 @@ sealed class SamsungHealthData
     ];
 
     // The SDK's error codes (com.samsung.android.sdk.health.data.error.ErrorCode).
-    const int ErrInvalidCaller = 1002, ErrNoUserPermission = 2000, ErrAccessControl = 2003,
+    const int ErrInvalidCaller = 1002, ErrNoUserPermission = 2000, ErrNoOwnershipToWrite = 2002, ErrAccessControl = 2003,
         ErrPlatformNotInstalled = 3000, ErrOldVersionPlatform = 3001, ErrPlatformDisabled = 3002, ErrPlatformNotInitialized = 3003;
 
     Java.Lang.Object? _store;
@@ -145,7 +145,9 @@ sealed class SamsungHealthData
                 "BREAKFAST" => MealType.Breakfast,
                 "LUNCH" => MealType.Lunch,
                 "DINNER" => MealType.Dinner,
-                "MORNING_SNACK" or "AFTERNOON_SNACK" or "EVENING_SNACK" => MealType.Snack,
+                "MORNING_SNACK" => MealType.MorningSnack,
+                "AFTERNOON_SNACK" => MealType.Snack,
+                "EVENING_SNACK" => MealType.EveningSnack,
                 _ => null,
             };
             var source = CallOrNull(point, Sdk + "data/HealthDataPoint", "getDataSource", "()L" + Sdk + "data/DataSource;") is { } dataSource
@@ -199,6 +201,157 @@ sealed class SamsungHealthData
                     ?.JavaCast<Java.Lang.Number>() is { } cm)
                 return cm.DoubleValue();
         return null;
+    }
+
+    // ---------- Writing ----------
+
+    const string Exercise = "EXERCISE";
+    const string ExerciseType = "DataType$ExerciseType", NutritionType = "DataType$NutritionType", BodyType = "DataType$BodyCompositionType";
+
+    /// <summary>
+    /// Asks to write workouts, food and body composition (Samsung Health's own screen); true if all three were allowed.
+    /// Without Samsung's approval (an access code in developer mode) it may refuse outright, as a <see cref="SamsungHealthException"/>.
+    /// </summary>
+    public async Task<bool> RequestWriteAsync(Android.App.Activity activity)
+    {
+        var write = StaticField(Sdk + "permission/AccessType", "WRITE", "L" + Sdk + "permission/AccessType;");
+        var permissions = new[] { (Exercise, ExerciseType), (Nutrition, NutritionType), (Body, BodyType) }.ToDictionary(k => k.Item1, k =>
+            StaticCall(Sdk + "permission/Permission", "of",
+                "(L" + Request + "DataType;L" + Sdk + "permission/AccessType;)L" + Sdk + "permission/Permission;",
+                new JValue(StaticField(Request + "DataTypes", k.Item1, "L" + Request + k.Item2 + ";")), new JValue(write)));
+        var granted = await Await(Call(Store, Sdk + "HealthDataStore", "requestPermissionsAsync",
+            "(Ljava/util/Set;Landroid/app/Activity;)L" + Future + ";", new JValue(ToSet(permissions)), new JValue(activity)));
+        return Allowed(permissions, granted).Count == permissions.Count;
+    }
+
+    /// <summary>A finished workout as a strength-training session (weight machines, as Samsung Health has no free-weights type), with its title and calories.</summary>
+    public Java.Lang.Object WorkoutPoint(string clientId, string title, DateTime start, DateTime end, double activeKcal)
+    {
+        var session = Call(StaticField(Sdk + "data/entries/ExerciseSession", "Companion", "L" + Sdk + "data/entries/ExerciseSession$Companion;"),
+            Sdk + "data/entries/ExerciseSession$Companion", "builder", "()L" + Sdk + "data/entries/ExerciseSession$Builder;");
+        var kind = StaticField(Request + "DataType$ExerciseType$PredefinedExerciseType", "WEIGHT_MACHINE", "L" + Request + "DataType$ExerciseType$PredefinedExerciseType;");
+        const string sb = Sdk + "data/entries/ExerciseSession$Builder";
+        session = Call(session, sb, "setStartTime", "(Ljava/time/Instant;)L" + sb + ";", new JValue(Instant(start)));
+        session = Call(session, sb, "setEndTime", "(Ljava/time/Instant;)L" + sb + ";", new JValue(Instant(end)));
+        session = Call(session, sb, "setDuration", "(Ljava/time/Duration;)L" + sb + ";", new JValue(Java.Time.Duration.OfMillis((long)(end - start).TotalMilliseconds)!));
+        session = Call(session, sb, "setExerciseType", "(L" + Request + "DataType$ExerciseType$PredefinedExerciseType;)L" + sb + ";", new JValue(kind));
+        session = Call(session, sb, "setCustomTitle", "(Ljava/lang/String;)L" + sb + ";", new JValue(new Java.Lang.String(title)));
+        session = Call(session, sb, "setCalories", "(F)L" + sb + ";", new JValue((float)activeKcal));
+        var sessions = new Java.Util.ArrayList();
+        sessions.Add(Call(session, sb, "build", "()L" + Sdk + "data/entries/ExerciseSession;"));
+        return Point(clientId, start, end,
+            (ExerciseType, "EXERCISE_TYPE", kind),
+            (ExerciseType, "CUSTOM_TITLE", new Java.Lang.String(title)),
+            (ExerciseType, "SESSIONS", sessions));
+    }
+
+    /// <summary>A food, in the meal it was logged under.</summary>
+    public Java.Lang.Object FoodPoint(string clientId, DateTime time, MealType meal, string name, double kcal, double protein, double carbs, double fat)
+    {
+        var mealName = meal switch
+        {
+            MealType.Breakfast => "BREAKFAST",
+            MealType.Lunch => "LUNCH",
+            MealType.Dinner => "DINNER",
+            MealType.MorningSnack => "MORNING_SNACK",
+            MealType.EveningSnack => "EVENING_SNACK",
+            _ => "AFTERNOON_SNACK",
+        };
+        var mealType = StaticField(Request + "DataType$NutritionType$MealType", mealName, "L" + Request + "DataType$NutritionType$MealType;");
+        return Point(clientId, time, null,
+            (NutritionType, "TITLE", new Java.Lang.String(name)),
+            (NutritionType, "MEAL_TYPE", mealType),
+            (NutritionType, "CALORIES", new Java.Lang.Float((float)kcal)),
+            (NutritionType, "PROTEIN", new Java.Lang.Float((float)protein)),
+            (NutritionType, "CARBOHYDRATE", new Java.Lang.Float((float)carbs)),
+            (NutritionType, "TOTAL_FAT", new Java.Lang.Float((float)fat)));
+    }
+
+    /// <summary>A weight, and its body fat if measured.</summary>
+    public Java.Lang.Object BodyPoint(string clientId, DateTime time, double weightKg, double? bodyFat)
+    {
+        var fields = new List<(string, string, Java.Lang.Object)> { (BodyType, "WEIGHT", new Java.Lang.Float((float)weightKg)) };
+        if (bodyFat is { } f)
+            fields.Add((BodyType, "BODY_FAT", new Java.Lang.Float((float)f)));
+        return Point(clientId, time, null, [.. fields]);
+    }
+
+    /// <summary>Adds the points of one kind (<see cref="Exercise"/>, <see cref="Nutrition"/> or <see cref="Body"/>) to Samsung Health.</summary>
+    public async Task InsertAsync(string kind, IReadOnlyList<Java.Lang.Object> points)
+    {
+        if (points.Count == 0)
+            return;
+        var type = TypeOf(kind);
+        var builder = Call(StaticField(Request + "DataTypes", kind, "L" + Request + type + ";"), Request + type,
+            "getInsertDataRequestBuilder", "()L" + Request + "InsertDataRequest$BasicBuilder;");
+        foreach (var point in points)
+            builder = Call(builder, Request + "InsertDataRequest$BasicBuilder", "addData",
+                "(L" + Sdk + "data/DataPoint;)L" + Request + "InsertDataRequest$BasicBuilder;", new JValue(point));
+        var request = Call(builder, Request + "InsertDataRequest$BasicBuilder", "build", "()L" + Request + "InsertDataRequest;");
+        await AwaitDone(Call(Store, Sdk + "HealthDataStore", "insertDataAsync",
+            "(L" + Request + "InsertDataRequest;)L" + Sdk + "response/AsyncCompletableFuture;", new JValue(request)));
+    }
+
+    /// <summary>Takes out what Gym Book wrote under <paramref name="clientId"/> (nothing, if it isn't there).</summary>
+    public async Task DeleteAsync(string kind, string clientId)
+    {
+        var type = TypeOf(kind);
+        var builder = Call(StaticField(Request + "DataTypes", kind, "L" + Request + type + ";"), Request + type,
+            "getDeleteDataRequestBuilder", "()L" + Request + "DeleteDataRequest$BasicBuilder;");
+        var filter = StaticCall(Request + "IdFilter", "fromClientDataId", "(Ljava/lang/String;)L" + Request + "IdFilter;", new JValue(new Java.Lang.String(clientId)));
+        builder = Call(builder, Request + "DeleteDataRequest$BasicBuilder", "setIdFilter",
+            "(L" + Request + "IdFilter;)L" + Request + "DeleteDataRequest$BasicBuilder;", new JValue(filter));
+        var request = Call(builder, Request + "DeleteDataRequest$BasicBuilder", "build", "()L" + Request + "DeleteDataRequest;");
+        await AwaitDone(Call(Store, Sdk + "HealthDataStore", "deleteDataAsync",
+            "(L" + Request + "DeleteDataRequest;)L" + Sdk + "response/AsyncCompletableFuture;", new JValue(request)));
+    }
+
+    public const string ExerciseKind = Exercise;
+
+    static string TypeOf(string kind) => kind switch
+    {
+        Exercise => ExerciseType,
+        Nutrition => NutritionType,
+        _ => BodyType,
+    };
+
+    /// <summary>A data point at <paramref name="start"/> (to <paramref name="end"/>), under Gym Book's id for it, with its fields.</summary>
+    static Java.Lang.Object Point(string clientId, DateTime start, DateTime? end, params (string Type, string Field, Java.Lang.Object Value)[] fields)
+    {
+        const string pb = Sdk + "data/HealthDataPoint$Builder";
+        var builder = Call(StaticField(Sdk + "data/HealthDataPoint", "Companion", "L" + Sdk + "data/HealthDataPoint$Companion;"),
+            Sdk + "data/HealthDataPoint$Companion", "builder", "()L" + pb + ";");
+        builder = Call(builder, pb, "setClientDataId", "(Ljava/lang/String;)L" + pb + ";", new JValue(new Java.Lang.String(clientId)));
+        builder = Call(builder, pb, "setStartTime", "(Ljava/time/Instant;Ljava/time/ZoneOffset;)L" + pb + ";", new JValue(Instant(start)), new JValue(Offset(start)));
+        if (end is { } e)
+            builder = Call(builder, pb, "setEndTime", "(Ljava/time/Instant;Ljava/time/ZoneOffset;)L" + pb + ";", new JValue(Instant(e)), new JValue(Offset(e)));
+        foreach (var (type, field, value) in fields)
+            builder = Call(builder, pb, "addFieldData", "(L" + Sdk + "data/Field;Ljava/lang/Object;)L" + pb + ";",
+                new JValue(StaticField(Request + type, field, "L" + Sdk + "data/Field;")), new JValue(value));
+        return Call(builder, pb, "build", "()L" + Sdk + "data/HealthDataPoint;");
+    }
+
+    static Java.Time.Instant Instant(DateTime local) =>
+        Java.Time.Instant.OfEpochMilli(new DateTimeOffset(DateTime.SpecifyKind(local, DateTimeKind.Local)).ToUnixTimeMilliseconds())!;
+
+    static Java.Time.ZoneOffset Offset(DateTime local) =>
+        Java.Time.ZoneOffset.OfTotalSeconds((int)TimeZoneInfo.Local.GetUtcOffset(local).TotalSeconds)!;
+
+    /// <summary>Waits for an AsyncCompletableFuture (a write): done, or its error as a <see cref="SamsungHealthException"/>.</summary>
+    static Task AwaitDone(Java.Lang.Object future)
+    {
+        var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        CallOrNull(future, Sdk + "response/AsyncCompletableFuture", "setCallback",
+            "(Landroid/os/Looper;Ljava/lang/Runnable;Ljava/util/function/Consumer;)V",
+            new JValue(Looper.MainLooper!),
+            new JValue(new Runnable(() => done.TrySetResult())),
+            new JValue(new Consumer(error => done.TrySetException(SamsungHealthException.From(error?.JavaCast<Java.Lang.Throwable>())))));
+        return done.Task;
+    }
+
+    sealed class Runnable(Action run) : Java.Lang.Object, Java.Lang.IRunnable
+    {
+        public void Run() => run();
     }
 
     /// <summary>Every record of one kind between the two local times, page by page.</summary>
@@ -400,6 +553,9 @@ sealed class SamsungHealthData
 
         /// <summary>Samsung Health can fix it on its own screen (see <see cref="Resolve"/>).</summary>
         public bool Resolvable { get; } = resolvable;
+
+        /// <summary>Samsung Health won't let Gym Book in at all (not an approved partner, developer mode off, or no access code to write).</summary>
+        public bool NotApproved => Code is ErrInvalidCaller or ErrAccessControl or ErrNoOwnershipToWrite;
 
         public static SamsungHealthException From(Java.Lang.Throwable? error)
         {

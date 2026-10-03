@@ -389,3 +389,45 @@ public class MacroMiniBarDrawable(double carbsKcal, double fatKcal, double prote
         canvas.RestoreState();
     }
 }
+
+/// <summary>
+/// The day's surplus or deficit against the one aimed for, as a short bar: it fills toward the target (blue for a
+/// deficit, orange for a surplus, green once within <see cref="Near"/> kcal of it), a tick marks the target, and going
+/// the other way leaves it empty with a sliver of the wrong colour.
+/// </summary>
+public class BalanceTargetDrawable(double balance, double target, Color deficit, Color surplus, Color onTarget) : IDrawable, IRevealable
+{
+    public const double Near = 100;
+    static readonly Color Track = Color.FromArgb("#2C3240"), Tick = Color.FromArgb("#F4F6FB");
+
+    public float Reveal { get; set; } = 1;
+
+    public void Draw(ICanvas canvas, RectF rect)
+    {
+        var h = 8f;
+        var bar = new RectF(rect.X, rect.Center.Y - h / 2, rect.Width, h);
+        canvas.FillColor = Track;
+        canvas.FillRoundedRectangle(bar, h / 2);
+        var grow = 1 - MathF.Pow(1 - Math.Clamp(Reveal, 0, 1), 3);
+        var aim = Math.Abs(target);
+        // The bar's end: a little past the target or the balance, whichever's further.
+        var scale = Math.Max(Math.Max(aim, Math.Abs(balance)) * 1.15, 50);
+        var sameWay = target == 0 || Math.Sign(balance) == Math.Sign(target);
+        var color = Math.Abs(balance - target) <= Near ? onTarget : balance < 0 ? deficit : surplus;
+        var share = sameWay ? Math.Abs(balance) / scale : Math.Min(Math.Abs(balance) / scale, 0.06);
+        var w = (float)share * bar.Width * grow;
+        if (w > 0.5f)
+        {
+            canvas.FillColor = color;
+            canvas.FillRoundedRectangle(bar.X, bar.Y, Math.Max(w, h), h, h / 2);
+        }
+        if (aim > 0)
+        {
+            var x = bar.X + (float)(aim / scale) * bar.Width;
+            canvas.StrokeColor = Tick;
+            canvas.StrokeSize = 2.5f;
+            canvas.StrokeLineCap = LineCap.Round;
+            canvas.DrawLine(x, bar.Top - 4, x, bar.Bottom + 4);
+        }
+    }
+}

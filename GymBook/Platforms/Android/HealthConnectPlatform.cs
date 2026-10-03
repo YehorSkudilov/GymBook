@@ -18,9 +18,10 @@ namespace GymBook;
 /// Samsung Health shares weight, body composition, calories burned, steps and its food diary there (Samsung Health ›
 /// Settings › Health Connect). Reads every app's records (Google Fit, Fitbit, Withings, Garmin, scales, ...), or only
 /// those of the apps picked (Samsung Health alone, for instance).
-/// Read only: Gym Book doesn't write anything back.
+/// As an <see cref="IHealthWriter"/> it also takes Gym Book's workouts, food and weights (when sending is on), each under
+/// Gym Book's own id so it can be updated; Samsung Health brings them in from here until it takes them directly.
 /// </summary>
-public class HealthConnectPlatform : IHealthPlatform
+public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
 {
 
     /// <summary>
@@ -122,6 +123,125 @@ public class HealthConnectPlatform : IHealthPlatform
         {
             // Health Connect's home screen (HealthConnectManager.ACTION_HEALTH_HOME_SETTINGS, which isn't bound).
             Context.StartActivity(new Intent("android.health.connect.action.HEALTH_HOME_SETTINGS").AddFlags(ActivityFlags.NewTask));
+        }
+    }
+
+    // ---------- Writing ----------
+
+    /// <summary>What Gym Book writes (also declared in AndroidManifest.xml).</summary>
+    public static readonly string[] WritePermissions =
+    [
+        "android.permission.health.WRITE_EXERCISE",
+        "android.permission.health.WRITE_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.WRITE_NUTRITION",
+        "android.permission.health.WRITE_WEIGHT",
+        "android.permission.health.WRITE_BODY_FAT",
+    ];
+
+    public string WriterName => "Health Connect";
+
+    public bool CanWrite => Availability == HealthAvailability.Available;
+
+    public async Task<bool> RequestWriteAsync()
+    {
+        if (!CanWrite)
+            return false;
+        await MainThread.InvokeOnMainThreadAsync(() => Permissions.RequestAsync<HealthWritePermissions>());
+        return WritePermissions.All(Granted);
+    }
+
+    public Task WriteAsync(IReadOnlyList<HealthWrite> upserts, IReadOnlyList<(HealthWriteKind Kind, string ClientId)> deletes)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(34))
+            return Task.CompletedTask;
+        if (!WritePermissions.All(Granted))
+            throw new HealthWriteRefusedException("Health Connect hasn't allowed Gym Book to write: allow it in Health Connect's settings.");
+        return new Writer().WriteAsync(upserts, deletes);
+    }
+
+    sealed class HealthWritePermissions : Permissions.BasePlatformPermission
+    {
+        public override (string androidPermission, bool isRuntime)[] RequiredPermissions =>
+            [.. WritePermissions.Select(p => (p, true))];
+    }
+
+    [SupportedOSPlatform("android34.0")]
+    sealed class Writer
+    {
+        readonly HealthConnectManager _manager = Context.GetSystemService(Context.HealthconnectService).JavaCast<HealthConnectManager>()
+            ?? throw new InvalidOperationException("Health Connect isn't available on this phone.");
+
+        /// <summary>
+        /// Writes each (a record with the same client id replaces the one there, its version being newer) and deletes the
+        /// rest by their client ids.
+        /// </summary>
+        public async Task WriteAsync(IReadOnlyList<HealthWrite> upserts, IReadOnlyList<(HealthWriteKind Kind, string ClientId)> deletes)
+        {
+            var version = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            if (deletes.Count > 0)
+            {
+                var filters = deletes.SelectMany(d => Types(d.Kind).Select(t => RecordIdFilter.FromClientRecordId(Java.Lang.Class.FromType(t.Type), d.ClientId + t.Suffix)!))
+                    .ToList();
+                await Call(receiver => _manager.DeleteRecords(filters, Context.MainExecutor!, receiver));
+            }
+            var records = upserts.SelectMany(u => Records(u, version)).ToList();
+            // A few hundred at a time at most.
+            foreach (var chunk in records.Chunk(200))
+                await Call(receiver => _manager.InsertRecords([.. chunk], Context.MainExecutor!, receiver));
+        }
+
+        /// <summary>The record types (and client id suffixes) each kind is written as.</summary>
+        static (Type Type, string Suffix)[] Types(HealthWriteKind kind) => kind switch
+        {
+            HealthWriteKind.Workout => [(typeof(ExerciseSessionRecord), ""), (typeof(ActiveCaloriesBurnedRecord), "-kcal")],
+            HealthWriteKind.Food => [(typeof(NutritionRecord), "")],
+            _ => [(typeof(WeightRecord), ""), (typeof(BodyFatRecord), "-fat")],
+        };
+
+        static IEnumerable<Record> Records(HealthWrite w, long version)
+        {
+            Metadata Meta(string id) => new Metadata.Builder().SetClientRecordId(id)!.SetClientRecordVersion(version)!.Build()!;
+            switch (w)
+            {
+                case WorkoutWrite x:
+                    yield return new ExerciseSessionRecord.Builder(Meta(x.ClientId), Instant(x.Start), Instant(x.End),
+                        ExerciseSessionType.ExerciseSessionTypeStrengthTraining).SetTitle(x.Title)!.Build()!;
+                    if (x.ActiveKcal > 0)
+                        yield return new ActiveCaloriesBurnedRecord.Builder(Meta(x.ClientId + "-kcal"), Instant(x.Start), Instant(x.End),
+                            Energy.FromCalories(x.ActiveKcal * 1000)!).Build()!;
+                    break;
+                case FoodWrite x:
+                    yield return new NutritionRecord.Builder(Meta(x.ClientId), Instant(x.Time), Instant(x.Time.AddMinutes(1)))
+                        .SetMealName(x.Name)!
+                        .SetMealType(x.Meal switch
+                        {
+                            Models.MealType.Breakfast => Android.Health.Connect.DataTypes.MealType.MealTypeBreakfast,
+                            Models.MealType.Lunch => Android.Health.Connect.DataTypes.MealType.MealTypeLunch,
+                            Models.MealType.Dinner => Android.Health.Connect.DataTypes.MealType.MealTypeDinner,
+                            _ => Android.Health.Connect.DataTypes.MealType.MealTypeSnack,
+                        })!
+                        .SetEnergy(Energy.FromCalories(x.Kcal * 1000))!
+                        .SetProtein(Mass.FromGrams(x.ProteinG))!
+                        .SetTotalCarbohydrate(Mass.FromGrams(x.CarbsG))!
+                        .SetTotalFat(Mass.FromGrams(x.FatG))!
+                        .Build()!;
+                    break;
+                case BodyWrite x:
+                    yield return new WeightRecord.Builder(Meta(x.ClientId), Instant(x.Time), Mass.FromGrams(x.WeightKg * 1000)!).Build()!;
+                    if (x.BodyFatPercent is { } fat)
+                        yield return new BodyFatRecord.Builder(Meta(x.ClientId + "-fat"), Instant(x.Time), Percentage.FromValue(fat)!).Build()!;
+                    break;
+            }
+        }
+
+        static Java.Time.Instant Instant(DateTime local) =>
+            Java.Time.Instant.OfEpochMilli(new DateTimeOffset(DateTime.SpecifyKind(local, DateTimeKind.Local)).ToUnixTimeMilliseconds())!;
+
+        static Task<Java.Lang.Object> Call(Action<IOutcomeReceiver> start)
+        {
+            var receiver = new Receiver();
+            start(receiver);
+            return receiver.Task;
         }
     }
 
@@ -244,7 +364,7 @@ public class HealthConnectPlatform : IHealthPlatform
                         1 => Models.MealType.Breakfast,
                         2 => Models.MealType.Lunch,
                         3 => Models.MealType.Dinner,
-                        4 => Models.MealType.Snack,
+                        4 => Models.EnumDisplay.SnackAt(time),
                         _ => null,
                     };
                     foods.Add(new FoodReading(id, time, meal, r.MealName,

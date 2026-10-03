@@ -96,47 +96,35 @@
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
                         <VerticalStackLayout VerticalOptions="Start">
                             <Label Text="{Binding EatenText}" FontFamily="OpenSansSemibold" FontSize="48" LineHeight="0.9" />
-                            <Label Text="Cal" FontSize="20" />
+                            <Label Text="Cal eaten" FontSize="18" />
+                            <!-- The surplus or deficit (no sign: the word says which), and the one aimed for as a small bar -->
                             <Label Text="{Binding BalanceLine}" TextColor="{Binding BalanceColor}" FontFamily="OpenSansSemibold" FontSize="14"
-                                   IsVisible="{Binding HasBalanceLine}" Margin="0,6,0,0" />
+                                   IsVisible="{Binding HasBalanceLine}" Margin="0,8,0,0" />
+                            <GraphicsView Drawable="{Binding BalanceTargetBar}" HeightRequest="18" WidthRequest="140" HorizontalOptions="Start"
+                                          IsVisible="{Binding HasBalanceTarget}" controls:ChartReveal.When="{Binding IsShowing}" />
+                            <Label Text="{Binding BalanceTargetText}" TextColor="{Binding BalanceTargetColor}" FontSize="12" IsVisible="{Binding HasBalanceTarget}" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1" Spacing="12" VerticalOptions="Start" Margin="0,8,0,0">
-                            <Grid ColumnDefinitions="24,Auto" ColumnSpacing="10">
-                                <GraphicsView Drawable="{Binding GoalIcon}" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
-                                <Label Grid.Column="1" Text="{Binding GoalText}" Style="{StaticResource Figure}" TextColor="{StaticResource TextSecondary}" />
-                            </Grid>
-                            <Grid ColumnDefinitions="24,Auto" ColumnSpacing="10" IsVisible="{Binding HasGoal}">
-                                <GraphicsView Drawable="{Binding RangeIcon}" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
-                                <Label Grid.Column="1" Text="{Binding GoalRangeText}" Style="{StaticResource Figure}" TextColor="{StaticResource TextSecondary}" />
-                            </Grid>
                             <Grid ColumnDefinitions="24,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10">
-                                <GraphicsView Drawable="{Binding BurnedIcon}" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
-                                <Label Grid.Column="1" Text="{Binding BurnedText}" Style="{StaticResource Figure}" TextColor="{StaticResource TextSecondary}" />
-                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding BurnedCaption}" IsVisible="{Binding HasBurnedCaption}"
+                                <GraphicsView Grid.RowSpan="2" Drawable="{Binding GoalIcon}" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="Goal" Style="{StaticResource Caption}" FontSize="11" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding GoalText}" Style="{StaticResource Figure}" TextColor="{StaticResource TextSecondary}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="24,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="10" IsVisible="{Binding HasGoal}">
+                                <GraphicsView Grid.RowSpan="2" Drawable="{Binding RangeIcon}" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="Target range" Style="{StaticResource Caption}" FontSize="11" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding GoalRangeText}" Style="{StaticResource Figure}" TextColor="{StaticResource TextSecondary}" />
+                            </Grid>
+                            <Grid ColumnDefinitions="24,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10">
+                                <GraphicsView Grid.RowSpan="2" Drawable="{Binding BurnedIcon}" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="Burned" Style="{StaticResource Caption}" FontSize="11" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding BurnedText}" Style="{StaticResource Figure}" TextColor="{StaticResource TextSecondary}" />
+                                <Label Grid.Row="2" Grid.Column="1" Text="{Binding BurnedCaption}" IsVisible="{Binding HasBurnedCaption}"
                                        Style="{StaticResource Caption}" FontSize="11" TextColor="{StaticResource TextTertiary}" />
                             </Grid>
                         </VerticalStackLayout>
                     </Grid>
                     <GraphicsView Drawable="{Binding CalorieBar}" HeightRequest="58" controls:ChartReveal.When="{Binding IsShowing}" />
-                    <Label Text="{Binding BalanceTargetText}" TextColor="{Binding BalanceTargetColor}" FontSize="13" IsVisible="{Binding HasBalanceTarget}" />
-                    <!-- The range's days before this one, plus this one, make the total -->
-                    <BoxView Style="{StaticResource Divider}" IsVisible="{Binding HasRunningTotal}" />
-                    <Grid ColumnDefinitions="*,Auto,*,Auto,*" ColumnSpacing="6" IsVisible="{Binding HasRunningTotal}">
-                        <VerticalStackLayout>
-                            <Label Text="{Binding RunningPriorText}" TextColor="{Binding RunningPriorColor}" Style="{StaticResource Figure}" HorizontalOptions="Center" />
-                            <Label Text="{Binding RunningPriorLabel}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
-                        </VerticalStackLayout>
-                        <Label Grid.Column="1" Text="+" Style="{StaticResource Figure}" TextColor="{StaticResource TextTertiary}" VerticalOptions="Start" />
-                        <VerticalStackLayout Grid.Column="2">
-                            <Label Text="{Binding RunningDayText}" TextColor="{Binding RunningDayColor}" Style="{StaticResource Figure}" HorizontalOptions="Center" />
-                            <Label Text="{Binding RunningDayLabel}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
-                        </VerticalStackLayout>
-                        <Label Grid.Column="3" Text="=" Style="{StaticResource Figure}" TextColor="{StaticResource TextTertiary}" VerticalOptions="Start" />
-                        <VerticalStackLayout Grid.Column="4">
-                            <Label Text="{Binding RunningTotalText}" TextColor="{Binding RunningTotalColor}" Style="{StaticResource Figure}" HorizontalOptions="Center" />
-                            <Label Text="{Binding RunningTotalLabel}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" />
-                        </VerticalStackLayout>
-                    </Grid>
                 </VerticalStackLayout>
             </Border>
     
@@ -394,6 +382,34 @@
                             <Label Text="{Binding TrendMacroLegend[2].Name}" TextColor="{Binding TrendMacroLegend[2].Color}" FontSize="13" HorizontalOptions="Center" />
                             <Label Text="{Binding TrendMacroLegend[2].Share}" Style="{StaticResource Figure}" HorizontalOptions="Center" />
                             <Label Text="{Binding TrendMacroLegend[2].Aim}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Creatine over the range: a calendar of the days it was taken, and the streaks -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Streak" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Creatine" Style="{StaticResource H3}" />
+                            <Label Text="{Binding CreatineTrendCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <GraphicsView Drawable="{Binding CreatineChart}" HeightRequest="150" controls:ChartReveal.When="{Binding IsShowing}" />
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <VerticalStackLayout>
+                            <Label Text="{Binding CreatineStats[0].Value}" Style="{StaticResource Figure}" />
+                            <Label Text="{Binding CreatineStats[0].Label}" Style="{StaticResource Caption}" FontSize="11" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="{Binding CreatineStats[1].Value}" Style="{StaticResource Figure}" />
+                            <Label Text="{Binding CreatineStats[1].Label}" Style="{StaticResource Caption}" FontSize="11" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2">
+                            <Label Text="{Binding CreatineStats[2].Value}" Style="{StaticResource Figure}" />
+                            <Label Text="{Binding CreatineStats[2].Label}" Style="{StaticResource Caption}" FontSize="11" />
                         </VerticalStackLayout>
                     </Grid>
                 </VerticalStackLayout>

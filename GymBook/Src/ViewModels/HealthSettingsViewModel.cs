@@ -24,6 +24,13 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
     [ObservableProperty] string appsText = "";
     [ObservableProperty] bool isBusy;
 
+    // Sending Gym Book's workouts, food and weights to the health app
+    [ObservableProperty] bool showSendBack;
+    [ObservableProperty] bool sendBack;
+    [ObservableProperty] string sendBackTitle = "";
+    [ObservableProperty] string sendBackStatus = "";
+    bool _showingSendBack;
+
     const string SamsungHealthOption = "Samsung Health", HealthConnectOption = "Health Connect";
 
     public void Refresh()
@@ -35,6 +42,13 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
         IsAvailable = availability == HealthAvailability.Available;
         IsConnected = health.IsConnected;
         AppsText = source == HealthSource.SamsungHealth ? "Samsung Health" : health.Apps == null ? "Health Connect" : health.SourceName;
+        var writeBack = health.WriteBack;
+        ShowSendBack = health.IsConnected && writeBack.IsAvailable;
+        _showingSendBack = true;
+        SendBack = writeBack.IsEnabled;
+        _showingSendBack = false;
+        SendBackTitle = $"Send to {(source == HealthSource.SamsungHealth ? "Samsung Health" : "Health Connect")}";
+        SendBackStatus = writeBack.IsEnabled && writeBack.Status.Length > 0 ? writeBack.Status : "Workouts, food and weights from Gym Book go there too.";
         switch (availability)
         {
             case HealthAvailability.NotSupported:
@@ -204,7 +218,48 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
     /// Samsung Health itself lands on its home screen), then a read with whatever was changed.
     /// </summary>
     [RelayCommand]
-    async Task OpenPermissions()
+    async Task OpenPermissions() => await OpenPermissionsCore();
+
+    /// <summary>
+    /// Sending on: asks the health app to take Gym Book's data (Samsung Health, or Health Connect while Samsung hasn't
+    /// approved Gym Book), then sends; says why if nothing would. Off: stops (what was sent stays there).
+    /// </summary>
+    partial void OnSendBackChanged(bool value)
+    {
+        if (_showingSendBack)
+            return;
+        if (value)
+        {
+            _ = TurnOnSendBack();
+            return;
+        }
+        health.WriteBack.Disable();
+        Refresh();
+    }
+
+    async Task TurnOnSendBack()
+    {
+        var on = false;
+        string? problem = null;
+        await Busy(async () =>
+        {
+            try
+            {
+                on = await health.WriteBack.EnableAsync();
+                problem = on ? null : health.WriteBack.Status;
+            }
+            catch (Exception e)
+            {
+                problem = e.Message;
+            }
+        });
+        if (!on)
+            await dialogs.Alert("Not sending", problem ?? "Nothing was allowed to take Gym Book's data.");
+        else if (store.Profile.HealthSource == HealthSource.SamsungHealth && health.WriteBack.Status.Contains("Health Connect"))
+            await dialogs.Alert("Sending through Health Connect", health.WriteBack.Status);
+    }
+
+    async Task OpenPermissionsCore()
     {
         if (IsBusy)
             return;

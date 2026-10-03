@@ -318,6 +318,15 @@
                         <Label Grid.Column="1" Text="{Binding Health.AppsText}" Style="{StaticResource RowValue}" MaximumWidthRequest="190" LineBreakMode="TailTruncation" />
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
+                    <!-- The other way: Gym Book's workouts, food and weights to the health app (HealthWriteBack) -->
+                    <BoxView Style="{StaticResource Divider}" IsVisible="{Binding Health.ShowSendBack}" />
+                    <Grid Style="{StaticResource Row}" Padding="16,6" IsVisible="{Binding Health.ShowSendBack}">
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="{Binding Health.SendBackTitle}" />
+                            <Label Text="{Binding Health.SendBackStatus}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="2" IsToggled="{Binding Health.SendBack}" />
+                    </Grid>
                     <BoxView Style="{StaticResource Divider}" IsVisible="{Binding Health.IsConnected}" />
                     <Grid Style="{StaticResource Row}" IsVisible="{Binding Health.IsConnected}">
                         <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding Health.OpenPermissionsCommand}" /></Grid.GestureRecognizers>

@@ -7,9 +7,10 @@ namespace GymBook;
 /// <summary>
 /// Health data read from Samsung Health itself (<see cref="SamsungHealthData"/>), without Health Connect: each day's
 /// calories burned, activity calories and steps exactly as Samsung Health shows them, the food in its diary, weight and
-/// body composition, and the height on its profile.
+/// body composition, and the height on its profile. Gym Book's workouts, food and weights can go the other way too (as an
+/// <see cref="IHealthWriter"/>, once Samsung allows Gym Book to write).
 /// </summary>
-public class SamsungHealthPlatform : IHealthPlatform
+public class SamsungHealthPlatform : IHealthPlatform, IHealthWriter
 {
     readonly SamsungHealthData _samsung = new();
 
@@ -66,6 +67,56 @@ public class SamsungHealthPlatform : IHealthPlatform
         double? height = allowed.Contains(SamsungHealthData.Profile) ? await _samsung.ReadHeightAsync() : null;
         return new HealthReadResult(days, body, height, foods);
     }
+
+    // ---------- Writing ----------
+
+    public string WriterName => "Samsung Health";
+
+    public bool CanWrite => SamsungHealthData.IsInstalled;
+
+    public async Task<bool> RequestWriteAsync()
+    {
+        try
+        {
+            return await MainThread.InvokeOnMainThreadAsync(async () =>
+                Platform.CurrentActivity is { } activity && await _samsung.RequestWriteAsync(activity));
+        }
+        catch (SamsungHealthData.SamsungHealthException e) when (e.NotApproved)
+        {
+            throw new HealthWriteRefusedException(e.Message);
+        }
+    }
+
+    public async Task WriteAsync(IReadOnlyList<HealthWrite> upserts, IReadOnlyList<(HealthWriteKind Kind, string ClientId)> deletes)
+    {
+        try
+        {
+            // Changed ones go out and back in (Samsung Health updates by its own id, which Gym Book doesn't keep).
+            foreach (var (kind, id) in deletes.Concat(upserts.Select(u => (u.Kind, u.ClientId))))
+                await _samsung.DeleteAsync(Kind(kind), id);
+            foreach (var group in upserts.GroupBy(u => u.Kind))
+                await _samsung.InsertAsync(Kind(group.Key), [.. group.Select(Point)]);
+        }
+        catch (SamsungHealthData.SamsungHealthException e) when (e.NotApproved)
+        {
+            throw new HealthWriteRefusedException(e.Message);
+        }
+    }
+
+    static string Kind(HealthWriteKind kind) => kind switch
+    {
+        HealthWriteKind.Workout => SamsungHealthData.ExerciseKind,
+        HealthWriteKind.Food => SamsungHealthData.Nutrition,
+        _ => SamsungHealthData.Body,
+    };
+
+    Java.Lang.Object Point(HealthWrite w) => w switch
+    {
+        WorkoutWrite x => _samsung.WorkoutPoint(x.ClientId, x.Title, x.Start, x.End, x.ActiveKcal),
+        FoodWrite x => _samsung.FoodPoint(x.ClientId, x.Time, x.Meal, x.Name, x.Kcal, x.ProteinG, x.CarbsG, x.FatG),
+        BodyWrite x => _samsung.BodyPoint(x.ClientId, x.Time, x.WeightKg, x.BodyFatPercent),
+        _ => throw new ArgumentOutOfRangeException(nameof(w)),
+    };
 
     // Everything comes from Samsung Health: there are no apps to pick.
     public Task<IReadOnlyList<HealthApp>> FindAppsAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<HealthApp>>([]);

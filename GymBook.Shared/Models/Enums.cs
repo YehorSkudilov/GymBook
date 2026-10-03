@@ -15,7 +15,11 @@ public enum EquipmentAccess { FullGym, HomeDumbbells, Bodyweight }
 
 public enum WeightUnit { Kg, Lbs }
 
-public enum MealType { Breakfast, Lunch, Dinner, Snack }
+/// <summary>
+/// A meal, as Samsung Health splits the day. <see cref="MealType.Snack"/> is the afternoon snack: it was the only snack once, and
+/// meals are stored by name, so it keeps its name; the morning and evening ones came later.
+/// </summary>
+public enum MealType { Breakfast, Lunch, Dinner, Snack, MorningSnack, EveningSnack }
 
 public enum Sex { Male, Female }
 
@@ -73,6 +77,26 @@ public static class EnumDisplay
         ActivityLevel.Light => "Some walking, on your feet now and then",
         ActivityLevel.Moderate => "On your feet most of the day",
         _ => "Physical job or lots of daily activity",
+    };
+
+    /// <summary>The meals in the order they're listed: the three meals, then the three snacks (as Samsung Health lists them).</summary>
+    public static readonly MealType[] Meals =
+        [MealType.Breakfast, MealType.Lunch, MealType.Dinner, MealType.MorningSnack, MealType.Snack, MealType.EveningSnack];
+
+    public static string Display(this MealType m) => m switch
+    {
+        MealType.MorningSnack => "Morning snack",
+        MealType.Snack => "Afternoon snack",
+        MealType.EveningSnack => "Evening snack",
+        _ => m.ToString(),
+    };
+
+    /// <summary>A snack by when it was eaten: before noon the morning one, before 5 p.m. the afternoon one, else the evening one.</summary>
+    public static MealType SnackAt(DateTime time) => time.Hour switch
+    {
+        >= 4 and < 12 => MealType.MorningSnack,
+        >= 12 and < 17 => MealType.Snack,
+        _ => MealType.EveningSnack,
     };
 
     public static string Display(this HealthSource s) => s switch
