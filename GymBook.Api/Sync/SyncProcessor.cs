@@ -26,7 +26,12 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock)
         var rejected = new SyncChanges();
 
         var wrote = await UpsertAsync(db.Plans, changes.Plans, (to, from) => { to.Workouts = from.Workouts; to.RestDays = from.RestDays; to.RestDaysDone = from.RestDaysDone; }, rejected.Plans);
-        wrote |= await UpsertAsync(db.Sessions, changes.Sessions, (to, from) => to.Exercises = from.Exercises, rejected.Sessions);
+        // A finished workout is never undone by a copy of it from before it was finished: a device that missed the finish
+        // (a watch out of sync, say) still has it in progress, and discarding or carrying on with that copy would replace
+        // the finished workout, or delete it, everywhere. Deleting a finished workout from the history (a tombstone with
+        // its end) still goes through. The device gets the finished one back.
+        wrote |= await UpsertAsync(db.Sessions, changes.Sessions, (to, from) => to.Exercises = from.Exercises, rejected.Sessions,
+            keep: (current, item) => current is { IsDeleted: false, EndedAt: not null } && item.EndedAt == null);
         wrote |= await UpsertAsync(db.CustomExercises, changes.CustomExercises, (to, from) => to.SecondaryMuscles = from.SecondaryMuscles, rejected.CustomExercises);
         wrote |= await UpsertAsync(db.BodyWeights, changes.BodyWeights, (_, _) => { }, rejected.BodyWeights);
         wrote |= await UpsertAsync(db.FoodEntries, changes.FoodEntries, (_, _) => { }, rejected.FoodEntries);
@@ -43,7 +48,9 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock)
         }
         return await PullAsync(user.SyncVersion, request.Since, accepted, rejected, ct);
 
-        async Task<bool> UpsertAsync<T>(DbSet<T> set, List<T> items, Action<T, T> copyCollections, List<T> lost) where T : class, ISyncEntity
+        // keep: the stored record wins over the incoming one whatever their times (see the sessions above).
+        async Task<bool> UpsertAsync<T>(DbSet<T> set, List<T> items, Action<T, T> copyCollections, List<T> lost, Func<T, T, bool>? keep = null)
+            where T : class, ISyncEntity
         {
             if (items.Count == 0)
                 return false;
@@ -63,7 +70,7 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock)
                 item.UpdatedAt = Normalize(item.UpdatedAt, now);
                 if (existing.TryGetValue(item.Id, out var current))
                 {
-                    if (item.UpdatedAt < current.UpdatedAt)
+                    if (item.UpdatedAt < current.UpdatedAt || keep?.Invoke(current, item) == true)
                     {
                         lost.Add(current);
                         continue;
