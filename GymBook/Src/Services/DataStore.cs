@@ -122,6 +122,7 @@ public class DataStore
     /// </summary>
     public List<WorkoutSession> DeletedWorkouts() =>
         [.. _local.DeletedSessions().Where(s => s.Id != Data.ActiveSession?.Id && Data.Sessions.All(x => x.Id != s.Id)
+            && Data.PausedSessions.All(x => x.Id != s.Id)
             && s.Exercises.Any(e => e.Sets.Count > 0))];
 
     /// <summary>A workout discarded while in progress with no set ticked: restoring it takes its sets as done as planned.</summary>
@@ -134,13 +135,20 @@ public class DataStore
     /// Brings deleted workouts back into the history, as they were (syncs like any change). One discarded while in
     /// progress comes back finished, like finishing it would have: the sets done, the rest counted as skipped, ending
     /// when the last thing was logged. One with nothing ticked comes back with its sets done as planned (weights and
-    /// reps as they were set) and a guessed length, to correct with Edit workout.
+    /// reps as they were set) and a guessed length, to correct with Open workout. One discarded while paused comes back
+    /// paused, to resume.
     /// </summary>
     public void RestoreSessions(IEnumerable<WorkoutSession> sessions)
     {
         foreach (var session in sessions)
         {
             session.IsDeleted = false;
+            if (session.IsPaused && !NothingLogged(session))
+            {
+                Data.PausedSessions.Insert(0, session);
+                continue;
+            }
+            session.PausedAt = null;
             if (NothingLogged(session))
             {
                 foreach (var set in session.Exercises.SelectMany(e => e.Sets))

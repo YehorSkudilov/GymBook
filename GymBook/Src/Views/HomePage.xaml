@@ -40,6 +40,32 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Workouts paused (put aside unfinished): Resume makes one the workout in progress again; tap for more -->
+            <VerticalStackLayout IsVisible="{Binding HasPaused}" Spacing="10" BindableLayout.ItemsSource="{Binding PausedWorkouts}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PausedWorkoutItem">
+                        <Border Style="{StaticResource Card}" Padding="16,12">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding MenuCommand}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Image WidthRequest="26" HeightRequest="26" VerticalOptions="Center">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="pause" Color="{StaticResource Warning}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                    <Label Text="{Binding Name}" Style="{StaticResource H3}" LineBreakMode="TailTruncation" />
+                                    <Label Text="{Binding Detail}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="2" Text="▶  Resume" BackgroundColor="{StaticResource Success}" TextColor="#06200F" CornerRadius="12"
+                                        Padding="14,6" HeightRequest="40" MinimumHeightRequest="40" VerticalOptions="Center" Command="{Binding ResumeCommand}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+
             <!-- Week strip -->
             <Border Style="{StaticResource Card}" Padding="12,14">
                 <Border.GestureRecognizers>

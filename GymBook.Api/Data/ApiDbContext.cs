@@ -93,6 +93,8 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
         model.Entity<WorkoutPlan>().Property(p => p.CreatedAt).HasColumnType(wallClock);
         model.Entity<WorkoutSession>().Property(s => s.StartedAt).HasColumnType(wallClock);
         model.Entity<WorkoutSession>().Property(s => s.EndedAt).HasColumnType(wallClock);
+        model.Entity<WorkoutSession>().Property(s => s.PausedAt).HasColumnType(wallClock);
+        model.Entity<WorkoutSession>().Property(s => s.ReopenedAt).HasColumnType(wallClock);
         model.Entity<BodyWeightEntry>().Property(b => b.Date).HasColumnType(wallClock);
         model.Entity<FoodEntry>().Property(f => f.Date).HasColumnType(wallClock);
         model.Entity<FoodEntry>().Property(f => f.LoggedAt).HasColumnType(wallClock);

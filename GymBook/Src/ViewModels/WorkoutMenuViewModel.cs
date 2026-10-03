@@ -5,8 +5,9 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>
-/// The ··· sheet of the workout in progress: its name, when it started and how long it has run, finishing or
-/// discarding it, and the logging settings. Every change is saved as it's made.
+/// The ··· sheet of the workout in progress: its name, when it started and how long it has run, finishing, pausing or
+/// discarding it, and the logging settings. For a finished workout opened again: its start and length, resuming it and
+/// deleting it. Every change is saved as it's made.
 /// </summary>
 public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs) : BaseViewModel, IQueryAttributable
 {
@@ -20,6 +21,11 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
     [ObservableProperty] bool trackRir;
     /// <summary>False in a workout of a plan with RIR switched off: the switch would do nothing there.</summary>
     [ObservableProperty] bool canTrackRir = true;
+    /// <summary>A finished workout opened again, rather than the one in progress.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsActive))]
+    bool isReviewing;
+    public bool IsActive => !IsReviewing;
 
     public void ApplyQueryAttributes(IDictionary<string, object> query) => _workout = query.TryGetValue("workout", out var w) ? w as WorkoutViewModel : null;
 
@@ -32,12 +38,15 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
         }
         _loading = true;
         Name = _workout.Name;
+        IsReviewing = _workout.IsReviewing;
         ShowStart(started);
         TrackRir = store.Profile.TrackRir;
         // Only a plan with its own training settings and RIR off rules it out; one on the defaults follows this switch.
-        CanTrackRir = store.GetPlan(store.Data.ActiveSession?.PlanId) is not { OwnTraining: true, UseRir: false };
+        CanTrackRir = store.GetPlan(_workout.PlanId) is not { OwnTraining: true, UseRir: false };
         _loading = false;
         Tick();
+        if (IsReviewing)
+            return;
 
         _timer ??= Application.Current!.Dispatcher.CreateTimer();
         _timer.Interval = TimeSpan.FromSeconds(1);
@@ -71,8 +80,27 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
 
     void Tick()
     {
-        if (_workout?.StartedAt is { } started)
+        if (_workout?.Length is { } length)
+            DurationText = Units.Clock(length);
+        else if (_workout?.StartedAt is { } started)
             DurationText = Units.Clock(DateTime.Now - started);
+    }
+
+    /// <summary>Tap Duration on a finished workout: how many minutes it took. Its end moves, its start stays.</summary>
+    [RelayCommand]
+    async Task EditDuration()
+    {
+        if (!IsReviewing || _workout?.Length is not { } length)
+            return;
+        if (await dialogs.Numbers("Duration", "Minutes from start to finish. The start stays where it is.", "Save",
+                new Views.NumberField("Minutes", Math.Clamp((int)Math.Round(length.TotalMinutes), 1, 600), 1, 600)) is not [var minutes])
+            return;
+        if (_workout.ChangeLength(minutes) is { } error)
+        {
+            await dialogs.Alert("Can't be that long", error);
+            return;
+        }
+        Tick();
     }
 
     // The default for plans' RIR too: plans following the defaults follow it.
@@ -123,6 +151,36 @@ public partial class WorkoutMenuViewModel(DataStore store, DialogService dialogs
         await GoBack();
         if (workout != null)
             await workout.ResetCommand.ExecuteAsync(null);
+    }
+
+    /// <summary>Closes the sheet, then puts the workout aside unfinished, to resume later.</summary>
+    [RelayCommand]
+    async Task Pause()
+    {
+        var workout = _workout;
+        await GoBack();
+        if (workout != null)
+            await workout.PauseCommand.ExecuteAsync(null);
+    }
+
+    /// <summary>Closes the sheet, then makes the finished workout the one in progress again.</summary>
+    [RelayCommand]
+    async Task Resume()
+    {
+        var workout = _workout;
+        await GoBack();
+        if (workout != null)
+            await workout.ResumeCommand.ExecuteAsync(null);
+    }
+
+    /// <summary>Closes the sheet, then deletes the finished workout (after asking).</summary>
+    [RelayCommand]
+    async Task Delete()
+    {
+        var workout = _workout;
+        await GoBack();
+        if (workout != null)
+            await workout.DeleteCommand.ExecuteAsync(null);
     }
 
     [RelayCommand]

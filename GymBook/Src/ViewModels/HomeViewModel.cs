@@ -45,6 +45,11 @@ public partial class HomeViewModel(
     bool isWorkoutRunning;
     [ObservableProperty] string startText = "▶  Start";
     public bool ShowNextCard => HasPlan || IsWorkoutRunning;
+    /// <summary>Workouts put aside unfinished, newest first, each with Resume.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPaused))]
+    List<PausedWorkoutItem> pausedWorkouts = [];
+    public bool HasPaused => PausedWorkouts.Count > 0;
 
     static readonly Color Muted = Color.FromArgb("#2C3240"), Amber = Color.FromArgb("#FFB020"),
         Blue = Color.FromArgb("#3F7DFF"), Green = Color.FromArgb("#2ED47A");
@@ -187,6 +192,7 @@ public partial class HomeViewModel(
         }
 
         ShowActiveWorkout();
+        ShowPausedWorkouts();
 
         WelcomeBack = progression.DaysAway() is { } away
             ? $"It's been {away} days since your last workout. Your weights are set lighter for a safe return and build back up over the next few sessions."
@@ -235,6 +241,38 @@ public partial class HomeViewModel(
         NextGlow = 1;
         StartColor = Green;
         StartTextColor = Color.FromArgb("#06200F");
+    }
+
+    void ShowPausedWorkouts() => PausedWorkouts = store.Data.PausedSessions.Select(session =>
+    {
+        var sets = session.Exercises.SelectMany(e => e.Sets).Where(s => !s.IsWarmup).ToList();
+        var paused = session.PausedAt ?? session.StartedAt;
+        var when = paused.Date == DateTime.Today ? $"{paused:t}" : paused.Date == DateTime.Today.AddDays(-1) ? $"yesterday {paused:t}" : $"{paused:ddd d MMM}";
+        return new PausedWorkoutItem
+        {
+            Name = session.Name,
+            Detail = $"Paused {when} · {sets.Count(s => s.IsCompleted)}/{sets.Count} sets · {Units.Duration(session.Duration)}",
+            ResumeCommand = new AsyncRelayCommand(() => ResumeWorkoutAsync(workouts, dialogs, session)),
+            MenuCommand = new AsyncRelayCommand(() => PausedMenu(session)),
+        };
+    }).ToList();
+
+    /// <summary>Tapping a paused workout: resume it, or discard it (it can be brought back from Recently deleted).</summary>
+    async Task PausedMenu(WorkoutSession session)
+    {
+        switch (await dialogs.ActionSheet(session.Name, "Discard workout", "Resume"))
+        {
+            case "Resume":
+                await ResumeWorkoutAsync(workouts, dialogs, session);
+                break;
+            case "Discard workout":
+                if (!await dialogs.Confirm("Discard workout?", "It's paused, not finished: everything logged in it goes. It can be brought back from Recently deleted for a while.", "Discard"))
+                    return;
+                store.Data.PausedSessions.Remove(session);
+                store.Save();
+                Refresh();
+                break;
+        }
     }
 
     /// <summary>The shown plan week's days in order. Tapping a day opens it in the day sheet, where it can be started or marked finished.</summary>
@@ -446,4 +484,14 @@ public partial class HomeViewModel(
 
     [RelayCommand]
     void RecoveryNow() => RecoveryHours = 0;
+}
+
+/// <summary>A workout put aside unfinished, on the Workout tab.</summary>
+public class PausedWorkoutItem
+{
+    public required string Name { get; init; }
+    /// <summary>"Paused 18:02 · 6/14 sets · 34 min".</summary>
+    public required string Detail { get; init; }
+    public required IAsyncRelayCommand ResumeCommand { get; init; }
+    public required IAsyncRelayCommand MenuCommand { get; init; }
 }

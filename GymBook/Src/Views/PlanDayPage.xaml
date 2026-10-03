@@ -124,8 +124,6 @@
                     <!-- Exercises, each with its set table -->
                     <Border Style="{StaticResource Card}" Padding="14" IsVisible="{Binding IsWorkoutDay}">
                         <VerticalStackLayout Spacing="18">
-                            <Label Text="Tap a set to change or delete it. Changes are saved as you make them." Style="{StaticResource Caption}"
-                                   IsVisible="{Binding IsEditing}" />
                             <VerticalStackLayout BindableLayout.ItemsSource="{Binding Exercises}" Spacing="18">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate x:DataType="vm:PlanDaySheetExercise">
@@ -153,10 +151,6 @@
                                                     <Label Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="18" LineBreakMode="TailTruncation" />
                                                     <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="15" />
                                                 </VerticalStackLayout>
-                                                <!-- Editing a finished workout: note, replace, move, remove -->
-                                                <ImageButton Grid.Column="2" Source="{StaticResource IconMore}" WidthRequest="44" HeightRequest="36" Padding="10,6"
-                                                             BackgroundColor="{StaticResource Surface2}" CornerRadius="18" VerticalOptions="Center"
-                                                             IsVisible="{Binding IsEditing}" Command="{Binding MenuCommand}" />
                                             </Grid>
                                             <!-- The note from the workout -->
                                             <Label Text="{Binding Note}" IsVisible="{Binding HasNote}" FontSize="14" FontAttributes="Italic"
@@ -173,21 +167,15 @@
                                                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding Rows}" Spacing="6">
                                                         <BindableLayout.ItemTemplate>
                                                             <DataTemplate x:DataType="vm:PlanDaySetRow">
-                                                                <!-- Editing a finished workout: tap a set to change it (its values in blue) -->
                                                                 <Grid ColumnDefinitions="0.6*,*,*,*" Opacity="{Binding RowOpacity}" MinimumHeightRequest="28">
-                                                                    <Grid.GestureRecognizers>
-                                                                        <TapGestureRecognizer Command="{Binding TapCommand}" />
-                                                                    </Grid.GestureRecognizers>
                                                                     <Label Text="{Binding Number}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center" />
-                                                                    <Label Grid.Column="1" Text="{Binding First}" TextColor="{Binding ValueColor}" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center" />
-                                                                    <Label Grid.Column="2" Text="{Binding Second}" TextColor="{Binding ValueColor}" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                                    <Label Grid.Column="1" Text="{Binding First}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                                    <Label Grid.Column="2" Text="{Binding Second}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center" />
                                                                     <Label Grid.Column="3" Text="{Binding Third}" TextColor="{StaticResource TextSecondary}" FontSize="15" HorizontalOptions="Center" VerticalOptions="Center" />
                                                                 </Grid>
                                                             </DataTemplate>
                                                         </BindableLayout.ItemTemplate>
                                                     </VerticalStackLayout>
-                                                    <Button Text="+  Add set" Style="{StaticResource GhostButton}" TextColor="{StaticResource Accent}" FontSize="15"
-                                                            HorizontalOptions="Center" IsVisible="{Binding IsEditing}" Command="{Binding AddSetCommand}" />
                                                 </VerticalStackLayout>
                                             </Border>
                                         </VerticalStackLayout>
@@ -196,8 +184,6 @@
                             </VerticalStackLayout>
                             <Label Text="No exercises yet. Add some from the ··· menu." Style="{StaticResource Caption}" HorizontalOptions="Center"
                                    IsVisible="{Binding IsEmptyDay}" />
-                            <Button Text="+  Add exercise" Style="{StaticResource SecondaryButton}" IsVisible="{Binding IsEditing}"
-                                    Command="{Binding AddExerciseCommand}" />
                         </VerticalStackLayout>
                     </Border>
 
@@ -255,14 +241,13 @@
 
             <Button Grid.Row="2" Text="{Binding ActionText}" Style="{StaticResource PrimaryButton}"
                     Margin="10,8,10,16" IsVisible="{Binding HasAction}" Command="{Binding DayActionCommand}" />
-            <!-- A finished workout, wherever it was opened from: edit it, or remove it from the history (after asking). -->
-            <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="10" Margin="10,8,10,16" IsVisible="{Binding CanEdit}">
-                <Button Text="Edit workout" Style="{StaticResource SecondaryButton}" Command="{Binding StartEditingCommand}" />
-                <Button Grid.Column="1" Text="Discard" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Danger}"
-                        IsVisible="{Binding CanDiscard}" Command="{Binding DiscardCommand}" />
+            <!-- A finished workout, wherever it was opened from: open it in the workout view to change what was logged, or
+                 resume it (it becomes the workout in progress again). Discarding it is in the ···. -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10" Margin="10,8,10,16" IsVisible="{Binding CanOpen}">
+                <Button Text="Open workout" Style="{StaticResource SecondaryButton}" Command="{Binding OpenWorkoutCommand}" />
+                <Button Grid.Column="1" Text="▶  Resume" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Success}"
+                        Command="{Binding ResumeCommand}" />
             </Grid>
-            <Button Grid.Row="2" Text="Done" Style="{StaticResource PrimaryButton}"
-                    Margin="10,8,10,16" IsVisible="{Binding IsEditing}" Command="{Binding DoneEditingCommand}" />
         </Grid>
     </Border>
 </views:SheetPage>

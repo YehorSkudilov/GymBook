@@ -191,7 +191,7 @@ public partial class PlanWorkoutsViewModel(DataStore store, DialogService dialog
             store.RestoreSessions(chosen);
             await dialogs.Alert(chosen.Count == 1 ? "Restored" : $"{chosen.Count} workouts restored",
                 "They're back in your history. One discarded while in progress comes back finished, with the sets you'd done."
-                + (planned ? " One with nothing ticked comes back with its sets done as planned and a guessed length: open it and use Edit workout (and ··· › Change length) to put in what you really did." : ""));
+                + (planned ? " One with nothing ticked comes back with its sets done as planned and a guessed length: open it, then Open workout (its ··· has the duration) to put in what you really did." : ""));
             Load();
             return;
         }

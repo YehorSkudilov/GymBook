@@ -23,6 +23,9 @@ public class AppData
     /// <summary>The workout in progress. Stored and synced as a session without EndedAt; finishing moves it to <see cref="Sessions"/>.</summary>
     public WorkoutSession? ActiveSession { get; set; }
 
+    /// <summary>Workouts put aside unfinished to carry on later (<see cref="WorkoutSession.PausedAt"/>), newest first.</summary>
+    public List<WorkoutSession> PausedSessions { get; set; } = [];
+
     public List<BodyWeightEntry> BodyWeights { get; set; } = [];
     public List<Exercise> CustomExercises { get; set; } = [];
     public List<FoodEntry> FoodEntries { get; set; } = [];

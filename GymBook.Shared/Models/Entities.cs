@@ -155,13 +155,23 @@ public class WorkoutSession : ISyncEntity
     public int? PlanWeek { get; set; }
     public DateTime StartedAt { get; set; } = DateTime.Now;
     public DateTime? EndedAt { get; set; }
+    /// <summary>When an unfinished workout was put aside to carry on later. Paused, it isn't the workout in progress.</summary>
+    public DateTime? PausedAt { get; set; }
+    /// <summary>
+    /// When a finished workout was last reopened to carry on with it. Lets the server tell a deliberate resume from a
+    /// stale in-progress copy (one from a watch that missed the finish), which mustn't undo the finish.
+    /// </summary>
+    public DateTime? ReopenedAt { get; set; }
     [MaxItems(100)]
     public List<SessionExercise> Exercises { get; set; } = [];
     public DateTimeOffset UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
 
     [JsonIgnore]
-    public TimeSpan Duration => (EndedAt ?? DateTime.Now) - StartedAt;
+    public TimeSpan Duration => (EndedAt ?? PausedAt ?? DateTime.Now) - StartedAt;
+
+    [JsonIgnore]
+    public bool IsPaused => EndedAt == null && PausedAt != null;
 
     [JsonIgnore]
     public IEnumerable<SetEntry> WorkingSets => Exercises.SelectMany(e => e.Sets).Where(s => s.IsCompleted && !s.IsWarmup);

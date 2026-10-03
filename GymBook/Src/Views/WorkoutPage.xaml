@@ -29,10 +29,12 @@
                 <HorizontalStackLayout Spacing="8">
                     <Label Text="{Binding Elapsed}" Style="{StaticResource Caption}" FontFamily="OpenSansSemibold" />
                     <Label Text="{Binding ProgressText}" Style="{StaticResource Caption}" />
-                    <!-- The heart rate from the watch, live -->
-                    <controls:HeartRatePill />
+                    <!-- The heart rate from the watch, live (not for a finished workout opened again) -->
+                    <ContentView IsVisible="{Binding IsReviewing, Converter={StaticResource Not}}">
+                        <controls:HeartRatePill />
+                    </ContentView>
                 </HorizontalStackLayout>
-                <!-- How long is left and when it should end, from the user's own pace -->
+                <!-- How long is left and when it should end, from the user's own pace; a finished workout: when it was -->
                 <Label Text="{Binding EstimateText}" Style="{StaticResource Caption}" FontSize="12" LineBreakMode="TailTruncation" />
             </VerticalStackLayout>
             <ImageButton Grid.Column="2" Source="{StaticResource IconMore}" WidthRequest="40" HeightRequest="40" Padding="9"

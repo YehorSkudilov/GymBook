@@ -84,20 +84,54 @@
                                 <Label Text="Start" Style="{StaticResource MenuLabel}" />
                                 <Label Text="{Binding StartText}" Style="{StaticResource MenuValue}" TextColor="{StaticResource Accent}" />
                             </Grid>
-                            <Grid Style="{StaticResource MenuRow}">
+                            <!-- Running: how long so far. A finished workout: tap to change how long it took (its start stays) -->
+                            <Grid Style="{StaticResource MenuRow}" BackgroundColor="Transparent">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding EditDurationCommand}" />
+                                </Grid.GestureRecognizers>
                                 <Image Style="{StaticResource MenuIcon}">
                                     <Image.Source>
                                         <FontImageSource FontFamily="OutlinedIcons" Glyph="hourglass_empty" Color="{StaticResource TextSecondary}" Size="32" />
                                     </Image.Source>
                                 </Image>
                                 <Label Text="Duration" Style="{StaticResource MenuLabel}" />
-                                <Label Text="{Binding DurationText}" Style="{StaticResource MenuValue}" />
+                                <Label Text="{Binding DurationText}" Style="{StaticResource MenuValue}" IsVisible="{Binding IsActive}" />
+                                <Label Text="{Binding DurationText}" Style="{StaticResource MenuValue}" TextColor="{StaticResource Accent}" IsVisible="{Binding IsReviewing}" />
                             </Grid>
                         </VerticalStackLayout>
                     </Border>
 
-                    <!-- Finish or throw away -->
-                    <Border Style="{StaticResource MenuCard}">
+                    <!-- A finished workout opened again: carry on with it, or delete it -->
+                    <Border Style="{StaticResource MenuCard}" IsVisible="{Binding IsReviewing}">
+                        <VerticalStackLayout>
+                            <!-- It becomes the workout in progress again, its clock carrying on from where it ended -->
+                            <Grid Style="{StaticResource MenuRow}">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ResumeCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Image Style="{StaticResource MenuIcon}">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="play_arrow" Color="{StaticResource Success}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="Resume" Style="{StaticResource MenuLabel}" TextColor="{StaticResource Success}" />
+                            </Grid>
+                            <Grid Style="{StaticResource MenuRow}">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding DeleteCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Image Style="{StaticResource MenuIcon}">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="delete" Color="{StaticResource Danger}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="Delete" Style="{StaticResource MenuLabel}" TextColor="{StaticResource Danger}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Finish, put aside or throw away -->
+                    <Border Style="{StaticResource MenuCard}" IsVisible="{Binding IsActive}">
                         <VerticalStackLayout>
                             <Grid Style="{StaticResource MenuRow}">
                                 <Grid.GestureRecognizers>
@@ -109,6 +143,18 @@
                                     </Image.Source>
                                 </Image>
                                 <Label Text="Finish" Style="{StaticResource MenuLabel}" TextColor="{StaticResource Success}" />
+                            </Grid>
+                            <!-- Not finished and not in progress: everything logged stays, to resume from the Workout tab -->
+                            <Grid Style="{StaticResource MenuRow}">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding PauseCommand}" />
+                                </Grid.GestureRecognizers>
+                                <Image Style="{StaticResource MenuIcon}">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="pause" Color="{StaticResource TextSecondary}" Size="32" />
+                                    </Image.Source>
+                                </Image>
+                                <Label Text="Pause" Style="{StaticResource MenuLabel}" />
                             </Grid>
                             <!-- Start over: sets unticked, clock restarted -->
                             <Grid Style="{StaticResource MenuRow}">
