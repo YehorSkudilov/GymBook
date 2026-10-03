@@ -117,22 +117,39 @@ public class DataStore
 
     /// <summary>
     /// Workouts deleted from the history and workouts discarded while in progress, most recently deleted first, that can
-    /// be brought back (see <see cref="RestoreSessions"/>): those with at least one set done.
+    /// be brought back (see <see cref="RestoreSessions"/>): any with sets, even none ticked (a copy discarded on a device
+    /// that never saw the sets done, a watch out of sync, say).
     /// </summary>
     public List<WorkoutSession> DeletedWorkouts() =>
         [.. _local.DeletedSessions().Where(s => s.Id != Data.ActiveSession?.Id && Data.Sessions.All(x => x.Id != s.Id)
-            && s.Exercises.Any(e => e.Sets.Any(x => x.IsCompleted)))];
+            && s.Exercises.Any(e => e.Sets.Count > 0))];
+
+    /// <summary>A workout discarded while in progress with no set ticked: restoring it takes its sets as done as planned.</summary>
+    public static bool NothingLogged(WorkoutSession s) => s.EndedAt == null && !s.Exercises.Any(e => e.Sets.Any(x => x.IsCompleted));
+
+    /// <summary>A guess at how long a workout of <paramref name="sets"/> sets took, when nothing in it says: about 3 minutes a set.</summary>
+    static TimeSpan GuessedLength(int sets) => TimeSpan.FromMinutes(Math.Clamp(sets * 3, 20, 120));
 
     /// <summary>
     /// Brings deleted workouts back into the history, as they were (syncs like any change). One discarded while in
     /// progress comes back finished, like finishing it would have: the sets done, the rest counted as skipped, ending
-    /// when the last thing was logged.
+    /// when the last thing was logged. One with nothing ticked comes back with its sets done as planned (weights and
+    /// reps as they were set) and a guessed length, to correct with Edit workout.
     /// </summary>
     public void RestoreSessions(IEnumerable<WorkoutSession> sessions)
     {
         foreach (var session in sessions)
         {
             session.IsDeleted = false;
+            if (NothingLogged(session))
+            {
+                foreach (var set in session.Exercises.SelectMany(e => e.Sets))
+                {
+                    set.IsCompleted = true;
+                    set.IsSkipped = false;
+                }
+                session.EndedAt = session.StartedAt + GuessedLength(session.Exercises.Sum(e => e.Sets.Count));
+            }
             if (session.EndedAt == null)
             {
                 session.EndedAt = SetTimes.LastLogged(session);
