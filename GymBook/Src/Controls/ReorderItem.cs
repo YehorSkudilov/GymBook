@@ -7,8 +7,8 @@ namespace GymBook.Controls;
 /// copy of it), the others slide aside to show where it will land, and on release it settles into place and
 /// <see cref="MoveCommand"/> runs with its new index. The list is the item's parent layout (e.g. a stack with a
 /// BindableLayout); every item in it must be a ReorderItem.
-/// On Android it is handled natively (see ReorderItemHandler): straight from the item's grip (<see cref="IsHandleProperty"/>)
-/// if it has one, otherwise a long-press, so a quick swipe still scrolls;
+/// On Android it is handled natively (see ReorderItemHandler): a long-press on the item's grip (<see cref="IsHandleProperty"/>)
+/// if it has one, otherwise on the item, so a swipe still scrolls;
 /// elsewhere it's a plain drag.
 /// </summary>
 public class ReorderItem : ContentView
@@ -37,8 +37,8 @@ public class ReorderItem : ContentView
         BindableProperty.CreateAttached("IsHandle", typeof(bool), typeof(ReorderItem), false);
 
     /// <summary>
-    /// Marks the grip inside an item. An item with one is dragged from it straight away, and a touch anywhere else on
-    /// the item scrolls the list as usual. Without one, the whole item is held (long-pressed) to drag.
+    /// Marks the grip inside an item. An item with one is dragged by holding the grip, and a touch anywhere else on the
+    /// item scrolls the list as usual. Without one, the whole item is held (long-pressed) to drag.
     /// </summary>
     public static bool GetIsHandle(BindableObject view) => (bool)view.GetValue(IsHandleProperty);
     public static void SetIsHandle(BindableObject view, bool value) => view.SetValue(IsHandleProperty, value);

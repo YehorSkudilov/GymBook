@@ -53,7 +53,7 @@
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding DayExercises}" Spacing="6">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="vm:PlanDayExercise">
-                                <!-- The row itself follows the finger; the others slide aside. A solid background so it covers them. -->
+                                <!-- Hold the card and drag: it follows the finger and the others slide aside. A solid background so it covers them. -->
                                 <controls:ReorderItem MoveCommand="{Binding MoveCommand}">
                                 <Border BackgroundColor="{StaticResource Surface}" StrokeShape="RoundRectangle 16" StrokeThickness="0" Padding="0,4">
                                     <VerticalStackLayout>
@@ -90,9 +90,9 @@
                                                     </Border>
                                                 </Grid>
                                             </VerticalStackLayout>
-                                            <!-- The grip: drag the row from here (at once, no hold). Anywhere else on the row scrolls the list.
+                                            <!-- The grip: a sign the card can be moved. Hold anywhere on the card to drag it; a swipe scrolls the list.
                                                  The whole row height and a bit either side, so it is easy to hit. -->
-                                            <Label Grid.Column="2" Text="⋮⋮" TextColor="{StaticResource TextTertiary}" FontSize="18" controls:ReorderItem.IsHandle="True"
+                                            <Label Grid.Column="2" Text="⋮⋮" TextColor="{StaticResource TextTertiary}" FontSize="18"
                                                    VerticalOptions="Fill" VerticalTextAlignment="Center" Padding="12,0" Margin="-12,0,0,0" />
                                         </Grid>
 
