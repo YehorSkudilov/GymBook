@@ -169,6 +169,36 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
     /// <summary>The history is being read (in the background, after a sync).</summary>
     public bool IsReadingHistory { get; private set; }
 
+    /// <summary>How much of the history was read, 0 to 1 (by time, back to <see cref="HistoryStart"/>); 1 once done.</summary>
+    public double HistoryProgress
+    {
+        get
+        {
+            if (HasReadHistory)
+                return 1;
+            var oldest = HistoryOldest(HistorySignature) ?? DateTime.Today.AddDays(1 - Days);
+            var span = (DateTime.Today - HistoryStart).TotalDays;
+            return span <= 0 ? 1 : Math.Clamp((DateTime.Today - oldest).TotalDays / span, 0, 1);
+        }
+    }
+
+    /// <summary>Why reading the history stopped short, or null. Kept until it's tried again (the next sync).</summary>
+    public string? HistoryError { get; private set; }
+
+    /// <summary>Reading the history started, got further, finished or failed. Raised on the UI thread.</summary>
+    public event EventHandler? HistoryChanged;
+
+    void OnHistoryChanged() => MainThread.BeginInvokeOnMainThread(() => HistoryChanged?.Invoke(this, EventArgs.Empty));
+
+    /// <summary>The oldest day read so far for <paramref name="signature"/>, or null when its history wasn't started.</summary>
+    static DateTime? HistoryOldest(string signature)
+    {
+        var saved = Preferences.Default.Get(HistoryKey, "");
+        return saved.StartsWith(signature + "|", StringComparison.Ordinal) && long.TryParse(saved[(signature.Length + 1)..], out var ticks)
+            ? new DateTime(ticks)
+            : null;
+    }
+
     /// <summary>The whole history of the source and apps read now was read on this device.</summary>
     public bool HasReadHistory => Preferences.Default.Get(HistoryDoneKey, "") == HistorySignature;
 
@@ -177,6 +207,7 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
     {
         Preferences.Default.Remove(HistoryKey);
         Preferences.Default.Remove(HistoryDoneKey);
+        HistoryError = null;
     }
 
     string HistorySignature => $"{store.Profile.HealthSource}|{string.Join(",", Apps ?? [])}";
@@ -191,14 +222,12 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
         if (IsReadingHistory || HasReadHistory)
             return;
         IsReadingHistory = true;
+        HistoryError = null;
+        OnHistoryChanged();
         try
         {
             var signature = HistorySignature;
-            var saved = Preferences.Default.Get(HistoryKey, "");
-            var oldest = saved.StartsWith(signature + "|", StringComparison.Ordinal)
-                && long.TryParse(saved[(signature.Length + 1)..], out var ticks)
-                    ? new DateTime(ticks)
-                    : DateTime.Today.AddDays(1 - Days);
+            var oldest = HistoryOldest(signature) ?? DateTime.Today.AddDays(1 - Days);
             while (oldest > HistoryStart)
             {
                 await _gate.WaitAsync();
@@ -215,6 +244,7 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
                     await MainThread.InvokeOnMainThreadAsync(() => Apply(result with { HeightCm = null }, name) | ApplyFoods(result.Foods, from, to));
                     oldest = from;
                     Preferences.Default.Set(HistoryKey, $"{signature}|{oldest.Ticks}");
+                    OnHistoryChanged();
                 }
                 finally
                 {
@@ -227,12 +257,13 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
         }
         catch (Exception e)
         {
-            // Carries on from where it got to on the next sync.
-            LastError = e.Message;
+            // Not marked done: the next sync carries on from where it got to.
+            HistoryError = e.Message;
         }
         finally
         {
             IsReadingHistory = false;
+            OnHistoryChanged();
         }
     }
 

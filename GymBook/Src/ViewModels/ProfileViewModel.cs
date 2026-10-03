@@ -67,6 +67,7 @@ public partial class ProfileViewModel(
         sync.StatusChanged += OnSyncChanged;
         store.Changed += OnSyncChanged;
         account.Changed += OnSyncChanged;
+        healthSync.HistoryChanged += OnSyncChanged;
         Refresh();
         return Task.CompletedTask;
     }
@@ -76,6 +77,7 @@ public partial class ProfileViewModel(
         sync.StatusChanged -= OnSyncChanged;
         store.Changed -= OnSyncChanged;
         account.Changed -= OnSyncChanged;
+        healthSync.HistoryChanged -= OnSyncChanged;
     }
 
     void OnSyncChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(Refresh);

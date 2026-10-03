@@ -307,6 +307,8 @@
                         <VerticalStackLayout VerticalOptions="Center">
                             <Label Text="{Binding Health.Title}" />
                             <Label Text="{Binding Health.Status}" Style="{StaticResource Caption}" FontSize="12" />
+                            <ProgressBar Progress="{Binding Health.HistoryProgress}" ProgressColor="{StaticResource Accent}" HeightRequest="4"
+                                         Margin="0,6,0,0" IsVisible="{Binding Health.ShowHistoryProgress}" />
                         </VerticalStackLayout>
                         <Label Grid.Column="1" Text="{Binding Health.ActionText}" TextColor="{StaticResource Accent}" FontSize="14" VerticalOptions="Center"
                                IsVisible="{Binding Health.IsAvailable}" />
