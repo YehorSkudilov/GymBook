@@ -49,11 +49,7 @@ public record HealthReadResult(IReadOnlyList<HealthDayReading> Days, IReadOnlyLi
     IReadOnlyList<FoodReading>? Foods = null);
 
 /// <summary>An app that shares health data (through Health Connect): its Android package and its name.</summary>
-public record HealthApp(string Package, string Name)
-{
-    /// <summary>Samsung Health's package: "Samsung Health only" was a choice of its own in earlier versions.</summary>
-    public const string SamsungHealth = "com.sec.android.app.shealth";
-}
+public record HealthApp(string Package, string Name);
 
 public enum HealthAvailability
 {

@@ -15,11 +15,11 @@ namespace GymBook;
 
 /// <summary>
 /// Health data through Android's Health Connect, built into Android 14 and later (its framework API, so no extra library).
-/// Samsung Health shares weight, body composition, calories burned, steps and its food diary there (Samsung Health ›
-/// Settings › Health Connect). Reads every app's records (Google Fit, Fitbit, Withings, Garmin, scales, ...), or only
-/// those of the apps picked (Samsung Health alone, for instance).
-/// As an <see cref="IHealthWriter"/> it also takes Gym Book's workouts, food and weights (when sending is on), each under
-/// Gym Book's own id so it can be updated; Samsung Health brings them in from here until it takes them directly.
+/// A general connector: reads every app's records (Google Fit, Fitbit, Garmin, Withings, Samsung Health, scales, the phone's own
+/// step counter, ...), or only those of the apps picked, as they recorded them; calories burned are worked out from what
+/// they share (see NutritionService.Burned). Samsung Health's own totals come from reading it directly instead
+/// (SamsungHealthPlatform). As an <see cref="IHealthWriter"/> it also takes Gym Book's workouts, food and weights (when
+/// sending is on), each under Gym Book's own id so it can be updated.
 /// </summary>
 public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
 {
@@ -205,7 +205,7 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
             {
                 case WorkoutWrite x:
                     yield return new ExerciseSessionRecord.Builder(Meta(x.ClientId), Instant(x.Start), Instant(x.End),
-                        ExerciseSessionType.ExerciseSessionTypeStrengthTraining).SetTitle(x.Title)!.Build()!;
+                        ExerciseSessionTypeEnum.StrengthTraining).SetTitle(x.Title)!.Build()!;
                     if (x.ActiveKcal > 0)
                         yield return new ActiveCaloriesBurnedRecord.Builder(Meta(x.ClientId + "-kcal"), Instant(x.Start), Instant(x.End),
                             Energy.FromCalories(x.ActiveKcal * 1000)!).Build()!;
@@ -215,10 +215,10 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
                         .SetMealName(x.Name)!
                         .SetMealType(x.Meal switch
                         {
-                            Models.MealType.Breakfast => Android.Health.Connect.DataTypes.MealType.MealTypeBreakfast,
-                            Models.MealType.Lunch => Android.Health.Connect.DataTypes.MealType.MealTypeLunch,
-                            Models.MealType.Dinner => Android.Health.Connect.DataTypes.MealType.MealTypeDinner,
-                            _ => Android.Health.Connect.DataTypes.MealType.MealTypeSnack,
+                            Models.MealType.Breakfast => HealthMealType.Breakfast,
+                            Models.MealType.Lunch => HealthMealType.Lunch,
+                            Models.MealType.Dinner => HealthMealType.Dinner,
+                            _ => HealthMealType.Snack,
                         })!
                         .SetEnergy(Energy.FromCalories(x.Kcal * 1000))!
                         .SetProtein(Mass.FromGrams(x.ProteinG))!

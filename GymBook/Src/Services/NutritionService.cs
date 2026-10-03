@@ -88,27 +88,25 @@ public class NutritionService(DataStore store)
             asTotal);
     }
 
-    // Where Samsung Health can't be read directly (see SamsungHealthData), Health Connect only has its steps and a
-    // resting burn worked out from the BMR, not its activity calories or the total burned it shows. These two make the
-    // day's burn from what is shared match that total: fitted to whole days in Samsung Health, within some 10 kcal.
-
     /// <summary>
-    /// Samsung Health's resting calories over the BMR shared with Health Connect: about 1.21 times it. The BMR alone is
-    /// the body lying still; the rest of the day's baseline (digesting food, sitting, standing) comes on top.
+    /// The net energy cost of walking, on top of resting: about 0.5 kcal per kg of body weight per km at an everyday pace
+    /// (ACSM's walking equation: 0.1 mL of oxygen per kg per metre, at about 5 kcal per litre).
     /// </summary>
-    const double RestingPerBasal = 1.21;
+    const double WalkKcalPerKgPerKm = 0.5;
+
+    /// <summary>A step's length as a share of height: about 0.414 (the usual estimate, between men's 0.415 and women's 0.413).</summary>
+    const double StridePerHeight = 0.414;
 
     /// <summary>
-    /// Activity calories per step for each kilogram of body weight, on top of resting: what Samsung Health's activity
-    /// calories come to, some 430 kcal for 10,000 steps at 70 kg (walking alone is about 0.0004).
-    /// </summary>
-    const double ActivityKcalPerStepPerKg = 0.00062;
-
-    /// <summary>
-    /// The day's burn from the health apps: resting plus activity. Where an app shares no total of its own, Health
-    /// Connect's total is only resting (worked out from the BMR) plus any active calories recorded, so walking that
-    /// only shows up as steps would be missed: the activity is the most of the active calories recorded, what the total
-    /// has beyond resting, and what the day's steps burn. Null (N/A) with nothing from the health apps.
+    /// The day's burn from the health data: resting plus activity, the way the apps measured it.
+    /// <list type="bullet">
+    /// <item>A complete total of the app's own (Samsung Health's, read directly: it comes without a resting figure) is used as it is.</item>
+    /// <item>Through Health Connect it's resting (from the BMR) plus activity, the most of: the active calories the apps
+    /// recorded; what the day's total has beyond resting (an app's own total, a watch's, say, which counts all its
+    /// movement); and walking worked out from the day's steps, for days whose only activity is steps (a phone's step
+    /// counter records no calories).</item>
+    /// </list>
+    /// Null (N/A) with nothing from the health apps.
     /// </summary>
     (double? Kcal, BurnSource Source, bool StepsCounted) Burned(HealthDay? health, DateTime date)
     {
@@ -116,16 +114,22 @@ public class NutritionService(DataStore store)
             return (null, BurnSource.None, false);
         var total = health.TotalBurnedKcal;
         var basal = health.BasalBurnedKcal;
-        var steps = health.Steps is { } s && s > 0 ? s * ActivityKcalPerStepPerKg * WeightOn(date) : (double?)null;
         if (basal == null)
         {
-            // No resting figure to build on: the total as it is (Samsung Health's own, read directly, comes this way), or
-            // active calories alone aren't a day's burn.
+            // No resting figure to build on: the total as it is, or active calories alone aren't a day's burn.
             return total is { } t ? (t, BurnSource.Measured, false) : (null, BurnSource.None, false);
         }
+        var walking = health.Steps is { } s && s > 0 ? WalkingKcal(s, date) : (double?)null;
         var recorded = Math.Max(health.ActiveBurnedKcal ?? 0, total is { } all ? all - basal.Value : 0);
-        var activity = Math.Max(recorded, steps ?? 0);
-        return (basal.Value * RestingPerBasal + activity, BurnSource.Measured, steps is { } walked && walked > recorded);
+        var activity = Math.Max(recorded, walking ?? 0);
+        return (basal.Value + activity, BurnSource.Measured, walking is { } w && w > recorded);
+    }
+
+    /// <summary>What <paramref name="steps"/> of walking burn on top of resting: the distance (steps × stride, from height) at <see cref="WalkKcalPerKgPerKm"/>.</summary>
+    double WalkingKcal(int steps, DateTime date)
+    {
+        var strideM = Profile.HeightCm is > 100 and < 250 ? Profile.HeightCm.Value * StridePerHeight / 100 : 0.75;
+        return steps * strideM / 1000 * WalkKcalPerKgPerKm * WeightOn(date);
     }
 
     /// <summary>Body weight on a day: the last weighed by then, else the profile's.</summary>
