@@ -113,6 +113,11 @@ public static class MauiProgram
         AddPage<SharedPlanPage, SharedPlanViewModel>(builder.Services);
         AddPage<ProPage, ProViewModel>(builder.Services);
 
+#if IOS
+        // Drag reordering with a long-press, as on Android, so swipes elsewhere still scroll.
+        builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.ReorderItem, ReorderItemHandler>());
+#endif
+
 #if ANDROID
         // Drag reordering (plan exercises from their grip, days with a long-press), so swipes elsewhere still scroll.
         builder.ConfigureMauiHandlers(handlers =>
