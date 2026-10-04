@@ -597,9 +597,9 @@ public partial class NutritionViewModel(
         {
             await api.SaveNutritionStatsAsync(new NutritionStatsRequest { Streak = s.Logging, BestStreak = s.BestLogging, OnTargetLast30 = s.OnTargetLast30 });
         }
-        catch (Exception e) when (Online.Message(e) != null)
+        catch (Exception)
         {
-            // Offline: sent again next time.
+            // Offline, or the server turned it down: sent again next time.
             _sentStreaks = null;
         }
     }

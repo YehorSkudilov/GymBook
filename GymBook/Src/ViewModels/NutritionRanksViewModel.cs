@@ -103,12 +103,13 @@ public partial class NutritionRanksViewModel(ApiClient api, AccountService accou
             BoardEmptyText = _friendsOnly ? "No friends on this board yet. Add friends from Progress, under Ranks."
                 : "Nobody's on this board yet. Log your food to be the first.";
         }
-        catch (Exception e) when (Online.Message(e) is { } message)
+        catch (Exception e)
         {
+            // Offline and the like say so; anything else still shows that something went wrong, not an empty board.
             Board = [];
             MyRows = [];
             IsBoardEmpty = true;
-            BoardEmptyText = message;
+            BoardEmptyText = Online.Message(e) ?? "Couldn't load this board. Try again later.";
         }
         finally
         {
