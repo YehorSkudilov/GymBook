@@ -71,6 +71,34 @@
         </VerticalStackLayout>
 
         <VerticalStackLayout Spacing="14" IsVisible="{Binding InRanks}">
+            <!-- Your numbers: what the boards rank you on and why it's that, like the categories in Progress's Ranks -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasMine}">
+                <VerticalStackLayout Spacing="14">
+                    <Label Text="YOUR NUMBERS" Style="{StaticResource Overline}" />
+                    <VerticalStackLayout Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Streak" FontFamily="OpenSansSemibold" />
+                            <HorizontalStackLayout Grid.Column="1" Spacing="4">
+                                <Image Source="{StaticResource IconFlame}" WidthRequest="14" HeightRequest="14" VerticalOptions="Center" />
+                                <Label Text="{Binding StreakText}" FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Grid>
+                        <!-- How far to the best streak -->
+                        <ProgressBar Progress="{Binding StreakProgress}" ProgressColor="#FF7A45" />
+                        <Label Text="{Binding StreakDetail}" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="4">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="On target" FontFamily="OpenSansSemibold" />
+                            <Label Grid.Column="1" Text="{Binding OnTargetText}" TextColor="{StaticResource Success}" FontFamily="OpenSansSemibold" FontSize="14" />
+                        </Grid>
+                        <ProgressBar Progress="{Binding OnTargetProgress}" ProgressColor="{StaticResource Success}" />
+                        <Label Text="{Binding OnTargetDetail}" Style="{StaticResource Caption}" FontSize="12" />
+                    </VerticalStackLayout>
+                    <Label Text="{Binding PlaceText}" Style="{StaticResource Caption}" />
+                </VerticalStackLayout>
+            </Border>
+
             <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding BoardChips}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
             <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding ScopeChips}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
             <Label Text="{Binding BoardCaption}" Style="{StaticResource Caption}" FontSize="12" Margin="4,0" />

@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Contracts;
+using GymBook.Services;
 using GymBook.Services.Sync;
 
 namespace GymBook.ViewModels;
@@ -32,6 +33,56 @@ public partial class NutritionRanksViewModel(ApiClient api, AccountService accou
 
     bool _friendsOnly;
     NutritionBoard _board = NutritionBoard.Streak;
+
+    // ---- Your numbers: what the boards rank the user on, and why it's that (like the strength categories in Progress) ----
+
+    [ObservableProperty] bool hasMine;
+    [ObservableProperty] string streakText = "";
+    [ObservableProperty] string streakDetail = "";
+    [ObservableProperty] double streakProgress;
+    [ObservableProperty] string onTargetText = "";
+    [ObservableProperty] string onTargetDetail = "";
+    [ObservableProperty] double onTargetProgress;
+    /// <summary>Where the user is on the board showing, or why they aren't on it.</summary>
+    [ObservableProperty] string placeText = "";
+
+    NutritionStreaks? _mine;
+
+    /// <summary>
+    /// The user's own numbers, as the app works them out (and sends to the boards), each with what it counts; from the
+    /// Nutrition tab, which has them.
+    /// </summary>
+    public void ShowMine(NutritionStreaks s, int? calorieGoal, int? proteinGoal)
+    {
+        _mine = s;
+        HasMine = true;
+        StreakText = $"{Days(s.Logging)} in a row";
+        StreakProgress = s.BestLogging > 0 ? Math.Clamp(s.Logging / (double)s.BestLogging, 0, 1) : 0;
+        StreakDetail = s.Logging == 0 ? $"No streak right now: log any food today to start one. Your best is {Days(s.BestLogging)}."
+            : !s.TodayLogged ? $"Counted to yesterday: log something today to keep it going. Your best is {Days(s.BestLogging)}."
+            : s.Logging >= s.BestLogging ? "Your longest streak yet. Every day you log any food adds one."
+            : $"Your best is {Days(s.BestLogging)}. Every day you log any food adds one.";
+
+        OnTargetText = $"{s.OnTargetLast30} of the last 30 days";
+        OnTargetProgress = s.OnTargetLast30 / 30.0;
+        OnTargetDetail = calorieGoal is not > 0
+            ? "Set a calorie goal (Goals, at the top of Nutrition) to count days on target."
+            : $"A day counts when its calories land within {NutritionService.TargetRange:P0} of your {calorieGoal} kcal goal"
+              + (proteinGoal is > 0 ? $" and protein reaches {NutritionService.ProteinReached:P0} of your {proteinGoal} g goal." : ".");
+        ShowPlace();
+    }
+
+    /// <summary>The user's place on the board showing: their row on it, or why they're not there.</summary>
+    void ShowPlace()
+    {
+        var mine = Board.FirstOrDefault(r => r.IsMe) ?? MyRows.FirstOrDefault();
+        var board = _board == NutritionBoard.Streak ? "the streak board" : "the on-target board";
+        PlaceText = mine != null ? $"#{mine.Position} on {board}{(_friendsOnly ? " among friends" : "")}."
+            : _mine == null || IsBoardLoading ? ""
+            : _board == NutritionBoard.Streak && _mine.Logging == 0 ? $"Not on {board}: it shows streaks still going."
+            : _board == NutritionBoard.OnTarget && _mine.OnTargetLast30 == 0 ? $"Not on {board}: no days on target in the last 30."
+            : $"Not on {board} yet: it updates when you open Nutrition.";
+    }
 
     public override async Task OnAppearingAsync()
     {
@@ -114,6 +165,7 @@ public partial class NutritionRanksViewModel(ApiClient api, AccountService accou
         finally
         {
             IsBoardLoading = false;
+            ShowPlace();
         }
     }
 

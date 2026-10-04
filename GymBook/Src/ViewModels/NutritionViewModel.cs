@@ -193,6 +193,7 @@ public partial class NutritionViewModel(
             // The boards come from the server each time the tab shows, after the user's own streak has gone up, so they're
             // on them with today's numbers.
             ShowStreaks();
+            ranks.ShowMine(_streaks!, store.Profile.CalorieGoal, store.Profile.ProteinGoalG);
             _ = ShowRanksAsync();
             return;
         }
