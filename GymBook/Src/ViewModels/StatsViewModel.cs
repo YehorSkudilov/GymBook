@@ -14,10 +14,28 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     /// <summary>The Ranks tab's own view model (see RanksView).</summary>
     public RanksViewModel Ranks => ranks;
 
-    List<ChipItem>? _sectionTabs;
+    /// <summary>
+    /// Stats | Ranks, at the top of the tab, the chosen one lit. Made afresh on each choice rather than recoloured in
+    /// place, as Nutrition's Day | Trends is: recolouring didn't always redraw in this switch.
+    /// </summary>
+    public System.Collections.ObjectModel.ObservableCollection<ChipItem> SectionTabs
+    {
+        get
+        {
+            if (_sectionTabs.Count == 0)
+                ShowSectionTabs();
+            return _sectionTabs;
+        }
+    }
 
-    /// <summary>Stats or Ranks, at the top of the tab.</summary>
-    public List<ChipItem> SectionTabs => _sectionTabs ??= [new("Stats", false, SelectSection) { IsSelected = true }, new("Ranks", true, SelectSection)];
+    readonly System.Collections.ObjectModel.ObservableCollection<ChipItem> _sectionTabs = [];
+
+    void ShowSectionTabs()
+    {
+        _sectionTabs.Clear();
+        _sectionTabs.Add(new ChipItem("Stats", false, SelectSection) { IsSelected = !IsRanksTab });
+        _sectionTabs.Add(new ChipItem("Ranks", true, SelectSection) { IsSelected = IsRanksTab });
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsStatsTab))]
@@ -27,9 +45,8 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
 
     void SelectSection(ChipItem chip)
     {
-        foreach (var tab in SectionTabs)
-            tab.IsSelected = tab == chip;
         IsRanksTab = chip.Value is true;
+        ShowSectionTabs();
         // The stats play in again when they come back; the ranks load from the server each time they're opened.
         _ = OnAppearingAsync();
     }

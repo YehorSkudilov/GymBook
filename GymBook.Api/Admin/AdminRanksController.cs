@@ -66,7 +66,7 @@ public class AdminRanksController(ApiDbContext db, TimeProvider time, ILogger<Ad
         return NoContent();
     }
 
-    /// <summary>Clears a user's bio, home gym and picture, e.g. after a report about something offensive in them.</summary>
+    /// <summary>Clears a user's bio and picture, e.g. after a report about something offensive in them.</summary>
     [HttpPost("users/{userId}/clear-profile")]
     public async Task<IActionResult> ClearProfile(string userId, CancellationToken ct)
     {
@@ -74,7 +74,6 @@ public class AdminRanksController(ApiDbContext db, TimeProvider time, ILogger<Ad
         if (profile == null)
             return Problem(statusCode: StatusCodes.Status404NotFound, title: "That user has no public profile.");
         profile.Bio = "";
-        profile.HomeGym = "";
         profile.AvatarVersion = 0;
         await db.Avatars.Where(a => a.UserId == userId).ExecuteDeleteAsync(ct);
         await db.SaveChangesAsync(ct);

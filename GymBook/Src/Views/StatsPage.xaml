@@ -32,17 +32,19 @@
                 <Button Grid.Column="1" Text="History" Style="{StaticResource SmallButton}" Command="{Binding OpenHistoryCommand}" VerticalOptions="Center" />
             </Grid>
 
-            <!-- Stats or Ranks -->
-            <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding SectionTabs}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="vm:ChipItem">
-                        <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="16,7">
-                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding SelectCommand}" /></Border.GestureRecognizers>
-                            <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </HorizontalStackLayout>
+            <!-- Stats | Ranks: a full-width switch, like Nutrition's Day | Trends -->
+            <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="3" HorizontalOptions="Fill">
+                <FlexLayout BindableLayout.ItemsSource="{Binding SectionTabs}" Direction="Row">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:ChipItem">
+                            <Border FlexLayout.Grow="1" FlexLayout.Basis="0" BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="0,10">
+                                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding SelectCommand}" /></Border.GestureRecognizers>
+                                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="15" FontFamily="OpenSansSemibold" HorizontalOptions="Center" />
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+            </Border>
 
             <!-- Ranks: shown by this view (bound to the page), filled by the inner one (bound to the ranks) -->
             <ContentView IsVisible="{Binding IsRanksTab}">

@@ -102,7 +102,7 @@ public class AdminApi(HttpClient http, AdminSession session)
     public Task SetRankHiddenAsync(string userId, bool hidden) =>
         PostAsync($"api/admin/ranks/users/{Uri.EscapeDataString(userId)}/hidden", new SetRankHiddenRequest(hidden));
 
-    /// <summary>Clears the user's public bio, home gym and picture.</summary>
+    /// <summary>Clears the user's public bio and picture.</summary>
     public Task ClearPublicProfileAsync(string userId) =>
         SendAsync(() => new HttpRequestMessage(HttpMethod.Post, $"api/admin/ranks/users/{Uri.EscapeDataString(userId)}/clear-profile"));
 

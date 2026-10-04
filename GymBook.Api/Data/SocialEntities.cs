@@ -13,7 +13,6 @@ public class SocialProfile
     /// <summary><see cref="Username"/> in lower case: usernames are unique ignoring case.</summary>
     public string UsernameKey { get; set; } = "";
     public string Bio { get; set; } = "";
-    public string HomeGym { get; set; } = "";
     /// <summary>Bumped with each new picture, so its address changes and caches let go of the old one; 0 for none.</summary>
     public int AvatarVersion { get; set; }
     /// <summary>What a friend enters to add this user.</summary>

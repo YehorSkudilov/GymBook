@@ -13,7 +13,6 @@ public static class SocialLimits
     /// <summary>Letters, digits, underscores and dots.</summary>
     public const string UsernamePattern = "^[A-Za-z0-9_.]+$";
     public const int BioLength = 160;
-    public const int HomeGymLength = 60;
     public const int ReportReasonLength = 300;
     /// <summary>The picture as sent: the app shrinks it to a small square JPEG first, far under this.</summary>
     public const int AvatarBytes = 512 * 1024;
@@ -30,7 +29,6 @@ public class MyPublicProfile
     public bool Exists { get; set; }
     public string Username { get; set; } = "";
     public string Bio { get; set; } = "";
-    public string HomeGym { get; set; } = "";
     /// <summary>Path on the API (see <see cref="ProfileCard.AvatarPath"/>); null without a picture.</summary>
     public string? AvatarPath { get; set; }
     /// <summary>Given to friends so they can add this user.</summary>
@@ -48,8 +46,6 @@ public class SavePublicProfileRequest
     public string Username { get; set; } = "";
     [MaxLength(SocialLimits.BioLength)]
     public string Bio { get; set; } = "";
-    [MaxLength(SocialLimits.HomeGymLength)]
-    public string HomeGym { get; set; } = "";
 }
 
 public class SetAvatarRequest
@@ -70,7 +66,6 @@ public class ProfileCard
 {
     public string Username { get; set; } = "";
     public string Bio { get; set; } = "";
-    public string HomeGym { get; set; } = "";
     /// <summary>The picture, relative to the API's address ("api/social/avatars/name?v=3"); null without one.</summary>
     public string? AvatarPath { get; set; }
     /// <summary>Their overall strength, when they're in the ranks.</summary>
@@ -123,6 +118,8 @@ public class LeaderboardEntry
     public double? Ratio { get; set; }
     public bool IsMe { get; set; }
     public bool IsFriend { get; set; }
+    /// <summary>A Gym Book Pro member: shown with a ring round their picture.</summary>
+    public bool IsPro { get; set; }
 }
 
 public class LeaderboardResponse

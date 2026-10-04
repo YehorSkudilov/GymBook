@@ -112,11 +112,11 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
         var aim = choice == lose ? NutritionAim.LoseFat : choice == gain ? NutritionAim.GainMuscle : NutritionAim.Maintain;
         var measured = nutrition.MeasuredDailyBurn() != null;
 
-        // Without a health app's measured burn, it's worked out from the body: sex and how active the days are, once.
+        // Without a health app's measured burn, it's worked out from the body: gender (About you in Profile) and how active the days are, once.
         if (!measured && P.Sex == null)
         {
             const string male = "Male", female = "Female";
-            var sex = await dialogs.ActionSheet("Your sex", null, male, female);
+            var sex = await dialogs.ActionSheet("Your gender", null, male, female);
             if (sex == null)
                 return;
             P.Sex = sex == male ? Sex.Male : Sex.Female;

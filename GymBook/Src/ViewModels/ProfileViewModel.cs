@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GymBook.Contracts;
 using GymBook.Models;
 using GymBook.Services;
 using GymBook.Services.Health;
@@ -18,7 +19,8 @@ public partial class ProfileViewModel(
     HealthSettingsViewModel health,
     HealthSyncService healthSync,
     DataExport export,
-    PublicProfileViewModel publicProfile) : BaseViewModel
+    PublicProfileViewModel publicProfile,
+    GymBook.Services.Billing.SubscriptionService subscriptions) : BaseViewModel
 {
     /// <summary>The public profile, first on the tab: the username the app calls the user by, picture, bio and friend code.</summary>
     public PublicProfileViewModel Public => publicProfile;
@@ -33,6 +35,7 @@ public partial class ProfileViewModel(
     [ObservableProperty] string compoundRestText = "";
     [ObservableProperty] string isolationRestText = "";
     [ObservableProperty] string experienceText = "";
+    [ObservableProperty] string sexText = "";
     [ObservableProperty] bool trackRir;
     [ObservableProperty] bool defaultDeloads;
     [ObservableProperty] bool defaultPeriodization;
@@ -40,10 +43,17 @@ public partial class ProfileViewModel(
     [ObservableProperty] string bodyFatText = "";
     [ObservableProperty] string trainingSinceText = "";
     [ObservableProperty] string version = "";
-    [ObservableProperty] bool isSignedIn;
-    [ObservableProperty] string accountEmail = "";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowProPromo))]
+    bool isSignedIn;
+    /// <summary>A Gym Book Pro member: the Account section shows their plan rather than the invitation to subscribe.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowProPromo))]
+    bool isPro;
+    /// <summary>Signed in without Pro: the invitation to subscribe, first in the Account section.</summary>
+    public bool ShowProPromo => IsSignedIn && !IsPro;
+    [ObservableProperty] string proText = "";
     [ObservableProperty] string passwordRowText = "";
-    [ObservableProperty] string syncStatus = "";
     [ObservableProperty] bool hasSyncDetails;
     [ObservableProperty] string syncDetailsSummary = "";
 
@@ -70,6 +80,7 @@ public partial class ProfileViewModel(
         account.Changed += OnSyncChanged;
         account.Changed += OnAccountChanged;
         healthSync.HistoryChanged += OnSyncChanged;
+        subscriptions.Changed += OnSyncChanged;
         Refresh();
         _ = publicProfile.OnAppearingAsync();
         return Task.CompletedTask;
@@ -82,6 +93,7 @@ public partial class ProfileViewModel(
         account.Changed -= OnSyncChanged;
         account.Changed -= OnAccountChanged;
         healthSync.HistoryChanged -= OnSyncChanged;
+        subscriptions.Changed -= OnSyncChanged;
     }
 
     // Signed in or out: another account, another username.
@@ -93,9 +105,10 @@ public partial class ProfileViewModel(
     {
         Health.Refresh();
         IsSignedIn = account.IsSignedIn;
-        AccountEmail = account.Email ?? "";
+        IsPro = subscriptions.IsMember;
+        publicProfile.RefreshAccount();
+        ProText = ProStatusText(subscriptions.Status);
         PasswordRowText = account.HasPassword ? "Change password" : "Set a password";
-        SyncStatus = sync.LastSyncedAt is { } at && sync.State == SyncState.UpToDate ? $"Synced {at:t}" : sync.Status;
         // While a sync runs, pending changes are about to go up; only a failure or leftovers are worth a look.
         var failed = sync.State is SyncState.Failed or SyncState.Offline or SyncState.SignInRequired;
         var pending = sync.State != SyncState.Syncing && store.Local.HasPendingChanges ? sync.PendingItems().Count : 0;
@@ -111,6 +124,7 @@ public partial class ProfileViewModel(
         CompoundRestText = RestLabel(P.CompoundRestSeconds);
         IsolationRestText = RestLabel(P.IsolationRestSeconds);
         ExperienceText = P.Experience.Display();
+        SexText = P.Sex switch { Sex.Male => "Male", Sex.Female => "Female", _ => "Not set" };
         WarmupSettings.Refresh();
         TrackRir = P.TrackRir;
         DefaultDeloads = P.DefaultDeloads;
@@ -254,12 +268,49 @@ public partial class ProfileViewModel(
     [RelayCommand]
     Task EditExperience() => Pick("Experience", Enum.GetValues<Experience>(), e => e.Display(), e => P.Experience = e);
 
+    /// <summary>
+    /// Starting weights, the AI's plans, calorie goals and the strength ranks go by it. Changed while ranked: the ranks
+    /// follow, against the other standards.
+    /// </summary>
+    [RelayCommand]
+    Task EditSex() => Pick("Gender", Enum.GetValues<Sex>(), s => s == Sex.Male ? "Male" : "Female", s =>
+    {
+        P.Sex = s;
+        _ = UpdateRankSexAsync(s);
+    });
+
+    async Task UpdateRankSexAsync(Sex sex)
+    {
+        if (!account.IsSignedIn)
+            return;
+        var api = services.GetRequiredService<ApiClient>();
+        try
+        {
+            if (await api.GetMyPublicProfileAsync() is { InRanks: true } me && me.Sex != sex)
+                await api.JoinRanksAsync(sex);
+        }
+        catch (Exception e) when (Online.Message(e) != null)
+        {
+            // Offline: the Ranks tab puts it right when it next loads.
+        }
+    }
+
     [RelayCommand]
     Task OpenSyncDetails() => GoTo(Routes.SyncDetails);
 
-    /// <summary>Gym Book Pro: what it unlocks, subscribing or managing it.</summary>
+    /// <summary>Gym Book Pro: its plans and free trial, or, for a member, managing it.</summary>
     [RelayCommand]
     Task OpenPro() => ProViewModel.ShowAsync();
+
+    /// <summary>A member's plan in a line, under "Gym Book Pro" in the Account section.</summary>
+    static string ProStatusText(SubscriptionStatusResponse? s) => s switch
+    {
+        { Store: null, Granted: true, ExpiresAt: { } until } =>
+            "Given to you by Gym Book" + (until >= ProGrant.Forever ? "" : $" · until {until.LocalDateTime:d MMM yyyy}"),
+        { ExpiresAt: { } until } =>
+            (s.InTrial ? "Free trial" : "Active") + (s.AutoRenewing ? $" · renews {until.LocalDateTime:d MMM}" : $" · ends {until.LocalDateTime:d MMM}"),
+        _ => "Active",
+    };
 
     /// <summary>The exercise library: browse, search and filter every exercise, and make custom ones.</summary>
     [RelayCommand]
@@ -275,13 +326,6 @@ public partial class ProfileViewModel(
 
     [RelayCommand]
     Task SignIn() => AccountPage.ShowAsync(services);
-
-    [RelayCommand]
-    async Task SyncNow()
-    {
-        await sync.SyncNowAsync();
-        Refresh();
-    }
 
     /// <summary>Syncing before signing out: the Sign out row says so.</summary>
     [ObservableProperty] bool isSyncingToSignOut;
@@ -319,9 +363,6 @@ public partial class ProfileViewModel(
         await account.SignOutAsync();
         ShowOnboarding();
     }
-
-    [RelayCommand]
-    Task ChangeEmail() => ManageAccountPage.ShowAsync(services, AccountChange.Email);
 
     [RelayCommand]
     Task ChangePassword() => ManageAccountPage.ShowAsync(services, AccountChange.Password);

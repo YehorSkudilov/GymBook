@@ -32,6 +32,12 @@
         <GradientStop Color="#7C5CFF" Offset="1" />
     </LinearGradientBrush>
 
+    <!-- Gym Book Pro: its card in Profile and the ring round a member's picture, in the app's own colours -->
+    <LinearGradientBrush x:Key="ProGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#3F7DFF" Offset="0" />
+        <GradientStop Color="#7C5CFF" Offset="1" />
+    </LinearGradientBrush>
+
     <!-- Shared glass look (AppSkeleton's AcrylicView) for the nav bar, the workout pill and Up next's Skip. App-wide, not on
          MainPage: a tab's XAML looks up StaticResources before it's placed in the page, so a page-level one isn't found. -->
     <!-- The app's lightest surface colour, so the glass matches the cards; a notch lighter than the page so it stands apart. -->

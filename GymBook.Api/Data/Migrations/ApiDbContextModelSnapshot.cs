@@ -378,11 +378,6 @@ namespace GymBook.Api.Data.Migrations
                         .HasMaxLength(8)
                         .HasColumnType("character varying(8)");
 
-                    b.Property<string>("HomeGym")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)");
-
                     b.Property<bool>("InRanks")
                         .HasColumnType("boolean");
 

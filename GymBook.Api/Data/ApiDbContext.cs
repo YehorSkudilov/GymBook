@@ -154,7 +154,6 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
             b.Property(p => p.UsernameKey).HasMaxLength(GymBook.Contracts.SocialLimits.UsernameMaxLength);
             b.HasIndex(p => p.UsernameKey).IsUnique();
             b.Property(p => p.Bio).HasMaxLength(GymBook.Contracts.SocialLimits.BioLength);
-            b.Property(p => p.HomeGym).HasMaxLength(GymBook.Contracts.SocialLimits.HomeGymLength);
             b.Property(p => p.FriendCode).HasMaxLength(GymBook.Contracts.SocialLimits.FriendCodeLength);
             b.HasIndex(p => p.FriendCode).IsUnique();
             b.HasIndex(p => new { p.InRanks, p.RankHidden, p.Score });

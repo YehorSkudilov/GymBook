@@ -311,7 +311,7 @@ export class AdminApi {
   resolveReport = (id: string) => this.send("POST", `api/admin/ranks/reports/${id}/resolve`);
   setRankHidden = (userId: string, hidden: boolean) =>
     this.send("POST", `api/admin/ranks/users/${encodeURIComponent(userId)}/hidden`, { hidden });
-  /** Clears the user's public bio, home gym and picture. */
+  /** Clears the user's public bio and picture. */
   clearPublicProfile = (userId: string) => this.send("POST", `api/admin/ranks/users/${encodeURIComponent(userId)}/clear-profile`);
 
   private async get<T>(path: string): Promise<T> {

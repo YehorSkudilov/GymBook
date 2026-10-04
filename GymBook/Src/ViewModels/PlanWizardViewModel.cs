@@ -101,6 +101,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
 
     public ObservableCollection<OptionItem> Options { get; } = [];
     public ObservableCollection<ChipItem> UnitChips { get; } = [];
+    /// <summary>The About step's gender: starting weights, the AI's plans and the strength ranks go by it.</summary>
+    public ObservableCollection<ChipItem> SexChips { get; } = [];
     public ObservableCollection<AiQuestionItem> Questions { get; } = [];
     public ObservableCollection<ProgramItem> Programs { get; } = [];
     public ObservableCollection<ChipItem> ProgramTabs { get; } = [];
@@ -139,6 +141,9 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         UnitChips.Clear();
         foreach (var u in Enum.GetValues<WeightUnit>())
             UnitChips.Add(new ChipItem(u == WeightUnit.Kg ? "Kilograms (kg)" : "Pounds (lbs)", u, SelectUnit) { IsSelected = p.Unit == u });
+        SexChips.Clear();
+        foreach (var s in Enum.GetValues<Sex>())
+            SexChips.Add(new ChipItem(s == Sex.Male ? "Male" : "Female", s, SelectSex) { IsSelected = p.Sex == s });
         BodyWeight = units.Format(p.BodyWeightKg);
         _index = 0;
         Show();
@@ -149,6 +154,13 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         if (_steps.Count == 0)
             Start(onboarding: false);
         return Task.CompletedTask;
+    }
+
+    void SelectSex(ChipItem chip)
+    {
+        foreach (var c in SexChips)
+            c.IsSelected = c == chip;
+        store.Profile.Sex = (Sex)chip.Value!;
     }
 
     void SelectUnit(ChipItem chip)
@@ -380,6 +392,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             TrainNeck = _neck,
             BodyWeightKg = units.TryParse(BodyWeight, out var kg) && kg > 0 ? kg : p.BodyWeightKg,
             BirthYear = p.BirthYear,
+            Sex = p.Sex,
             TrainingSince = p.TrainingSince,
             CompoundRestSeconds = p.CompoundRestSeconds,
             IsolationRestSeconds = p.IsolationRestSeconds,
@@ -546,6 +559,11 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         if (IsGenerating)
             return;
         var step = _steps[_index];
+        if (step == Step.About && store.Profile.Sex == null)
+        {
+            await dialogs.Alert("Gender", "Please choose your gender: starting weights and your plan take it into account.");
+            return;
+        }
         if (step == Step.About && !units.TryParse(BodyWeight, out _))
         {
             await dialogs.Alert("Body weight", "Please enter your body weight as a number.");

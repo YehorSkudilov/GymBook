@@ -314,6 +314,8 @@ public class OpenAiPlanGenerator(HttpClient http, OpenAiOptions options, ILogger
         - Match sets, rep range (repMin-repMax), reps in reserve (targetRir, 0-4) and rest to the goal and experience:
           strength and power favour heavy compounds with low reps and long rest; muscle building uses moderate reps;
           fat loss and general fitness use higher reps and shorter rest. Beginners get fewer sets and more reps in reserve.
+        - When age, sex and body weight are given, use them to fine-tune volume, rest and recovery (e.g. a little more rest
+          and fewer hard sets for older lifters). Don't pick exercises by sex: the goal, experience and answers decide those.
         - For the power goal, open each workout with an explosive movement if the list has one.
         - Only include neck exercises when neck training is requested; then add one or two to most non-leg days.
         - Take the answers to the follow-up questions into account: priorities, weak points, injuries and exercises to avoid,
@@ -474,6 +476,8 @@ public class OpenAiPlanGenerator(HttpClient http, OpenAiOptions options, ILogger
         sb.AppendLine($"Train the neck: {(r.TrainNeck ? "yes" : "no")}");
         if (r.Age is { } age)
             sb.AppendLine($"Age: {age}");
+        if (r.Sex is { } sex)
+            sb.AppendLine($"Sex: {(sex == Sex.Male ? "male" : "female")}");
         if (r.BodyWeightKg is { } kg)
             sb.AppendLine($"Body weight: {kg:0.#} kg");
         if (r.TrainingYears is { } years)

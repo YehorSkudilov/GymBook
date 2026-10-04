@@ -447,6 +447,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
             TrainNeck = p.TrainNeck,
             BodyWeightKg = p.BodyWeightKg,
             BirthYear = p.BirthYear,
+            Sex = p.Sex,
             TrainingSince = p.TrainingSince,
             CompoundRestSeconds = p.CompoundRestSeconds,
             IsolationRestSeconds = p.IsolationRestSeconds,
@@ -462,6 +463,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
         target.EquipmentAccess = answers.EquipmentAccess;
         target.TrainNeck = answers.TrainNeck;
         target.Age = answers.BirthYear is { } year ? Math.Clamp(DateTime.Now.Year - year, 10, 100) : null;
+        target.Sex = answers.Sex;
         target.BodyWeightKg = answers.BodyWeightKg is > 20 and < 400 ? answers.BodyWeightKg : null;
         target.TrainingYears = answers.TrainingSince is { } since ? Math.Clamp((DateTime.Now - since).TotalDays / 365, 0, 80) : null;
         return target;

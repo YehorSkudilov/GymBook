@@ -16,7 +16,8 @@ namespace GymBook.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/social")]
-public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCalculator ranks, Usernames usernames, TimeProvider time) : ControllerBase
+public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCalculator ranks, Usernames usernames, TimeProvider time,
+    GymBook.Api.Billing.Subscriptions subscriptions) : ControllerBase
 {
     string Me => currentUser.UserId!;
 
@@ -38,7 +39,6 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
         profile.Username = username;
         profile.UsernameKey = username.ToLowerInvariant();
         profile.Bio = request.Bio.Trim();
-        profile.HomeGym = request.HomeGym.Trim();
         try
         {
             await db.SaveChangesAsync(ct);
@@ -185,8 +185,13 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
             : people.Select(p => new Row { UserId = p.UserId, Username = p.Username, AvatarVersion = p.AvatarVersion, Score = p.Score });
 
         var top = await rows.OrderByDescending(r => r.Score).ThenBy(r => r.Username).Take(SocialLimits.LeaderboardSize).ToListAsync(ct);
+        var mine = top.All(r => r.UserId != Me) ? await rows.FirstOrDefaultAsync(r => r.UserId == Me, ct) : null;
+        var shown = top.Select(r => r.UserId).ToList();
+        if (mine != null)
+            shown.Add(mine.UserId);
+        var members = await subscriptions.MembersAsync(shown, ct);
         var response = new LeaderboardResponse { Entries = [.. top.Select((r, i) => Entry(r, i + 1))] };
-        if (top.All(r => r.UserId != Me) && await rows.FirstOrDefaultAsync(r => r.UserId == Me, ct) is { } mine)
+        if (mine != null)
             response.Me = Entry(mine, await rows.CountAsync(r => r.Score > mine.Score, ct) + 1);
         return response;
 
@@ -201,6 +206,7 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
             Ratio = r.Ratio,
             IsMe = r.UserId == Me,
             IsFriend = friendIds.Contains(r.UserId),
+            IsPro = members.Contains(r.UserId),
         };
     }
 
@@ -310,7 +316,6 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
     {
         Username = p.Username,
         Bio = p.Bio,
-        HomeGym = p.HomeGym,
         AvatarPath = AvatarPath(p.Username, p.AvatarVersion),
         Tier = IsRanked(p) ? Ranks.Tier(p.Score) : null,
         Score = IsRanked(p) ? p.Score : null,
@@ -326,7 +331,6 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
         Exists = true,
         Username = p.Username,
         Bio = p.Bio,
-        HomeGym = p.HomeGym,
         AvatarPath = AvatarPath(p.Username, p.AvatarVersion),
         FriendCode = p.FriendCode,
         InRanks = p.InRanks,

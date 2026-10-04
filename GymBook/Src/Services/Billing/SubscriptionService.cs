@@ -27,6 +27,12 @@ public class SubscriptionService(ApiClient api, IStoreBilling billing, AccountSe
     public bool IsActive => account.IsSignedIn && (Status?.Active
         ?? (Preferences.Default.Get(ActiveKey, false) && Preferences.Default.Get(ExpiresKey, DateTime.MinValue) > DateTime.UtcNow));
 
+    /// <summary>
+    /// Subscribed (or given Pro by an admin), as last heard from the API: not merely let in while an admin has made the AI
+    /// features free for everyone. Members get a ring round their picture.
+    /// </summary>
+    public bool IsMember => account.IsSignedIn && Status is { Active: true } s && (s.Store != null || s.Granted);
+
     /// <summary>The store purchases go through on this device; null where it can't buy.</summary>
     public SubscriptionStore? Store => billing.Store;
 

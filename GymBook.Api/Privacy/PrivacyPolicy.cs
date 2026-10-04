@@ -83,7 +83,7 @@ public static class PrivacyPolicy
         <h2>Your public profile, ranks and shared plans</h2>
         <p>These are optional and off until you turn them on. What you choose to make public is visible to other people:</p>
         <ul>
-          <li><strong>Public profile:</strong> if you pick a username, other GymBook users can see it, along with the picture, bio and home gym you add. Your email address and the rest of your profile are never shown.</li>
+          <li><strong>Public profile:</strong> other GymBook users can see your username, along with the picture and bio you add. Your email address and the rest of your profile are never shown.</li>
           <li><strong>Strength ranks:</strong> if you join the leaderboards, everyone using GymBook can see your tiers and estimated one-rep maxes on the bench press, squat, deadlift and overhead press, worked out from your synced workouts and body weight. Leaving the leaderboards removes them.</li>
           <li><strong>Friends and reports:</strong> who you add as a friend, and any report you send about another user, which our team reviews.</li>
           <li><strong>Shared plans:</strong> a plan you share with people in the app is visible to them, and a plan you share by public link can be seen by anyone with the link, without an account, along with your username, picture and bio. Stopping sharing ends both.</li>

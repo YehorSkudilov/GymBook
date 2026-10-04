@@ -8,10 +8,11 @@ namespace GymBook.ViewModels;
 
 /// <summary>
 /// The public profile, at the top of the Profile tab: the username the app calls the user by and everyone else sees
-/// them as (on leaderboards, friends lists and shared plans), a picture, a short bio and a home gym, plus the friend
+/// them as (on leaderboards, friends lists and shared plans), a picture and a short bio, plus the friend
 /// code to give friends. Nothing else about the user is public. It needs the account.
 /// </summary>
-public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs, AccountService account) : BaseViewModel
+public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs, AccountService account,
+    GymBook.Services.Billing.SubscriptionService subscriptions, IServiceProvider services) : BaseViewModel
 {
     /// <summary>The picture as sent: a JPEG this many pixels on its longer side.</summary>
     const int AvatarPixels = 320;
@@ -21,15 +22,50 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     [ObservableProperty] bool exists;
     [ObservableProperty] string username = "";
     [ObservableProperty] string bio = "";
-    [ObservableProperty] string homeGym = "";
     [ObservableProperty] string? avatarUrl;
     [ObservableProperty] string friendCode = "";
     [ObservableProperty] bool isBusy;
 
     public string Initial => Username.Length > 0 ? Username[..1].ToUpperInvariant() : "?";
     public bool HasAvatar => AvatarUrl != null;
+    /// <summary>A Gym Book Pro member: a ring in Pro's gradient round the picture.</summary>
+    public bool IsPro => subscriptions.IsMember;
+
+    /// <summary>The account's email, under the name. Not public: only the user sees it.</summary>
+    public string Email => account.Email ?? "";
+
+    /// <summary>The account or subscription changed (see ProfileViewModel): the email and the ring follow.</summary>
+    public void RefreshAccount()
+    {
+        OnPropertyChanged(nameof(Email));
+        OnPropertyChanged(nameof(IsPro));
+    }
+
+    /// <summary>The pencil next to the name: a menu of what to change, each in its own popup.</summary>
+    [RelayCommand]
+    async Task EditProfile()
+    {
+        if (!Exists)
+            return;
+        const string username = "Username", bio = "Bio", picture = "Picture", email = "Email";
+        switch (await dialogs.ActionSheet("Edit profile", null, username, bio, picture, email))
+        {
+            case username:
+                await EditUsername();
+                break;
+            case bio:
+                await EditBio();
+                break;
+            case picture:
+                await ChangePicture();
+                break;
+            case email:
+                await Views.ManageAccountPage.ShowAsync(services, AccountChange.Email);
+                break;
+        }
+    }
+
     public string BioText => Bio.Length > 0 ? Bio : "Add a few words about your training";
-    public string HomeGymText => HomeGym.Length > 0 ? HomeGym : "Not set";
 
     public bool IsSignedIn => account.IsSignedIn;
     /// <summary>Signed out: no username, just the invitation to sign in.</summary>
@@ -56,14 +92,13 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     partial void OnUsernameChanged(string value) => OnPropertyChanged(nameof(Initial));
     partial void OnAvatarUrlChanged(string? value) => OnPropertyChanged(nameof(HasAvatar));
     partial void OnBioChanged(string value) => OnPropertyChanged(nameof(BioText));
-    partial void OnHomeGymChanged(string value) => OnPropertyChanged(nameof(HomeGymText));
 
     public override async Task OnAppearingAsync()
     {
         OnStateChanged();
         if (!account.IsSignedIn)
         {
-            (Exists, Username, Bio, HomeGym, AvatarUrl, FriendCode) = (false, "", "", "", null, "");
+            (Exists, Username, Bio, AvatarUrl, FriendCode) = (false, "", "", null, "");
             IsLoading = false;
             return;
         }
@@ -93,7 +128,6 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
         Exists = p.Exists;
         Username = p.Username;
         Bio = p.Bio;
-        HomeGym = p.HomeGym;
         AvatarUrl = ApiClient.AvatarUrl(p.AvatarPath);
         FriendCode = p.FriendCode;
     }
@@ -101,7 +135,6 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     [RelayCommand]
     Task Retry() => OnAppearingAsync();
 
-    [RelayCommand]
     async Task EditUsername()
     {
         var name = await dialogs.Prompt("Username",
@@ -109,27 +142,16 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
             Username, Keyboard.Plain);
         if (name == null || (name = name.Trim().TrimStart('@')) == Username)
             return;
-        await SaveAsync(name, Bio, HomeGym);
+        await SaveAsync(name, Bio);
     }
 
-    [RelayCommand]
     async Task EditBio()
     {
         if (!Exists)
             return;
         var bio = await dialogs.Prompt("Bio", $"A line or two about your training, up to {SocialLimits.BioLength} characters.", Bio, Keyboard.Text);
-        if (bio != null)
-            await SaveAsync(Username, Clip(bio, SocialLimits.BioLength), HomeGym);
-    }
-
-    [RelayCommand]
-    async Task EditHomeGym()
-    {
-        if (!Exists)
-            return;
-        var gym = await dialogs.Prompt("Home gym", "Where you usually train. Leave it empty to not show one.", HomeGym, Keyboard.Text);
-        if (gym != null)
-            await SaveAsync(Username, Bio, Clip(gym, SocialLimits.HomeGymLength));
+        if (bio != null && (bio = Clip(bio, SocialLimits.BioLength)) != Bio)
+            await SaveAsync(Username, bio);
     }
 
     [RelayCommand]
@@ -211,18 +233,9 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
         });
     }
 
-    [RelayCommand]
-    async Task CopyFriendCode()
-    {
-        if (FriendCode.Length == 0)
-            return;
-        await Clipboard.Default.SetTextAsync(FriendCode);
-        await dialogs.Alert("Copied", $"Your friend code {FriendCode} is on the clipboard.");
-    }
-
-    Task SaveAsync(string username, string bio, string homeGym) =>
+    Task SaveAsync(string username, string bio) =>
         RunAsync("Couldn't save your profile",
-            () => api.SavePublicProfileAsync(new SavePublicProfileRequest { Username = username, Bio = bio, HomeGym = homeGym }));
+            () => api.SavePublicProfileAsync(new SavePublicProfileRequest { Username = username, Bio = bio }));
 
     async Task RunAsync(string failTitle, Func<Task<MyPublicProfile>> call)
     {

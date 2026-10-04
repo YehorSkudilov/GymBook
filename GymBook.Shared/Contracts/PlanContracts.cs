@@ -35,6 +35,8 @@ public class PlanAnswers
     public bool TrainNeck { get; set; } = true;
     [Range(10, 100)]
     public int? Age { get; set; }
+    /// <summary>Starting loads and exercise choices take it into account; null when the user hasn't said.</summary>
+    public Sex? Sex { get; set; }
     [Range(20, 400)]
     public double? BodyWeightKg { get; set; }
     /// <summary>How long the user has trained consistently, in years.</summary>

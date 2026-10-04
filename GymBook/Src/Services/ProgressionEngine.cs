@@ -267,7 +267,24 @@ public class ProgressionEngine(DataStore store, Units units)
             (MuscleGroup.Neck, Mechanic.Isolation) when ex.Equipment == Equipment.Machine => 0.3,
             _ => 1.0,
         };
-        return bw * factor * muscle * (1 + 12 / 30.0);
+        return bw * factor * muscle * (1 + 12 / 30.0) * SexFactor(ex);
+    }
+
+    /// <summary>
+    /// The standards above are men's. Women lift less for their body weight on average, the upper body more so (about
+    /// 55-60% of men's bench or press ratio) than the lower (about 75-80% of their squat or deadlift). Unknown: the men's,
+    /// as before gender was asked.
+    /// </summary>
+    double SexFactor(Exercise ex)
+    {
+        if (store.Profile.Sex != Sex.Female)
+            return 1;
+        return ex.PrimaryMuscle switch
+        {
+            MuscleGroup.Quads or MuscleGroup.Hamstrings or MuscleGroup.Glutes or MuscleGroup.Calves or MuscleGroup.LowerBack => 0.78,
+            MuscleGroup.Abs or MuscleGroup.Neck => 0.7,
+            _ => 0.6,
+        };
     }
 
     /// <summary>

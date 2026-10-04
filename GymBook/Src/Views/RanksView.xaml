@@ -20,13 +20,18 @@
             <Grid ColumnDefinitions="36,40,*,Auto" ColumnSpacing="10" Padding="12,10" BackgroundColor="{Binding Background}">
                 <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}" /></Grid.GestureRecognizers>
                 <Label Text="{Binding Position}" FontFamily="OpenSansSemibold" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" HorizontalTextAlignment="Center" />
-                <Border Grid.Column="1" WidthRequest="36" HeightRequest="36" StrokeShape="RoundRectangle 18" StrokeThickness="0" Background="{StaticResource AccentGradient}" VerticalOptions="Center">
-                    <Grid>
-                        <Label Text="{Binding Initial}" TextColor="White" FontFamily="OpenSansSemibold" HorizontalOptions="Center" VerticalOptions="Center"
-                               IsVisible="{Binding HasAvatar, Converter={StaticResource Not}}" />
-                        <Image Source="{Binding AvatarUrl}" Aspect="AspectFill" IsVisible="{Binding HasAvatar}" />
-                    </Grid>
-                </Border>
+                <!-- Gym Book Pro members: a ring in Pro's gradient round the picture, as on their profile -->
+                <Grid Grid.Column="1" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Ellipse Fill="{StaticResource ProGradient}" IsVisible="{Binding IsPro}" />
+                    <Ellipse Fill="{StaticResource Surface}" Margin="2" IsVisible="{Binding IsPro}" />
+                    <Border Margin="4" StrokeShape="RoundRectangle 16" StrokeThickness="0" Background="{StaticResource AccentGradient}">
+                        <Grid>
+                            <Label Text="{Binding Initial}" TextColor="White" FontFamily="OpenSansSemibold" HorizontalOptions="Center" VerticalOptions="Center"
+                                   IsVisible="{Binding HasAvatar, Converter={StaticResource Not}}" />
+                            <Image Source="{Binding AvatarUrl}" Aspect="AspectFill" IsVisible="{Binding HasAvatar}" />
+                        </Grid>
+                    </Border>
+                </Grid>
                 <VerticalStackLayout Grid.Column="2" VerticalOptions="Center">
                     <Label Text="{Binding Username, StringFormat='@{0}'}" FontFamily="OpenSansSemibold" LineBreakMode="TailTruncation" />
                     <Label Text="{Binding Tier}" TextColor="{Binding TierColor}" FontSize="12" FontFamily="OpenSansSemibold" />

@@ -31,6 +31,22 @@ public class Subscriptions(ApiDbContext db, GooglePlayVerifier google, AppStoreV
         return until > time.GetUtcNow() ? until : null;
     }
 
+    /// <summary>
+    /// Which of <paramref name="userIds"/> are Pro members: given it by an admin, or with a store subscription running as
+    /// last recorded (not asked of the stores again, unlike <see cref="CurrentAsync"/>). Not everyone just because Pro
+    /// isn't required right now. For the ring round members' pictures, e.g. on the leaderboards.
+    /// </summary>
+    public async Task<HashSet<string>> MembersAsync(IReadOnlyCollection<string> userIds, CancellationToken ct)
+    {
+        if (userIds.Count == 0)
+            return [];
+        var now = time.GetUtcNow();
+        var granted = await db.Users.Where(u => userIds.Contains(u.Id) && u.ProGrantedUntil > now).Select(u => u.Id).ToListAsync(ct);
+        var subscribed = await db.Subscriptions.Where(s => userIds.Contains(s.UserId) && !s.Revoked && s.ExpiresAt > now)
+            .Select(s => s.UserId).Distinct().ToListAsync(ct);
+        return [.. granted, .. subscribed];
+    }
+
     /// <summary>The user's subscription that's running now, if any.</summary>
     public async Task<StoreSubscription?> CurrentAsync(string userId, CancellationToken ct)
     {

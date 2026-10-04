@@ -57,14 +57,14 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
         switch (availability)
         {
             case HealthAvailability.NotSupported:
-                Title = source == HealthSource.None ? "Not connected" : $"Reading {health.SourceName}";
+                Title = source == HealthSource.None ? "Health app not connected" : $"Reading {health.SourceName}";
                 Status = source == HealthSource.None
-                    ? "Connect in Gym Book on your Android phone: calories burned, steps and body measurements read there sync here."
+                    ? "Connect Samsung Health or Health Connect in Gym Book on your Android phone: calories burned, steps, food and body measurements read there sync here."
                     : "Read on your Android phone and synced here.";
                 break;
             case HealthAvailability.NeedsNewerAndroid:
-                Title = "Not available";
-                Status = "Reading health data needs Android 14 or later.";
+                Title = "Health apps not available";
+                Status = "Reading from Samsung Health or Health Connect needs Android 14 or later.";
                 break;
             case HealthAvailability.NotInstalled:
                 // Samsung Health was chosen, and it's gone: connect again (to Health Connect, say).
@@ -76,7 +76,7 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
             default:
                 if (source == HealthSource.None || !platform.HasAnyPermission)
                 {
-                    Title = source == HealthSource.None ? "Not connected" : "Not allowed on this phone";
+                    Title = source == HealthSource.None ? "Connect a health app" : $"{health.SourceName} not allowed on this phone";
                     Status = "Read calories burned, steps, food, weight and body composition from Samsung Health, or from your other health apps through Health Connect.";
                     ActionText = "Connect";
                 }

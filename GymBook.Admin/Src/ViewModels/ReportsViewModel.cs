@@ -60,7 +60,7 @@ public partial class ReportsViewModel(AdminApi api) : BaseViewModel
                 await RunAndRefresh(() => api.ResolveRankReportAsync(r.Id));
                 break;
             case clear:
-                if (await ConfirmAsync("Clear their public profile?", $"@{r.TargetUsername}'s bio, home gym and picture are removed. Their username stays.", "Clear"))
+                if (await ConfirmAsync("Clear their public profile?", $"@{r.TargetUsername}'s bio and picture are removed. Their username stays.", "Clear"))
                     await RunAndRefresh(async () =>
                     {
                         await api.ClearPublicProfileAsync(r.TargetUserId);

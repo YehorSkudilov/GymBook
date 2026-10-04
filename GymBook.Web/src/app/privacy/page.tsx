@@ -82,8 +82,8 @@ export default function PrivacyPage() {
       <p>These are optional and off until you turn them on. What you choose to make public is visible to other people:</p>
       <ul>
         <li>
-          <strong>Public profile:</strong> if you pick a username, other Gym Book users can see it, along with the picture, bio and
-          home gym you add. Your email address and the rest of your profile are never shown.
+          <strong>Public profile:</strong> other Gym Book users can see your username, along with the picture and bio you add.
+          Your email address and the rest of your profile are never shown.
         </li>
         <li>
           <strong>Strength ranks:</strong> if you join the leaderboards, everyone using Gym Book can see your tiers and estimated

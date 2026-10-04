@@ -32,6 +32,8 @@ public class LeaderboardRow
     public required Color TierColor { get; init; }
     public required string Value { get; init; }
     public required bool IsMe { get; init; }
+    /// <summary>A Gym Book Pro member: a ring in Pro's gradient round the picture.</summary>
+    public bool IsPro { get; init; }
     public Color Background => IsMe ? Color.FromArgb("#1A3F7DFF") : Colors.Transparent;
     public required IAsyncRelayCommand OpenCommand { get; init; }
 }
@@ -103,6 +105,9 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
             LoadFailed = false;
             if (InRanks)
             {
+                // Gender changed in About you while this couldn't reach the server: ranked against the right standards now.
+                if (services.GetRequiredService<DataStore>().Profile.Sex is { } sex && profile.Sex != sex)
+                    await api.JoinRanksAsync(sex);
                 Show(await api.GetRanksAsync());
                 await LoadBoardAsync();
             }
@@ -198,6 +203,7 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
         TierColor = TierColor(e.Tier),
         Value = e.E1RmKg is { } kg ? $"{units.FormatWithUnit(kg)} · {e.Ratio:0.00}×" : $"{e.Score:0}",
         IsMe = e.IsMe,
+        IsPro = e.IsPro,
         OpenCommand = new AsyncRelayCommand(() => OpenUserAsync(e.Username, e.IsMe, e.IsFriend)),
     };
 
@@ -210,15 +216,24 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
     [RelayCommand]
     async Task Join()
     {
-        const string male = "Men's standards", female = "Women's standards";
-        var choice = await dialogs.ActionSheet("Rank against", null, male, female);
-        if (choice == null)
-            return;
+        // Ranked against the standards for the gender in About you; asked here (and kept there) if it isn't set yet.
+        var store = services.GetRequiredService<DataStore>();
+        if (store.Profile.Sex == null)
+        {
+            const string male = "Male", female = "Female";
+            var choice = await dialogs.ActionSheet("Your gender", null, male, female);
+            if (choice == null)
+                return;
+            store.Profile.Sex = choice == male ? Sex.Male : Sex.Female;
+            store.Save();
+        }
+        var sex = store.Profile.Sex.Value;
         if (!await dialogs.Confirm("Join the leaderboards?",
                 "Your username, picture, tiers and estimated maxes on bench, squat, deadlift and overhead press will be visible to everyone using Gym Book. " +
-                "They're worked out from your synced workouts of the last year and your body weight. You can leave at any time.", "Join"))
+                "They're worked out from your synced workouts of the last year and your body weight, against " +
+                $"{(sex == Sex.Male ? "men's" : "women's")} standards (your gender in Profile). You can leave at any time.", "Join"))
             return;
-        var status = await Online.Try(dialogs, "Couldn't join", () => api.JoinRanksAsync(choice == male ? Sex.Male : Sex.Female));
+        var status = await Online.Try(dialogs, "Couldn't join", () => api.JoinRanksAsync(sex));
         if (status != null)
             await LoadAsync();
     }
@@ -237,7 +252,7 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
 
     [RelayCommand]
     async Task HowItWorks() => await dialogs.Alert("How ranks work",
-        "Each lift's tier comes from your estimated one-rep max divided by your body weight, against strength standards for your sex: " +
+        "Each lift's tier comes from your estimated one-rep max divided by your body weight, against strength standards for your gender (set in Profile, under About you): " +
         "Bronze, Silver, Gold, Platinum, Diamond and Elite. Your overall rank averages all four lifts, so an untrained lift counts as zero.\n\n" +
         $"To keep the boards fair, only sets of up to {Ranks.MaxReps} reps count, a lift needs {Ranks.MinSessions} workouts to rank, " +
         "a jump of more than 15% waits for another workout to back it up, and impossible numbers are ignored. " +
@@ -282,8 +297,6 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
         var lines = new List<string>();
         if (user.Bio.Length > 0)
             lines.Add(user.Bio);
-        if (user.HomeGym.Length > 0)
-            lines.Add($"Trains at {user.HomeGym}");
         if (user.Tier is { } tier)
             lines.Add($"Overall: {TierName(tier)} ({user.Score:0} points)");
         foreach (var l in user.Lifts.Where(l => l.Ranked))

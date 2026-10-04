@@ -164,7 +164,6 @@ public class PlanSharesController(ApiDbContext db, ICurrentUser currentUser, Pla
             {
                 Username = owner.Username,
                 Bio = owner.Bio,
-                HomeGym = owner.HomeGym,
                 AvatarPath = SocialController.AvatarPath(owner.Username, owner.AvatarVersion),
             };
         return view;

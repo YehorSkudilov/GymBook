@@ -73,7 +73,7 @@ function Report({ r, reload }: { r: RankReportRow; reload: () => void }) {
           disabled={working}
           onClick={() =>
             act(() => api.clearPublicProfile(r.targetUserId), {
-              confirm: `${name}'s bio, home gym and picture are removed. Their username stays.`,
+              confirm: `${name}'s bio and picture are removed. Their username stays.`,
               done: "Profile cleared",
             })
           }
