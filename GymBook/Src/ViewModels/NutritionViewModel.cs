@@ -124,15 +124,12 @@ public partial class NutritionViewModel(
     [ObservableProperty] string importedFoodText = "";
     [ObservableProperty] string importedFoodCalories = "";
 
-    // Streaks: days in a row logged and on target, the last week, and a nudge.
+    // The streak: a small flame by the title with the days in a row food was logged, faded until something's logged today.
+    // Tapping it says more (see ShowStreak).
     [ObservableProperty] bool hasStreaks;
-    [ObservableProperty] string streakTitle = "";
-    [ObservableProperty] string streakMessage = "";
-    [ObservableProperty] string loggingStreakText = "";
-    [ObservableProperty] string loggingBestText = "";
-    [ObservableProperty] string targetStreakText = "";
-    [ObservableProperty] string targetBestText = "";
-    [ObservableProperty] List<StreakDayItem> streakDays = [];
+    [ObservableProperty] string streakCount = "";
+    [ObservableProperty] double streakOpacity = 1;
+    NutritionStreaks? _streaks;
 
     // Creatine on the day
     [ObservableProperty] bool creatineTaken;
@@ -528,21 +525,25 @@ public partial class NutritionViewModel(
     void ShowStreaks()
     {
         var s = nutrition.Streaks();
+        _streaks = s;
         HasStreaks = s.BestLogging > 0;
-        if (!HasStreaks)
-            return;
-        static string Days(int n) => n == 1 ? "1 day" : $"{n} days";
-        StreakTitle = s.Logging == 0 ? "No streak yet" : $"{s.Logging}-day streak";
-        LoggingStreakText = Days(s.Logging);
-        LoggingBestText = $"Best {Days(s.BestLogging)}";
-        TargetStreakText = s.HasTarget ? Days(s.OnTarget) : "–";
-        TargetBestText = s.HasTarget ? $"Best {Days(s.BestOnTarget)}" : "Set a calorie goal";
-        StreakMessage = Nudge(s);
-        StreakDays = [.. s.LastWeek.Select(d => new StreakDayItem(
-            d.Date.ToString("ddd", CultureInfo.CurrentCulture)[..1],
-            d.Mark switch { StreakMark.OnTarget => Green, StreakMark.Logged => Accent, _ => Color.FromArgb("#262A35") },
-            d.Date == DateTime.Today && d.Mark == StreakMark.None ? Accent : Colors.Transparent,
-            d.Date == DateTime.Today))];
+        StreakCount = s.Logging.ToString(CultureInfo.CurrentCulture);
+        StreakOpacity = s.TodayLogged ? 1 : 0.5;
+    }
+
+    static string Days(int n) => n == 1 ? "1 day" : $"{n} days";
+
+    /// <summary>The flame: the streak in a few lines, with a nudge.</summary>
+    [RelayCommand]
+    Task ShowStreak()
+    {
+        if (_streaks is not { } s)
+            return Task.CompletedTask;
+        var title = s.Logging == 0 ? "No streak yet" : $"{s.Logging}-day streak";
+        var onTarget = s.HasTarget
+            ? $"On target (calories in range, protein near its goal): {Days(s.OnTarget)}, best {Days(s.BestOnTarget)}"
+            : "Set a calorie goal to count days on target too.";
+        return dialogs.Alert(title, $"{Nudge(s)}\n\nFood logged: {Days(s.Logging)} in a row, best {Days(s.BestLogging)}\n{onTarget}");
 
         static string Nudge(NutritionStreaks s)
         {
@@ -704,12 +705,6 @@ public class FoodItem
 }
 
 public record StatItem(string Label, string Value);
-
-/// <summary>A day of the streaks' last week: its letter, filled green on target or blue logged, ringed when it's today with nothing yet.</summary>
-public record StreakDayItem(string Letter, Color Fill, Color Ring, bool IsToday)
-{
-    public Color LetterColor => IsToday ? Color.FromArgb("#F4F6FB") : Color.FromArgb("#9AA3B5");
-}
 
 /// <summary>A macro in the trend split's legend: its name and colour, its share of the range's calories, and the share aimed for.</summary>
 public record MacroLegendItem(string Name, string Share, string Aim, Color Color);
