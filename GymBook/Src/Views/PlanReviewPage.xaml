@@ -37,7 +37,7 @@
 
                     <!-- Working on it -->
                     <VerticalStackLayout Spacing="12" Padding="0,48" IsVisible="{Binding IsLoading}" HorizontalOptions="Center">
-                        <ActivityIndicator IsRunning="{Binding IsLoading}" Color="{StaticResource Accent}" HeightRequest="32" />
+                        <ActivityIndicator IsRunning="{Binding IsLoading}" Color="{StaticResource Accent}" WidthRequest="32" HeightRequest="32" HorizontalOptions="Center" />
                         <Label Text="Looking at your workouts…" Style="{StaticResource Caption}" FontSize="15" HorizontalOptions="Center" />
                     </VerticalStackLayout>
 

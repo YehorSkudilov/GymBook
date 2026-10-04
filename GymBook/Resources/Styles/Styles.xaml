@@ -150,7 +150,6 @@
     <Style TargetType="skeleton:CInputField">
         <Setter Property="FieldBackgroundColor" Value="{StaticResource Surface2}" />
         <Setter Property="CornerRadius" Value="10" />
-        <Setter Property="FieldPadding" Value="12,0" />
         <Setter Property="HeightRequest" Value="52" />
     </Style>
 

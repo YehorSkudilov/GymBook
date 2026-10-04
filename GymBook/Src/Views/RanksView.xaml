@@ -37,7 +37,7 @@
     </ContentView.Resources>
 
     <Grid>
-        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HeightRequest="32" Margin="0,24" />
+        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" WidthRequest="32" HeightRequest="32" HorizontalOptions="Center" Margin="0,24" />
 
         <!-- Ranks need the account -->
         <VerticalStackLayout Padding="16,24" Spacing="14" IsVisible="{Binding NeedsSignIn}">
@@ -124,7 +124,7 @@
 
                 <Border Style="{StaticResource Card}" Padding="0,4">
                     <Grid>
-                        <ActivityIndicator IsRunning="{Binding IsBoardLoading}" IsVisible="{Binding IsBoardLoading}" HeightRequest="32" Margin="0,12" />
+                        <ActivityIndicator IsRunning="{Binding IsBoardLoading}" IsVisible="{Binding IsBoardLoading}" WidthRequest="32" HeightRequest="32" HorizontalOptions="Center" Margin="0,12" />
                         <Label Text="{Binding BoardEmptyText}" Style="{StaticResource Caption}" Margin="16,14" IsVisible="{Binding IsBoardEmpty}" />
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding Board}" BindableLayout.ItemTemplate="{StaticResource BoardRow}" />
                     </Grid>

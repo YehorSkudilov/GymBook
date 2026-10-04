@@ -40,7 +40,7 @@
                 <Grid Margin="0,8,0,0">
                     <Button Text="Verify" Style="{StaticResource PrimaryButton}" Command="{Binding VerifyCommand}"
                             IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
-                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="White" HeightRequest="24" />
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="White" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" />
                 </Grid>
 
                 <Label Text="Can't find it? Check your spam folder, or fix the address if it's wrong." Style="{StaticResource Caption}" FontSize="12"

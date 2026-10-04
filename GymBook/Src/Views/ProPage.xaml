@@ -38,7 +38,7 @@
                     <Label Text="✓  Smarter exercise matching when importing from other apps" />
                 </VerticalStackLayout>
 
-                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HeightRequest="32" />
+                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" WidthRequest="32" HeightRequest="32" HorizontalOptions="Center" />
 
                 <!-- Subscribed -->
                 <Border Style="{StaticResource Card}" BackgroundColor="{StaticResource SuccessSoft}" IsVisible="{Binding IsActive}">
@@ -74,7 +74,7 @@
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
-                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" HeightRequest="24" />
+                <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" />
 
                 <Button Text="Restore purchase" Style="{StaticResource GhostButton}" Command="{Binding RestoreCommand}" IsVisible="{Binding IsActive, Converter={StaticResource Not}}" />
                 <Label Style="{StaticResource Caption}" FontSize="11" HorizontalTextAlignment="Center"

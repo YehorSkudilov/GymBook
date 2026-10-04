@@ -9,51 +9,52 @@
     x:DataType="vm:AccountViewModel">
 
     <!-- Phone-width on a desktop window too, rather than stretched across it -->
-    <VerticalStackLayout Spacing="12" MaximumWidthRequest="{OnIdiom Default=100000, Desktop=400}" HorizontalOptions="Fill">
-        <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="28" />
-        <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="15" />
+    <VerticalStackLayout Spacing="{OnIdiom Default=12, Desktop=8}" MaximumWidthRequest="{OnIdiom Default=100000, Desktop=400}" HorizontalOptions="Fill">
+        <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="{OnIdiom Default=28, Desktop=24}" />
+        <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="{OnIdiom Default=15, Desktop=14}" />
 
-        <Label Text="EMAIL" Style="{StaticResource Overline}" Margin="0,22,0,0" />
-        <skeleton:CInputField x:Name="EmailEntry" HeightRequest="{OnIdiom Default=52, Desktop=46}" Text="{Binding Email}" Placeholder="you@example.com" Keyboard="Email" MaxLength="256"
+        <Label Text="EMAIL" Style="{StaticResource Overline}" Margin="{OnIdiom Default='0,22,0,0', Desktop='0,10,0,0'}" />
+        <skeleton:CInputField x:Name="EmailEntry" HeightRequest="{OnIdiom Default=52, Desktop=40}" Text="{Binding Email}" Placeholder="you@example.com" Keyboard="Email" MaxLength="256"
                               IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" ReturnType="Next" Completed="OnEmailCompleted" />
 
         <!-- Reset: the emailed code -->
-        <VerticalStackLayout Spacing="12" IsVisible="{Binding ShowCode}">
-            <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+        <VerticalStackLayout Spacing="{OnIdiom Default=12, Desktop=6}" IsVisible="{Binding ShowCode}">
+            <Grid ColumnDefinitions="*,Auto" Margin="{OnIdiom Default='0,8,0,0', Desktop='0,4,0,0'}">
                 <Label Text="CODE" Style="{StaticResource Overline}" VerticalOptions="Center" />
                 <Button Grid.Column="1" Text="Resend code" Style="{StaticResource GhostButton}" FontSize="13" Padding="4,0" HeightRequest="28"
                         Command="{Binding ResendCodeCommand}" />
             </Grid>
-            <skeleton:CInputField x:Name="CodeEntry" HeightRequest="{OnIdiom Default=52, Desktop=46}" Text="{Binding Code}" Placeholder="123456" Keyboard="Numeric" MaxLength="16"
+            <skeleton:CInputField x:Name="CodeEntry" HeightRequest="{OnIdiom Default=52, Desktop=40}" Text="{Binding Code}" Placeholder="123456" Keyboard="Numeric" MaxLength="16"
                                   ReturnType="Next" Completed="OnCodeCompleted" />
         </VerticalStackLayout>
 
-        <VerticalStackLayout Spacing="12" IsVisible="{Binding ShowPassword}">
-            <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+        <VerticalStackLayout Spacing="{OnIdiom Default=12, Desktop=6}" IsVisible="{Binding ShowPassword}">
+            <Grid ColumnDefinitions="*,Auto" Margin="{OnIdiom Default='0,8,0,0', Desktop='0,4,0,0'}">
                 <Label Text="{Binding PasswordLabel}" Style="{StaticResource Overline}" VerticalOptions="Center" />
                 <Button Grid.Column="1" Text="Forgot password?" Style="{StaticResource GhostButton}" FontSize="13" Padding="4,0" HeightRequest="28"
                         Command="{Binding ForgotPasswordCommand}" IsVisible="{Binding IsSignIn}" />
             </Grid>
-            <skeleton:CInputField x:Name="PasswordEntry" Text="{Binding Password}" Completed="OnPasswordCompleted" ReturnType="{Binding PasswordReturnType}" IsPassword="True" HeightRequest="{OnIdiom Default=52, Desktop=46}" />
+            <skeleton:CInputField x:Name="PasswordEntry" Text="{Binding Password}" Completed="OnPasswordCompleted" ReturnType="{Binding PasswordReturnType}" IsPassword="True" HeightRequest="{OnIdiom Default=52, Desktop=40}" />
         </VerticalStackLayout>
 
         <!-- Register and reset: typed twice, since a typo would lock the user out -->
-        <VerticalStackLayout Spacing="12" IsVisible="{Binding ShowConfirm}">
-            <Label Text="CONFIRM PASSWORD" Style="{StaticResource Overline}" Margin="0,8,0,0" />
-            <skeleton:CInputField x:Name="ConfirmEntry" Text="{Binding ConfirmPassword}" Completed="OnConfirmCompleted" ReturnType="Go" IsPassword="True" HeightRequest="{OnIdiom Default=52, Desktop=46}" />
+        <VerticalStackLayout Spacing="{OnIdiom Default=12, Desktop=6}" IsVisible="{Binding ShowConfirm}">
+            <Label Text="CONFIRM PASSWORD" Style="{StaticResource Overline}" Margin="{OnIdiom Default='0,8,0,0', Desktop='0,4,0,0'}" />
+            <skeleton:CInputField x:Name="ConfirmEntry" Text="{Binding ConfirmPassword}" Completed="OnConfirmCompleted" ReturnType="Go" IsPassword="True" HeightRequest="{OnIdiom Default=52, Desktop=40}" />
             <Label Text="{Binding PasswordHint}" Style="{StaticResource Caption}" FontSize="12" />
         </VerticalStackLayout>
 
         <skeleton:CLabel Text="{Binding Error}" TextColor="{StaticResource Danger}" FontSize="14" Margin="0,4,0,0" />
 
         <Grid Margin="0,8,0,0">
-            <Button Text="{Binding SubmitText}" Style="{StaticResource PrimaryButton}" Command="{Binding SubmitCommand}"
+            <Button Text="{Binding SubmitText}" Style="{StaticResource PrimaryButton}" HeightRequest="{OnIdiom Default=52, Desktop=42}" Command="{Binding SubmitCommand}"
                     IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="White" HeightRequest="24" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="White" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" />
         </Grid>
         <!-- Or one tap with Google: just the logo, under the form -->
-        <VerticalStackLayout Spacing="12" Margin="0,4,0,0" IsVisible="{Binding ShowGoogle}">
-            <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="12">
+        <VerticalStackLayout Spacing="{OnIdiom Default=12, Desktop=8}" Margin="0,4,0,0" IsVisible="{Binding ShowGoogle}">
+            <!-- Phone: "or" between the form and the logo; on desktop the Google button sits straight under the other -->
+            <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="12" IsVisible="{OnIdiom Default=True, Desktop=False}">
                 <BoxView HeightRequest="1" Color="{StaticResource Stroke}" VerticalOptions="Center" />
                 <Label Grid.Column="1" Text="or" Style="{StaticResource Caption}" />
                 <BoxView Grid.Column="2" HeightRequest="1" Color="{StaticResource Stroke}" VerticalOptions="Center" />
@@ -64,7 +65,7 @@
                          Command="{Binding GoogleCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
             <!-- Desktop: a full-width button, like the one above it -->
             <Grid IsVisible="{OnIdiom Default=False, Desktop=True}">
-                <Button Style="{StaticResource SecondaryButton}" SemanticProperties.Description="Continue with Google"
+                <Button Style="{StaticResource SecondaryButton}" HeightRequest="42" SemanticProperties.Description="Continue with Google"
                         Command="{Binding GoogleCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
                 <!-- The logo at icon size (the button's own image would show it at full size), with the words -->
                 <HorizontalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center" InputTransparent="True">
@@ -81,7 +82,7 @@
 
         <Button Text="{Binding ToggleText}" Style="{StaticResource GhostButton}" Command="{Binding ToggleCommand}" HorizontalOptions="Center" />
         <!-- Required sign-in with no connection: data already on this device stays usable (see SignInGate) -->
-        <VerticalStackLayout Spacing="4" IsVisible="{Binding CanContinueOffline}" Margin="0,8,0,0">
+        <VerticalStackLayout Spacing="4" IsVisible="{Binding CanContinueOffline}" Margin="{OnIdiom Default='0,8,0,0', Desktop='0,4,0,0'}">
             <Button Text="Continue offline for now" Style="{StaticResource SecondaryButton}" Command="{Binding ContinueOfflineCommand}" />
             <Label Text="Your workouts stay on this device. We'll ask you to sign in again when you're back online."
                    Style="{StaticResource Caption}" FontSize="12" HorizontalTextAlignment="Center" />

@@ -55,6 +55,7 @@ public partial class MainPage : ContentPage
         ];
 
         TabContent.CNavIconItems = _tabs;
+        TabContent.PropertyChanged += OnTabContentChanged;
         NavBar.LoadPageCommand = new Command<CNavItem>(Show);
         NavBar.CNavIconItems = _tabs;
         NavBar.SelectItem(_tabs[(int)AppTab.Workout]);
@@ -78,7 +79,24 @@ public partial class MainPage : ContentPage
             _current?.Page.Unload();
         _current = item;
         TabContent.SetContent(item);
-        if (_visible)
+        if (!_visible)
+            return;
+        // The tab refreshes once it has slid in, not while it slides: working out a tab's numbers and charts on the
+        // UI thread mid-slide is what made the switch stutter. It shows what it had until then.
+        if (TabContent.IsNavigating)
+            _loadAfterSlide = item;
+        else
+            item.Page.Load();
+    }
+
+    CNavItem? _loadAfterSlide;
+
+    void OnTabContentChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(CView.IsNavigating) || TabContent.IsNavigating || _loadAfterSlide is not { } item)
+            return;
+        _loadAfterSlide = null;
+        if (_visible && item == _current)
             item.Page.Load();
     }
 
@@ -90,6 +108,7 @@ public partial class MainPage : ContentPage
         // Opened from the workout notification before the tabs were up (a cold start): show the workout now.
         _ = WorkoutLaunch.TryOpenAsync();
         _visible = true;
+        _loadAfterSlide = null;
         _current?.Page.Load();
         UpdateActiveBar();
         _store.Changed += OnDataChanged;

@@ -121,7 +121,7 @@
                                 <!-- Just the number, no box -->
                                 <skeleton:CInputField Text="{Binding AmountText}" Keyboard="Numeric" FontSize="34" FontFamily="OpenSansSemibold"
                                                       HorizontalTextAlignment="Center" MinimumWidthRequest="120"
-                                                      FieldBackgroundColor="Transparent" FieldPadding="0" HeightRequest="-1" />
+                                                      FieldBackgroundColor="Transparent" HeightRequest="-1" />
                                 <Label Text="{Binding UnitLabel}" FontSize="18" HorizontalOptions="Center" />
                             </VerticalStackLayout>
                             <Button Grid.Column="2" Text="+" Style="{StaticResource StepButton}" Command="{Binding NudgeCommand}" CommandParameter="+" VerticalOptions="Center" />

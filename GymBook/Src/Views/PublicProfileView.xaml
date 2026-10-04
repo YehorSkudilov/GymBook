@@ -30,7 +30,7 @@
 
     <VerticalStackLayout Spacing="14">
         <Border Style="{StaticResource Card}" IsVisible="{Binding ShowLoading}">
-            <ActivityIndicator IsRunning="{Binding ShowLoading}" HeightRequest="32" />
+            <ActivityIndicator IsRunning="{Binding ShowLoading}" WidthRequest="32" HeightRequest="32" HorizontalOptions="Center" />
         </Border>
 
         <Border Style="{StaticResource Card}" IsVisible="{Binding ShowLoadFailed}">
