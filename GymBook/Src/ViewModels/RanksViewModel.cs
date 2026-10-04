@@ -48,9 +48,7 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
     [ObservableProperty] bool loadFailed;
     /// <summary>Signed out: ranks need the account.</summary>
     [ObservableProperty] bool needsSignIn;
-    /// <summary>No public profile yet: ranks need a username.</summary>
-    [ObservableProperty] bool needsProfile;
-    /// <summary>A profile, but not in the ranks.</summary>
+    /// <summary>Not in the ranks yet.</summary>
     [ObservableProperty] bool canJoin;
     [ObservableProperty] bool inRanks;
     [ObservableProperty] bool isHidden;
@@ -92,15 +90,14 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
         NeedsSignIn = !account.IsSignedIn;
         if (NeedsSignIn)
         {
-            (IsLoading, LoadFailed, NeedsProfile, CanJoin, InRanks) = (false, false, false, false, false);
+            (IsLoading, LoadFailed, CanJoin, InRanks) = (false, false, false, false);
             return;
         }
         IsLoading = Lifts.Count == 0;
         try
         {
             var profile = await api.GetMyPublicProfileAsync();
-            NeedsProfile = !profile.Exists;
-            CanJoin = profile.Exists && !profile.InRanks;
+            CanJoin = !profile.InRanks;
             InRanks = profile.InRanks;
             IsHidden = profile.RankHidden;
             LoadFailed = false;
@@ -206,10 +203,6 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
 
     [RelayCommand]
     Task Retry() => LoadAsync();
-
-    [RelayCommand]
-    // The username is picked at the top of the Profile tab.
-    Task SetUpProfile() => MainPage.ShowTab(AppTab.Profile);
 
     [RelayCommand]
     Task SignIn() => AccountPage.ShowAsync(services);

@@ -18,6 +18,7 @@ public class AuthController(
     TokenService tokens,
     GoogleTokenVerifier google,
     EmailSender email,
+    GymBook.Api.Social.Usernames usernames,
     ILogger<AuthController> log) : ControllerBase
 {
     // Used to spend the same hashing time on unknown emails as on real ones, so response timing doesn't
@@ -28,6 +29,13 @@ public class AuthController(
     public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request, CancellationToken ct)
     {
         var address = request.Email.Trim();
+        // Checked before the account is made, so a taken username doesn't leave an account behind.
+        var username = request.Username?.Trim();
+        if (username != null && await usernames.ProblemAsync(username, null, ct) is { } problem)
+        {
+            ModelState.AddModelError(nameof(request.Username), problem);
+            return ValidationProblem(ModelState);
+        }
         var user = new AppUser { UserName = address, Email = address };
         var result = await users.CreateAsync(user, request.Password);
         if (!result.Succeeded)
@@ -36,6 +44,8 @@ public class AuthController(
                 ModelState.AddModelError(error.Code.Contains("Password") ? nameof(request.Password) : nameof(request.Email), error.Description);
             return ValidationProblem(ModelState);
         }
+        // Taken in the moment between the check and here: a made-up one instead, changeable in the app.
+        await usernames.EnsureAsync(user.Id, username, ct);
         // No verification email yet: the app asks for one when it shows the verification screen, so there's never a
         // second one on top.
         return await tokens.IssueAsync(user, ct: ct);
@@ -100,6 +110,8 @@ public class AuthController(
         // Password sign-in refuses these through Identity's lockout; Google sign-in has to check itself.
         if (Admin.AccountStatus.IsDisabled(user))
             return Problem(statusCode: StatusCodes.Status403Forbidden, title: "This account has been disabled.");
+        // Google sign-up has no form to pick a username in: a made-up one, changeable in the app.
+        await usernames.EnsureAsync(user.Id, null, ct);
         return await tokens.IssueAsync(user, ct: ct);
     }
 

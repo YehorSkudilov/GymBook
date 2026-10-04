@@ -10,6 +10,11 @@ public class RegisterRequest
     // The upper bound keeps password hashing cost bounded.
     [Required, MinLength(AuthLimits.MinPasswordLength), MaxLength(AuthLimits.MaxPasswordLength)]
     public string Password { get; set; } = "";
+
+    /// <summary>The public username (see SocialLimits). Optional for older apps: they get a made-up one.</summary>
+    [MinLength(SocialLimits.UsernameMinLength), MaxLength(SocialLimits.UsernameMaxLength),
+     RegularExpression(SocialLimits.UsernamePattern, ErrorMessage = "A username can only have letters, numbers, dots and underscores.")]
+    public string? Username { get; set; }
 }
 
 public class LoginRequest

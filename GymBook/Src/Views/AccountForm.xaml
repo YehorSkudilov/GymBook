@@ -16,6 +16,13 @@
         <skeleton:CInputField x:Name="EmailEntry" HeightRequest="{OnIdiom Default=52, Desktop=40}" Text="{Binding Email}" Placeholder="you@example.com" Keyboard="Email" MaxLength="256"
                               IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" ReturnType="Next" Completed="OnEmailCompleted" />
 
+        <!-- Register: the name others see (ranks, friends, shared plans); changeable later in Profile -->
+        <VerticalStackLayout Spacing="{OnIdiom Default=12, Desktop=6}" IsVisible="{Binding IsRegister}">
+            <Label Text="USERNAME" Style="{StaticResource Overline}" Margin="{OnIdiom Default='0,8,0,0', Desktop='0,4,0,0'}" />
+            <skeleton:CInputField x:Name="UsernameEntry" HeightRequest="{OnIdiom Default=52, Desktop=40}" Text="{Binding Username}" Placeholder="e.g. heavy_lifter"
+                                  MaxLength="20" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" ReturnType="Next" Completed="OnUsernameCompleted" />
+        </VerticalStackLayout>
+
         <!-- Reset: the emailed code -->
         <VerticalStackLayout Spacing="{OnIdiom Default=12, Desktop=6}" IsVisible="{Binding ShowCode}">
             <Grid ColumnDefinitions="*,Auto" Margin="{OnIdiom Default='0,8,0,0', Desktop='0,4,0,0'}">

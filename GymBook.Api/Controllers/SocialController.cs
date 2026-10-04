@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using GymBook.Api.Data;
 using GymBook.Api.Social;
 using GymBook.Contracts;
@@ -11,41 +10,33 @@ using Microsoft.EntityFrameworkCore;
 namespace GymBook.Api.Controllers;
 
 /// <summary>
-/// The public profile (username, picture, bio), strength ranks, friends and reports. Everything social needs a public
-/// profile first; until then the user is invisible to everyone. Ranking is a further opt-in.
+/// The public profile (username, picture, bio), strength ranks, friends and reports. Every account has a public profile
+/// (see <see cref="Usernames"/>): one that never got a username gets a made-up one here the first time it's needed.
+/// Ranking is a further opt-in.
 /// </summary>
 [ApiController]
 [Route("api/social")]
-public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCalculator ranks, TimeProvider time) : ControllerBase
+public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCalculator ranks, Usernames usernames, TimeProvider time) : ControllerBase
 {
     string Me => currentUser.UserId!;
 
     // ---- Public profile ----
 
     [HttpGet("me")]
-    public async Task<MyPublicProfile> GetMine(CancellationToken ct) =>
-        ToMine(await db.SocialProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == Me, ct));
+    public async Task<MyPublicProfile> GetMine(CancellationToken ct) => ToMine(await MineAsync(ct));
 
-    /// <summary>Makes the public profile, or changes it. The username is unique ignoring case.</summary>
+    /// <summary>Changes the public profile. The username is unique ignoring case.</summary>
     [HttpPost("me")]
     [EnableRateLimiting(RateLimits.Sync)]
     public async Task<ActionResult<MyPublicProfile>> SaveMine(SavePublicProfileRequest request, CancellationToken ct)
     {
         var username = request.Username.Trim();
-        var key = username.ToLowerInvariant();
-        if (Reserved.Contains(key))
-            return Problem(statusCode: StatusCodes.Status409Conflict, title: "That username is taken.");
-        if (await db.SocialProfiles.AnyAsync(p => p.UsernameKey == key && p.UserId != Me, ct))
-            return Problem(statusCode: StatusCodes.Status409Conflict, title: "That username is taken.");
+        if (await usernames.ProblemAsync(username, Me, ct) is { } problem)
+            return Problem(statusCode: StatusCodes.Status409Conflict, title: problem);
 
-        var profile = await db.SocialProfiles.FirstOrDefaultAsync(p => p.UserId == Me, ct);
-        if (profile == null)
-        {
-            profile = new SocialProfile { UserId = Me, FriendCode = await NewFriendCodeAsync(ct), CreatedAt = time.GetUtcNow() };
-            db.SocialProfiles.Add(profile);
-        }
+        var profile = await MineAsync(ct);
         profile.Username = username;
-        profile.UsernameKey = key;
+        profile.UsernameKey = username.ToLowerInvariant();
         profile.Bio = request.Bio.Trim();
         profile.HomeGym = request.HomeGym.Trim();
         try
@@ -65,9 +56,7 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
     [EnableRateLimiting(RateLimits.Sync)]
     public async Task<ActionResult<MyPublicProfile>> SetAvatar(SetAvatarRequest request, CancellationToken ct)
     {
-        var profile = await db.SocialProfiles.FirstOrDefaultAsync(p => p.UserId == Me, ct);
-        if (profile == null)
-            return NeedsProfile();
+        var profile = await MineAsync(ct);
         byte[] bytes;
         try
         {
@@ -94,9 +83,7 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
     [HttpPost("me/avatar/remove")]
     public async Task<ActionResult<MyPublicProfile>> RemoveAvatar(CancellationToken ct)
     {
-        var profile = await db.SocialProfiles.FirstOrDefaultAsync(p => p.UserId == Me, ct);
-        if (profile == null)
-            return NeedsProfile();
+        var profile = await MineAsync(ct);
         await db.Avatars.Where(a => a.UserId == Me).ExecuteDeleteAsync(ct);
         profile.AvatarVersion = 0;
         await db.SaveChangesAsync(ct);
@@ -137,9 +124,7 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
     [EnableRateLimiting(RateLimits.Sync)]
     public async Task<ActionResult<RankStatusResponse>> JoinRanks(JoinRanksRequest request, CancellationToken ct)
     {
-        var profile = await db.SocialProfiles.FirstOrDefaultAsync(p => p.UserId == Me, ct);
-        if (profile == null)
-            return NeedsProfile();
+        var profile = await MineAsync(ct);
         profile.InRanks = true;
         profile.RankSex = request.Sex;
         await db.SaveChangesAsync(ct);
@@ -249,8 +234,7 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
     [EnableRateLimiting(RateLimits.Auth)]
     public async Task<ActionResult<ProfileCard>> AddFriend(AddFriendRequest request, CancellationToken ct)
     {
-        if (!await db.SocialProfiles.AnyAsync(p => p.UserId == Me, ct))
-            return NeedsProfile();
+        await MineAsync(ct);
         var code = request.Code.Trim().TrimStart('@');
         var key = code.ToLowerInvariant();
         var friend = await db.SocialProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.FriendCode == code.ToUpperInvariant() || p.UsernameKey == key, ct);
@@ -302,9 +286,8 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
 
     // ---- Helpers ----
 
-    static readonly HashSet<string> Reserved = ["admin", "administrator", "gymbook", "gym_book", "support", "moderator", "staff", "official"];
-
-    ActionResult NeedsProfile() => Problem(statusCode: StatusCodes.Status409Conflict, title: "Pick a username first.");
+    /// <summary>The user's public profile, made with a made-up username if they have none yet.</summary>
+    Task<SocialProfile> MineAsync(CancellationToken ct) => usernames.EnsureAsync(Me, null, ct);
 
     static bool IsRanked(SocialProfile p) => p is { InRanks: true, RankHidden: false };
 
@@ -350,17 +333,6 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
         Sex = p.RankSex,
         RankHidden = p.RankHidden,
     };
-
-    async Task<string> NewFriendCodeAsync(CancellationToken ct)
-    {
-        const string alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        while (true)
-        {
-            var code = RandomNumberGenerator.GetString(alphabet, SocialLimits.FriendCodeLength);
-            if (!await db.SocialProfiles.AnyAsync(p => p.FriendCode == code, ct))
-                return code;
-        }
-    }
 
     /// <summary>"image/jpeg" or "image/png" from the file's first bytes; null for anything else.</summary>
     static string? ImageType(byte[] b) =>

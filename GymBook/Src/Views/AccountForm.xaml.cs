@@ -14,13 +14,17 @@ public partial class AccountForm : ContentView
     // The keyboard's return key moves to the next field shown, and submits from the last one.
     void OnEmailCompleted(object? sender, EventArgs e)
     {
-        if (ViewModel.ShowCode)
+        if (ViewModel.IsRegister)
+            UsernameEntry.Focus();
+        else if (ViewModel.ShowCode)
             CodeEntry.Focus();
         else if (ViewModel.ShowPassword)
             PasswordEntry.Focus();
         else
             ViewModel.SubmitCommand.Execute(null);
     }
+
+    void OnUsernameCompleted(object? sender, EventArgs e) => PasswordEntry.Focus();
 
     void OnCodeCompleted(object? sender, EventArgs e) => PasswordEntry.Focus();
 

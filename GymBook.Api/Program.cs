@@ -129,6 +129,7 @@ builder.Services.AddScoped<SyncProcessor>();
 // Public profiles, ranks, friends and shared plans (see Social/).
 builder.Services.AddScoped<GymBook.Api.Social.PlanShares>();
 builder.Services.AddScoped<GymBook.Api.Social.RankCalculator>();
+builder.Services.AddScoped<GymBook.Api.Social.Usernames>();
 var openAi = builder.Configuration.GetSection("OpenAI").Get<OpenAiOptions>() ?? new OpenAiOptions();
 builder.Services.AddSingleton(openAi);
 builder.Services.AddHttpClient<OpenAiPlanGenerator>(c =>

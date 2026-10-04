@@ -34,9 +34,8 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     public bool IsSignedIn => account.IsSignedIn;
     /// <summary>Signed out: no username, just the invitation to sign in.</summary>
     public bool ShowSignIn => !IsSignedIn;
-    /// <summary>Loaded, and there's no profile yet: the invitation to pick a username.</summary>
-    public bool ShowIntro => IsSignedIn && !IsLoading && !LoadFailed && !Exists;
-    public bool ShowProfile => IsSignedIn && !IsLoading && Exists;
+    // Always the first section once loaded, username or not (a server from before every account had one may say none).
+    public bool ShowProfile => IsSignedIn && !IsLoading && (Exists || !LoadFailed);
     /// <summary>Couldn't load, and nothing saved to show instead.</summary>
     public bool ShowLoadFailed => IsSignedIn && LoadFailed && !Exists;
     public bool ShowLoading => IsSignedIn && IsLoading;
@@ -49,7 +48,6 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     {
         OnPropertyChanged(nameof(IsSignedIn));
         OnPropertyChanged(nameof(ShowSignIn));
-        OnPropertyChanged(nameof(ShowIntro));
         OnPropertyChanged(nameof(ShowProfile));
         OnPropertyChanged(nameof(ShowLoadFailed));
         OnPropertyChanged(nameof(ShowLoading));
@@ -75,7 +73,10 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
         IsLoading = !Exists;
         try
         {
-            Show(await api.GetMyPublicProfileAsync());
+            var profile = await api.GetMyPublicProfileAsync();
+            if (!profile.Exists)
+                profile = await MakeUpUsernameAsync(profile);
+            Show(profile);
             LoadFailed = false;
         }
         catch (Exception e) when (Online.Message(e) != null)
@@ -86,6 +87,28 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
         {
             IsLoading = false;
         }
+    }
+
+    /// <summary>
+    /// No username yet (an account from before sign-up asked for one): a made-up one like the server gives Google
+    /// sign-ups, "lifter_" and six random letters and digits, changeable here. Tries again if it's taken.
+    /// </summary>
+    async Task<MyPublicProfile> MakeUpUsernameAsync(MyPublicProfile none)
+    {
+        const string alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            var name = "lifter_" + string.Concat(Enumerable.Range(0, 6).Select(_ => alphabet[Random.Shared.Next(alphabet.Length)]));
+            try
+            {
+                return await api.SavePublicProfileAsync(new SavePublicProfileRequest { Username = name });
+            }
+            catch (ApiException e) when (e.Status == System.Net.HttpStatusCode.Conflict)
+            {
+                // Taken: another one.
+            }
+        }
+        return none;
     }
 
     void Show(MyPublicProfile p)
@@ -106,7 +129,7 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     [RelayCommand]
     async Task EditUsername()
     {
-        var name = await dialogs.Prompt(Exists ? "Username" : "Pick a username",
+        var name = await dialogs.Prompt("Username",
             $"What others see you as. {SocialLimits.UsernameMinLength}–{SocialLimits.UsernameMaxLength} letters, numbers, dots or underscores.",
             Username, Keyboard.Plain);
         if (name == null || (name = name.Trim().TrimStart('@')) == Username)
@@ -117,7 +140,7 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     [RelayCommand]
     async Task EditBio()
     {
-        if (!await EnsureExistsAsync())
+        if (!Exists)
             return;
         var bio = await dialogs.Prompt("Bio", $"A line or two about your training, up to {SocialLimits.BioLength} characters.", Bio, Keyboard.Text);
         if (bio != null)
@@ -127,7 +150,7 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     [RelayCommand]
     async Task EditHomeGym()
     {
-        if (!await EnsureExistsAsync())
+        if (!Exists)
             return;
         var gym = await dialogs.Prompt("Home gym", "Where you usually train. Leave it empty to not show one.", HomeGym, Keyboard.Text);
         if (gym != null)
@@ -137,7 +160,7 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     [RelayCommand]
     async Task ChangePicture()
     {
-        if (!await EnsureExistsAsync())
+        if (!Exists)
             return;
         if (HasAvatar)
         {
@@ -222,16 +245,8 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
         await dialogs.Alert("Copied", $"Your friend code {FriendCode} is on the clipboard.");
     }
 
-    /// <summary>Everything but the username needs one first: asks for it when there isn't one yet.</summary>
-    async Task<bool> EnsureExistsAsync()
-    {
-        if (!Exists)
-            await EditUsername();
-        return Exists;
-    }
-
     Task SaveAsync(string username, string bio, string homeGym) =>
-        RunAsync(Exists ? "Couldn't save your profile" : "Couldn't make your profile",
+        RunAsync("Couldn't save your profile",
             () => api.SavePublicProfileAsync(new SavePublicProfileRequest { Username = username, Bio = bio, HomeGym = homeGym }));
 
     async Task RunAsync(string failTitle, Func<Task<MyPublicProfile>> call)

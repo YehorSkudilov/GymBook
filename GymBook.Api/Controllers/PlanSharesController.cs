@@ -17,7 +17,7 @@ namespace GymBook.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/plan-shares")]
-public class PlanSharesController(ApiDbContext db, ICurrentUser currentUser, PlanShares shares, SyncNotifier notifier) : ControllerBase
+public class PlanSharesController(ApiDbContext db, ICurrentUser currentUser, PlanShares shares, SyncNotifier notifier, Usernames usernames) : ControllerBase
 {
     string Me => currentUser.UserId!;
 
@@ -54,8 +54,8 @@ public class PlanSharesController(ApiDbContext db, ICurrentUser currentUser, Pla
     public Task<ActionResult<PlanShareResponse>> Invite(string id, ShareInviteRequest request, CancellationToken ct) => RunAsync(async () =>
     {
         var share = await OwnedAsync(id, ct);
-        if (!await db.SocialProfiles.AnyAsync(p => p.UserId == Me, ct))
-            throw new SocialException(409, "Pick a username first, so people know who's sharing with them.");
+        // Members see who's sharing with them: an owner who never picked a username gets a made-up one.
+        await usernames.EnsureAsync(Me, null, ct);
         var userId = await UserIdAsync(request.Username, ct);
         await shares.InviteAsync(share, userId, request.Role, ct);
         await SaveAsync(ct);

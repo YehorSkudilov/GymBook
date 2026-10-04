@@ -53,15 +53,7 @@
             <Button Text="Try again" Style="{StaticResource PrimaryButton}" Command="{Binding RetryCommand}" />
         </VerticalStackLayout>
 
-        <!-- Ranks need a public profile first -->
-        <VerticalStackLayout Padding="16,24" Spacing="14" IsVisible="{Binding NeedsProfile}">
-            <Label Text="Compete on strength" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
-            <Label Text="See how your bench, squat, deadlift and overhead press rank against everyone else's, and race your friends up the tiers. Start with the username others will see you as."
-                   Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
-            <Button Text="Pick a username" Style="{StaticResource PrimaryButton}" Command="{Binding SetUpProfileCommand}" />
-        </VerticalStackLayout>
-
-        <!-- A profile, not ranked yet -->
+        <!-- Not ranked yet -->
         <VerticalStackLayout Padding="16,24" Spacing="14" IsVisible="{Binding CanJoin}">
             <Label Text="Join the leaderboards" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
             <Label Text="Earn a tier from Bronze to Elite on each of the big four lifts, worked out from your logged workouts and body weight, and see where you stand globally and among friends."

@@ -147,6 +147,11 @@ public sealed class LocalStore
     {
         lock (_gate)
         {
+            // A profile from before the first-run wizard was finished holds nothing yet, only defaults (stamped when
+            // the app saved on its way to the background), so it isn't uploaded: it could be newer than the account's
+            // real profile and replace it. The account's profile comes down instead. Its flag is set either way, since
+            // saves before signing in marked even a blank one.
+            var uploadProfile = Data.Profile.OnboardingDone;
             using (var db = NewDb())
             using (var tx = db.Database.BeginTransaction())
             {
@@ -157,7 +162,7 @@ public sealed class LocalStore
                 db.FoodEntries.ExecuteUpdate(s => s.SetProperty(e => EF.Property<bool>(e, LocalDbContext.Dirty), true));
                 db.HealthDays.ExecuteUpdate(s => s.SetProperty(e => EF.Property<bool>(e, LocalDbContext.Dirty), true));
                 db.Supplements.ExecuteUpdate(s => s.SetProperty(e => EF.Property<bool>(e, LocalDbContext.Dirty), true));
-                db.Profiles.ExecuteUpdate(s => s.SetProperty(e => EF.Property<bool>(e, LocalDbContext.Dirty), true));
+                db.Profiles.ExecuteUpdate(s => s.SetProperty(e => EF.Property<bool>(e, LocalDbContext.Dirty), uploadProfile));
                 var commit = new List<Action>();
                 StageSetting(db, AccountKey, accountId, commit);
                 StageSetting(db, CursorKey, null, commit);
@@ -167,7 +172,7 @@ public sealed class LocalStore
             }
             foreach (var t in new ITable[] { _plans, _sessions, _exercises, _weights, _foods, _healthDays, _supplements })
                 t.MarkAllDirty();
-            _profileDirty = _profileJson != null;
+            _profileDirty = _profileJson != null && uploadProfile;
         }
     }
 

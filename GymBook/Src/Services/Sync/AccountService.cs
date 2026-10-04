@@ -50,7 +50,8 @@ public class AccountService(ApiClient api, AuthSession session, DataStore store,
 
     public async Task SignInAsync(string email, string password) => await CompleteSignInAsync(await api.LoginAsync(email.Trim(), password));
 
-    public async Task RegisterAsync(string email, string password) => await CompleteSignInAsync(await api.RegisterAsync(email.Trim(), password));
+    public async Task RegisterAsync(string email, string password, string username) =>
+        await CompleteSignInAsync(await api.RegisterAsync(email.Trim(), password, username.Trim().TrimStart('@')));
 
     /// <summary>Signs in (or up) with the Google account the user picks. False when they backed out of the picker.</summary>
     public async Task<bool> SignInWithGoogleAsync()
@@ -77,7 +78,9 @@ public class AccountService(ApiClient api, AuthSession session, DataStore store,
         if (owner != auth.UserId)
             store.Local.AttachToAccount(auth.UserId);
         await session.SetAsync(auth);
-        await sync.SyncNowAsync();
+        // Waits out a sync already running (signing in can set one off) and then runs its own, so the account's
+        // profile is down before the caller looks at it, e.g. to skip the first-run wizard for an existing account.
+        await sync.SyncNowAsync(waitForRunning: true);
     }
 
     /// <summary>Changes the password, or adds one to a Google account. Other devices are signed out; this one stays in.</summary>

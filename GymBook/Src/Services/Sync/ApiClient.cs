@@ -26,8 +26,8 @@ public class ApiClient(HttpClient http, AuthSession session)
     /// <summary>Raised when the refresh token is rejected and the session was cleared.</summary>
     public event EventHandler? SessionExpired;
 
-    public Task<AuthResponse> RegisterAsync(string email, string password, CancellationToken ct = default) =>
-        SendAsync<RegisterRequest, AuthResponse>("api/auth/register", new() { Email = email, Password = password }, null, ct);
+    public Task<AuthResponse> RegisterAsync(string email, string password, string username, CancellationToken ct = default) =>
+        SendAsync<RegisterRequest, AuthResponse>("api/auth/register", new() { Email = email, Password = password, Username = username }, null, ct);
 
     public Task<AuthResponse> GoogleSignInAsync(string idToken, CancellationToken ct = default) =>
         SendAsync<GoogleSignInRequest, AuthResponse>("api/auth/google", new() { IdToken = idToken }, null, ct);
@@ -195,7 +195,29 @@ public class ApiClient(HttpClient http, AuthSession session)
 
     // ---- Social: public profile, ranks, friends (the API's SocialController) ----
 
-    public Task<MyPublicProfile> GetMyPublicProfileAsync(CancellationToken ct = default) => GetAuthorizedAsync<MyPublicProfile>("api/social/me", ct);
+    /// <summary>
+    /// The user's public profile. Every account has a username: one that has none yet (from before sign-up asked for
+    /// one; newer servers make it up themselves) gets a made-up one like Google sign-ups do, "lifter_" and six random
+    /// letters and digits, changeable in Profile. Tries again if it's taken.
+    /// </summary>
+    public async Task<MyPublicProfile> GetMyPublicProfileAsync(CancellationToken ct = default)
+    {
+        var profile = await GetAuthorizedAsync<MyPublicProfile>("api/social/me", ct);
+        const string alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+        for (var attempt = 0; !profile.Exists && attempt < 5; attempt++)
+        {
+            var name = "lifter_" + string.Concat(Enumerable.Range(0, 6).Select(_ => alphabet[Random.Shared.Next(alphabet.Length)]));
+            try
+            {
+                profile = await SavePublicProfileAsync(new SavePublicProfileRequest { Username = name }, ct);
+            }
+            catch (ApiException e) when (e.Status == HttpStatusCode.Conflict)
+            {
+                // Taken: another one.
+            }
+        }
+        return profile;
+    }
 
     public Task<MyPublicProfile> SavePublicProfileAsync(SavePublicProfileRequest request, CancellationToken ct = default) =>
         SendAuthorizedAsync<SavePublicProfileRequest, MyPublicProfile>("api/social/me", request, ct);

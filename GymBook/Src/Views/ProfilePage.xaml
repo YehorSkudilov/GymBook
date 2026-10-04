@@ -70,8 +70,8 @@
                         <Label Text="?" TextColor="White" FontFamily="OpenSansSemibold" FontSize="22" HorizontalOptions="Center" VerticalOptions="Center" />
                     </Border>
                     <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                        <Label Text="Pick a username" Style="{StaticResource H3}" />
-                        <Label Text="Sign in to get a username, a picture and a place on the strength leaderboards" Style="{StaticResource Caption}" />
+                        <Label Text="Sign in" Style="{StaticResource H3}" />
+                        <Label Text="For your username, a picture and a place on the strength leaderboards" Style="{StaticResource Caption}" />
                     </VerticalStackLayout>
                     <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                 </Grid>

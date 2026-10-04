@@ -27,6 +27,8 @@ public partial class AccountViewModel(AccountService account, IServiceProvider s
     bool codeSent;
 
     [ObservableProperty] string email = "";
+    /// <summary>Picked when creating an account: the name others see (ranks, friends, shared plans).</summary>
+    [ObservableProperty] string username = "";
     [ObservableProperty] string password = "";
     [ObservableProperty] string confirmPassword = "";
     [ObservableProperty] string code = "";
@@ -135,7 +137,7 @@ public partial class AccountViewModel(AccountService account, IServiceProvider s
             switch (Mode)
             {
                 case AccountMode.Register:
-                    await account.RegisterAsync(Email, Password);
+                    await account.RegisterAsync(Email, Password, Username);
                     break;
                 case AccountMode.ResetPassword when !CodeSent:
                     await account.SendPasswordResetCodeAsync(Email);
@@ -156,6 +158,8 @@ public partial class AccountViewModel(AccountService account, IServiceProvider s
     {
         if (string.IsNullOrWhiteSpace(Email))
             return "Enter your email.";
+        if (IsRegister && UsernameProblem(Username.Trim().TrimStart('@')) is { } usernameProblem)
+            return usernameProblem;
         if (ShowCode && string.IsNullOrWhiteSpace(Code))
             return "Enter the code from the email.";
         if (ShowPassword && string.IsNullOrEmpty(Password))
@@ -166,6 +170,15 @@ public partial class AccountViewModel(AccountService account, IServiceProvider s
             return "The passwords don't match.";
         return null;
     }
+
+    // The same rules the server applies (it also turns away taken and reserved names).
+    static string? UsernameProblem(string name) =>
+        name.Length == 0 ? "Pick a username."
+        : name.Length is < SocialLimits.UsernameMinLength or > SocialLimits.UsernameMaxLength
+            ? $"A username is {SocialLimits.UsernameMinLength} to {SocialLimits.UsernameMaxLength} characters."
+        : !System.Text.RegularExpressions.Regex.IsMatch(name, SocialLimits.UsernamePattern)
+            ? "A username can only have letters, numbers, dots and underscores."
+        : null;
 
     [RelayCommand]
     Task ResendCode()

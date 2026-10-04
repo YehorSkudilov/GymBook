@@ -27,6 +27,9 @@ public partial class App : Application
             _ = SignInGate.ShowIfNeededAsync(_services);
             _ = VerifyEmailPage.ShowIfNeededAsync(_services);
         });
+        // An existing account's finished profile can arrive after signing in (a slow or late sync): the first-run
+        // wizard gives way to the app as soon as it does.
+        store.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(ShowMainShellIfOnboarded);
     }
 
     protected override Window CreateWindow(IActivationState? activationState)

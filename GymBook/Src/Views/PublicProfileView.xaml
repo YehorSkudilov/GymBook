@@ -41,16 +41,6 @@
             </VerticalStackLayout>
         </Border>
 
-        <!-- No username yet -->
-        <Border Style="{StaticResource Card}" IsVisible="{Binding ShowIntro}">
-            <VerticalStackLayout Spacing="10">
-                <Label Text="Pick a username" Style="{StaticResource H3}" />
-                <Label Text="It's what Gym Book calls you, and how others see you on the strength leaderboards, as a friend and on plans you share. Only your username, picture, bio and home gym are public."
-                       Style="{StaticResource Caption}" />
-                <Button Text="Pick a username" Style="{StaticResource PrimaryButton}" Command="{Binding EditUsernameCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
-            </VerticalStackLayout>
-        </Border>
-
         <VerticalStackLayout Spacing="14" IsVisible="{Binding ShowProfile}">
             <!-- The picture (tap to change it), the username and the bio -->
             <Border Style="{StaticResource Card}">
