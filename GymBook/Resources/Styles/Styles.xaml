@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton">
 
     <!-- Implicit styles -->
     <Style TargetType="Page" ApplyToDerivedTypes="True">
@@ -142,6 +143,15 @@
         <Setter Property="StrokeThickness" Value="0" />
         <Setter Property="Padding" Value="4,0" />
         <Setter Property="HeightRequest" Value="40" />
+    </Style>
+
+    <!-- Every text field (AppSkeleton's CInputField): the InputBox look at full field height. The text inside takes the
+         Entry style above. -->
+    <Style TargetType="skeleton:CInputField">
+        <Setter Property="FieldBackgroundColor" Value="{StaticResource Surface2}" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="FieldPadding" Value="12,0" />
+        <Setter Property="HeightRequest" Value="52" />
     </Style>
 
     <!-- Buttons -->

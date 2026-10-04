@@ -9,15 +9,13 @@
     x:DataType="vm:AccountViewModel">
 
     <!-- Phone-width on a desktop window too, rather than stretched across it -->
-    <VerticalStackLayout Spacing="12" WidthRequest="{OnIdiom Default=-1, Desktop=440}" HorizontalOptions="{OnIdiom Default=Fill, Desktop=Center}">
+    <VerticalStackLayout Spacing="12" MaximumWidthRequest="{OnIdiom Default=100000, Desktop=400}" HorizontalOptions="Fill">
         <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="28" />
         <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="15" />
 
         <Label Text="EMAIL" Style="{StaticResource Overline}" Margin="0,22,0,0" />
-        <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-            <Entry x:Name="EmailEntry" Text="{Binding Email}" Placeholder="you@example.com" Keyboard="Email" MaxLength="256"
-                   IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" ReturnType="Next" Completed="OnEmailCompleted" />
-        </Border>
+        <skeleton:CInputField x:Name="EmailEntry" HeightRequest="{OnIdiom Default=52, Desktop=46}" Text="{Binding Email}" Placeholder="you@example.com" Keyboard="Email" MaxLength="256"
+                              IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" ReturnType="Next" Completed="OnEmailCompleted" />
 
         <!-- Reset: the emailed code -->
         <VerticalStackLayout Spacing="12" IsVisible="{Binding ShowCode}">
@@ -26,10 +24,8 @@
                 <Button Grid.Column="1" Text="Resend code" Style="{StaticResource GhostButton}" FontSize="13" Padding="4,0" HeightRequest="28"
                         Command="{Binding ResendCodeCommand}" />
             </Grid>
-            <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                <Entry x:Name="CodeEntry" Text="{Binding Code}" Placeholder="123456" Keyboard="Numeric" MaxLength="16"
-                       ReturnType="Next" Completed="OnCodeCompleted" />
-            </Border>
+            <skeleton:CInputField x:Name="CodeEntry" HeightRequest="{OnIdiom Default=52, Desktop=46}" Text="{Binding Code}" Placeholder="123456" Keyboard="Numeric" MaxLength="16"
+                                  ReturnType="Next" Completed="OnCodeCompleted" />
         </VerticalStackLayout>
 
         <VerticalStackLayout Spacing="12" IsVisible="{Binding ShowPassword}">
@@ -38,19 +34,13 @@
                 <Button Grid.Column="1" Text="Forgot password?" Style="{StaticResource GhostButton}" FontSize="13" Padding="4,0" HeightRequest="28"
                         Command="{Binding ForgotPasswordCommand}" IsVisible="{Binding IsSignIn}" />
             </Grid>
-            <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                <skeleton:CPasswordEntry x:Name="PasswordEntry" Text="{Binding Password}" Completed="OnPasswordCompleted" ReturnType="{Binding PasswordReturnType}"
-                                         TextColor="{StaticResource TextPrimary}" PlaceholderColor="{StaticResource TextTertiary}" />
-            </Border>
+            <skeleton:CInputField x:Name="PasswordEntry" Text="{Binding Password}" Completed="OnPasswordCompleted" ReturnType="{Binding PasswordReturnType}" IsPassword="True" HeightRequest="{OnIdiom Default=52, Desktop=46}" />
         </VerticalStackLayout>
 
         <!-- Register and reset: typed twice, since a typo would lock the user out -->
         <VerticalStackLayout Spacing="12" IsVisible="{Binding ShowConfirm}">
             <Label Text="CONFIRM PASSWORD" Style="{StaticResource Overline}" Margin="0,8,0,0" />
-            <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                <skeleton:CPasswordEntry x:Name="ConfirmEntry" Text="{Binding ConfirmPassword}" Completed="OnConfirmCompleted" ReturnType="Go"
-                                         TextColor="{StaticResource TextPrimary}" PlaceholderColor="{StaticResource TextTertiary}" />
-            </Border>
+            <skeleton:CInputField x:Name="ConfirmEntry" Text="{Binding ConfirmPassword}" Completed="OnConfirmCompleted" ReturnType="Go" IsPassword="True" HeightRequest="{OnIdiom Default=52, Desktop=46}" />
             <Label Text="{Binding PasswordHint}" Style="{StaticResource Caption}" FontSize="12" />
         </VerticalStackLayout>
 
@@ -70,8 +60,18 @@
             </Grid>
             <ImageButton Source="google_icon.png" WidthRequest="56" HeightRequest="56" CornerRadius="28" Padding="14"
                          BackgroundColor="{StaticResource Surface2}" HorizontalOptions="Center"
-                         SemanticProperties.Description="Sign in with Google"
+                         SemanticProperties.Description="Sign in with Google" IsVisible="{OnIdiom Default=True, Desktop=False}"
                          Command="{Binding GoogleCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+            <!-- Desktop: a full-width button, like the one above it -->
+            <Grid IsVisible="{OnIdiom Default=False, Desktop=True}">
+                <Button Style="{StaticResource SecondaryButton}" SemanticProperties.Description="Continue with Google"
+                        Command="{Binding GoogleCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+                <!-- The logo at icon size (the button's own image would show it at full size), with the words -->
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="Center" VerticalOptions="Center" InputTransparent="True">
+                    <Image Source="google_icon.png" WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
+                    <Label Text="Continue with Google" FontFamily="OpenSansSemibold" FontSize="15" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
             <!-- Windows: signing in goes on in the browser, which may be left unfinished -->
             <VerticalStackLayout Spacing="4" IsVisible="{Binding IsWaitingForGoogle}">
                 <Label Text="Finish signing in with Google in your browser." Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />

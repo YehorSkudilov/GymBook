@@ -10,6 +10,19 @@ public partial class AccountPage : SheetPage
     {
         InitializeComponent();
         BindingContext = viewModel;
+        if (DeviceInfo.Idiom == DeviceIdiom.Desktop)
+            Card.SizeChanged += (_, _) => FitColumns();
+    }
+
+    // Desktop: the app's side next to the form when the window has room for both, the form alone when it doesn't.
+    void FitColumns()
+    {
+        var wide = Card.Width >= 760;
+        if (Brand.IsVisible == wide)
+            return;
+        Brand.IsVisible = wide;
+        Columns.ColumnDefinitions[0].Width = wide ? new GridLength(0.42, GridUnitType.Star) : new GridLength(0);
+        Columns.ColumnDefinitions[1].Width = wide ? new GridLength(0.58, GridUnitType.Star) : GridLength.Star;
     }
 
     // A required sign-in taken away by something else (e.g. a notification opening a page) comes straight back.

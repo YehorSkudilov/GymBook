@@ -53,9 +53,7 @@
                     <!-- AI: a link to a web page, image or document with the plan -->
                     <VerticalStackLayout IsVisible="{Binding IsLink}" Spacing="8">
                         <Label Text="A link to a web page, image or document with the plan. AI reads it and builds the plan." Style="{StaticResource Caption}" FontSize="15" />
-                        <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                            <Entry Text="{Binding Link}" Placeholder="https://…" Keyboard="Url" />
-                        </Border>
+                        <skeleton:CInputField Text="{Binding Link}" Placeholder="https://…" Keyboard="Url" />
                     </VerticalStackLayout>
 
                     <!-- AI: a file -->
@@ -80,9 +78,7 @@
                     <!-- A plan someone shared from Gym Book -->
                     <VerticalStackLayout IsVisible="{Binding IsShared}" Spacing="8">
                         <Label Text="A link to a plan someone shared from Gym Book. Look it over, then save a copy to your plans." Style="{StaticResource Caption}" FontSize="15" />
-                        <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                            <Entry Text="{Binding SharedLink}" Placeholder="https://…/p/…" Keyboard="Url" />
-                        </Border>
+                        <skeleton:CInputField Text="{Binding SharedLink}" Placeholder="https://…/p/…" Keyboard="Url" />
                     </VerticalStackLayout>
 
                     <skeleton:CLabel Text="{Binding Error}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" FontSize="14" />

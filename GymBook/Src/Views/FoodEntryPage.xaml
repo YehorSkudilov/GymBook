@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:controls="clr-namespace:GymBook.Controls"
     xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:FoodEntryViewModel"
     Title="{Binding Title}"
@@ -35,14 +36,12 @@
             <!-- ============ Search ============ -->
             <VerticalStackLayout Spacing="12" IsVisible="{Binding IsSearchStep}">
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <Border Style="{StaticResource Field}">
-                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                            <Image Source="{StaticResource IconSearch}" WidthRequest="20" HeightRequest="20" VerticalOptions="Center" />
-                            <Entry Grid.Column="1" Text="{Binding SearchText}" Placeholder="Search foods, brands, dishes…" ReturnType="Search" />
-                            <ActivityIndicator Grid.Column="2" IsRunning="{Binding IsSearching}" IsVisible="{Binding IsSearching}"
+                    <skeleton:CInputField Icon="{StaticResource IconSearch}" IconSize="20" Text="{Binding SearchText}" Placeholder="Search foods, brands, dishes…" ReturnType="Search">
+                        <skeleton:CInputField.TrailingContent>
+                            <ActivityIndicator IsRunning="{Binding IsSearching}" IsVisible="{Binding IsSearching}"
                                                WidthRequest="20" HeightRequest="20" Color="{StaticResource Accent}" />
-                        </Grid>
-                    </Border>
+                        </skeleton:CInputField.TrailingContent>
+                    </skeleton:CInputField>
                     <!-- Scan a package's barcode -->
                     <Border Grid.Column="1" Style="{StaticResource InputBox}" WidthRequest="52" HeightRequest="52" Padding="0" IsVisible="{Binding CanScan}">
                         <Border.GestureRecognizers>
@@ -119,8 +118,10 @@
                         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                             <Button Text="−" Style="{StaticResource StepButton}" Command="{Binding NudgeCommand}" CommandParameter="-" VerticalOptions="Center" />
                             <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
-                                <Entry Text="{Binding AmountText}" Keyboard="Numeric" FontSize="34" FontFamily="OpenSansSemibold"
-                                       HorizontalTextAlignment="Center" MinimumWidthRequest="120" />
+                                <!-- Just the number, no box -->
+                                <skeleton:CInputField Text="{Binding AmountText}" Keyboard="Numeric" FontSize="34" FontFamily="OpenSansSemibold"
+                                                      HorizontalTextAlignment="Center" MinimumWidthRequest="120"
+                                                      FieldBackgroundColor="Transparent" FieldPadding="0" HeightRequest="-1" />
                                 <Label Text="{Binding UnitLabel}" FontSize="18" HorizontalOptions="Center" />
                             </VerticalStackLayout>
                             <Button Grid.Column="2" Text="+" Style="{StaticResource StepButton}" Command="{Binding NudgeCommand}" CommandParameter="+" VerticalOptions="Center" />
@@ -203,41 +204,25 @@
             <VerticalStackLayout Spacing="8" IsVisible="{Binding IsCreateStep}">
                 <Label Text="Make a food of your own: it's kept in My foods and found in the search." Style="{StaticResource Caption}" />
                 <Label Text="NAME" Style="{StaticResource FieldLabel}" Margin="0,6,0,0" />
-                <Border Style="{StaticResource Field}">
-                    <Entry Text="{Binding NewName}" Placeholder="Protein pancakes" MaxLength="200" />
-                </Border>
+                <skeleton:CInputField Text="{Binding NewName}" Placeholder="Protein pancakes" MaxLength="200" />
                 <Label Text="BRAND (OPTIONAL)" Style="{StaticResource FieldLabel}" />
-                <Border Style="{StaticResource Field}">
-                    <Entry Text="{Binding NewBrand}" Placeholder="Homemade" MaxLength="200" />
-                </Border>
+                <skeleton:CInputField Text="{Binding NewBrand}" Placeholder="Homemade" MaxLength="200" />
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto" RowSpacing="6">
                     <Label Text="A SERVING IS" Style="{StaticResource FieldLabel}" />
                     <Label Grid.Column="1" Text="ITS WEIGHT (G, OPTIONAL)" Style="{StaticResource FieldLabel}" />
-                    <Border Grid.Row="1" Style="{StaticResource Field}">
-                        <Entry Text="{Binding NewServingText}" Placeholder="1 serving" MaxLength="200" />
-                    </Border>
-                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Field}">
-                        <Entry Text="{Binding NewServingG}" Keyboard="Numeric" Placeholder="To log by weight" />
-                    </Border>
+                    <skeleton:CInputField Grid.Row="1" Text="{Binding NewServingText}" Placeholder="1 serving" MaxLength="200" />
+                    <skeleton:CInputField Grid.Row="1" Grid.Column="1" Text="{Binding NewServingG}" Keyboard="Numeric" Placeholder="To log by weight" />
                 </Grid>
                 <Label Text="IN ONE SERVING" Style="{StaticResource Overline}" Margin="0,8,0,0" />
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
                     <Label Text="CALORIES" Style="{StaticResource FieldLabel}" />
                     <Label Grid.Column="1" Text="PROTEIN (G)" Style="{StaticResource FieldLabel}" />
-                    <Border Grid.Row="1" Style="{StaticResource Field}">
-                        <Entry Text="{Binding NewCalories}" Keyboard="Numeric" Placeholder="From macros" />
-                    </Border>
-                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Field}">
-                        <Entry Text="{Binding NewProtein}" Keyboard="Numeric" Placeholder="0" />
-                    </Border>
+                    <skeleton:CInputField Grid.Row="1" Text="{Binding NewCalories}" Keyboard="Numeric" Placeholder="From macros" />
+                    <skeleton:CInputField Grid.Row="1" Grid.Column="1" Text="{Binding NewProtein}" Keyboard="Numeric" Placeholder="0" />
                     <Label Grid.Row="2" Text="CARBS (G)" Style="{StaticResource FieldLabel}" />
                     <Label Grid.Row="2" Grid.Column="1" Text="FAT (G)" Style="{StaticResource FieldLabel}" />
-                    <Border Grid.Row="3" Style="{StaticResource Field}">
-                        <Entry Text="{Binding NewCarbs}" Keyboard="Numeric" Placeholder="0" />
-                    </Border>
-                    <Border Grid.Row="3" Grid.Column="1" Style="{StaticResource Field}">
-                        <Entry Text="{Binding NewFat}" Keyboard="Numeric" Placeholder="0" />
-                    </Border>
+                    <skeleton:CInputField Grid.Row="3" Text="{Binding NewCarbs}" Keyboard="Numeric" Placeholder="0" />
+                    <skeleton:CInputField Grid.Row="3" Grid.Column="1" Text="{Binding NewFat}" Keyboard="Numeric" Placeholder="0" />
                 </Grid>
                 <Label Text="{Binding NewCaloriesHint}" Style="{StaticResource Caption}" FontSize="12" />
             </VerticalStackLayout>
@@ -246,26 +231,16 @@
             <VerticalStackLayout Spacing="8" IsVisible="{Binding IsQuickStep}">
                 <Label Text="Just the numbers, without a food." Style="{StaticResource Caption}" />
                 <Label Text="NAME (OPTIONAL)" Style="{StaticResource FieldLabel}" Margin="0,6,0,0" />
-                <Border Style="{StaticResource Field}">
-                    <Entry Text="{Binding QuickName}" Placeholder="Quick add" MaxLength="200" />
-                </Border>
+                <skeleton:CInputField Text="{Binding QuickName}" Placeholder="Quick add" MaxLength="200" />
                 <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
                     <Label Text="CALORIES" Style="{StaticResource FieldLabel}" />
                     <Label Grid.Column="1" Text="PROTEIN (G)" Style="{StaticResource FieldLabel}" />
-                    <Border Grid.Row="1" Style="{StaticResource Field}">
-                        <Entry Text="{Binding QuickCalories}" Keyboard="Numeric" Placeholder="From macros" />
-                    </Border>
-                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Field}">
-                        <Entry Text="{Binding QuickProtein}" Keyboard="Numeric" Placeholder="0" />
-                    </Border>
+                    <skeleton:CInputField Grid.Row="1" Text="{Binding QuickCalories}" Keyboard="Numeric" Placeholder="From macros" />
+                    <skeleton:CInputField Grid.Row="1" Grid.Column="1" Text="{Binding QuickProtein}" Keyboard="Numeric" Placeholder="0" />
                     <Label Grid.Row="2" Text="CARBS (G)" Style="{StaticResource FieldLabel}" />
                     <Label Grid.Row="2" Grid.Column="1" Text="FAT (G)" Style="{StaticResource FieldLabel}" />
-                    <Border Grid.Row="3" Style="{StaticResource Field}">
-                        <Entry Text="{Binding QuickCarbs}" Keyboard="Numeric" Placeholder="0" />
-                    </Border>
-                    <Border Grid.Row="3" Grid.Column="1" Style="{StaticResource Field}">
-                        <Entry Text="{Binding QuickFat}" Keyboard="Numeric" Placeholder="0" />
-                    </Border>
+                    <skeleton:CInputField Grid.Row="3" Text="{Binding QuickCarbs}" Keyboard="Numeric" Placeholder="0" />
+                    <skeleton:CInputField Grid.Row="3" Grid.Column="1" Text="{Binding QuickFat}" Keyboard="Numeric" Placeholder="0" />
                 </Grid>
                 <Label Text="{Binding QuickCaloriesHint}" Style="{StaticResource Caption}" FontSize="12" />
             </VerticalStackLayout>

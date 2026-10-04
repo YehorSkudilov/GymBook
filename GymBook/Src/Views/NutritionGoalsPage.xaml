@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:NutritionGoalsViewModel"
     Title="Nutrition goals"
@@ -35,20 +36,12 @@
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
                 <Label Text="CALORIES (KCAL)" Style="{StaticResource Overline}" />
                 <Label Grid.Column="1" Text="PROTEIN (G)" Style="{StaticResource Overline}" />
-                <Border Grid.Row="1" Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                    <Entry Text="{Binding CalorieGoal}" Keyboard="Numeric" Placeholder="No goal" />
-                </Border>
-                <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                    <Entry Text="{Binding ProteinGoal}" Keyboard="Numeric" Placeholder="No goal" />
-                </Border>
+                <skeleton:CInputField Grid.Row="1" Text="{Binding CalorieGoal}" Keyboard="Numeric" Placeholder="No goal" />
+                <skeleton:CInputField Grid.Row="1" Grid.Column="1" Text="{Binding ProteinGoal}" Keyboard="Numeric" Placeholder="No goal" />
                 <Label Grid.Row="2" Text="CARBS (G)" Style="{StaticResource Overline}" Margin="0,6,0,0" />
                 <Label Grid.Row="2" Grid.Column="1" Text="FAT (G)" Style="{StaticResource Overline}" Margin="0,6,0,0" />
-                <Border Grid.Row="3" Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                    <Entry Text="{Binding CarbsGoal}" Keyboard="Numeric" Placeholder="No goal" />
-                </Border>
-                <Border Grid.Row="3" Grid.Column="1" Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                    <Entry Text="{Binding FatGoal}" Keyboard="Numeric" Placeholder="No goal" />
-                </Border>
+                <skeleton:CInputField Grid.Row="3" Text="{Binding CarbsGoal}" Keyboard="Numeric" Placeholder="No goal" />
+                <skeleton:CInputField Grid.Row="3" Grid.Column="1" Text="{Binding FatGoal}" Keyboard="Numeric" Placeholder="No goal" />
             </Grid>
             <Label Text="{Binding MacroCheck}" Style="{StaticResource Caption}" FontSize="12" />
 
@@ -66,9 +59,7 @@
                 </BindableLayout.ItemTemplate>
             </FlexLayout>
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" IsVisible="{Binding HasBalanceAmount}">
-                <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
-                    <Entry Text="{Binding BalanceAmount}" Keyboard="Numeric" Placeholder="500" />
-                </Border>
+                <skeleton:CInputField Text="{Binding BalanceAmount}" Keyboard="Numeric" Placeholder="500" />
                 <Label Grid.Column="1" Text="kcal a day" Style="{StaticResource Caption}" VerticalOptions="Center" />
             </Grid>
             <Label Text="About 500 kcal a day is half a kilo (a pound) a week." Style="{StaticResource Caption}" FontSize="12"
