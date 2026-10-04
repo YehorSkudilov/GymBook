@@ -313,6 +313,10 @@ namespace GymBook.Api.Data.Migrations
                     b.Property<double>("E1RmKg")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("ExerciseId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<bool>("Ranked")
                         .HasColumnType("boolean");
 

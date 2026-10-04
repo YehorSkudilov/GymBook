@@ -231,8 +231,9 @@ public class ProgressionEngine(DataStore store, Units units)
     }
 
     /// <summary>
-    /// A typical intermediate lifter's e1RM for <paramref name="ex"/>: roughly their 10-rep working weight (with 2 in reserve)
-    /// as a share of body weight, by equipment, movement type and muscle. Lean mass stands in for body weight when body fat is known.
+    /// A typical intermediate lifter's e1RM for <paramref name="ex"/>: the same standard the ranks go by
+    /// (<see cref="Ranks.StandardRatio"/>, by equipment, movement type, muscle and gender) times body weight. Lean mass
+    /// stands in for body weight when body fat is known.
     /// </summary>
     double StandardE1Rm(Exercise ex)
     {
@@ -241,50 +242,7 @@ public class ProgressionEngine(DataStore store, Units units)
         // Normalised to a typical 15% body fat, so leaner lifters are expected to lift more for their weight.
         if (profile.BodyFatPercent is { } bf and > 0)
             bw = bw * (1 - bf / 100) / 0.85;
-
-        var factor = (ex.Equipment, ex.Mechanic) switch
-        {
-            (Equipment.Barbell, Mechanic.Compound) => 0.55,
-            (Equipment.Barbell, _) => 0.3,
-            (Equipment.EzBar, _) => 0.3,
-            (Equipment.Dumbbell, Mechanic.Compound) => 0.16,
-            (Equipment.Dumbbell, _) => 0.08,
-            (Equipment.Machine, Mechanic.Compound) => 0.6,
-            (Equipment.Machine, _) => 0.35,
-            (Equipment.Cable, Mechanic.Compound) => 0.45,
-            (Equipment.Cable, _) => 0.15,
-            (Equipment.Kettlebell, _) => 0.16,
-            (Equipment.Other, _) when ex.PrimaryMuscle == MuscleGroup.Neck => 0.08,
-            _ => 0,
-        };
-        var muscle = (ex.PrimaryMuscle, ex.Mechanic) switch
-        {
-            (MuscleGroup.Quads or MuscleGroup.Hamstrings or MuscleGroup.Glutes or MuscleGroup.LowerBack, Mechanic.Compound) => 1.3,
-            (MuscleGroup.Calves, _) => 1.4,
-            (MuscleGroup.Shoulders, Mechanic.Compound) => 0.65,
-            (MuscleGroup.Shoulders, _) => 0.6,
-            (MuscleGroup.Biceps or MuscleGroup.Triceps or MuscleGroup.Forearms, _) => 0.85,
-            (MuscleGroup.Neck, Mechanic.Isolation) when ex.Equipment == Equipment.Machine => 0.3,
-            _ => 1.0,
-        };
-        return bw * factor * muscle * (1 + 12 / 30.0) * SexFactor(ex);
-    }
-
-    /// <summary>
-    /// The standards above are men's. Women lift less for their body weight on average, the upper body more so (about
-    /// 55-60% of men's bench or press ratio) than the lower (about 75-80% of their squat or deadlift). Unknown: the men's,
-    /// as before gender was asked.
-    /// </summary>
-    double SexFactor(Exercise ex)
-    {
-        if (store.Profile.Sex != Sex.Female)
-            return 1;
-        return ex.PrimaryMuscle switch
-        {
-            MuscleGroup.Quads or MuscleGroup.Hamstrings or MuscleGroup.Glutes or MuscleGroup.Calves or MuscleGroup.LowerBack => 0.78,
-            MuscleGroup.Abs or MuscleGroup.Neck => 0.7,
-            _ => 0.6,
-        };
+        return bw * Ranks.StandardRatio(ex.Equipment, ex.Mechanic, ex.PrimaryMuscle, profile.Sex);
     }
 
     /// <summary>

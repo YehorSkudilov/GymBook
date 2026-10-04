@@ -8,7 +8,7 @@ using GymBook.Views;
 
 namespace GymBook.ViewModels;
 
-/// <summary>One of the user's four lifts on the ranks page.</summary>
+/// <summary>One of the user's categories on the ranks page (see <see cref="Ranks.Categories"/>).</summary>
 public class RankLiftItem
 {
     public required string Name { get; init; }
@@ -39,7 +39,7 @@ public class LeaderboardRow
 }
 
 /// <summary>
-/// Strength ranks: the user's tier on each of the big four lifts and overall (see <see cref="Ranks"/>), the global and
+/// Ranks: the user's tier in each category (strength by muscle group, and consistency) and overall (see <see cref="Ranks"/>), the global and
 /// friends leaderboards, and adding friends. Ranks are worked out on the server from synced workouts, so a workout
 /// counts once it has synced. Joining needs the account and a username, and is a choice of its own. The Ranks tab of Progress.
 /// </summary>
@@ -76,7 +76,7 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
     [ObservableProperty] string boardEmptyText = "";
 
     bool _friendsOnly;
-    RankLift? _lift;
+    RankCategory? _lift;
 
     public override async Task OnAppearingAsync()
     {
@@ -131,7 +131,7 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
         OverallProgress = Progress(status.Score);
         PositionText = IsHidden ? "Hidden from the leaderboards after reports. Contact support if you think that's a mistake."
             : status.Position is { } p ? $"#{p} of {status.Competitors} lifters"
-            : "Not on the board yet: log a ranked lift in two workouts.";
+            : $"Not on the board yet: log a weighted exercise in {Ranks.MinSessions} workouts.";
         Lifts = [.. status.Lifts.Select(l => new RankLiftItem
         {
             Name = Ranks.Name(l.Lift),
@@ -139,18 +139,24 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
             Tier = l.Ranked ? TierName(l.Tier) : "Unranked",
             TierColor = l.Ranked ? TierColor(l.Tier) : Color.FromArgb("#626B7E"),
             Progress = l.Ranked ? Progress(l.Score) : 0,
-            Detail = l.Ranked
-                ? $"{units.FormatWithUnit(l.E1RmKg)} est. 1RM · {l.Ratio:0.00}× body weight"
-                : l.Sessions == 0 ? $"Log it in {Ranks.MinSessions} workouts to rank"
-                : $"Log it in {Ranks.MinSessions - l.Sessions} more workout to rank",
+            Detail = Detail(l),
         })];
     }
+
+    /// <summary>A category's line: its best exercise and lift, or for Consistency workouts a week; unranked, how to rank.</summary>
+    string Detail(LiftRank l) => (l.Lift, l.Ranked) switch
+    {
+        (RankCategory.Consistency, true) => $"{l.Ratio:0.#} workouts a week over the last {Ranks.ConsistencyWeeks} weeks",
+        (RankCategory.Consistency, false) => $"Train to rank: workouts a week over the last {Ranks.ConsistencyWeeks} weeks",
+        (_, true) => $"{l.Exercise}: {units.FormatWithUnit(l.E1RmKg)} est. 1RM · {l.Ratio:0.00}× body weight",
+        _ => $"Log a weighted {Ranks.Name(l.Lift).ToLowerInvariant()} exercise in {Ranks.MinSessions} workouts to rank",
+    };
 
     void BuildChips()
     {
         ScopeChips = [new ChipItem("Global", false, SelectScope) { IsSelected = true }, new ChipItem("Friends", true, SelectScope)];
         LiftChips = [new ChipItem("Overall", null, SelectLift) { IsSelected = true },
-            .. Ranks.Lifts.Select(l => new ChipItem(Ranks.Name(l), l, SelectLift))];
+            .. Ranks.Categories.Select(c => new ChipItem(Ranks.Name(c), c, SelectLift))];
     }
 
     void SelectScope(ChipItem chip)
@@ -165,7 +171,7 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
     {
         foreach (var c in LiftChips)
             c.IsSelected = c == chip;
-        _lift = (RankLift?)chip.Value;
+        _lift = (RankCategory?)chip.Value;
         _ = LoadBoardAsync();
     }
 
@@ -199,9 +205,13 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
         Username = e.Username,
         Initial = e.Username[..1].ToUpperInvariant(),
         AvatarUrl = ApiClient.AvatarUrl(e.AvatarPath),
-        Tier = TierName(e.Tier),
+        // On a strength board, the exercise it's from too.
+        Tier = e.Exercise is { } exercise ? $"{TierName(e.Tier)} · {exercise}" : TierName(e.Tier),
         TierColor = TierColor(e.Tier),
-        Value = e.E1RmKg is { } kg ? $"{units.FormatWithUnit(kg)} · {e.Ratio:0.00}×" : $"{e.Score:0}",
+        // A strength board: the best exercise's lift; Consistency's: workouts a week; overall: points.
+        Value = e.E1RmKg is { } kg ? $"{units.FormatWithUnit(kg)} · {e.Ratio:0.00}×"
+            : _lift == RankCategory.Consistency && e.Ratio is { } perWeek ? $"{perWeek:0.#} a week"
+            : $"{e.Score:0}",
         IsMe = e.IsMe,
         IsPro = e.IsPro,
         OpenCommand = new AsyncRelayCommand(() => OpenUserAsync(e.Username, e.IsMe, e.IsFriend)),
@@ -229,7 +239,7 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
         }
         var sex = store.Profile.Sex.Value;
         if (!await dialogs.Confirm("Join the leaderboards?",
-                "Your username, picture, tiers and estimated maxes on bench, squat, deadlift and overhead press, and your food logging streak and days on target, will be visible to everyone using Gym Book. " +
+                "Your username, picture, strength tiers with your best lift in each, how often you train, and your food logging streak and days on target will be visible to everyone using Gym Book. " +
                 "They're worked out from your synced workouts of the last year and your body weight, against " +
                 $"{(sex == Sex.Male ? "men's" : "women's")} standards (your gender in Profile). You can leave at any time.", "Join"))
             return;
@@ -252,11 +262,16 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
 
     [RelayCommand]
     async Task HowItWorks() => await dialogs.Alert("How ranks work",
-        "Each lift's tier comes from your estimated one-rep max divided by your body weight, against strength standards for your gender (set in Profile, under About you): " +
-        "Bronze, Silver, Gold, Platinum, Diamond and Elite. Your overall rank averages all four lifts, so an untrained lift counts as zero.\n\n" +
-        $"To keep the boards fair, only sets of up to {Ranks.MaxReps} reps count, a lift needs {Ranks.MinSessions} workouts to rank, " +
-        "a jump of more than 15% waits for another workout to back it up, and impossible numbers are ignored. " +
-        "Variants count too: paused bench, low-bar and pause squats, and sumo deadlifts.\n\n" +
+        "You're ranked in seven categories, each Bronze, Silver, Gold, Platinum, Diamond or Elite:\n\n" +
+        "Strength: Chest, Back, Shoulders, Legs, Posterior chain (hamstrings, glutes, lower back) and Arms. Each takes your best " +
+        "weighted exercise for it, any of them, yours included: its estimated one-rep max divided by your body weight, against a " +
+        "standard for that exercise and your gender (set in Profile, under About you). Bench, squat, deadlift and overhead press " +
+        "have their own, well-known standards.\n\n" +
+        $"Consistency: how many workouts a week you've done over the last {Ranks.ConsistencyWeeks} weeks, from 1 for Silver to 5 for Elite.\n\n" +
+        "Your overall rank averages all seven, so a category you don't train counts as zero.\n\n" +
+        $"To keep the boards fair, only sets of up to {Ranks.MaxReps} reps count, an exercise needs {Ranks.MinSessions} workouts to rank, " +
+        "a jump of more than 15% waits for another workout to back it up, and impossible numbers are ignored. Abs, calves, neck " +
+        "and bodyweight-only exercises don't count.\n\n" +
         "Your body weight is your latest weigh-in, or the one in your profile.");
 
     [RelayCommand]
@@ -300,7 +315,9 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
         if (user.Tier is { } tier)
             lines.Add($"Overall: {TierName(tier)} ({user.Score:0} points)");
         foreach (var l in user.Lifts.Where(l => l.Ranked))
-            lines.Add($"{Ranks.Name(l.Lift)}: {TierName(l.Tier)}, {units.FormatWithUnit(l.E1RmKg)} ({units.FormatWithUnit(l.WeightKg)} × {l.Reps})");
+            lines.Add(l.Lift == RankCategory.Consistency
+                ? $"Consistency: {TierName(l.Tier)}, {l.Ratio:0.#} workouts a week"
+                : $"{Ranks.Name(l.Lift)}: {TierName(l.Tier)}, {l.Exercise} {units.FormatWithUnit(l.E1RmKg)} ({units.FormatWithUnit(l.WeightKg)} × {l.Reps})");
 
         const string add = "Add as friend", remove = "Remove friend", report = "Report";
         var choice = await dialogs.ActionSheet($"@{user.Username}\n\n{string.Join("\n", lines)}", null, user.IsFriend ? remove : add, report);
@@ -325,11 +342,11 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
     {
         const string profile = "Their username, picture or bio";
         var options = new List<string> { profile };
-        options.AddRange(user.Lifts.Where(l => l.Ranked).Select(l => $"Their {Ranks.Name(l.Lift).ToLowerInvariant()} looks fake"));
+        options.AddRange(user.Lifts.Where(l => l.Ranked && l.Lift != RankCategory.Consistency).Select(l => $"Their {Ranks.Name(l.Lift).ToLowerInvariant()} looks fake"));
         var what = await dialogs.ActionSheet($"Report @{user.Username}", null, [.. options]);
         if (what == null)
             return;
-        var lift = user.Lifts.Where(l => l.Ranked).Select(l => (RankLift?)l.Lift)
+        var lift = user.Lifts.Where(l => l.Ranked && l.Lift != RankCategory.Consistency).Select(l => (RankCategory?)l.Lift)
             .FirstOrDefault(l => what.Contains(Ranks.Name(l!.Value).ToLowerInvariant()));
         var reason = await dialogs.Prompt("What's wrong?", "Optional: anything that helps us check.", null, Keyboard.Text, "Report");
         if (reason == null)

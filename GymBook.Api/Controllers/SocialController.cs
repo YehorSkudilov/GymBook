@@ -174,10 +174,10 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
 
     /// <summary>
     /// The top of a board: <paramref name="scope"/> is "global" or "friends" (the user and their friends);
-    /// <paramref name="lift"/> is a <see cref="RankLift"/>, or empty for overall.
+    /// <paramref name="lift"/> is a <see cref="RankCategory"/>, or empty for overall.
     /// </summary>
     [HttpGet("leaderboard")]
-    public async Task<ActionResult<LeaderboardResponse>> Leaderboard([FromQuery] string? scope, [FromQuery] RankLift? lift, CancellationToken ct)
+    public async Task<ActionResult<LeaderboardResponse>> Leaderboard([FromQuery] string? scope, [FromQuery] RankCategory? lift, CancellationToken ct)
     {
         var friendIds = await db.Friendships.Where(f => f.UserId == Me).Select(f => f.FriendId).ToListAsync(ct);
         var friends = scope == "friends";
@@ -188,7 +188,7 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
         // (user, score, e1RM, ratio) rows, best first.
         IQueryable<Row> rows = lift is { } l
             ? people.Join(db.RankedLifts.Where(x => x.Lift == l && x.Ranked), p => p.UserId, x => x.UserId,
-                (p, x) => new Row { UserId = p.UserId, Username = p.Username, AvatarVersion = p.AvatarVersion, Score = x.Score, E1RmKg = x.E1RmKg, Ratio = x.Ratio })
+                (p, x) => new Row { UserId = p.UserId, Username = p.Username, AvatarVersion = p.AvatarVersion, Score = x.Score, ExerciseId = x.ExerciseId, E1RmKg = l == RankCategory.Consistency ? null : (double?)x.E1RmKg, Ratio = x.Ratio })
             : people.Select(p => new Row { UserId = p.UserId, Username = p.Username, AvatarVersion = p.AvatarVersion, Score = p.Score });
 
         var top = await rows.OrderByDescending(r => r.Score).ThenBy(r => r.Username).Take(SocialLimits.LeaderboardSize).ToListAsync(ct);
@@ -209,6 +209,7 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
             AvatarPath = AvatarPath(r.Username, r.AvatarVersion),
             Score = r.Score,
             Tier = Ranks.Tier(r.Score),
+            Exercise = ExerciseName(r.ExerciseId),
             E1RmKg = r.E1RmKg,
             Ratio = r.Ratio,
             IsMe = r.UserId == Me,
@@ -223,6 +224,7 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
         public string Username { get; set; } = "";
         public int AvatarVersion { get; set; }
         public double Score { get; set; }
+        public string? ExerciseId { get; set; }
         public double? E1RmKg { get; set; }
         public double? Ratio { get; set; }
     }
@@ -381,14 +383,22 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
     async Task<List<LiftRank>> LiftsAsync(string userId, CancellationToken ct)
     {
         var rows = await db.RankedLifts.AsNoTracking().Where(l => l.UserId == userId).ToListAsync(ct);
-        return [.. Ranks.Lifts.Select(lift => rows.FirstOrDefault(r => r.Lift == lift) is { } r
+        return [.. Ranks.Categories.Select(category => rows.FirstOrDefault(r => r.Lift == category) is { } r
             ? new LiftRank
             {
-                Lift = lift, Ranked = r.Ranked, E1RmKg = r.E1RmKg, BodyWeightKg = r.BodyWeightKg, Ratio = r.Ratio, Score = r.Score,
-                Tier = Ranks.Tier(r.Score), WeightKg = r.WeightKg, Reps = r.Reps, Date = r.Date, Sessions = r.Sessions,
+                Lift = category, Exercise = ExerciseName(r.ExerciseId), Ranked = r.Ranked, E1RmKg = r.E1RmKg, BodyWeightKg = r.BodyWeightKg,
+                Ratio = r.Ratio, Score = r.Score, Tier = Ranks.Tier(r.Score), WeightKg = r.WeightKg, Reps = r.Reps, Date = r.Date,
+                Sessions = r.Sessions,
             }
-            : new LiftRank { Lift = lift })];
+            : new LiftRank { Lift = category })];
     }
+
+    /// <summary>
+    /// A category's best exercise as others see it: a built-in one by its name, one the user made as "Custom exercise"
+    /// (what people call their own exercises stays theirs); null without one.
+    /// </summary>
+    static string? ExerciseName(string? exerciseId) =>
+        exerciseId == null ? null : GymBook.Services.ExerciseLibrary.Find(exerciseId)?.Name ?? "Custom exercise";
 
     async Task<ProfileCard> CardAsync(SocialProfile p, CancellationToken ct) =>
         ToCard(p, await db.Friendships.AnyAsync(f => f.UserId == Me && f.FriendId == p.UserId, ct));

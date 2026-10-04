@@ -238,7 +238,7 @@ public class ApiClient(HttpClient http, AuthSession session)
     public Task LeaveRanksAsync(CancellationToken ct = default) => SendEmptyAsync("api/social/ranks/leave", ct);
 
     /// <summary><paramref name="friendsOnly"/>: the user and their friends; <paramref name="lift"/>: a lift's board, null for overall.</summary>
-    public Task<LeaderboardResponse> GetLeaderboardAsync(bool friendsOnly, RankLift? lift, CancellationToken ct = default) =>
+    public Task<LeaderboardResponse> GetLeaderboardAsync(bool friendsOnly, RankCategory? lift, CancellationToken ct = default) =>
         GetAuthorizedAsync<LeaderboardResponse>($"api/social/leaderboard?scope={(friendsOnly ? "friends" : "global")}" + (lift is { } l ? $"&lift={l}" : ""), ct);
 
     /// <summary>The user's food logging streaks, for the nutrition boards.</summary>

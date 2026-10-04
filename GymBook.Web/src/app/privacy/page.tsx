@@ -117,10 +117,13 @@ export default function PrivacyPage() {
       </p>
       <ul>
         <li>
-          <strong>Strength:</strong> your tier on the bench press, squat, deadlift and overhead press and overall, your estimated one-rep
-          max on each, and its ratio to your body weight, which together show your body weight. They&apos;re worked out on our server
-          from your synced workouts of the last year and your latest weigh-in (or the body weight in your profile), against the standards
-          for your gender.
+          <strong>Strength and consistency:</strong> your tier overall and in each category (chest, back, shoulders, legs, posterior
+          chain, arms and consistency). For each strength category, the exercise it comes from (one you created yourself shows only as
+          &quot;Custom exercise&quot;), its estimated one-rep max and that lift&apos;s ratio to your body weight, which together show your
+          body weight; for consistency, how many workouts a week you&apos;ve done over the last 8 weeks. They&apos;re worked out on our
+          server from your synced workouts of the last year and your latest weigh-in (or the body weight in your profile), against the
+          standards for your gender.
+
         </li>
         <li>
           <strong>Nutrition:</strong> how many days in a row you&apos;ve logged food, your longest run, and how many of the last 30 days

@@ -57,19 +57,20 @@
                     </Border>
                 </Grid>
                 <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                    <!-- The username, then one pencil (a menu of what to change: username, bio, picture, email), the trophy (joining
-                         or leaving the leaderboards: gold when on them, grey when not) and the share button -->
-                    <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="2">
+                    <!-- The username with the trophy right after it (joining or leaving the leaderboards: gold when on them, grey
+                         when not), then at the end one pencil (a menu of what to change: username, bio, picture, email) and the
+                         share button -->
+                    <Grid ColumnDefinitions="Auto,Auto,*,Auto,Auto" ColumnSpacing="2">
                         <Label Text="{Binding Username, StringFormat='@{0}'}" Style="{StaticResource H3}" LineBreakMode="TailTruncation" VerticalOptions="Center" />
-                        <skeleton:CButton Grid.Column="1" Icon="edit" IconFontFamily="OutlinedIcons" IconColor="{StaticResource TextSecondary}"
+                        <skeleton:CButton Grid.Column="3" Icon="edit" IconFontFamily="OutlinedIcons" IconColor="{StaticResource TextSecondary}"
                                           IconWidthRequest="18" IconHeightRequest="18" WidthRequest="34" HeightRequest="34"
                                           CButtonBackgroundColor="Transparent" CButtonStroke="Transparent" VerticalOptions="Center"
                                           SemanticProperties.Description="Edit profile" Command="{Binding EditProfileCommand}" />
-                        <skeleton:CButton Grid.Column="2" Icon="emoji_events" IconFontFamily="OutlinedIcons" IconColor="{Binding RanksIconColor}"
+                        <skeleton:CButton Grid.Column="1" Icon="emoji_events" IconFontFamily="OutlinedIcons" IconColor="{Binding RanksIconColor}"
                                           IconWidthRequest="20" IconHeightRequest="20" WidthRequest="34" HeightRequest="34"
                                           CButtonBackgroundColor="Transparent" CButtonStroke="Transparent" VerticalOptions="Center"
                                           SemanticProperties.Description="Join or leave the leaderboards" Command="{Binding ToggleRanksCommand}" />
-                        <skeleton:CButton Grid.Column="3" Icon="share" IconFontFamily="OutlinedIcons" IconColor="{StaticResource TextSecondary}"
+                        <skeleton:CButton Grid.Column="4" Icon="share" IconFontFamily="OutlinedIcons" IconColor="{StaticResource TextSecondary}"
                                           IconWidthRequest="20" IconHeightRequest="20" WidthRequest="34" HeightRequest="34"
                                           CButtonBackgroundColor="Transparent" CButtonStroke="Transparent" VerticalOptions="Center"
                                           SemanticProperties.Description="Share your friend code" Command="{Binding ShareFriendCodeCommand}" />

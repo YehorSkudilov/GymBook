@@ -7,7 +7,7 @@
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:RanksViewModel">
 
-    <!-- Strength ranks, the Ranks tab of Progress: tiers on the big four lifts, the leaderboards and friends. -->
+    <!-- Ranks, the Ranks tab of Progress: tiers in each category (strength by muscle group, and consistency), the leaderboards and friends. -->
     <ContentView.Resources>
         <!-- A chip of the board's filters (scope, lift) -->
         <DataTemplate x:Key="Chip" x:DataType="vm:ChipItem">
@@ -47,7 +47,7 @@
         <!-- Ranks need the account -->
         <VerticalStackLayout Padding="16,24" Spacing="14" IsVisible="{Binding NeedsSignIn}">
             <Label Text="Compete on strength" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
-            <Label Text="Sign in to see how your bench, squat, deadlift and overhead press rank against everyone else's, and race your friends up the tiers."
+            <Label Text="Sign in to see how your strength and consistency rank against everyone else's, and race your friends up the tiers."
                    Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
             <Button Text="Sign in" Style="{StaticResource PrimaryButton}" Command="{Binding SignInCommand}" />
         </VerticalStackLayout>
@@ -61,7 +61,7 @@
         <!-- Not ranked yet -->
         <VerticalStackLayout Padding="16,24" Spacing="14" IsVisible="{Binding CanJoin}">
             <Label Text="Join the leaderboards" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
-            <Label Text="Earn a tier from Bronze to Elite on each of the big four lifts, worked out from your logged workouts and body weight, and see where you stand globally and among friends."
+            <Label Text="Earn a tier from Bronze to Elite for chest, back, shoulders, legs, posterior chain, arms and consistency, worked out from all your logged workouts and body weight, and see where you stand globally and among friends."
                    Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
             <Button Text="Join" Style="{StaticResource PrimaryButton}" Command="{Binding JoinCommand}" />
             <Button Text="How ranks work" Style="{StaticResource SecondaryButton}" Command="{Binding HowItWorksCommand}" />
@@ -83,7 +83,7 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- The four lifts -->
+                <!-- The categories -->
                 <Border Style="{StaticResource Card}">
                     <VerticalStackLayout Spacing="14" BindableLayout.ItemsSource="{Binding Lifts}">
                         <BindableLayout.ItemTemplate>

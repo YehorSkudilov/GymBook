@@ -173,6 +173,7 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
             b.ToTable("ranked_lifts");
             b.HasKey(l => new { l.UserId, l.Lift });
             b.Property(l => l.Date).HasColumnType(wallClock);
+            b.Property(l => l.ExerciseId).HasMaxLength(100);
             b.HasIndex(l => new { l.Lift, l.Score });
             b.HasOne<AppUser>().WithMany().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
         });

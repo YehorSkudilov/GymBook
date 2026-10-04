@@ -98,7 +98,8 @@ public static class PrivacyPolicy
         <p>The leaderboards are optional: you're only on them after you choose to join, and leaving removes you from all of them.
         While you're on them, everyone using GymBook can see, next to your username and picture:</p>
         <ul>
-          <li><strong>Strength:</strong> your tier on the bench press, squat, deadlift and overhead press and overall, your estimated one-rep max on each, and its ratio to your body weight, which together show your body weight. They're worked out on our server from your synced workouts of the last year and your latest weigh-in (or the body weight in your profile), against the standards for your gender.</li>
+          <li><strong>Strength and consistency:</strong> your tier overall and in each category (chest, back, shoulders, legs, posterior chain, arms and consistency). For each strength category, the exercise it comes from (one you created yourself shows only as "Custom exercise"), its estimated one-rep max and that lift's ratio to your body weight, which together show your body weight; for consistency, how many workouts a week you've done over the last 8 weeks. They're worked out on our server from your synced workouts of the last year and your latest weigh-in (or the body weight in your profile), against the standards for your gender.</li>
+
           <li><strong>Nutrition:</strong> how many days in a row you've logged food, your longest run, and how many of the last 30 days your calories and protein were on target for your own goals. Only these numbers are shared, never what you ate. The app sends them to our server whenever you open Nutrition.</li>
         </ul>
         <p>Someone who thinks your numbers or profile are wrong or offensive can report them; our team reviews reports and can hide

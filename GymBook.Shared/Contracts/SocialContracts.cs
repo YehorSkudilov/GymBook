@@ -76,10 +76,17 @@ public class ProfileCard
     public bool IsMe { get; set; }
 }
 
-/// <summary>One lift of a ranked user. Unranked until it's in <see cref="Ranks.MinSessions"/> workouts.</summary>
+/// <summary>
+/// One category of a ranked user (see <see cref="Ranks"/>). A strength category is its best exercise's, unranked until an
+/// exercise for it is in <see cref="Ranks.MinSessions"/> workouts. Consistency has no lift: <see cref="Ratio"/> is workouts
+/// a week, <see cref="Sessions"/> the workouts it counts.
+/// </summary>
 public class LiftRank
 {
-    public RankLift Lift { get; set; }
+    /// <summary>The category (named Lift from when ranks were four lifts).</summary>
+    public RankCategory Lift { get; set; }
+    /// <summary>A strength category's best exercise, by name; null for Consistency or when unranked.</summary>
+    public string? Exercise { get; set; }
     public bool Ranked { get; set; }
     public double E1RmKg { get; set; }
     public double BodyWeightKg { get; set; }
@@ -90,7 +97,7 @@ public class LiftRank
     public double WeightKg { get; set; }
     public int Reps { get; set; }
     public DateTime? Date { get; set; }
-    /// <summary>Workouts in the last year with the lift.</summary>
+    /// <summary>Workouts in the last year with the exercise; for Consistency, those it counts.</summary>
     public int Sessions { get; set; }
 }
 
@@ -113,7 +120,11 @@ public class LeaderboardEntry
     public string? AvatarPath { get; set; }
     public double Score { get; set; }
     public RankTier Tier { get; set; }
-    /// <summary>On a lift's board: the lift's estimated 1RM and its ratio to body weight.</summary>
+    /// <summary>
+    /// On a strength category's board: its best exercise, that exercise's estimated 1RM and its ratio to body weight. On
+    /// Consistency's: only <see cref="Ratio"/>, workouts a week.
+    /// </summary>
+    public string? Exercise { get; set; }
     public double? E1RmKg { get; set; }
     public double? Ratio { get; set; }
     public bool IsMe { get; set; }
@@ -183,8 +194,8 @@ public class ReportRequest
 {
     [Required, MaxLength(SocialLimits.UsernameMaxLength)]
     public string Username { get; set; } = "";
-    /// <summary>The lift that looks wrong; null for the profile itself (a username, picture or bio).</summary>
-    public RankLift? Lift { get; set; }
+    /// <summary>The category whose lift looks wrong; null for the profile itself (a username, picture or bio).</summary>
+    public RankCategory? Lift { get; set; }
     [MaxLength(SocialLimits.ReportReasonLength)]
     public string Reason { get; set; } = "";
 }

@@ -42,11 +42,18 @@ public class Avatar
     public string ContentType { get; set; } = "image/jpeg";
 }
 
-/// <summary>A ranked user's best on one lift, worked out from their synced workouts (see Social/RankCalculator).</summary>
+/// <summary>
+/// A ranked user's standing in one category (see <see cref="Ranks"/>), worked out from their synced workouts (see
+/// Social/RankCalculator): for a strength category its best exercise's lift, for Consistency workouts a week in
+/// <see cref="Ratio"/>. Named for when ranks were four lifts.
+/// </summary>
 public class RankedLift
 {
     public string UserId { get; set; } = "";
-    public RankLift Lift { get; set; }
+    /// <summary>The category.</summary>
+    public RankCategory Lift { get; set; }
+    /// <summary>A strength category's best exercise; null for Consistency or when unranked.</summary>
+    public string? ExerciseId { get; set; }
     public bool Ranked { get; set; }
     public double E1RmKg { get; set; }
     public double BodyWeightKg { get; set; }
@@ -71,7 +78,8 @@ public class RankReport
     public Guid Id { get; set; } = Guid.NewGuid();
     public string ReporterId { get; set; } = "";
     public string TargetId { get; set; } = "";
-    public RankLift? Lift { get; set; }
+    /// <summary>The category whose lift was reported; null for the profile.</summary>
+    public RankCategory? Lift { get; set; }
     public string Reason { get; set; } = "";
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ResolvedAt { get; set; }
