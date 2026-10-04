@@ -143,6 +143,9 @@ public partial class ChipItem(string title, object? value, Action<ChipItem> onSe
 {
     public string Title { get; } = title;
     public object? Value { get; } = value;
+    /// <summary>An icon before the title (an OutlinedIcons glyph), e.g. on the Day | Trends | Ranks tabs; null for none.</summary>
+    public string? Icon { get; init; }
+    public bool HasIcon => Icon != null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Background), nameof(TextColor))]

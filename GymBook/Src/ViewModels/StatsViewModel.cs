@@ -33,8 +33,8 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     void ShowSectionTabs()
     {
         _sectionTabs.Clear();
-        foreach (var (title, section) in new[] { ("Day", ProgressSection.Day), ("Trends", ProgressSection.Trends), ("Ranks", ProgressSection.Ranks) })
-            _sectionTabs.Add(new ChipItem(title, section, SelectSection) { IsSelected = _section == section });
+        foreach (var (title, icon, section) in new[] { ("Day", "today", ProgressSection.Day), ("Trends", "trending_up", ProgressSection.Trends), ("Ranks", "leaderboard", ProgressSection.Ranks) })
+            _sectionTabs.Add(new ChipItem(title, section, SelectSection) { Icon = icon, IsSelected = _section == section });
     }
 
     ProgressSection _section = ProgressSection.Day;

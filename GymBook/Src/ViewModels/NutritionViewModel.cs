@@ -225,8 +225,8 @@ public partial class NutritionViewModel(
     void ShowModeChips()
     {
         ModeChips.Clear();
-        foreach (var (title, section) in new[] { ("Day", NutritionSection.Day), ("Trends", NutritionSection.Trends), ("Ranks", NutritionSection.Ranks) })
-            ModeChips.Add(new ChipItem(title, section, SelectMode) { IsSelected = _section == section });
+        foreach (var (title, icon, section) in new[] { ("Day", "today", NutritionSection.Day), ("Trends", "trending_up", NutritionSection.Trends), ("Ranks", "leaderboard", NutritionSection.Ranks) })
+            ModeChips.Add(new ChipItem(title, section, SelectMode) { Icon = icon, IsSelected = _section == section });
     }
 
     void SelectRange(ChipItem chip)

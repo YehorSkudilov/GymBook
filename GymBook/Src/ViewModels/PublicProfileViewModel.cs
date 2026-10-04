@@ -12,7 +12,7 @@ namespace GymBook.ViewModels;
 /// code to give friends. Nothing else about the user is public. It needs the account.
 /// </summary>
 public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs, AccountService account,
-    GymBook.Services.Billing.SubscriptionService subscriptions, IServiceProvider services) : BaseViewModel
+    GymBook.Services.Billing.SubscriptionService subscriptions, IServiceProvider services, RanksViewModel ranks) : BaseViewModel
 {
     /// <summary>The picture as sent: a JPEG this many pixels on its longer side.</summary>
     const int AvatarPixels = 320;
@@ -24,6 +24,11 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     [ObservableProperty] string bio = "";
     [ObservableProperty] string? avatarUrl;
     [ObservableProperty] string friendCode = "";
+    /// <summary>On the leaderboards (strength and nutrition): the trophy by the name is lit.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(RanksIconColor))]
+    bool inRanks;
+    public Color RanksIconColor => InRanks ? Color.FromArgb("#FFC857") : Color.FromArgb("#626B7E");
     [ObservableProperty] bool isBusy;
 
     public string Initial => Username.Length > 0 ? Username[..1].ToUpperInvariant() : "?";
@@ -130,10 +135,27 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
         Bio = p.Bio;
         AvatarUrl = ApiClient.AvatarUrl(p.AvatarPath);
         FriendCode = p.FriendCode;
+        InRanks = p.InRanks;
     }
 
     [RelayCommand]
     Task Retry() => OnAppearingAsync();
+
+    /// <summary>
+    /// The trophy by the name: joins the leaderboards, or leaves them, as the Ranks tabs do (the same questions: the
+    /// gender if it isn't set, and confirming), then shows where things stand.
+    /// </summary>
+    [RelayCommand]
+    async Task ToggleRanks()
+    {
+        if (!Exists)
+            return;
+        if (InRanks)
+            await ranks.LeaveCommand.ExecuteAsync(null);
+        else
+            await ranks.JoinCommand.ExecuteAsync(null);
+        await OnAppearingAsync();
+    }
 
     async Task EditUsername()
     {

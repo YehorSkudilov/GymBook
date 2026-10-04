@@ -71,7 +71,12 @@
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding SelectCommand}" />
                             </Border.GestureRecognizers>
-                            <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="15" FontFamily="OpenSansSemibold" HorizontalOptions="Center" />
+                            <HorizontalStackLayout Spacing="6" HorizontalOptions="Center">
+                                <Image WidthRequest="18" HeightRequest="18" VerticalOptions="Center" IsVisible="{Binding HasIcon}">
+                                    <Image.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="{Binding Icon}" Color="{Binding TextColor}" Size="100" /></Image.Source>
+                                </Image>
+                                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="15" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
                         </Border>
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
