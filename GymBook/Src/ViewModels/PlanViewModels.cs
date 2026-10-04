@@ -427,31 +427,6 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
         }
     }
 
-    /// <summary>A link to a shared plan someone sent (…/p/id): to look at it and save a copy.</summary>
-    [RelayCommand]
-    async Task OpenSharedLink()
-    {
-        string? clip = null;
-        try
-        {
-            clip = Clipboard.Default.HasText ? await Clipboard.Default.GetTextAsync() : null;
-        }
-        catch (Exception)
-        {
-            // No clipboard access: just ask.
-        }
-        var initial = clip != null && SharedPlanViewModel.ShareIdFrom(clip) != null ? clip.Trim() : null;
-        var text = await dialogs.Prompt("Open a shared plan", "Paste the link someone sent you.", initial, Keyboard.Url, "Open");
-        if (text == null)
-            return;
-        if (SharedPlanViewModel.ShareIdFrom(text) is not { } id)
-        {
-            await dialogs.Alert("That's not a plan link", "A shared plan's link ends in /p/ and a code.");
-            return;
-        }
-        await GoTo($"{Routes.SharedPlan}?id={Uri.EscapeDataString(id)}");
-    }
-
     /// <summary>The finished workouts linked to no plan (never, or their plan was deleted), to link or delete them.</summary>
     [RelayCommand]
     Task OpenUnlinked() => GoTo($"{Routes.PlanWorkouts}?plan=none");
@@ -459,7 +434,10 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
     [RelayCommand]
     Task Generate() => GoTo(Routes.Wizard);
 
-    /// <summary>The import sheet: a plan read by AI (needs an account), or another app's plans and workout history (CSV).</summary>
+    /// <summary>
+    /// The import sheet: a plan read by AI (needs an account), a plan someone shared from Gym Book, or another app's plans
+    /// and workout history (CSV).
+    /// </summary>
     [RelayCommand]
     Task Import() => GoTo(Routes.ImportPlan);
 

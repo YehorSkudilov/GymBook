@@ -12,7 +12,8 @@
     Backdrop="#B3000000">
 
     <!--
-        A sheet to import from elsewhere, one way per tab: the AI turns pasted text, a link or a file into a plan; the CSV
+        A sheet to import from elsewhere, one way per tab: the AI turns pasted text, a link or a file into a plan; a Gym
+        Book link someone shared opens their plan, to save a copy; the CSV
         tabs read another app's exports, plans and workout history from separate files.
     -->
     <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
@@ -76,6 +77,14 @@
                         </Border>
                     </VerticalStackLayout>
 
+                    <!-- A plan someone shared from Gym Book -->
+                    <VerticalStackLayout IsVisible="{Binding IsShared}" Spacing="8">
+                        <Label Text="A link to a plan someone shared from Gym Book. Look it over, then save a copy to your plans." Style="{StaticResource Caption}" FontSize="15" />
+                        <Border Style="{StaticResource InputBox}" HeightRequest="52" Padding="12,0">
+                            <Entry Text="{Binding SharedLink}" Placeholder="https://…/p/…" Keyboard="Url" />
+                        </Border>
+                    </VerticalStackLayout>
+
                     <skeleton:CLabel Text="{Binding Error}" IsVisible="{Binding HasError}" TextColor="{StaticResource Danger}" FontSize="14" />
 
                     <!-- CSV: plans, then (separately) workouts -->
@@ -100,6 +109,7 @@
                     </HorizontalStackLayout>
                     <Label Text="{Binding QuotaText}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
                 </VerticalStackLayout>
+                <Button Text="Open plan" Style="{StaticResource PrimaryButton}" Command="{Binding OpenSharedCommand}" IsVisible="{Binding IsShared}" />
                 <ContentView IsVisible="{Binding IsPlans}">
                     <views:ImportCsvButton BindingContext="{Binding PlansImport}" />
                 </ContentView>

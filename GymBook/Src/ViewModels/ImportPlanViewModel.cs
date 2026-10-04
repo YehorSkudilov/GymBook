@@ -7,8 +7,11 @@ using GymBook.Services.Sync;
 
 namespace GymBook.ViewModels;
 
-/// <summary>The import sheet's tabs: the AI's three ways in, and another app's CSV exports, plans and workouts apart.</summary>
-public enum ImportMode { Paste, Link, File, Plans, Workouts }
+/// <summary>
+/// The import sheet's tabs: the AI's three ways in, a Gym Book link someone shared, and another app's CSV exports, plans
+/// and workouts apart.
+/// </summary>
+public enum ImportMode { Paste, Link, File, Shared, Plans, Workouts }
 
 /// <summary>A tab at the top of the import sheet; the selected one is filled with the accent.</summary>
 public partial class ImportTab(string title, ImportMode mode, Action<ImportMode> select) : ObservableObject
@@ -28,7 +31,8 @@ public partial class ImportTab(string title, ImportMode mode, Action<ImportMode>
 /// <summary>
 /// Imports from elsewhere, one way per tab. The AI tabs: pasted text, a link (to a web page, image or document), or a file
 /// (a photo or screenshot, a PDF, or a text file), which the AI reads and rebuilds as a plan from the app's exercises; the
-/// new plan opens when it's done. The CSV tabs: another app's exports of plans and of workout history, separate files
+/// new plan opens when it's done. The shared plan tab: a link to a plan someone shared (…/p/id), opened to look at and
+/// save a copy of (see <see cref="SharedPlanViewModel"/>). The CSV tabs: another app's exports of plans and of workout history, separate files
 /// (see <see cref="ImportCsvViewModel"/>).
 /// </summary>
 public partial class ImportPlanViewModel : BaseViewModel
@@ -49,6 +53,7 @@ public partial class ImportPlanViewModel : BaseViewModel
             new("Paste", ImportMode.Paste, SelectMode),
             new("Link", ImportMode.Link, SelectMode),
             new("File", ImportMode.File, SelectMode),
+            new("Shared plan", ImportMode.Shared, SelectMode),
             new("Plans CSV", ImportMode.Plans, SelectMode),
             new("Workouts CSV", ImportMode.Workouts, SelectMode),
         ];
@@ -64,7 +69,7 @@ public partial class ImportPlanViewModel : BaseViewModel
     public ImportCsvViewModel WorkoutsImport { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsPaste), nameof(IsLink), nameof(IsFile), nameof(IsAi), nameof(IsPlans), nameof(IsWorkouts), nameof(CanImport))]
+    [NotifyPropertyChangedFor(nameof(IsPaste), nameof(IsLink), nameof(IsFile), nameof(IsAi), nameof(IsShared), nameof(IsPlans), nameof(IsWorkouts), nameof(CanImport))]
     [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
     ImportMode mode;
 
@@ -72,6 +77,7 @@ public partial class ImportPlanViewModel : BaseViewModel
     public bool IsLink => Mode == ImportMode.Link;
     public bool IsFile => Mode == ImportMode.File;
     public bool IsAi => Mode is ImportMode.Paste or ImportMode.Link or ImportMode.File;
+    public bool IsShared => Mode == ImportMode.Shared;
     public bool IsPlans => Mode == ImportMode.Plans;
     public bool IsWorkouts => Mode == ImportMode.Workouts;
 
@@ -81,6 +87,8 @@ public partial class ImportPlanViewModel : BaseViewModel
         foreach (var tab in Tabs)
             tab.IsSelected = tab.Mode == value;
         Error = "";
+        if (value == ImportMode.Shared && SharedLink.Trim().Length == 0)
+            _ = PasteSharedLinkAsync();
     }
 
     /// <summary>What the API accepts once base64-encoded.</summary>
@@ -97,6 +105,10 @@ public partial class ImportPlanViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(CanImport))]
     [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
     string link = "";
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(OpenSharedCommand))]
+    string sharedLink = "";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasFile), nameof(CanImport))]
@@ -239,6 +251,36 @@ public partial class ImportPlanViewModel : BaseViewModel
         {
             IsImporting = false;
         }
+    }
+
+    /// <summary>A plan link already copied (from a message, say) fills the tab when it's opened.</summary>
+    async Task PasteSharedLinkAsync()
+    {
+        try
+        {
+            if (Clipboard.Default.HasText && await Clipboard.Default.GetTextAsync() is { } clip
+                && SharedPlanViewModel.ShareIdFrom(clip) != null && SharedLink.Trim().Length == 0)
+                SharedLink = clip.Trim();
+        }
+        catch (Exception)
+        {
+            // No clipboard access: the link is pasted by hand.
+        }
+    }
+
+    bool CanOpenShared() => SharedLink.Trim().Length > 0;
+
+    /// <summary>Closes the sheet and opens the shared plan, to look at it and save a copy.</summary>
+    [RelayCommand(CanExecute = nameof(CanOpenShared))]
+    async Task OpenShared()
+    {
+        Error = "";
+        if (SharedPlanViewModel.ShareIdFrom(SharedLink) is not { } id)
+        {
+            Error = "That's not a plan link. A shared plan's link ends in /p/ and a code.";
+            return;
+        }
+        await GoTo($"../{Routes.SharedPlan}?id={Uri.EscapeDataString(id)}");
     }
 
     [RelayCommand]
