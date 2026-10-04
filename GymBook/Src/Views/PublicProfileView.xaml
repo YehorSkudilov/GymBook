@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="GymBook.Views.PublicProfileView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:PublicProfileViewModel">
+
+    <!-- The public profile, first on the Profile tab (signed in only; ProfilePage covers signed out): the username the
+         app calls the user by and others see, the picture, bio and home gym, and the friend code. -->
+    <ContentView.Resources>
+        <Style x:Key="Row" TargetType="Grid">
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="ColumnDefinitions" Value="*,Auto" />
+            <Setter Property="ColumnSpacing" Value="8" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+        </Style>
+        <Style x:Key="Divider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Margin" Value="16,0" />
+            <Setter Property="Color" Value="{StaticResource Surface2}" />
+        </Style>
+        <Style x:Key="Chevron" TargetType="Image">
+            <Setter Property="Source" Value="{StaticResource IconChevronRight}" />
+            <Setter Property="WidthRequest" Value="16" />
+            <Setter Property="HeightRequest" Value="16" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+    </ContentView.Resources>
+
+    <VerticalStackLayout Spacing="14">
+        <Border Style="{StaticResource Card}" IsVisible="{Binding ShowLoading}">
+            <ActivityIndicator IsRunning="{Binding ShowLoading}" HeightRequest="32" />
+        </Border>
+
+        <Border Style="{StaticResource Card}" IsVisible="{Binding ShowLoadFailed}">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Couldn't load your profile" Style="{StaticResource H3}" />
+                <Label Text="Your username and public profile live on the server, so they need a connection." Style="{StaticResource Caption}" />
+                <Button Text="Try again" Style="{StaticResource SecondaryButton}" Command="{Binding RetryCommand}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- No username yet -->
+        <Border Style="{StaticResource Card}" IsVisible="{Binding ShowIntro}">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Pick a username" Style="{StaticResource H3}" />
+                <Label Text="It's what Gym Book calls you, and how others see you on the strength leaderboards, as a friend and on plans you share. Only your username, picture, bio and home gym are public."
+                       Style="{StaticResource Caption}" />
+                <Button Text="Pick a username" Style="{StaticResource PrimaryButton}" Command="{Binding EditUsernameCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+            </VerticalStackLayout>
+        </Border>
+
+        <VerticalStackLayout Spacing="14" IsVisible="{Binding ShowProfile}">
+            <!-- The picture (tap to change it), the username and the bio -->
+            <Border Style="{StaticResource Card}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="14">
+                    <Grid WidthRequest="64" HeightRequest="64" VerticalOptions="Center">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding ChangePictureCommand}" /></Grid.GestureRecognizers>
+                        <Border StrokeShape="RoundRectangle 32" StrokeThickness="0" Background="{StaticResource AccentGradient}">
+                            <Grid>
+                                <Label Text="{Binding Initial}" TextColor="White" FontFamily="OpenSansSemibold" FontSize="26"
+                                       HorizontalOptions="Center" VerticalOptions="Center" IsVisible="{Binding HasAvatar, Converter={StaticResource Not}}" />
+                                <Image Source="{Binding AvatarUrl}" Aspect="AspectFill" IsVisible="{Binding HasAvatar}" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                        <Label Text="{Binding Username, StringFormat='@{0}'}" Style="{StaticResource H3}" LineBreakMode="TailTruncation" />
+                        <Label Text="{Binding BioText}" Style="{StaticResource Caption}" MaxLines="2" LineBreakMode="TailTruncation" />
+                        <Label Text="Change picture" TextColor="{StaticResource Accent}" FontSize="13" Margin="0,2,0,0">
+                            <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding ChangePictureCommand}" /></Label.GestureRecognizers>
+                        </Label>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource Card}" Padding="0">
+                <VerticalStackLayout>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditUsernameCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Username" />
+                            <Label Text="{Binding Username, StringFormat='@{0}'}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Image Grid.Column="1" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditBioCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Bio" />
+                            <Label Text="{Binding BioText}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Image Grid.Column="1" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditHomeGymCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Home gym" />
+                            <Label Text="{Binding HomeGymText}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Image Grid.Column="1" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <!-- The friend code: friends add you with it (or the username) from Progress > Ranks -->
+                    <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="16">
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Friend code" />
+                            <Label Text="{Binding FriendCode}" Style="{StaticResource Caption}" FontSize="12" CharacterSpacing="2" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="Copy" TextColor="{StaticResource Accent}" FontSize="14" VerticalOptions="Center">
+                            <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding CopyFriendCodeCommand}" /></Label.GestureRecognizers>
+                        </Label>
+                        <Label Grid.Column="2" Text="Share" TextColor="{StaticResource Accent}" FontSize="14" VerticalOptions="Center">
+                            <Label.GestureRecognizers><TapGestureRecognizer Command="{Binding ShareFriendCodeCommand}" /></Label.GestureRecognizers>
+                        </Label>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </VerticalStackLayout>
+</ContentView>

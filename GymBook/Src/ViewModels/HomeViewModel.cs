@@ -14,7 +14,8 @@ public partial class HomeViewModel(
     Units units,
     DialogService dialogs,
     WorkoutEstimator estimator,
-    ProgressionEngine progression) : BaseViewModel
+    ProgressionEngine progression,
+    GymBook.Services.Sync.AccountService account) : BaseViewModel
 {
 
     [ObservableProperty] string greeting = "";
@@ -136,7 +137,6 @@ public partial class HomeViewModel(
 
     void Refresh()
     {
-        var profile = store.Profile;
         DayPart = TimeOfDayView.For(DateTime.Now);
         var part = DayPart switch
         {
@@ -146,7 +146,8 @@ public partial class HomeViewModel(
             // After midnight and before dawn.
             _ => DateTime.Now.Hour < 5 ? "Up late" : "Good evening",
         };
-        Greeting = string.IsNullOrWhiteSpace(profile.Name) ? part : $"{part}, {profile.Name}";
+        // The username is what the app calls the user (there's no separate name).
+        Greeting = account.Username is { } username ? $"{part}, {username}" : part;
         DateText = DateTime.Today.ToString("dddd, d MMMM");
 
         // Close any gap in the plan weeks (an empty week before one with progress) before showing them, and move any

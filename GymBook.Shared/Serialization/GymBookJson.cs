@@ -75,6 +75,8 @@ public static class GymBookJson
 [JsonSerializable(typeof(SetRoleRequest))]
 [JsonSerializable(typeof(SetDisabledRequest))]
 [JsonSerializable(typeof(SetEmailVerifiedRequest))]
+[JsonSerializable(typeof(SetProGrantRequest))]
+[JsonSerializable(typeof(AdminSettings))]
 [JsonSerializable(typeof(WearWorkout))]
 [JsonSerializable(typeof(WearCompleteSet))]
 [JsonSerializable(typeof(WearStartWorkout))]

@@ -64,7 +64,6 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     bool isResult;
     [ObservableProperty] bool canGoBack;
     [ObservableProperty] string nextText = "Continue";
-    [ObservableProperty] string userName = "";
     [ObservableProperty] string bodyWeight = "";
     [ObservableProperty] string planName = "";
     [ObservableProperty] string planDescription = "";
@@ -127,7 +126,6 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             _goal = _regenerating.Goal;
             _days = Math.Clamp(_regenerating.Workouts.Count > 0 ? _regenerating.Workouts.Count : _regenerating.DaysPerWeek, 2, 6);
         }
-        UserName = p.Name;
         _steps = onboarding
             ? [Step.Welcome, Step.About, Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Programs, Step.Questions, Step.Result]
             : [Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Programs, Step.Questions, Step.Result];
@@ -609,7 +607,6 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         p.TrainNeck = _neck;
         if (IsOnboarding)
         {
-            p.Name = UserName.Trim();
             if (units.TryParse(BodyWeight, out var kg))
             {
                 p.BodyWeightKg = kg;

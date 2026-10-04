@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<views:BasePage
-    x:Class="GymBook.Views.RanksPage"
+<ContentView
+    x:Class="GymBook.Views.RanksView"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:controls="clr-namespace:GymBook.Controls"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
-    x:DataType="vm:RanksViewModel"
-    Title="Strength ranks"
-    Shell.TabBarIsVisible="False">
+    x:DataType="vm:RanksViewModel">
 
-    <ContentPage.Resources>
+    <!-- Strength ranks, the Ranks tab of Progress: tiers on the big four lifts, the leaderboards and friends. -->
+    <ContentView.Resources>
         <!-- A chip of the board's filters (scope, lift) -->
         <DataTemplate x:Key="Chip" x:DataType="vm:ChipItem">
             <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,7">
@@ -35,27 +34,35 @@
                 <Label Grid.Column="3" Text="{Binding Value}" FontSize="13" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
             </Grid>
         </DataTemplate>
-    </ContentPage.Resources>
+    </ContentView.Resources>
 
     <Grid>
-        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" VerticalOptions="Center" HorizontalOptions="Center" />
+        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" HeightRequest="32" Margin="0,24" />
 
-        <VerticalStackLayout Padding="24" Spacing="12" VerticalOptions="Center" IsVisible="{Binding LoadFailed}">
+        <!-- Ranks need the account -->
+        <VerticalStackLayout Padding="16,24" Spacing="14" IsVisible="{Binding NeedsSignIn}">
+            <Label Text="Compete on strength" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
+            <Label Text="Sign in to see how your bench, squat, deadlift and overhead press rank against everyone else's, and race your friends up the tiers."
+                   Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Button Text="Sign in" Style="{StaticResource PrimaryButton}" Command="{Binding SignInCommand}" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Padding="16,24" Spacing="12" IsVisible="{Binding LoadFailed}">
             <Label Text="Couldn't load the ranks" Style="{StaticResource H3}" HorizontalTextAlignment="Center" />
             <Label Text="Ranks are worked out on the server, so they need a connection." Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
             <Button Text="Try again" Style="{StaticResource PrimaryButton}" Command="{Binding RetryCommand}" />
         </VerticalStackLayout>
 
         <!-- Ranks need a public profile first -->
-        <VerticalStackLayout Padding="24" Spacing="14" VerticalOptions="Center" IsVisible="{Binding NeedsProfile}">
+        <VerticalStackLayout Padding="16,24" Spacing="14" IsVisible="{Binding NeedsProfile}">
             <Label Text="Compete on strength" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
-            <Label Text="See how your bench, squat, deadlift and overhead press rank against everyone else's, and race your friends up the tiers. Start with a username others will see."
+            <Label Text="See how your bench, squat, deadlift and overhead press rank against everyone else's, and race your friends up the tiers. Start with the username others will see you as."
                    Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
-            <Button Text="Set up public profile" Style="{StaticResource PrimaryButton}" Command="{Binding SetUpProfileCommand}" />
+            <Button Text="Pick a username" Style="{StaticResource PrimaryButton}" Command="{Binding SetUpProfileCommand}" />
         </VerticalStackLayout>
 
         <!-- A profile, not ranked yet -->
-        <VerticalStackLayout Padding="24" Spacing="14" VerticalOptions="Center" IsVisible="{Binding CanJoin}">
+        <VerticalStackLayout Padding="16,24" Spacing="14" IsVisible="{Binding CanJoin}">
             <Label Text="Join the leaderboards" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
             <Label Text="Earn a tier from Bronze to Elite on each of the big four lifts, worked out from your logged workouts and body weight, and see where you stand globally and among friends."
                    Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
@@ -63,8 +70,8 @@
             <Button Text="How ranks work" Style="{StaticResource SecondaryButton}" Command="{Binding HowItWorksCommand}" />
         </VerticalStackLayout>
 
-        <ScrollView IsVisible="{Binding InRanks}">
-            <VerticalStackLayout Padding="10,8,10,24" Spacing="14">
+        <VerticalStackLayout IsVisible="{Binding InRanks}">
+            <VerticalStackLayout Spacing="14">
 
                 <!-- Overall -->
                 <Border Style="{StaticResource Card}">
@@ -108,9 +115,12 @@
                     </Label>
                 </Grid>
                 <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding ScopeChips}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
-                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
-                    <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding LiftChips}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
-                </ScrollView>
+                <!-- Keeps a sideways drag from swiping the tabs -->
+                <controls:HorizontalDragArea>
+                    <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                        <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding LiftChips}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
+                    </ScrollView>
+                </controls:HorizontalDragArea>
 
                 <Border Style="{StaticResource Card}" Padding="0,4">
                     <Grid>
@@ -129,6 +139,6 @@
                     <Button Grid.Column="1" Text="Leave ranks" Style="{StaticResource SecondaryButton}" Command="{Binding LeaveCommand}" />
                 </Grid>
             </VerticalStackLayout>
-        </ScrollView>
+        </VerticalStackLayout>
     </Grid>
-</views:BasePage>
+</ContentView>

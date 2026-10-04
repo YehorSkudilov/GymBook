@@ -22,6 +22,12 @@ public class AppUser : IdentityUser
     /// </summary>
     [MaxLength(16)]
     public string? AdminRole { get; set; }
+
+    /// <summary>
+    /// Gym Book Pro given by an admin, without a store, until then (<see cref="GymBook.Contracts.ProGrant.Forever"/> for good). Null for
+    /// everyone else; see <see cref="Billing.Subscriptions"/>.
+    /// </summary>
+    public DateTimeOffset? ProGrantedUntil { get; set; }
 }
 
 public class RefreshToken
@@ -78,6 +84,7 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
     public DbSet<PlanShare> PlanShares => Set<PlanShare>();
     public DbSet<PlanShareMembership> PlanShareMembers => Set<PlanShareMembership>();
     public DbSet<StoreSubscription> Subscriptions => Set<StoreSubscription>();
+    public DbSet<ServerSetting> Settings => Set<ServerSetting>();
 
     /// <summary>Read by the query filters on every query; null (no signed-in user) matches nothing.</summary>
     string? CurrentUserId => currentUser.UserId;
@@ -219,6 +226,14 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
             b.HasIndex(s => new { s.Store, s.PurchaseKey }).IsUnique();
             b.HasIndex(s => new { s.UserId, s.ExpiresAt });
             b.HasOne<AppUser>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<ServerSetting>(b =>
+        {
+            b.ToTable("server_settings");
+            b.HasKey(s => s.Key);
+            b.Property(s => s.Key).HasMaxLength(64);
+            b.Property(s => s.Value).HasMaxLength(1024);
         });
     }
 

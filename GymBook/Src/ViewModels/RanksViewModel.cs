@@ -4,6 +4,7 @@ using GymBook.Contracts;
 using GymBook.Models;
 using GymBook.Services;
 using GymBook.Services.Sync;
+using GymBook.Views;
 
 namespace GymBook.ViewModels;
 
@@ -38,12 +39,15 @@ public class LeaderboardRow
 /// <summary>
 /// Strength ranks: the user's tier on each of the big four lifts and overall (see <see cref="Ranks"/>), the global and
 /// friends leaderboards, and adding friends. Ranks are worked out on the server from synced workouts, so a workout
-/// counts once it has synced. Joining needs a public profile and is a choice of its own.
+/// counts once it has synced. Joining needs the account and a username, and is a choice of its own. The Ranks tab of Progress.
 /// </summary>
-public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units units, SyncService sync) : BaseViewModel
+public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units units, SyncService sync, AccountService account, IServiceProvider services)
+    : BaseViewModel
 {
     [ObservableProperty] bool isLoading = true;
     [ObservableProperty] bool loadFailed;
+    /// <summary>Signed out: ranks need the account.</summary>
+    [ObservableProperty] bool needsSignIn;
     /// <summary>No public profile yet: ranks need a username.</summary>
     [ObservableProperty] bool needsProfile;
     /// <summary>A profile, but not in the ranks.</summary>
@@ -85,6 +89,12 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
 
     async Task LoadAsync()
     {
+        NeedsSignIn = !account.IsSignedIn;
+        if (NeedsSignIn)
+        {
+            (IsLoading, LoadFailed, NeedsProfile, CanJoin, InRanks) = (false, false, false, false, false);
+            return;
+        }
         IsLoading = Lifts.Count == 0;
         try
         {
@@ -198,7 +208,11 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
     Task Retry() => LoadAsync();
 
     [RelayCommand]
-    Task SetUpProfile() => GoTo(Routes.PublicProfile);
+    // The username is picked at the top of the Profile tab.
+    Task SetUpProfile() => MainPage.ShowTab(AppTab.Profile);
+
+    [RelayCommand]
+    Task SignIn() => AccountPage.ShowAsync(services);
 
     [RelayCommand]
     async Task Join()
@@ -240,7 +254,7 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
     [RelayCommand]
     async Task AddFriend()
     {
-        var code = await dialogs.Prompt("Add a friend", "Their friend code (in their Public profile) or their username.", null, Keyboard.Plain, "Add");
+        var code = await dialogs.Prompt("Add a friend", "Their friend code (at the top of their Profile tab) or their username.", null, Keyboard.Plain, "Add");
         if (string.IsNullOrWhiteSpace(code))
             return;
         if (await Online.Try(dialogs, "Couldn't add them", () => api.AddFriendAsync(code.Trim())) is { } friend)

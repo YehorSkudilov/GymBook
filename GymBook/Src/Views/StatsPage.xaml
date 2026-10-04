@@ -32,6 +32,24 @@
                 <Button Grid.Column="1" Text="History" Style="{StaticResource SmallButton}" Command="{Binding OpenHistoryCommand}" VerticalOptions="Center" />
             </Grid>
 
+            <!-- Stats or Ranks -->
+            <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding SectionTabs}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ChipItem">
+                        <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="16,7">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding SelectCommand}" /></Border.GestureRecognizers>
+                            <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </HorizontalStackLayout>
+
+            <!-- Ranks: shown by this view (bound to the page), filled by the inner one (bound to the ranks) -->
+            <ContentView IsVisible="{Binding IsRanksTab}">
+                <views:RanksView BindingContext="{Binding Ranks}" />
+            </ContentView>
+
+            <VerticalStackLayout Spacing="14" IsVisible="{Binding IsStatsTab}">
             <!-- The totals, with an animated icon each -->
             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
                 <Border Style="{StaticResource StatTile}">
@@ -346,6 +364,6 @@
                                   controls:ChartReveal.When="{Binding IsShowing}" />
                 </VerticalStackLayout>
             </Border>
-    
+            </VerticalStackLayout>
         </VerticalStackLayout>
 </views:TabView>

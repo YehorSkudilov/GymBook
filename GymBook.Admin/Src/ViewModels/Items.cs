@@ -22,7 +22,7 @@ public class UserItem(UserRow row, ICommand open)
 {
     public string Id => row.Id;
     public string Initial => Initials.Of(row.Name, row.Email);
-    public string Title => string.IsNullOrWhiteSpace(row.Name) ? row.Email : row.Name;
+    public string Title => string.IsNullOrWhiteSpace(row.Name) ? row.Email : $"@{row.Name}";
     public string Subtitle => string.IsNullOrWhiteSpace(row.Name) ? $"Joined {Format.Date(row.CreatedAt)}" : row.Email;
     public string Activity => $"{Format.Number(row.Workouts)} workouts · {Format.Number(row.Plans)} plans · active {Format.Ago(row.LastActiveAt)}";
     public IReadOnlyList<Badge> Badges { get; } = Badge.For(row);
@@ -54,6 +54,8 @@ public record Badge(string Text, Color Color, Color Background)
             badges.Add(new("Locked out", Palette.Warning, Palette.WarningSoft));
         if (!row.EmailVerified)
             badges.Add(new("Unverified", Palette.Warning, Palette.WarningSoft));
+        if (row.Pro)
+            badges.Add(new("Pro", Palette.Success, Palette.SuccessSoft));
         if (row.HasGoogle)
             badges.Add(new("Google", Palette.TextSecondary, Palette.Surface2));
         return badges;

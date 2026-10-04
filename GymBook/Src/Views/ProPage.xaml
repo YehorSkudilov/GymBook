@@ -45,7 +45,7 @@
                     <VerticalStackLayout Spacing="10">
                         <Label Text="You have Gym Book Pro" FontFamily="OpenSansSemibold" TextColor="{StaticResource Success}" />
                         <Label Text="{Binding ActiveText}" Style="{StaticResource Caption}" />
-                        <Button Text="Manage subscription" Style="{StaticResource SecondaryButton}" Command="{Binding ManageCommand}" />
+                        <Button Text="Manage subscription" Style="{StaticResource SecondaryButton}" Command="{Binding ManageCommand}" IsVisible="{Binding CanManage}" />
                     </VerticalStackLayout>
                 </Border>
 

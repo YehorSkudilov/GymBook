@@ -23,6 +23,16 @@
         <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="{StaticResource Accent}" HeightRequest="24" />
 
         <VerticalStackLayout Spacing="14" IsVisible="{Binding HasData}">
+            <!-- Whether the AI features need Gym Book Pro, for everyone -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasProSetting}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Require Gym Book Pro for AI" Style="{StaticResource H3}" />
+                    <Label Text="{Binding ProSettingText}" Style="{StaticResource Caption}" />
+                    <Button Text="{Binding ProSettingButton}" Command="{Binding ToggleProRequiredCommand}" IsVisible="{Binding CanChangeSettings}" HorizontalOptions="Start" />
+                    <Label Text="Only a SuperAdmin can change this." Style="{StaticResource Caption}" FontSize="12" IsVisible="{Binding CanChangeSettings, Converter={StaticResource Not}}" />
+                </VerticalStackLayout>
+            </Border>
+
             <FlexLayout Wrap="Wrap" Margin="0,0,-10,-10" BindableLayout.ItemsSource="{Binding Tiles}" BindableLayout.ItemTemplate="{StaticResource StatTile}" />
 
             <Border Style="{StaticResource Card}">

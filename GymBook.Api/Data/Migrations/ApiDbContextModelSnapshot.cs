@@ -72,6 +72,9 @@ namespace GymBook.Api.Data.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTimeOffset?>("ProGrantedUntil")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
@@ -333,6 +336,25 @@ namespace GymBook.Api.Data.Migrations
                     b.HasIndex("Lift", "Score");
 
                     b.ToTable("ranked_lifts", (string)null);
+                });
+
+            modelBuilder.Entity("GymBook.Api.Data.ServerSetting", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("server_settings", (string)null);
                 });
 
             modelBuilder.Entity("GymBook.Api.Data.SocialProfile", b =>

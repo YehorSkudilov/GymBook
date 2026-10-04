@@ -7,10 +7,11 @@ using GymBook.Services.Sync;
 namespace GymBook.ViewModels;
 
 /// <summary>
-/// The public profile: the username everyone else sees (on leaderboards, friends lists and shared plans), a picture, a
-/// short bio and a home gym, plus the friend code to give friends. Nothing else about the user is public.
+/// The public profile, at the top of the Profile tab: the username the app calls the user by and everyone else sees
+/// them as (on leaderboards, friends lists and shared plans), a picture, a short bio and a home gym, plus the friend
+/// code to give friends. Nothing else about the user is public. It needs the account.
 /// </summary>
-public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs) : BaseViewModel
+public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs, AccountService account) : BaseViewModel
 {
     /// <summary>The picture as sent: a JPEG this many pixels on its longer side.</summary>
     const int AvatarPixels = 320;
@@ -30,9 +31,15 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     public string BioText => Bio.Length > 0 ? Bio : "Add a few words about your training";
     public string HomeGymText => HomeGym.Length > 0 ? HomeGym : "Not set";
 
+    public bool IsSignedIn => account.IsSignedIn;
+    /// <summary>Signed out: no username, just the invitation to sign in.</summary>
+    public bool ShowSignIn => !IsSignedIn;
     /// <summary>Loaded, and there's no profile yet: the invitation to pick a username.</summary>
-    public bool ShowIntro => !IsLoading && !LoadFailed && !Exists;
-    public bool ShowProfile => !IsLoading && Exists;
+    public bool ShowIntro => IsSignedIn && !IsLoading && !LoadFailed && !Exists;
+    public bool ShowProfile => IsSignedIn && !IsLoading && Exists;
+    /// <summary>Couldn't load, and nothing saved to show instead.</summary>
+    public bool ShowLoadFailed => IsSignedIn && LoadFailed && !Exists;
+    public bool ShowLoading => IsSignedIn && IsLoading;
 
     partial void OnIsLoadingChanged(bool value) => OnStateChanged();
     partial void OnLoadFailedChanged(bool value) => OnStateChanged();
@@ -40,8 +47,12 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
 
     void OnStateChanged()
     {
+        OnPropertyChanged(nameof(IsSignedIn));
+        OnPropertyChanged(nameof(ShowSignIn));
         OnPropertyChanged(nameof(ShowIntro));
         OnPropertyChanged(nameof(ShowProfile));
+        OnPropertyChanged(nameof(ShowLoadFailed));
+        OnPropertyChanged(nameof(ShowLoading));
     }
 
     partial void OnUsernameChanged(string value) => OnPropertyChanged(nameof(Initial));
@@ -51,7 +62,17 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
 
     public override async Task OnAppearingAsync()
     {
-        IsLoading = true;
+        OnStateChanged();
+        if (!account.IsSignedIn)
+        {
+            (Exists, Username, Bio, HomeGym, AvatarUrl, FriendCode) = (false, "", "", "", null, "");
+            IsLoading = false;
+            return;
+        }
+        // The saved username shows at once; the rest comes from the server.
+        if (!Exists && account.Username is { } saved)
+            (Exists, Username) = (true, saved);
+        IsLoading = !Exists;
         try
         {
             Show(await api.GetMyPublicProfileAsync());
@@ -69,6 +90,8 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
 
     void Show(MyPublicProfile p)
     {
+        // What the app calls the user (Home, a finished workout), offline too.
+        account.Username = p.Exists ? p.Username : null;
         Exists = p.Exists;
         Username = p.Username;
         Bio = p.Bio;

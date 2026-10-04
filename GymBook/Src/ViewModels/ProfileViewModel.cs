@@ -17,16 +17,17 @@ public partial class ProfileViewModel(
     IServiceProvider services,
     HealthSettingsViewModel health,
     HealthSyncService healthSync,
-    DataExport export) : BaseViewModel
+    DataExport export,
+    PublicProfileViewModel publicProfile) : BaseViewModel
 {
+    /// <summary>The public profile, first on the tab: the username the app calls the user by, picture, bio and friend code.</summary>
+    public PublicProfileViewModel Public => publicProfile;
+
     /// <summary>The Health data section: connecting health apps, which to read from, and so on.</summary>
     public HealthSettingsViewModel Health => health;
 
     bool _loading;
 
-    [ObservableProperty] string name = "";
-    [ObservableProperty] string initial = "";
-    [ObservableProperty] string summary = "";
     [ObservableProperty] string unitText = "";
     [ObservableProperty] string bodyWeightText = "";
     [ObservableProperty] string compoundRestText = "";
@@ -67,8 +68,10 @@ public partial class ProfileViewModel(
         sync.StatusChanged += OnSyncChanged;
         store.Changed += OnSyncChanged;
         account.Changed += OnSyncChanged;
+        account.Changed += OnAccountChanged;
         healthSync.HistoryChanged += OnSyncChanged;
         Refresh();
+        _ = publicProfile.OnAppearingAsync();
         return Task.CompletedTask;
     }
 
@@ -77,8 +80,12 @@ public partial class ProfileViewModel(
         sync.StatusChanged -= OnSyncChanged;
         store.Changed -= OnSyncChanged;
         account.Changed -= OnSyncChanged;
+        account.Changed -= OnAccountChanged;
         healthSync.HistoryChanged -= OnSyncChanged;
     }
+
+    // Signed in or out: another account, another username.
+    void OnAccountChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(() => _ = publicProfile.OnAppearingAsync());
 
     void OnSyncChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(Refresh);
 
@@ -96,11 +103,6 @@ public partial class ProfileViewModel(
         SyncDetailsSummary = failed ? "Sync failed" + (pending > 0 ? $" · {pending} not synced" : "") : $"{pending} not synced yet";
 
         _loading = true;
-        Name = string.IsNullOrWhiteSpace(P.Name) ? "Athlete" : P.Name;
-        Initial = Name[..1].ToUpperInvariant();
-        var count = store.History.Count();
-        var since = store.History.LastOrDefault()?.StartedAt;
-        Summary = count == 0 ? "No workouts logged yet" : $"{count} workouts since {since:MMM yyyy}";
         UnitText = P.Unit == WeightUnit.Kg ? "Kilograms" : "Pounds";
         BodyWeightText = units.FormatWithUnit(P.BodyWeightKg);
         AgeText = P.BirthYear is { } year ? $"{DateTime.Now.Year - year}" : "Not set";
@@ -154,17 +156,6 @@ public partial class ProfileViewModel(
         if (choice == null || match == null)
             return;
         apply(match);
-        store.Save();
-        Refresh();
-    }
-
-    [RelayCommand]
-    async Task EditName()
-    {
-        var value = await dialogs.Prompt("Your name", "What should we call you?", P.Name);
-        if (value == null)
-            return;
-        P.Name = value.Trim();
         store.Save();
         Refresh();
     }
@@ -266,17 +257,9 @@ public partial class ProfileViewModel(
     [RelayCommand]
     Task OpenSyncDetails() => GoTo(Routes.SyncDetails);
 
-    /// <summary>The public profile others see: username, picture, bio and home gym.</summary>
-    [RelayCommand]
-    Task OpenPublicProfile() => GoTo(Routes.PublicProfile);
-
     /// <summary>Gym Book Pro: what it unlocks, subscribing or managing it.</summary>
     [RelayCommand]
     Task OpenPro() => ProViewModel.ShowAsync();
-
-    /// <summary>Strength ranks, leaderboards and friends.</summary>
-    [RelayCommand]
-    Task OpenRanks() => GoTo(Routes.Ranks);
 
     /// <summary>The exercise library: browse, search and filter every exercise, and make custom ones.</summary>
     [RelayCommand]

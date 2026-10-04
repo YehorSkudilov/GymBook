@@ -78,6 +78,15 @@ public class AdminApi(HttpClient http, AdminSession session)
 
     public Task SendPasswordResetAsync(string id) => SendAsync(() => new HttpRequestMessage(HttpMethod.Post, UserPath(id, "password-reset-email")));
 
+    /// <summary>Gives the account Gym Book Pro until <paramref name="until"/> (ProGrant.Forever for good), or takes it back (null).</summary>
+    public Task SetProGrantAsync(string id, DateTimeOffset? until) => PostAsync(UserPath(id, "pro"), new SetProGrantRequest(until));
+
+    public Task<AdminSettings> GetSettingsAsync(CancellationToken ct = default) => GetAsync<AdminSettings>("api/admin/settings", ct);
+
+    /// <summary>SuperAdmin only.</summary>
+    public Task SetSettingsAsync(AdminSettings settings) =>
+        SendAsync(() => new HttpRequestMessage(HttpMethod.Put, "api/admin/settings") { Content = JsonContent.Create(settings, TypeInfo<AdminSettings>()) });
+
     /// <summary>SuperAdmin only. Null makes the account a regular user.</summary>
     public Task SetRoleAsync(string id, string? role) => PostAsync(UserPath(id, "role"), new SetRoleRequest(role));
 

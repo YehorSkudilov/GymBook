@@ -7,8 +7,36 @@ using GymBook.Services;
 
 namespace GymBook.ViewModels;
 
-public partial class StatsViewModel(DataStore store, StatsService stats, Units units, DialogService dialogs, NutritionService nutrition) : BaseViewModel
+/// <summary>The Progress tab: the stats from this device's workouts, and (its Ranks tab) the strength ranks.</summary>
+public partial class StatsViewModel(DataStore store, StatsService stats, Units units, DialogService dialogs, NutritionService nutrition, RanksViewModel ranks)
+    : BaseViewModel
 {
+    /// <summary>The Ranks tab's own view model (see RanksView).</summary>
+    public RanksViewModel Ranks => ranks;
+
+    List<ChipItem>? _sectionTabs;
+
+    /// <summary>Stats or Ranks, at the top of the tab.</summary>
+    public List<ChipItem> SectionTabs => _sectionTabs ??= [new("Stats", false, SelectSection) { IsSelected = true }, new("Ranks", true, SelectSection)];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStatsTab))]
+    bool isRanksTab;
+
+    public bool IsStatsTab => !IsRanksTab;
+
+    void SelectSection(ChipItem chip)
+    {
+        foreach (var tab in SectionTabs)
+            tab.IsSelected = tab == chip;
+        IsRanksTab = chip.Value is true;
+        // The stats play in again when they come back; the ranks load from the server each time they're opened.
+        if (IsRanksTab)
+            _ = ranks.OnAppearingAsync();
+        else
+            _ = OnAppearingAsync();
+    }
+
     static readonly Color Accent = Color.FromArgb("#3F7DFF");
     static readonly Color Violet = Color.FromArgb("#7C5CFF");
     static readonly Color Green = Color.FromArgb("#2ED47A");
@@ -138,6 +166,8 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
 
     public override Task OnAppearingAsync()
     {
+        if (IsRanksTab)
+            _ = ranks.OnAppearingAsync();
         IsShowing = false;
         var history = store.History.ToList();
         TotalWorkouts = history.Count.ToString();

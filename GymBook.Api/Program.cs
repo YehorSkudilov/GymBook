@@ -156,8 +156,15 @@ var billingHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
 builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<GymBook.Api.Billing.GooglePlayVerifier>(sp, billingHttp));
 builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<GymBook.Api.Billing.AppStoreVerifier>(sp, billingHttp));
 builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<GymBook.Api.Billing.MicrosoftStoreVerifier>(sp, billingHttp));
+// Settings admins change while the server runs (whether the AI features need Pro).
+builder.Services.AddScoped<GymBook.Api.Admin.ServerSettings>();
 builder.Services.AddScoped<GymBook.Api.Billing.Subscriptions>();
 builder.Services.AddHostedService<GymBook.Api.Billing.SubscriptionRefresher>();
+// The web admin (GymBook.Web's /admin) calls the API from the website: its origins, from Cors__AllowedOrigins
+// (comma-separated). Bearer tokens, no cookies, so no credentials. Unset: no browser origin may call it.
+var corsOrigins = (builder.Configuration["Cors:AllowedOrigins"] ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+    .Select(o => o.TrimEnd('/')).ToArray();
+builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod()));
 builder.Services.AddProblemDetails();
 builder.Services.AddControllers(o =>
     {
@@ -199,6 +206,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseSwaggerWithAuth();
+app.UseCors();
 app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();

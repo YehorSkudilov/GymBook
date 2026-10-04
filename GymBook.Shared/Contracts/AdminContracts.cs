@@ -25,6 +25,7 @@ public record DayCount(DateOnly Date, int Count);
 
 public record TopUser(string Id, string Email, int Count);
 
+/// <param name="Pro">Has Gym Book Pro now: bought in a store or given by an admin.</param>
 public record UserRow(
     string Id,
     string Email,
@@ -36,7 +37,8 @@ public record UserRow(
     string Status,
     int Workouts,
     int Plans,
-    DateTimeOffset? LastActiveAt);
+    DateTimeOffset? LastActiveAt,
+    bool Pro);
 
 public record UserDetail(
     UserRow User,
@@ -46,7 +48,19 @@ public record UserDetail(
     TrainingStats Stats,
     List<PlanRow> Plans,
     List<WorkoutRow> RecentWorkouts,
-    AiUsage Ai);
+    AiUsage Ai,
+    ProInfo Pro);
+
+/// <summary>The account's Gym Book Pro.</summary>
+/// <param name="GrantedUntil">Given by an admin until then (<see cref="ProGrant.Forever"/> for good); null when not given, or the grant ended.</param>
+/// <param name="Store">The store subscription running now, if any, and what it is.</param>
+public record ProInfo(
+    DateTimeOffset? GrantedUntil,
+    SubscriptionStore? Store,
+    string? ProductId,
+    DateTimeOffset? StoreExpiresAt,
+    bool AutoRenewing,
+    bool InTrial);
 
 public record ProfileInfo(
     string Name,
@@ -115,6 +129,13 @@ public record SetRoleRequest(string? Role);
 public record SetDisabledRequest(bool Disabled);
 
 public record SetEmailVerifiedRequest(bool Verified);
+
+/// <summary>Gives the account Gym Book Pro until <paramref name="Until"/> (<see cref="ProGrant.Forever"/> for good), or takes it back (null).</summary>
+public record SetProGrantRequest(DateTimeOffset? Until);
+
+/// <summary>Settings admins change while the server runs.</summary>
+/// <param name="ProRequired">The AI features need Gym Book Pro; off, they're free for everyone (within the AI limits).</param>
+public record AdminSettings(bool ProRequired);
 
 /// <summary>A report about someone's ranked lift or public profile, newest first in the admin app.</summary>
 /// <param name="OpenAboutTarget">Open reports about the same user, this one included.</param>

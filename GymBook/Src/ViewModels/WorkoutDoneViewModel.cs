@@ -9,7 +9,7 @@ namespace GymBook.ViewModels;
 /// The celebration right after a workout is finished: what was done, counted up as the screen comes in, and any new
 /// personal bests. Continue opens the finished workout itself.
 /// </summary>
-public partial class WorkoutDoneViewModel(DataStore store, StatsService stats, Units units) : BaseViewModel, IQueryAttributable
+public partial class WorkoutDoneViewModel(DataStore store, StatsService stats, Units units, GymBook.Services.Sync.AccountService account) : BaseViewModel, IQueryAttributable
 {
     string? _sessionId;
     TimeSpan _duration;
@@ -45,7 +45,7 @@ public partial class WorkoutDoneViewModel(DataStore store, StatsService stats, U
         _sets = session.WorkingSets.Count();
         _volume = stats.SessionVolume(session);
         _exercises = session.Exercises.Count(e => e.Sets.Any(s => s.IsCompleted && !s.IsWarmup));
-        var name = store.Profile.Name.Trim();
+        var name = account.Username ?? "";
         Title = Pick(name.Length > 0 ? [$"Great work, {name}!", $"Nailed it, {name}!", $"That's a wrap, {name}!"] : ["Great work!", "Nailed it!", "Workout complete!"]);
         Subtitle = $"{session.Name} is done. Rest up and recover.";
         Records = PersonalRecords(session);

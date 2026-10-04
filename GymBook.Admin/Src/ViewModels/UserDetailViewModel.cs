@@ -18,13 +18,13 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
     [NotifyPropertyChangedFor(nameof(HasData), nameof(Title), nameof(Email), nameof(Badges), nameof(AccountRows), nameof(ProfileRows),
         nameof(HasProfile), nameof(StatTiles), nameof(WorkoutsByWeek), nameof(WeeksRange), nameof(Plans), nameof(HasPlans),
         nameof(Workouts), nameof(HasWorkouts), nameof(AiRows), nameof(IsSelf), nameof(CanAct), nameof(ActionsNote), nameof(HasActionsNote),
-        nameof(Actions), nameof(Initial), nameof(Summary), nameof(HasBadges))]
+        nameof(Actions), nameof(HasActions), nameof(Initial), nameof(Summary), nameof(HasBadges))]
     UserDetail? detail;
 
     public bool HasData => Detail != null;
     UserRow? Row => Detail?.User;
 
-    public string Title => Row == null ? "" : string.IsNullOrWhiteSpace(Row.Name) ? Row.Email : Row.Name;
+    public string Title => Row == null ? "" : string.IsNullOrWhiteSpace(Row.Name) ? Row.Email : $"@{Row.Name}";
     public string Email => Row?.Email ?? "";
     public string Initial => Row == null ? "" : Initials.Of(Row.Name, Row.Email);
     public string Summary => Row == null ? "" : $"Joined {Format.Date(Row.CreatedAt)} · active {Format.Ago(Row.LastActiveAt)}";
@@ -36,8 +36,11 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
     {
         get
         {
-            if (Row is not { } user || !CanAct)
+            if (Row is not { } user)
                 return [];
+            // Pro is the one thing an admin may also change on their own account.
+            if (!CanAct)
+                return IsSelf ? [ProAction] : [];
             var disabled = user.Status == "Disabled";
             var actions = new List<ActionItem>
             {
@@ -49,6 +52,7 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
                     ? new("unpublished", Palette.Warning, Palette.WarningSoft, "Mark email unverified", "They'll have to enter a code again", ToggleVerifiedCommand)
                     : new("verified", Palette.Accent, Palette.AccentSoft, "Mark email verified", "Skips the emailed code", ToggleVerifiedCommand),
                 new("auto_awesome", Palette.Accent2, Palette.Accent2Soft, "Reset AI quota", "Gives back the AI plans and chats used", ResetAiQuotaCommand),
+                ProAction,
             };
             if (Detail.HasPassword)
                 actions.Add(new("key", Palette.Accent, Palette.AccentSoft, "Send password reset", "Emails a code to choose a new password", SendPasswordResetCommand));
@@ -60,6 +64,25 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
             return actions;
         }
     }
+
+    ActionItem ProAction => Detail?.Pro.GrantedUntil is { } until
+        ? new("workspace_premium", Palette.Warning, Palette.WarningSoft, "Take back Gym Book Pro", $"Given {ProUntil(until)}", RemoveProCommand)
+        : new("workspace_premium", Palette.Success, Palette.SuccessSoft, "Give Gym Book Pro", "Free, for good or until a date", GrantProCommand);
+
+    static string ProUntil(DateTimeOffset until) => until >= ProGrant.Forever ? "for good" : $"until {Format.Date(until)}";
+
+    static string ProText(ProInfo pro)
+    {
+        var parts = new List<string>();
+        if (pro.GrantedUntil is { } until)
+            parts.Add($"Given {ProUntil(until)}");
+        if (pro.Store is { } store && pro.StoreExpiresAt is { } expires)
+            parts.Add($"{(pro.InTrial ? "Free trial" : Format.Words(store.ToString()))} ({(pro.ProductId == SubscriptionProducts.Yearly ? "yearly" : "monthly")}), "
+                + $"{(pro.AutoRenewing ? "renews" : "ends")} {Format.Date(expires)}");
+        return parts.Count > 0 ? string.Join(" · ", parts) : "No";
+    }
+
+    public bool HasActions => Actions.Count > 0;
 
     public IReadOnlyList<InfoRow> AccountRows => Detail is not { } d ? [] :
     [
@@ -77,7 +100,6 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
 
     public IReadOnlyList<InfoRow> ProfileRows => Detail?.Profile is not { } p ? [] :
     [
-        new("Name", p.Name),
         new("Goal", Format.Words(p.Goal)),
         new("Experience", Format.Words(p.Experience)),
         new("Schedule", $"{p.DaysPerWeek} days a week, {p.SessionMinutes} min"),
@@ -124,6 +146,7 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
     [
         new("AI plans", $"{Format.Quota(ai.Plan.Used, ai.Plan.Limit, ai.Plan.Period)} · {ai.Plans30d} in 30 days"),
         new("Plan chat", $"{Format.Quota(ai.Chat.Used, ai.Chat.Limit, ai.Chat.Period)} · {ai.Chats30d} in 30 days"),
+        new("Gym Book Pro", ProText(Detail.Pro)),
     ];
 
     public bool IsSelf => Row?.Id == session.UserId;
@@ -133,7 +156,7 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
 
     public string ActionsNote =>
         Row == null ? "" :
-        IsSelf ? "This is your account. Admins can't act on their own account." :
+        IsSelf ? "This is your account. Admins can only change their own Pro here." :
         !CanAct ? "Only a SuperAdmin can change another admin's account." :
         "";
 
@@ -236,6 +259,32 @@ public partial class UserDetailViewModel(AdminApi api, AdminSession session) : B
     {
         if (Row is { } user && await ConfirmAsync("Reset AI quota?", $"{user.Email} gets back the AI plans and chat messages used in the current windows.", "Reset"))
             await ActAsync(() => api.ResetAiQuotaAsync(user.Id));
+    }
+
+    [RelayCommand]
+    async Task GrantPro()
+    {
+        if (Row is not { } user)
+            return;
+        const string forever = "For good", year = "For a year", month = "For a month";
+        var choice = await CurrentPage.DisplayActionSheetAsync($"Give {user.Email} Gym Book Pro", "Cancel", null, forever, year, month);
+        DateTimeOffset? until = choice switch
+        {
+            forever => ProGrant.Forever,
+            year => DateTimeOffset.UtcNow.AddYears(1),
+            month => DateTimeOffset.UtcNow.AddMonths(1),
+            _ => null,
+        };
+        if (until != null)
+            await ActAsync(() => api.SetProGrantAsync(user.Id, until));
+    }
+
+    [RelayCommand]
+    async Task RemovePro()
+    {
+        if (Row is { } user && await ConfirmAsync("Take back Gym Book Pro?",
+                $"{user.Email} loses the Pro you gave them. A subscription they bought in a store keeps running.", "Take back"))
+            await ActAsync(() => api.SetProGrantAsync(user.Id, null));
     }
 
     [RelayCommand]

@@ -29,8 +29,8 @@ public class AdminUsersController(
     const int ListLimit = 300;
 
     /// <summary>
-    /// Newest first. <paramref name="q"/> matches the email or profile name; <paramref name="filter"/> is admins, disabled,
-    /// locked (out after wrong passwords), unverified, google (signs in with Google), new (joined in the last 7 days),
+    /// Newest first. <paramref name="q"/> matches the email or username; <paramref name="filter"/> is admins, disabled,
+    /// locked (out after wrong passwords), unverified, google (signs in with Google), pro (has Gym Book Pro), new (joined in the last 7 days),
     /// active (used the app in the last 7 days, as the dashboard counts it) or inactive (not in the last 30 days).
     /// </summary>
     [HttpGet]
@@ -44,7 +44,7 @@ public class AdminUsersController(
         {
             var pattern = $"%{q.Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
             query = query.Where(u => EF.Functions.ILike(u.Email!, pattern)
-                || db.Profiles.IgnoreQueryFilters().Any(p => EF.Property<string>(p, ApiDbContext.UserIdColumn) == u.Id && EF.Functions.ILike(p.Name, pattern)));
+                || db.SocialProfiles.Any(p => p.UserId == u.Id && EF.Functions.ILike(p.Username, pattern)));
         }
         query = filter switch
         {
@@ -53,6 +53,7 @@ public class AdminUsersController(
             "locked" => query.Where(u => u.LockoutEnd > now && u.LockoutEnd < AdminQueries.DisabledThreshold),
             "unverified" => query.Where(u => !u.EmailConfirmed),
             "google" => query.Where(u => db.UserLogins.Any(l => l.UserId == u.Id && l.LoginProvider == GoogleTokenVerifier.Provider)),
+            "pro" => query.Where(u => u.ProGrantedUntil > now || db.Subscriptions.Any(s => s.UserId == u.Id && !s.Revoked && s.ExpiresAt > now)),
             "new" => query.Where(u => u.CreatedAt > weekAgo),
             "active" => query.Where(u => db.RefreshTokens.Any(t => t.UserId == u.Id && t.CreatedAt > weekAgo)),
             "inactive" => query.Where(u => !db.RefreshTokens.Any(t => t.UserId == u.Id && t.CreatedAt > monthAgo)),
@@ -80,6 +81,12 @@ public class AdminUsersController(
             .Select(t => t.FamilyId)
             .Distinct()
             .CountAsync(ct);
+
+        // The store subscription running now, as last checked (not asked of the store again here).
+        var subscription = await db.Subscriptions
+            .Where(s => s.UserId == id && !s.Revoked && s.ExpiresAt > now)
+            .OrderByDescending(s => s.ExpiresAt)
+            .FirstOrDefaultAsync(ct);
 
         var d30 = now.AddDays(-30);
         var planQuota = await quota.GetAsync(id, QuotaKind.Plan, ct);
@@ -149,7 +156,14 @@ public class AdminUsersController(
                 w.WorkingSets.Count(),
                 Math.Round(Volume(w)),
                 w.PlanWeek)).ToList(),
-            ai);
+            ai,
+            new ProInfo(
+                user.ProGrantedUntil > now ? user.ProGrantedUntil : null,
+                subscription?.Store,
+                subscription?.ProductId,
+                subscription?.ExpiresAt,
+                subscription?.AutoRenewing ?? false,
+                subscription?.InTrial ?? false));
     }
 
     /// <summary>Disables (or re-enables) the account. Disabling also signs it out everywhere.</summary>
@@ -218,6 +232,26 @@ public class AdminUsersController(
                 && ((g.Kind == QuotaKind.Plan && g.CreatedAt > planSince) || (g.Kind == QuotaKind.Chat && g.CreatedAt > chatSince)))
             .ExecuteDeleteAsync(ct);
         log.LogInformation("Admin {Admin} reset the AI quota of {User}", CallerId, user.Id);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Gives the account Gym Book Pro until a date (<see cref="ProGrant.Forever"/> for good), or takes it back (null);
+    /// a store subscription it has runs on either way. Unlike the other actions, an admin may do this to their own
+    /// account. The user's app sees it the next time it asks for the subscription.
+    /// </summary>
+    [HttpPost("{id}/pro")]
+    public async Task<IActionResult> SetProGrant(string id, SetProGrantRequest request, CancellationToken ct)
+    {
+        if (request.Until is { } until && until <= time.GetUtcNow())
+            return Problem(statusCode: StatusCodes.Status400BadRequest, title: "Pick a date in the future.");
+        (AppUser? user, ActionResult? error) = id == CallerId ? (await users.FindByIdAsync(id), null) : await FindTargetAsync(id);
+        if (user == null)
+            return error ?? NotFoundProblem();
+
+        user.ProGrantedUntil = request.Until;
+        await users.UpdateAsync(user);
+        log.LogInformation("Admin {Admin} set Pro of {User} until {Until}", CallerId, user.Id, request.Until?.ToString("u") ?? "none");
         return NoContent();
     }
 

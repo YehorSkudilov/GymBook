@@ -21,6 +21,13 @@ public static class SubscriptionProducts
     public const string Name = "Gym Book Pro";
 }
 
+/// <summary>Gym Book Pro given by an admin, without a store.</summary>
+public static class ProGrant
+{
+    /// <summary>The end of a grant that never ends.</summary>
+    public static readonly DateTimeOffset Forever = new(9999, 12, 31, 0, 0, 0, TimeSpan.Zero);
+}
+
 /// <summary>The signed-in user's subscription, and what the app needs to tie a new purchase to the account.</summary>
 public class SubscriptionStatusResponse
 {
@@ -32,6 +39,13 @@ public class SubscriptionStatusResponse
     public bool AutoRenewing { get; set; }
     /// <summary>In the store's free trial.</summary>
     public bool InTrial { get; set; }
+    /// <summary>
+    /// Given by an admin rather than bought (no <see cref="Store"/>); <see cref="ExpiresAt"/> is when the grant ends,
+    /// <see cref="ProGrant.Forever"/> for good.
+    /// </summary>
+    public bool Granted { get; set; }
+    /// <summary>The AI features need Pro. False while an admin has made them free for everyone (then Active is true).</summary>
+    public bool Required { get; set; } = true;
     /// <summary>
     /// The account's id for purchases: Google Play's obfuscated account id and Apple's app account token (a UUID), so
     /// a purchase can only be claimed by the account that made it.

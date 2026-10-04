@@ -32,6 +32,8 @@ public partial class ProViewModel(SubscriptionService subscriptions, DialogServi
     [ObservableProperty] bool isBusy;
     [ObservableProperty] bool isActive;
     [ObservableProperty] string activeText = "";
+    /// <summary>Bought in a store, so there's a subscription to manage (not when given by Gym Book, or free for everyone).</summary>
+    [ObservableProperty] bool canManage;
     [ObservableProperty] List<ProOfferItem> offers = [];
     [ObservableProperty] string? offersError;
     /// <summary>Why the sheet opened, e.g. "AI plans need Gym Book Pro".</summary>
@@ -103,10 +105,17 @@ public partial class ProViewModel(SubscriptionService subscriptions, DialogServi
     {
         IsActive = subscriptions.IsActive;
         var s = subscriptions.Status;
-        ActiveText = s is { Active: true, ExpiresAt: { } until }
-            ? (s.InTrial ? "Free trial" : "Subscribed") + (s.AutoRenewing ? $", renews {until.LocalDateTime:d MMM yyyy}" : $", ends {until.LocalDateTime:d MMM yyyy}")
-              + (s.Store != subscriptions.Store && s.Store is { } other ? $" · bought in the {StoreName(other)}" : "")
-            : "Subscribed";
+        CanManage = s?.Store != null;
+        ActiveText = s switch
+        {
+            { Active: true, Store: null, Granted: true, ExpiresAt: { } until } =>
+                "Given to you by Gym Book" + (until >= ProGrant.Forever ? "" : $", until {until.LocalDateTime:d MMM yyyy}"),
+            { Active: true, Store: null, Required: false } => "The AI features are free for everyone right now",
+            { Active: true, ExpiresAt: { } until } =>
+                (s.InTrial ? "Free trial" : "Subscribed") + (s.AutoRenewing ? $", renews {until.LocalDateTime:d MMM yyyy}" : $", ends {until.LocalDateTime:d MMM yyyy}")
+                + (s.Store != subscriptions.Store && s.Store is { } other ? $" · bought in the {StoreName(other)}" : ""),
+            _ => "Subscribed",
+        };
     }
 
     async Task LoadOffersAsync()

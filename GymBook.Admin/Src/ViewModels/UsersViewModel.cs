@@ -3,7 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace GymBook.Admin.ViewModels;
 
-/// <summary>Every account, newest first, searchable by email or name and filterable (the API returns up to 300).</summary>
+/// <summary>Every account, newest first, searchable by email or username and filterable (the API returns up to 300).</summary>
 public partial class UsersViewModel : BaseViewModel
 {
     const int ListLimit = 300;
@@ -25,6 +25,7 @@ public partial class UsersViewModel : BaseViewModel
             new("Inactive", "inactive", select),
             new("Unverified", "unverified", select),
             new("Google", "google", select),
+            new("Pro", "pro", select),
             new("Admins", "admins", select),
             new("Disabled", "disabled", select),
             new("Locked out", "locked", select),

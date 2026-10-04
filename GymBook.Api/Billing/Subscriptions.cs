@@ -1,3 +1,4 @@
+using GymBook.Api.Admin;
 using GymBook.Api.Data;
 using GymBook.Contracts;
 using Microsoft.EntityFrameworkCore;
@@ -8,16 +9,27 @@ namespace GymBook.Api.Billing;
 /// Who has Gym Book Pro. Purchases are checked with their store when the app reports one (on buying and on restoring)
 /// and recorded against the account; once a recorded one's expiry passes, the store is asked again (it may have
 /// renewed), at most every <see cref="RecheckAfter"/>. A purchase belongs to the account that first recorded it.
+/// An admin can also give an account Pro (<see cref="AppUser.ProGrantedUntil"/>), or make the AI features free for
+/// everyone (<see cref="ServerSettings.ProRequiredAsync"/>).
 /// </summary>
 public class Subscriptions(ApiDbContext db, GooglePlayVerifier google, AppStoreVerifier apple, MicrosoftStoreVerifier microsoft,
-    TimeProvider time, ILogger<Subscriptions> log)
+    ServerSettings settings, TimeProvider time, ILogger<Subscriptions> log)
 {
     static readonly TimeSpan RecheckAfter = TimeSpan.FromHours(6);
 
     /// <summary>How long after expiring a subscription is still asked about: a renewal after a lapse longer than this needs a restore in the app.</summary>
     static readonly TimeSpan LapseChecked = TimeSpan.FromDays(60);
 
-    public async Task<bool> IsActiveAsync(string userId, CancellationToken ct) => await CurrentAsync(userId, ct) != null;
+    /// <summary>The user may use the AI features: Pro isn't required right now, or they were given it, or bought it.</summary>
+    public async Task<bool> IsActiveAsync(string userId, CancellationToken ct) =>
+        !await settings.ProRequiredAsync(ct) || await GrantedUntilAsync(userId, ct) != null || await CurrentAsync(userId, ct) != null;
+
+    /// <summary>When the Pro an admin gave the user ends, if they have it now.</summary>
+    public async Task<DateTimeOffset?> GrantedUntilAsync(string userId, CancellationToken ct)
+    {
+        var until = await db.Users.Where(u => u.Id == userId).Select(u => u.ProGrantedUntil).FirstOrDefaultAsync(ct);
+        return until > time.GetUtcNow() ? until : null;
+    }
 
     /// <summary>The user's subscription that's running now, if any.</summary>
     public async Task<StoreSubscription?> CurrentAsync(string userId, CancellationToken ct)
@@ -165,15 +177,20 @@ public class Subscriptions(ApiDbContext db, GooglePlayVerifier google, AppStoreV
 
     public async Task<SubscriptionStatusResponse> StatusAsync(string userId, CancellationToken ct)
     {
+        // A store subscription comes first, so it can still be managed (or cancelled) while a grant runs too.
         var current = await CurrentAsync(userId, ct);
+        var granted = current == null ? await GrantedUntilAsync(userId, ct) : null;
+        var required = await settings.ProRequiredAsync(ct);
         return new SubscriptionStatusResponse
         {
-            Active = current != null,
+            Active = current != null || granted != null || !required,
             Store = current?.Store,
             ProductId = current?.ProductId,
-            ExpiresAt = current?.ExpiresAt,
+            ExpiresAt = current?.ExpiresAt ?? granted,
             AutoRenewing = current?.AutoRenewing ?? false,
             InTrial = current?.InTrial ?? false,
+            Granted = granted != null,
+            Required = required,
             AccountToken = BillingIds.AccountToken(userId),
         };
     }

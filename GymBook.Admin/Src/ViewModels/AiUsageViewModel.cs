@@ -9,11 +9,13 @@ namespace GymBook.Admin.ViewModels;
 public partial class AiUsageViewModel : BaseViewModel
 {
     readonly AdminApi _api;
+    readonly AdminSession _session;
     int _days = 30;
 
-    public AiUsageViewModel(AdminApi api)
+    public AiUsageViewModel(AdminApi api, AdminSession session)
     {
         _api = api;
+        _session = session;
         var select = new RelayCommand<ChipItem>(chip => SelectRange(int.Parse(chip!.Value!)));
         Ranges = [new("7 days", "7", select), new("30 days", "30", select), new("90 days", "90", select)];
         Ranges[1].IsSelected = true;
@@ -48,7 +50,43 @@ public partial class AiUsageViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    Task Refresh() => RunAsync(async () => Show(await _api.GetAiUsageAsync(_days)));
+    Task Refresh() => RunAsync(async () =>
+    {
+        Show(await _api.GetAiUsageAsync(_days));
+        ProRequired = (await _api.GetSettingsAsync()).ProRequired;
+    });
+
+    /// <summary>Whether the AI features need Gym Book Pro (see AdminSettings); null until loaded.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasProSetting), nameof(ProSettingText), nameof(ProSettingButton))]
+    bool? proRequired;
+
+    public bool HasProSetting => ProRequired != null;
+
+    public string ProSettingText => ProRequired == false
+        ? "Off: the AI features are free for everyone, within the quotas."
+        : "On: the AI features need Gym Book Pro (bought, or given by an admin).";
+
+    public string ProSettingButton => ProRequired == false ? "Require Pro" : "Make AI free for everyone";
+
+    /// <summary>Only a SuperAdmin changes it; the API refuses anyone else.</summary>
+    public bool CanChangeSettings => _session.IsSuperAdmin;
+
+    [RelayCommand]
+    async Task ToggleProRequired()
+    {
+        if (ProRequired is not { } required)
+            return;
+        var (title, message) = required
+            ? ("Make AI free for everyone?", "Every signed-in user can use the AI features without Gym Book Pro, within the quotas. Each use is a paid OpenAI call.")
+            : ("Require Gym Book Pro?", "Users without Pro (bought, or given by an admin) can't use the AI features any more.");
+        if (!await ConfirmAsync(title, message, required ? "Make free" : "Require Pro"))
+            return;
+        if (await RunAsync(() => _api.SetSettingsAsync(new AdminSettings(!required))))
+            ProRequired = !required;
+        else if (HasError)
+            await AlertAsync("Couldn't do that", Error);
+    }
 
     void Show(AiUsageResponse a)
     {

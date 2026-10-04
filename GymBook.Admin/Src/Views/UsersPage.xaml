@@ -20,7 +20,7 @@
                 <Border Style="{StaticResource InputBox}" Padding="10,0" HeightRequest="44">
                     <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
                         <Image Source="{StaticResource IconSearch}" WidthRequest="18" HeightRequest="18" VerticalOptions="Center" />
-                        <Entry Grid.Column="1" Text="{Binding Query}" Placeholder="Search by email or name" ClearButtonVisibility="WhileEditing" ReturnCommand="{Binding RefreshCommand}" />
+                        <Entry Grid.Column="1" Text="{Binding Query}" Placeholder="Search by email or username" ClearButtonVisibility="WhileEditing" ReturnCommand="{Binding RefreshCommand}" />
                     </Grid>
                 </Border>
 

@@ -32,10 +32,8 @@ public static class AdminQueries
                 u.EmailConfirmed,
                 u.AdminRole,
                 u.LockoutEnd,
-                Name = db.Profiles.IgnoreQueryFilters()
-                    .Where(p => EF.Property<string>(p, ApiDbContext.UserIdColumn) == u.Id)
-                    .Select(p => p.Name)
-                    .FirstOrDefault(),
+                // The username (the public profile's) is what the apps call the user; there's no other name.
+                Name = db.SocialProfiles.Where(p => p.UserId == u.Id).Select(p => p.Username).FirstOrDefault(),
                 HasGoogle = db.UserLogins.Any(l => l.UserId == u.Id && l.LoginProvider == GoogleTokenVerifier.Provider),
                 Workouts = db.Sessions.IgnoreQueryFilters()
                     .Count(s => EF.Property<string>(s, ApiDbContext.UserIdColumn) == u.Id && !s.IsDeleted && s.EndedAt != null),
@@ -43,6 +41,7 @@ public static class AdminQueries
                     .Count(p => EF.Property<string>(p, ApiDbContext.UserIdColumn) == u.Id && !p.IsDeleted),
                 // A sign-in or token refresh happens at least every access token lifetime while the app is in use.
                 LastActiveAt = db.RefreshTokens.Where(t => t.UserId == u.Id).Max(t => (DateTimeOffset?)t.CreatedAt),
+                Pro = u.ProGrantedUntil > now || db.Subscriptions.Any(s => s.UserId == u.Id && !s.Revoked && s.ExpiresAt > now),
             })
             .ToListAsync(ct);
 
@@ -57,7 +56,8 @@ public static class AdminQueries
             AccountStatus.Of(new AppUser { LockoutEnd = r.LockoutEnd }, now),
             r.Workouts,
             r.Plans,
-            r.LastActiveAt)).ToList();
+            r.LastActiveAt,
+            r.Pro)).ToList();
     }
 
     /// <summary>Accounts locked until the end of time (see <see cref="AccountStatus"/>).</summary>

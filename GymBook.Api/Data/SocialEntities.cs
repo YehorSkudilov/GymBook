@@ -125,3 +125,11 @@ public class StoreSubscription
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset CheckedAt { get; set; }
 }
+
+/// <summary>A setting admins change while the server runs (see <see cref="Admin.ServerSettings"/>), by key.</summary>
+public class ServerSetting
+{
+    public string Key { get; set; } = "";
+    public string Value { get; set; } = "";
+    public DateTimeOffset UpdatedAt { get; set; }
+}

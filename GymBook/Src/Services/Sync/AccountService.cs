@@ -10,6 +10,26 @@ public class AccountService(ApiClient api, AuthSession session, DataStore store,
     public bool HasPassword => session.HasPassword;
     public bool CanUseGoogle => google.IsAvailable;
 
+    /// <summary>
+    /// The account's username (its public profile's), what the app calls the user everywhere. As last loaded from the
+    /// server, kept on the device so it shows offline; null when signed out or without one yet.
+    /// </summary>
+    public string? Username
+    {
+        get => IsSignedIn && Preferences.Default.Get(UsernameKey, "") is { Length: > 0 } name ? name : null;
+        set
+        {
+            if (!IsSignedIn)
+                return;
+            if (string.IsNullOrEmpty(value))
+                Preferences.Default.Remove(UsernameKey);
+            else
+                Preferences.Default.Set(UsernameKey, value);
+        }
+    }
+
+    string UsernameKey => $"account.username.{Email}";
+
     /// <summary>Signed in with an email that hasn't been verified yet: the app asks for the code before anything else.</summary>
     public bool NeedsEmailVerification => session.IsSignedIn && !session.EmailVerified;
 
