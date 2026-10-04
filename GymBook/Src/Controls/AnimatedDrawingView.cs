@@ -51,9 +51,32 @@ public abstract class AnimatedDrawingView : GraphicsView
         }
         if (this.AnimationIsRunning(FramesAnimation))
             return;
-        // A one-second animation that only redraws, repeated for as long as it should run.
-        new Animation(_ => Invalidate()).Commit(this, FramesAnimation, rate: 16, length: 1000,
-            repeat: () => IsRunning && IsLoaded);
+        // A one-second animation that only redraws, repeated for as long as it should run. Frames aren't drawn while
+        // the view can't be seen (scrolled away, under another page, or inside something hidden); the picture goes by
+        // the clock, so it carries on just where it would have been once it's back.
+        new Animation(_ =>
+        {
+            if (IsOnScreen())
+                Invalidate();
+        }).Commit(this, FramesAnimation, rate: 16, length: 1000, repeat: () => IsRunning && IsLoaded);
+    }
+
+#if ANDROID
+    Android.Graphics.Rect? _visibleRect;
+#endif
+
+    bool IsOnScreen()
+    {
+#if ANDROID
+        // Shown: it and every view above it are visible and in a window. A visible rect: some of it is inside the
+        // screen and its scrolling parents.
+        if (Handler?.PlatformView is Android.Views.View view)
+            return view.IsShown && view.GetGlobalVisibleRect(_visibleRect ??= new Android.Graphics.Rect());
+#endif
+        for (Element? e = this; e != null; e = e.Parent)
+            if (e is VisualElement { IsVisible: false })
+                return false;
+        return true;
     }
 
     sealed class Frame(AnimatedDrawingView view) : IDrawable

@@ -23,6 +23,9 @@ public class StatIconView : AnimatedDrawingView
     static readonly Color Blue = Color.FromArgb("#3F7DFF"), Violet = Color.FromArgb("#8B5CF6"), Flame = Color.FromArgb("#FF7A59"),
         FlameCore = Color.FromArgb("#FFC857"), Track = Color.FromArgb("#272C39");
 
+    // Made once rather than every frame.
+    static readonly float[] Sides = [-1f, 1f], SetHeights = [0.36f, 0.52f, 0.68f], RingSpots = [0.3f, 0.7f];
+
     protected override void DrawFrame(ICanvas canvas, RectF rect, float t)
     {
         var s = Math.Min(rect.Width, rect.Height);
@@ -79,7 +82,7 @@ public class StatIconView : AnimatedDrawingView
         canvas.FillColor = Blue;
         var bar = s * 0.5f;
         canvas.FillRoundedRectangle(cx - bar / 2, y - s * 0.04f, bar, s * 0.08f, s * 0.04f);
-        foreach (var side in new[] { -1f, 1f })
+        foreach (var side in Sides)
         {
             var x = cx + side * bar * 0.42f;
             canvas.FillRoundedRectangle(x - s * 0.07f, y - s * 0.2f, s * 0.14f, s * 0.4f, s * 0.05f);
@@ -96,7 +99,7 @@ public class StatIconView : AnimatedDrawingView
     {
         var width = s * 0.16f;
         var gap = s * 0.08f;
-        var heights = new[] { 0.36f, 0.52f, 0.68f };
+        var heights = SetHeights;
         var cycle = t % 3.6f;
         for (var i = 0; i < 3; i++)
         {
@@ -178,7 +181,7 @@ public class StatIconView : AnimatedDrawingView
         canvas.FillColor = Blue;
         canvas.FillRoundedRectangle(x, y, w, h * 0.26f, s * 0.08f);
         canvas.FillRectangle(x, y + h * 0.14f, w, h * 0.12f);
-        foreach (var side in new[] { 0.3f, 0.7f })
+        foreach (var side in RingSpots)
         {
             canvas.FillColor = Light;
             canvas.FillRoundedRectangle(x + w * side - s * 0.03f, y - s * 0.06f, s * 0.06f, s * 0.12f, s * 0.03f);

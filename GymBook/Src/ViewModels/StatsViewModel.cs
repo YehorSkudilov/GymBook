@@ -31,10 +31,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             tab.IsSelected = tab == chip;
         IsRanksTab = chip.Value is true;
         // The stats play in again when they come back; the ranks load from the server each time they're opened.
-        if (IsRanksTab)
-            _ = ranks.OnAppearingAsync();
-        else
-            _ = OnAppearingAsync();
+        _ = OnAppearingAsync();
     }
 
     static readonly Color Accent = Color.FromArgb("#3F7DFF");
@@ -166,9 +163,14 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
 
     public override Task OnAppearingAsync()
     {
-        if (IsRanksTab)
-            _ = ranks.OnAppearingAsync();
         IsShowing = false;
+        // The stats are only hidden under the ranks, so they stay off there: their icons would otherwise redraw every
+        // frame unseen. They're worked out again when the Stats tab comes back.
+        if (IsRanksTab)
+        {
+            _ = ranks.OnAppearingAsync();
+            return Task.CompletedTask;
+        }
         var history = store.History.ToList();
         TotalWorkouts = history.Count.ToString();
         var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
