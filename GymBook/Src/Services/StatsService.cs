@@ -58,10 +58,13 @@ public class StatsService(DataStore store, RecoveryService recovery)
         }).ToList();
     }
 
-    public Dictionary<MuscleGroup, double> SetsPerMuscleSince(DateTime from)
+    public Dictionary<MuscleGroup, double> SetsPerMuscleSince(DateTime from) => SetsPerMuscle(store.History.Where(s => s.StartedAt >= from));
+
+    /// <summary>Hard sets per muscle across <paramref name="sessions"/> (e.g. one day's, on Progress's Day tab).</summary>
+    public Dictionary<MuscleGroup, double> SetsPerMuscle(IEnumerable<WorkoutSession> sessions)
     {
         var total = Enum.GetValues<MuscleGroup>().ToDictionary(m => m, _ => 0.0);
-        foreach (var s in store.History.Where(s => s.StartedAt >= from))
+        foreach (var s in sessions)
             foreach (var (m, sets) in recovery.SetsPerMuscle(s))
                 total[m] += sets;
         return total;

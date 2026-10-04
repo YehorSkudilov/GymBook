@@ -129,6 +129,44 @@ public class LeaderboardResponse
     public LeaderboardEntry? Me { get; set; }
 }
 
+/// <summary>Nutrition's boards: days in a row with food logged, and days on target in the last 30.</summary>
+public enum NutritionBoard { Streak, OnTarget }
+
+/// <summary>
+/// The user's food logging, as the app works it out (see the app's NutritionService.Streaks), for the nutrition boards.
+/// Sent whenever the Nutrition tab shows; a board leaves out anyone who hasn't sent it lately.
+/// </summary>
+public class NutritionStatsRequest
+{
+    [Range(0, 100_000)]
+    public int Streak { get; set; }
+    [Range(0, 100_000)]
+    public int BestStreak { get; set; }
+    [Range(0, 30)]
+    public int OnTargetLast30 { get; set; }
+}
+
+public class NutritionLeaderboardEntry
+{
+    public int Position { get; set; }
+    public string Username { get; set; } = "";
+    public string? AvatarPath { get; set; }
+    /// <summary>Days: in a row with food logged, or on target in the last 30.</summary>
+    public int Days { get; set; }
+    /// <summary>On the Streak board: the user's best streak.</summary>
+    public int BestStreak { get; set; }
+    public bool IsMe { get; set; }
+    public bool IsFriend { get; set; }
+    public bool IsPro { get; set; }
+}
+
+public class NutritionLeaderboardResponse
+{
+    public List<NutritionLeaderboardEntry> Entries { get; set; } = [];
+    /// <summary>The signed-in user's own entry when it's below the top of the board.</summary>
+    public NutritionLeaderboardEntry? Me { get; set; }
+}
+
 public class AddFriendRequest
 {
     [Required, MaxLength(32)]

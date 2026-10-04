@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GymBook.Contracts;
 using GymBook.Controls;
 using GymBook.Models;
 using GymBook.Services;
@@ -18,7 +19,10 @@ public partial class NutritionViewModel(
     NutritionService nutrition,
     HealthSyncService health,
     Units units,
-    DialogService dialogs) : BaseViewModel
+    DialogService dialogs,
+    NutritionRanksViewModel ranks,
+    GymBook.Services.Sync.ApiClient api,
+    GymBook.Services.Sync.AccountService account) : BaseViewModel
 {
     public static readonly Color Accent = Color.FromArgb("#3F7DFF");
     public static readonly Color Green = Color.FromArgb("#2ED47A");
@@ -69,11 +73,16 @@ public partial class NutritionViewModel(
 
     static bool IsMaintenance(double balance) => Math.Abs(balance) <= MaintenanceBand;
 
-    // Day | Trends: one day at a time, or a range of days with its totals and charts.
+    // Day | Trends | Ranks: one day at a time, a range of days with its totals and charts, or the nutrition boards.
     public System.Collections.ObjectModel.ObservableCollection<ChipItem> ModeChips { get; } = [];
     public System.Collections.ObjectModel.ObservableCollection<ChipItem> RangeChips { get; } = [];
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsDay))] bool isTrends;
-    public bool IsDay => !IsTrends;
+    NutritionSection _section = NutritionSection.Day;
+    public bool IsDay => _section == NutritionSection.Day;
+    public bool IsTrends => _section == NutritionSection.Trends;
+    public bool IsRanks => _section == NutritionSection.Ranks;
+
+    /// <summary>The Ranks tab's own view model (see NutritionRanksView).</summary>
+    public NutritionRanksViewModel Ranks => ranks;
     int _rangeDays = 7;
     /// <summary>The range's last day: today for the presets, any day for a custom range.</summary>
     DateTime _rangeEnd = DateTime.Today;
@@ -179,6 +188,13 @@ public partial class NutritionViewModel(
     {
         if (_date > DateTime.Today)
             _date = DateTime.Today;
+        if (IsRanks)
+        {
+            // The boards come from the server each time the tab shows; the streak still goes up for them.
+            ShowStreaks();
+            _ = ranks.OnAppearingAsync();
+            return;
+        }
         if (IsTrends)
         {
             ShowTrends();
@@ -193,20 +209,23 @@ public partial class NutritionViewModel(
 
     void SelectMode(ChipItem chip)
     {
-        IsTrends = (bool)chip.Value!;
+        _section = (NutritionSection)chip.Value!;
+        OnPropertyChanged(nameof(IsDay));
+        OnPropertyChanged(nameof(IsTrends));
+        OnPropertyChanged(nameof(IsRanks));
         ShowModeChips();
         Refresh();
     }
 
     /// <summary>
-    /// Day | Trends, the chosen one lit. Made afresh from <see cref="IsTrends"/> each time (on a choice, and whenever the tab
-    /// shows) rather than recoloured in place, which didn't always redraw: the lit chip could stay on Day while Trends showed.
+    /// Day | Trends | Ranks, the chosen one lit. Made afresh each time (on a choice, and whenever the tab shows) rather than
+    /// recoloured in place, which didn't always redraw: the lit chip could stay on Day while Trends showed.
     /// </summary>
     void ShowModeChips()
     {
         ModeChips.Clear();
-        ModeChips.Add(new ChipItem("Day", false, SelectMode) { IsSelected = !IsTrends });
-        ModeChips.Add(new ChipItem("Trends", true, SelectMode) { IsSelected = IsTrends });
+        foreach (var (title, section) in new[] { ("Day", NutritionSection.Day), ("Trends", NutritionSection.Trends), ("Ranks", NutritionSection.Ranks) })
+            ModeChips.Add(new ChipItem(title, section, SelectMode) { IsSelected = _section == section });
     }
 
     void SelectRange(ChipItem chip)
@@ -529,6 +548,31 @@ public partial class NutritionViewModel(
         HasStreaks = s.BestLogging > 0;
         StreakCount = s.Logging.ToString(CultureInfo.CurrentCulture);
         StreakOpacity = s.TodayLogged ? 1 : 0.5;
+        _ = SendStreaksAsync(s);
+    }
+
+    static (int, int, int)? _sentStreaks;
+    static DateTime _sentStreaksAt;
+
+    /// <summary>
+    /// The streaks up to the server for the nutrition boards: when they change, and at least every few hours so the boards
+    /// don't leave the user off as out of date. Quietly, and not at all signed out.
+    /// </summary>
+    async Task SendStreaksAsync(NutritionStreaks s)
+    {
+        var numbers = (s.Logging, s.BestLogging, s.OnTargetLast30);
+        if (!account.IsSignedIn || (numbers == _sentStreaks && DateTime.UtcNow - _sentStreaksAt < TimeSpan.FromHours(6)))
+            return;
+        (_sentStreaks, _sentStreaksAt) = (numbers, DateTime.UtcNow);
+        try
+        {
+            await api.SaveNutritionStatsAsync(new NutritionStatsRequest { Streak = s.Logging, BestStreak = s.BestLogging, OnTargetLast30 = s.OnTargetLast30 });
+        }
+        catch (Exception e) when (Online.Message(e) != null)
+        {
+            // Offline: sent again next time.
+            _sentStreaks = null;
+        }
     }
 
     static string Days(int n) => n == 1 ? "1 day" : $"{n} days";
@@ -708,3 +752,6 @@ public record StatItem(string Label, string Value);
 
 /// <summary>A macro in the trend split's legend: its name and colour, its share of the range's calories, and the share aimed for.</summary>
 public record MacroLegendItem(string Name, string Share, string Aim, Color Color);
+
+/// <summary>Nutrition's tabs: one day, the trends over a range, and the boards.</summary>
+public enum NutritionSection { Day, Trends, Ranks }

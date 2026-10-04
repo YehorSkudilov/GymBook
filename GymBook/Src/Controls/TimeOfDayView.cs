@@ -77,17 +77,31 @@ public class TimeOfDayView : AnimatedDrawingView
         canvas.FillCircle(x, y, r);
     }
 
-    /// <summary>A puffy cloud crossing the scene; <paramref name="speed"/> in scene widths per 10 s.</summary>
+    /// <summary>
+    /// A puffy cloud crossing the scene; <paramref name="speed"/> in scene widths per 10 s. It fades in as it comes in at
+    /// one side and out before it leaves at the other, rather than being cut off by the scene's edge and popping back.
+    /// </summary>
     static void DrawCloud(ICanvas canvas, RectF rect, float s, float t, float speed, float y, float alpha)
     {
         var span = rect.Width + s * 0.6f;
-        var x = rect.Left - s * 0.3f + (t * speed * rect.Width / 10 % span);
+        var travelled = t * speed * rect.Width / 10 % span;
+        var x = rect.Left - s * 0.3f + travelled;
+        // 0 at either end of its path, 1 over the middle: the first and last 30% of the way are the fades.
+        var along = travelled / span;
+        var fade = Math.Clamp(Math.Min(along, 1 - along) / 0.3f, 0, 1);
+        fade = fade * fade * (3 - 2 * fade);
+        if (fade <= 0)
+            return;
         var r = s * 0.1f;
-        canvas.FillColor = Cloud.WithAlpha(alpha);
-        canvas.FillCircle(x, y, r);
-        canvas.FillCircle(x + r * 1.1f, y - r * 0.6f, r * 1.25f);
-        canvas.FillCircle(x + r * 2.3f, y, r * 1.05f);
-        canvas.FillRoundedRectangle(x - r * 0.2f, y - r * 0.2f, r * 2.7f, r * 1.2f, r * 0.6f);
+        // One shape (its puffs filled as a union), so while it's see-through the overlaps don't show up brighter. All
+        // ellipses, which wind the same way, so the union has no holes where they overlap.
+        var cloud = new PathF();
+        cloud.AppendCircle(x, y, r);
+        cloud.AppendCircle(x + r * 1.1f, y - r * 0.6f, r * 1.25f);
+        cloud.AppendCircle(x + r * 2.3f, y, r * 1.05f);
+        cloud.AppendEllipse(x - r * 0.2f, y - r * 0.2f, r * 2.7f, r * 1.2f);
+        canvas.FillColor = Cloud.WithAlpha(alpha * fade);
+        canvas.FillPath(cloud, WindingMode.NonZero);
     }
 
     static void DrawSunset(ICanvas canvas, RectF rect, float s, float t)

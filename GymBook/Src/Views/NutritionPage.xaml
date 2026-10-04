@@ -62,7 +62,7 @@
             <Button Grid.Column="2" Text="Goals" Style="{StaticResource SmallButton}" Command="{Binding OpenGoalsCommand}" VerticalOptions="Center" />
         </Grid>
 
-        <!-- Day | Trends: one day at a time, or a range of days with its totals and charts -->
+        <!-- Day | Trends | Ranks: one day at a time, a range of days with its totals and charts, or the nutrition boards -->
         <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="3" HorizontalOptions="Fill">
             <FlexLayout BindableLayout.ItemsSource="{Binding ModeChips}" Direction="Row">
                 <BindableLayout.ItemTemplate>
@@ -288,6 +288,11 @@
                 </VerticalStackLayout>
             </Border>
         </VerticalStackLayout>
+
+        <!-- Ranks: shown by this view (bound to the page), filled by the inner one (bound to the nutrition ranks) -->
+        <ContentView IsVisible="{Binding IsRanks}">
+            <views:NutritionRanksView BindingContext="{Binding Ranks}" />
+        </ContentView>
 
         <!-- Trends: a range of days, its totals and charts -->
         <VerticalStackLayout Spacing="14" IsVisible="{Binding IsTrends}">

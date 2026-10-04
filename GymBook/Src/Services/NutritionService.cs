@@ -55,8 +55,9 @@ public enum StreakMark { None, Logged, OnTarget }
 /// range, and protein near its goal when there is one), now and at their longest; whether today counts yet; and the last
 /// seven days, oldest first. Today doesn't break a streak until it's over.
 /// </summary>
+/// <param name="OnTargetLast30">Days on target in the last 30, today included: the nutrition ranks' On target board.</param>
 public record NutritionStreaks(int Logging, int BestLogging, int OnTarget, int BestOnTarget, bool HasTarget, bool TodayLogged,
-    bool TodayOnTarget, IReadOnlyList<(DateTime Date, StreakMark Mark)> LastWeek);
+    bool TodayOnTarget, IReadOnlyList<(DateTime Date, StreakMark Mark)> LastWeek, int OnTargetLast30);
 
 /// <summary>A direction for <see cref="NutritionService.Suggest"/>.</summary>
 public enum NutritionAim { LoseFat, Maintain, GainMuscle }
@@ -134,7 +135,8 @@ public class NutritionService(DataStore store)
         static bool OnTarget(StreakMark m) => m == StreakMark.OnTarget;
         return new NutritionStreaks(Current(Logged), Best(Logged), Current(OnTarget), Best(OnTarget), hasTarget,
             Logged(marks[today]), OnTarget(marks[today]),
-            [.. Enumerable.Range(0, 7).Select(i => today.AddDays(i - 6)).Select(d => (d, marks.GetValueOrDefault(d)))]);
+            [.. Enumerable.Range(0, 7).Select(i => today.AddDays(i - 6)).Select(d => (d, marks.GetValueOrDefault(d)))],
+            Enumerable.Range(0, 30).Count(i => OnTarget(marks.GetValueOrDefault(today.AddDays(-i)))));
     }
 
     UserProfile Profile => store.Profile;

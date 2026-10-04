@@ -15,8 +15,8 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     public RanksViewModel Ranks => ranks;
 
     /// <summary>
-    /// Stats | Ranks, at the top of the tab, the chosen one lit. Made afresh on each choice rather than recoloured in
-    /// place, as Nutrition's Day | Trends is: recolouring didn't always redraw in this switch.
+    /// Day | Trends | Ranks, at the top of the tab, the chosen one lit. Made afresh on each choice rather than recoloured
+    /// in place, as Nutrition's Day | Trends is: recolouring didn't always redraw in this switch.
     /// </summary>
     public System.Collections.ObjectModel.ObservableCollection<ChipItem> SectionTabs
     {
@@ -33,22 +33,110 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     void ShowSectionTabs()
     {
         _sectionTabs.Clear();
-        _sectionTabs.Add(new ChipItem("Stats", false, SelectSection) { IsSelected = !IsRanksTab });
-        _sectionTabs.Add(new ChipItem("Ranks", true, SelectSection) { IsSelected = IsRanksTab });
+        foreach (var (title, section) in new[] { ("Day", ProgressSection.Day), ("Trends", ProgressSection.Trends), ("Ranks", ProgressSection.Ranks) })
+            _sectionTabs.Add(new ChipItem(title, section, SelectSection) { IsSelected = _section == section });
     }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsStatsTab))]
-    bool isRanksTab;
+    ProgressSection _section = ProgressSection.Day;
 
-    public bool IsStatsTab => !IsRanksTab;
+    /// <summary>One day's training (see <see cref="ShowDay"/>).</summary>
+    public bool IsDayTab => _section == ProgressSection.Day;
+    /// <summary>The trends: totals, charts, records over time.</summary>
+    public bool IsStatsTab => _section == ProgressSection.Trends;
+    public bool IsRanksTab => _section == ProgressSection.Ranks;
 
     void SelectSection(ChipItem chip)
     {
-        IsRanksTab = chip.Value is true;
+        _section = (ProgressSection)chip.Value!;
+        OnPropertyChanged(nameof(IsDayTab));
+        OnPropertyChanged(nameof(IsStatsTab));
+        OnPropertyChanged(nameof(IsRanksTab));
         ShowSectionTabs();
-        // The stats play in again when they come back; the ranks load from the server each time they're opened.
+        // The trends play in again when they come back; the ranks load from the server each time they're opened.
         _ = OnAppearingAsync();
+    }
+
+    // ---- Day: one day's training, picked like Nutrition's day ----
+
+    DateTime _date = DateTime.Today;
+
+    [ObservableProperty] string dayTitle = "";
+    [ObservableProperty] string daySubtitle = "";
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(DayNextOpacity))] bool canGoNextDay;
+    public double DayNextOpacity => CanGoNextDay ? 1 : 0.3;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasNoDayWorkouts))] bool hasDayWorkouts;
+    public bool HasNoDayWorkouts => !HasDayWorkouts;
+    [ObservableProperty] string dayEmptyText = "";
+    [ObservableProperty] List<StatItem> dayTotals = [];
+    [ObservableProperty] List<SessionItem> daySessions = [];
+    [ObservableProperty] IDrawable dayMuscleMap = MuscleMapDrawable.Empty;
+    [ObservableProperty] List<MuscleBarItem> dayMuscles = [];
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasDayRecords))] List<LineItem> dayRecords = [];
+    public bool HasDayRecords => DayRecords.Count > 0;
+
+    void ShowDay()
+    {
+        DayTitle = _date == DateTime.Today ? "Today" : _date == DateTime.Today.AddDays(-1) ? "Yesterday" : _date.ToString("dddd", CultureInfo.CurrentCulture);
+        DaySubtitle = _date.ToString("d MMMM", CultureInfo.CurrentCulture);
+        CanGoNextDay = _date < DateTime.Today;
+
+        var sessions = store.History.Where(s => s.StartedAt.Date == _date).OrderBy(s => s.StartedAt).ToList();
+        HasDayWorkouts = sessions.Count > 0;
+        DayEmptyText = _date == DateTime.Today ? "No workout yet today." : "No workout this day: a rest day.";
+        DayTotals =
+        [
+            new("Workouts", sessions.Count.ToString(CultureInfo.CurrentCulture)),
+            new("Time", Units.Duration(TimeSpan.FromTicks(sessions.Sum(s => s.Duration.Ticks)))),
+            new("Volume", units.FormatVolume(sessions.Sum(stats.SessionVolume))),
+            new("Sets", sessions.Sum(s => s.WorkingSets.Count()).ToString(CultureInfo.CurrentCulture)),
+        ];
+        DaySessions = [.. sessions.Select(s => SessionItem.Create(s, store, stats, units))];
+
+        // A day's sets per muscle: about 10 hard sets is a full session's worth for one muscle.
+        var sets = stats.SetsPerMuscle(sessions);
+        DayMuscleMap = MuscleMapDrawable.ForVolume(sets);
+        DayMuscles = [.. sets.Where(s => s.Value > 0).OrderByDescending(s => s.Value).Select(s => new MuscleBarItem
+        {
+            Name = s.Key.Display(),
+            Value = $"{s.Value:0.#} sets",
+            Progress = Math.Clamp(s.Value / 10, 0, 1),
+            Color = Accent,
+        })];
+
+        DayRecords = [.. sessions.SelectMany(stats.RecordsIn).Select(r => new LineItem
+        {
+            Title = r.Exercise.Name,
+            Detail = $"{units.Format(r.WeightKg)} {units.Label} × {r.Reps}",
+            Value = units.FormatWithUnit(r.E1RmKg),
+            OpenCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Exercise}?id={r.Exercise.Id}")),
+        })];
+    }
+
+    [RelayCommand]
+    void PreviousDay()
+    {
+        _date = _date.AddDays(-1);
+        ShowDay();
+    }
+
+    [RelayCommand]
+    void NextDay()
+    {
+        if (_date >= DateTime.Today)
+            return;
+        _date = _date.AddDays(1);
+        ShowDay();
+    }
+
+    /// <summary>A calendar with a dot on each day with a workout.</summary>
+    [RelayCommand]
+    async Task PickDay()
+    {
+        var days = store.History.Select(s => s.StartedAt.Date).ToHashSet();
+        if (await dialogs.Calendar("Pick a day", _date, DateTime.Today, days.Contains) is not { } day || day.Date == _date)
+            return;
+        _date = day.Date;
+        ShowDay();
     }
 
     static readonly Color Accent = Color.FromArgb("#3F7DFF");
@@ -181,11 +269,16 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     public override Task OnAppearingAsync()
     {
         IsShowing = false;
-        // The stats are only hidden under the ranks, so they stay off there: their icons would otherwise redraw every
-        // frame unseen. They're worked out again when the Stats tab comes back.
+        // The trends are only hidden under the other tabs, so they stay off there: their icons would otherwise redraw
+        // every frame unseen. They're worked out again when the Trends tab comes back.
         if (IsRanksTab)
         {
             _ = ranks.OnAppearingAsync();
+            return Task.CompletedTask;
+        }
+        if (IsDayTab)
+        {
+            ShowDay();
             return Task.CompletedTask;
         }
         var history = store.History.ToList();
@@ -351,3 +444,6 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     [RelayCommand]
     Task OpenHistory() => GoTo(Routes.History);
 }
+
+/// <summary>Progress's tabs: one day's training, the trends over time, and the strength ranks.</summary>
+public enum ProgressSection { Day, Trends, Ranks }

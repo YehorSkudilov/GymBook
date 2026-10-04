@@ -241,6 +241,13 @@ public class ApiClient(HttpClient http, AuthSession session)
     public Task<LeaderboardResponse> GetLeaderboardAsync(bool friendsOnly, RankLift? lift, CancellationToken ct = default) =>
         GetAuthorizedAsync<LeaderboardResponse>($"api/social/leaderboard?scope={(friendsOnly ? "friends" : "global")}" + (lift is { } l ? $"&lift={l}" : ""), ct);
 
+    /// <summary>The user's food logging streaks, for the nutrition boards.</summary>
+    public Task SaveNutritionStatsAsync(NutritionStatsRequest request, CancellationToken ct = default) =>
+        SendEmptyAsync("api/social/nutrition", request, ct);
+
+    public Task<NutritionLeaderboardResponse> GetNutritionLeaderboardAsync(bool friendsOnly, NutritionBoard board, CancellationToken ct = default) =>
+        GetAuthorizedAsync<NutritionLeaderboardResponse>($"api/social/nutrition/leaderboard?scope={(friendsOnly ? "friends" : "global")}&board={board}", ct);
+
     public Task<List<ProfileCard>> GetFriendsAsync(CancellationToken ct = default) => GetAuthorizedAsync<List<ProfileCard>>("api/social/friends", ct);
 
     /// <summary>Adds a friend by their friend code or username.</summary>

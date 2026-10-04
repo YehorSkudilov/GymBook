@@ -223,6 +223,80 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
     /// <summary>Who's on the boards: ranked, not hidden by an admin, with at least one ranked lift.</summary>
     IQueryable<SocialProfile> Board() => db.SocialProfiles.AsNoTracking().Where(p => p.InRanks && !p.RankHidden && p.Score > 0);
 
+    // ---- Nutrition boards ----
+
+    /// <summary>The user's food logging, as the app works it out; it sends it whenever the Nutrition tab shows.</summary>
+    [HttpPost("nutrition")]
+    [EnableRateLimiting(RateLimits.Sync)]
+    public async Task<IActionResult> SaveNutrition(NutritionStatsRequest request, CancellationToken ct)
+    {
+        var profile = await MineAsync(ct);
+        profile.FoodStreak = request.Streak;
+        profile.FoodBestStreak = Math.Max(request.BestStreak, request.Streak);
+        profile.FoodOnTarget = request.OnTargetLast30;
+        profile.FoodUpdatedAt = time.GetUtcNow();
+        await db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// The top of a nutrition board, for the ranked (the same opt-in as strength): <paramref name="board"/> is days in a
+    /// row with food logged, or days on target in the last 30. Numbers the app hasn't sent lately are out of date (a
+    /// streak can't be kept up without opening the app), so those users are left off: 2 days for a streak, a week for
+    /// days on target.
+    /// </summary>
+    [HttpGet("nutrition/leaderboard")]
+    public async Task<NutritionLeaderboardResponse> NutritionLeaderboard([FromQuery] string? scope, [FromQuery] NutritionBoard board, CancellationToken ct)
+    {
+        var friendIds = await db.Friendships.Where(f => f.UserId == Me).Select(f => f.FriendId).ToListAsync(ct);
+        var fresh = time.GetUtcNow() - (board == NutritionBoard.Streak ? TimeSpan.FromDays(2) : TimeSpan.FromDays(7));
+        var people = db.SocialProfiles.AsNoTracking().Where(p => p.InRanks && !p.RankHidden && p.FoodUpdatedAt >= fresh
+            && (board == NutritionBoard.Streak ? p.FoodStreak : p.FoodOnTarget) > 0);
+        if (scope == "friends")
+            people = people.Where(p => p.UserId == Me || friendIds.Contains(p.UserId));
+        var rows = people.Select(p => new NutritionRow
+        {
+            UserId = p.UserId,
+            Username = p.Username,
+            AvatarVersion = p.AvatarVersion,
+            Days = board == NutritionBoard.Streak ? p.FoodStreak : p.FoodOnTarget,
+            BestStreak = p.FoodBestStreak,
+        });
+
+        var top = await rows.OrderByDescending(r => r.Days).ThenByDescending(r => r.BestStreak).ThenBy(r => r.Username)
+            .Take(SocialLimits.LeaderboardSize).ToListAsync(ct);
+        var mine = top.All(r => r.UserId != Me) ? await rows.FirstOrDefaultAsync(r => r.UserId == Me, ct) : null;
+        var shown = top.Select(r => r.UserId).ToList();
+        if (mine != null)
+            shown.Add(mine.UserId);
+        var members = await subscriptions.MembersAsync(shown, ct);
+        var response = new NutritionLeaderboardResponse { Entries = [.. top.Select((r, i) => Entry(r, i + 1))] };
+        if (mine != null)
+            response.Me = Entry(mine, await rows.CountAsync(r => r.Days > mine.Days, ct) + 1);
+        return response;
+
+        NutritionLeaderboardEntry Entry(NutritionRow r, int position) => new()
+        {
+            Position = position,
+            Username = r.Username,
+            AvatarPath = AvatarPath(r.Username, r.AvatarVersion),
+            Days = r.Days,
+            BestStreak = r.BestStreak,
+            IsMe = r.UserId == Me,
+            IsFriend = friendIds.Contains(r.UserId),
+            IsPro = members.Contains(r.UserId),
+        };
+    }
+
+    class NutritionRow
+    {
+        public string UserId { get; set; } = "";
+        public string Username { get; set; } = "";
+        public int AvatarVersion { get; set; }
+        public int Days { get; set; }
+        public int BestStreak { get; set; }
+    }
+
     // ---- Friends ----
 
     [HttpGet("friends")]

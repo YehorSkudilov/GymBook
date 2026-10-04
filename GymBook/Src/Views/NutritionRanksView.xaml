@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    x:Class="GymBook.Views.NutritionRanksView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:GymBook.Controls"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:NutritionRanksViewModel">
+
+    <!-- Nutrition ranks, the Ranks tab of Nutrition: the food logging streak and days on target, global or among friends.
+         Looks like the strength ranks (RanksView): the same chips and rows. -->
+    <ContentView.Resources>
+        <DataTemplate x:Key="Chip" x:DataType="vm:ChipItem">
+            <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,7">
+                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding SelectCommand}" /></Border.GestureRecognizers>
+                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+            </Border>
+        </DataTemplate>
+        <DataTemplate x:Key="BoardRow" x:DataType="vm:LeaderboardRow">
+            <Grid ColumnDefinitions="36,40,*,Auto" ColumnSpacing="10" Padding="12,10" BackgroundColor="{Binding Background}">
+                <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}" /></Grid.GestureRecognizers>
+                <Label Text="{Binding Position}" FontFamily="OpenSansSemibold" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" HorizontalTextAlignment="Center" />
+                <!-- Gym Book Pro members: a ring in Pro's gradient round the picture -->
+                <Grid Grid.Column="1" WidthRequest="40" HeightRequest="40" VerticalOptions="Center">
+                    <Ellipse Fill="{StaticResource ProGradient}" IsVisible="{Binding IsPro}" />
+                    <Ellipse Fill="{StaticResource Surface}" Margin="2" IsVisible="{Binding IsPro}" />
+                    <Border Margin="4" StrokeShape="RoundRectangle 16" StrokeThickness="0" Background="{StaticResource AccentGradient}">
+                        <Grid>
+                            <Label Text="{Binding Initial}" TextColor="White" FontFamily="OpenSansSemibold" HorizontalOptions="Center" VerticalOptions="Center"
+                                   IsVisible="{Binding HasAvatar, Converter={StaticResource Not}}" />
+                            <Image Source="{Binding AvatarUrl}" Aspect="AspectFill" IsVisible="{Binding HasAvatar}" />
+                        </Grid>
+                    </Border>
+                </Grid>
+                <VerticalStackLayout Grid.Column="2" VerticalOptions="Center">
+                    <Label Text="{Binding Username, StringFormat='@{0}'}" FontFamily="OpenSansSemibold" LineBreakMode="TailTruncation" />
+                    <!-- On the streak board: the best streak, when it's longer than the current one -->
+                    <Label Text="{Binding Tier}" TextColor="{Binding TierColor}" FontSize="12" />
+                </VerticalStackLayout>
+                <HorizontalStackLayout Grid.Column="3" Spacing="4" VerticalOptions="Center">
+                    <Image Source="{StaticResource IconFlame}" WidthRequest="14" HeightRequest="14" VerticalOptions="Center" />
+                    <Label Text="{Binding Value}" FontSize="13" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
+        </DataTemplate>
+    </ContentView.Resources>
+
+    <Grid>
+        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" WidthRequest="32" HeightRequest="32" HorizontalOptions="Center" Margin="0,24" />
+
+        <!-- The boards need the account -->
+        <VerticalStackLayout Padding="16,24" Spacing="14" IsVisible="{Binding NeedsSignIn}">
+            <Label Text="Compete on consistency" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
+            <Label Text="Sign in to see how your food logging streak and days on target compare with everyone else's, and race your friends."
+                   Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Button Text="Sign in" Style="{StaticResource PrimaryButton}" Command="{Binding SignInCommand}" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Padding="16,24" Spacing="12" IsVisible="{Binding LoadFailed}">
+            <Label Text="Couldn't load the boards" Style="{StaticResource H3}" HorizontalTextAlignment="Center" />
+            <Label Text="The boards live on the server, so they need a connection." Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Button Text="Try again" Style="{StaticResource PrimaryButton}" Command="{Binding RetryCommand}" />
+        </VerticalStackLayout>
+
+        <!-- Not on the leaderboards yet: one opt-in for these and the strength ranks -->
+        <VerticalStackLayout Padding="16,24" Spacing="14" IsVisible="{Binding CanJoin}">
+            <Label Text="Join the leaderboards" Style="{StaticResource H2}" HorizontalTextAlignment="Center" />
+            <Label Text="See your food logging streak and days on target next to everyone else's, globally and among friends. Joining also puts you on the strength ranks in Progress."
+                   Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Button Text="Join" Style="{StaticResource PrimaryButton}" Command="{Binding JoinCommand}" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Spacing="14" IsVisible="{Binding InRanks}">
+            <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding BoardChips}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
+            <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding ScopeChips}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
+            <Label Text="{Binding BoardCaption}" Style="{StaticResource Caption}" FontSize="12" Margin="4,0" />
+
+            <Border Style="{StaticResource Card}" Padding="0,4">
+                <Grid>
+                    <ActivityIndicator IsRunning="{Binding IsBoardLoading}" IsVisible="{Binding IsBoardLoading}" WidthRequest="32" HeightRequest="32" HorizontalOptions="Center" Margin="0,12" />
+                    <Label Text="{Binding BoardEmptyText}" Style="{StaticResource Caption}" Margin="16,14" IsVisible="{Binding IsBoardEmpty}" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Board}" BindableLayout.ItemTemplate="{StaticResource BoardRow}" />
+                </Grid>
+            </Border>
+            <!-- The user's own place when it's below the top of the board -->
+            <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding HasMyRow}">
+                <VerticalStackLayout BindableLayout.ItemsSource="{Binding MyRows}" BindableLayout.ItemTemplate="{StaticResource BoardRow}" />
+            </Border>
+        </VerticalStackLayout>
+    </Grid>
+</ContentView>

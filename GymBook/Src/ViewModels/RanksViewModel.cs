@@ -229,7 +229,7 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
         }
         var sex = store.Profile.Sex.Value;
         if (!await dialogs.Confirm("Join the leaderboards?",
-                "Your username, picture, tiers and estimated maxes on bench, squat, deadlift and overhead press will be visible to everyone using Gym Book. " +
+                "Your username, picture, tiers and estimated maxes on bench, squat, deadlift and overhead press, and your food logging streak and days on target, will be visible to everyone using Gym Book. " +
                 "They're worked out from your synced workouts of the last year and your body weight, against " +
                 $"{(sex == Sex.Male ? "men's" : "women's")} standards (your gender in Profile). You can leave at any time.", "Join"))
             return;
@@ -288,7 +288,7 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
     }
 
     /// <summary>Someone's profile and lifts, with what can be done about them.</summary>
-    async Task OpenUserAsync(string username, bool isMe, bool isFriend)
+    public async Task OpenUserAsync(string username, bool isMe, bool isFriend)
     {
         if (isMe)
             return;

@@ -26,6 +26,12 @@ public class SocialProfile
     public double Score { get; set; }
     public DateTimeOffset? RanksUpdatedAt { get; set; }
 
+    // Food logging, as the app last sent it, for the nutrition boards (on them too while InRanks).
+    public int FoodStreak { get; set; }
+    public int FoodBestStreak { get; set; }
+    public int FoodOnTarget { get; set; }
+    public DateTimeOffset? FoodUpdatedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 }
 

@@ -110,6 +110,7 @@ public static class MauiProgram
         // The public profile (top of Profile) and ranks (Progress > Ranks) are views inside the tabs, not pages.
         builder.Services.AddTransient<PublicProfileViewModel>();
         builder.Services.AddTransient<RanksViewModel>();
+        builder.Services.AddTransient<NutritionRanksViewModel>();
         AddPage<PlanSharePage, PlanShareViewModel>(builder.Services);
         AddPage<SharedPlanPage, SharedPlanViewModel>(builder.Services);
         AddPage<ProPage, ProViewModel>(builder.Services);

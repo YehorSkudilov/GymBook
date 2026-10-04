@@ -373,6 +373,18 @@ namespace GymBook.Api.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("FoodBestStreak")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FoodOnTarget")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("FoodStreak")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("FoodUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("FriendCode")
                         .IsRequired()
                         .HasMaxLength(8)

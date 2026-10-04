@@ -32,7 +32,7 @@
                 <Button Grid.Column="1" Text="History" Style="{StaticResource SmallButton}" Command="{Binding OpenHistoryCommand}" VerticalOptions="Center" />
             </Grid>
 
-            <!-- Stats | Ranks: a full-width switch, like Nutrition's Day | Trends -->
+            <!-- Day | Trends | Ranks: a full-width switch, like Nutrition's Day | Trends -->
             <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="3" HorizontalOptions="Fill">
                 <FlexLayout BindableLayout.ItemsSource="{Binding SectionTabs}" Direction="Row">
                     <BindableLayout.ItemTemplate>
@@ -50,6 +50,94 @@
             <ContentView IsVisible="{Binding IsRanksTab}">
                 <views:RanksView BindingContext="{Binding Ranks}" />
             </ContentView>
+
+            <!-- Day: one day's training, the day picked like Nutrition's (‹ ›, or tap for a calendar with a dot on each
+                 day with a workout): its totals, its workouts (tap for the finished-workout sheet), the muscles worked and
+                 any records set -->
+            <VerticalStackLayout Spacing="14" IsVisible="{Binding IsDayTab}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <Button Text="‹" Style="{StaticResource StepButton}" Command="{Binding PreviousDayCommand}" VerticalOptions="Center" />
+                    <Border Grid.Column="1" BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 999" StrokeThickness="0"
+                            Padding="18,10" HorizontalOptions="Fill" Margin="24,0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding PickDayCommand}" />
+                        </Border.GestureRecognizers>
+                        <VerticalStackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding DayTitle}" Style="{StaticResource H3}" HorizontalOptions="Center" />
+                            <Label Text="{Binding DaySubtitle}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Button Grid.Column="2" Text="›" Style="{StaticResource StepButton}" Command="{Binding NextDayCommand}" IsEnabled="{Binding CanGoNextDay}"
+                            Opacity="{Binding DayNextOpacity}" VerticalOptions="Center" />
+                </Grid>
+
+                <Border Style="{StaticResource Card}" IsVisible="{Binding HasNoDayWorkouts}">
+                    <Label Text="{Binding DayEmptyText}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                </Border>
+
+                <VerticalStackLayout Spacing="14" IsVisible="{Binding HasDayWorkouts}">
+                    <Border Style="{StaticResource Card}">
+                        <FlexLayout BindableLayout.ItemsSource="{Binding DayTotals}" Wrap="Wrap" JustifyContent="Start">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:StatItem">
+                                    <VerticalStackLayout FlexLayout.Basis="25%" Padding="0,2">
+                                        <Label Text="{Binding Value}" Style="{StaticResource Figure}" />
+                                        <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                    </Border>
+
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding DaySessions}" Spacing="10">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SessionItem">
+                                <views:SessionCard />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Muscles worked" Style="{StaticResource H3}" />
+                            <GraphicsView Drawable="{Binding DayMuscleMap}" HeightRequest="200" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding DayMuscles}" Spacing="8">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:MuscleBarItem">
+                                        <Grid ColumnDefinitions="90,*,64" ColumnSpacing="10">
+                                            <Label Text="{Binding Name}" FontSize="13" VerticalOptions="Center" />
+                                            <ProgressBar Grid.Column="1" Progress="{Binding Progress}" ProgressColor="{Binding Color}" VerticalOptions="Center" />
+                                            <Label Grid.Column="2" Text="{Binding Value}" Style="{StaticResource Caption}" FontSize="12" HorizontalTextAlignment="End" VerticalOptions="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" IsVisible="{Binding HasDayRecords}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Records set" Style="{StaticResource H3}" Margin="0,0,0,6" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding DayRecords}" Spacing="4">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LineItem">
+                                        <Grid ColumnDefinitions="*,Auto" Padding="0,6">
+                                            <Grid.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                                            </Grid.GestureRecognizers>
+                                            <VerticalStackLayout>
+                                                <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="14" />
+                                                <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                            </VerticalStackLayout>
+                                            <Label Grid.Column="1" Text="{Binding Value}" FontFamily="OpenSansSemibold" TextColor="{StaticResource Warning}" VerticalOptions="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="14" IsVisible="{Binding IsStatsTab}">
             <!-- The totals, with an animated icon each -->
