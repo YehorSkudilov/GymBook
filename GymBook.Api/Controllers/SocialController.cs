@@ -151,6 +151,13 @@ public class SocialController(ApiDbContext db, ICurrentUser currentUser, RankCal
         var profile = await db.SocialProfiles.AsNoTracking().FirstOrDefaultAsync(p => p.UserId == Me, ct);
         if (profile is not { InRanks: true })
             return new RankStatusResponse();
+        // Worked out after each sync that brings workouts, weigh-ins or the profile; but never, if joining failed partway
+        // or nothing has synced since, and the last-year window moves on regardless. Not today: worked out now.
+        if (profile.RanksUpdatedAt is not { } updated || time.GetUtcNow() - updated > TimeSpan.FromDays(1))
+        {
+            await ranks.RefreshQuietlyAsync(Me, ct);
+            profile = await db.SocialProfiles.AsNoTracking().FirstAsync(p => p.UserId == Me, ct);
+        }
         var lifts = await LiftsAsync(Me, ct);
         var board = Board();
         var onBoard = !profile.RankHidden && profile.Score > 0;

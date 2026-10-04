@@ -190,9 +190,10 @@ public partial class NutritionViewModel(
             _date = DateTime.Today;
         if (IsRanks)
         {
-            // The boards come from the server each time the tab shows; the streak still goes up for them.
+            // The boards come from the server each time the tab shows, after the user's own streak has gone up, so they're
+            // on them with today's numbers.
             ShowStreaks();
-            _ = ranks.OnAppearingAsync();
+            _ = ShowRanksAsync();
             return;
         }
         if (IsTrends)
@@ -548,11 +549,39 @@ public partial class NutritionViewModel(
         HasStreaks = s.BestLogging > 0;
         StreakCount = s.Logging.ToString(CultureInfo.CurrentCulture);
         StreakOpacity = s.TodayLogged ? 1 : 0.5;
-        _ = SendStreaksAsync(s);
+        // In turn, so waiting on the latest also waits on one still on its way.
+        _sending = SendAfterAsync(_sending, s);
+    }
+
+    async Task SendAfterAsync(Task before, NutritionStreaks s)
+    {
+        try
+        {
+            await before;
+        }
+        catch (Exception)
+        {
+            // That one's failure is its own; this one still goes.
+        }
+        await SendStreaksAsync(s);
+    }
+
+    async Task ShowRanksAsync()
+    {
+        try
+        {
+            await _sending;
+        }
+        catch (Exception)
+        {
+            // Not sent: the boards show what the server has.
+        }
+        await ranks.OnAppearingAsync();
     }
 
     static (int, int, int)? _sentStreaks;
     static DateTime _sentStreaksAt;
+    Task _sending = Task.CompletedTask;
 
     /// <summary>
     /// The streaks up to the server for the nutrition boards: when they change, and at least every few hours so the boards
