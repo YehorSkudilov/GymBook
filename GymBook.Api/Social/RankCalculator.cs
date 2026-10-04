@@ -20,7 +20,9 @@ public class RankCalculator(ApiDbContext db, TimeProvider time, ILogger<RankCalc
         if (profile is not { InRanks: true, RankSex: { } sex })
             return;
 
-        var since = time.GetUtcNow().UtcDateTime.AddDays(-365);
+        // Sessions and weigh-ins are wall-clock times (timestamp without time zone): Npgsql won't compare one with a UTC
+        // DateTime, so the cut-offs are Unspecified, like AdminQueries.WallClockDaysAgo. Hours off either way don't matter here.
+        var since = WallClockDaysAgo(365);
         var sessions = await db.Sessions.OwnedBy(userId).AsNoTracking()
             .Where(s => !s.IsDeleted && s.EndedAt != null && s.StartedAt >= since)
             .ToListAsync(ct);
@@ -39,6 +41,8 @@ public class RankCalculator(ApiDbContext db, TimeProvider time, ILogger<RankCalc
         await db.SaveChangesAsync(ct);
     }
 
+    DateTime WallClockDaysAgo(int days) => DateTime.SpecifyKind(time.GetUtcNow().UtcDateTime.AddDays(-days), DateTimeKind.Unspecified);
+
     /// <summary>After a sync: refreshes only when the user is ranked, and never fails the sync.</summary>
     public async Task RefreshQuietlyAsync(string userId, CancellationToken ct)
     {
@@ -56,7 +60,7 @@ public class RankCalculator(ApiDbContext db, TimeProvider time, ILogger<RankCalc
     /// <summary>The latest weigh-in of the last 90 days, otherwise the profile's; null when neither is believable.</summary>
     async Task<double?> BodyWeightAsync(string userId, CancellationToken ct)
     {
-        var recent = time.GetUtcNow().UtcDateTime.AddDays(-90);
+        var recent = WallClockDaysAgo(90);
         var weighIn = await db.BodyWeights.OwnedBy(userId)
             .Where(b => !b.IsDeleted && b.Date >= recent)
             .OrderByDescending(b => b.Date)
