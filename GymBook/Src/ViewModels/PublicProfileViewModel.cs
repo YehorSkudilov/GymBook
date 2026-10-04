@@ -73,10 +73,7 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
         IsLoading = !Exists;
         try
         {
-            var profile = await api.GetMyPublicProfileAsync();
-            if (!profile.Exists)
-                profile = await MakeUpUsernameAsync(profile);
-            Show(profile);
+            Show(await api.GetMyPublicProfileAsync());
             LoadFailed = false;
         }
         catch (Exception e) when (Online.Message(e) != null)
@@ -87,28 +84,6 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
         {
             IsLoading = false;
         }
-    }
-
-    /// <summary>
-    /// No username yet (an account from before sign-up asked for one): a made-up one like the server gives Google
-    /// sign-ups, "lifter_" and six random letters and digits, changeable here. Tries again if it's taken.
-    /// </summary>
-    async Task<MyPublicProfile> MakeUpUsernameAsync(MyPublicProfile none)
-    {
-        const string alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
-        for (var attempt = 0; attempt < 5; attempt++)
-        {
-            var name = "lifter_" + string.Concat(Enumerable.Range(0, 6).Select(_ => alphabet[Random.Shared.Next(alphabet.Length)]));
-            try
-            {
-                return await api.SavePublicProfileAsync(new SavePublicProfileRequest { Username = name });
-            }
-            catch (ApiException e) when (e.Status == System.Net.HttpStatusCode.Conflict)
-            {
-                // Taken: another one.
-            }
-        }
-        return none;
     }
 
     void Show(MyPublicProfile p)
