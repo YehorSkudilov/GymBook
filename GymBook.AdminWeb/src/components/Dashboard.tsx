@@ -1,6 +1,6 @@
 "use client";
 
-import * as f from "@/lib/admin/format";
+import * as f from "@/lib/format";
 import { UserList } from "./Users";
 import { Bars, Head, Status, Tiles, useAdmin, useLoad } from "./ui";
 import s from "./admin.module.css";

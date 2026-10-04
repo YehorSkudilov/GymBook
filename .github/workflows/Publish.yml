@@ -99,6 +99,13 @@ jobs:
     secrets: inherit
 
   # ==================================================
+  # DEPLOY WEB ADMIN
+  # ==================================================
+  deploy-admin-web:
+    uses: ./.github/workflows/PublishAdminWeb.yml
+    secrets: inherit
+
+  # ==================================================
   # VERSION BUMP + BUILD ANDROID/WEAR OS/WINDOWS/IOS/MACOS + RELEASE
   # ==================================================
   publish-app:

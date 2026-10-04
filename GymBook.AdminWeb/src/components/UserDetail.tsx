@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AdminRole, isForever, ProForever, SuperAdminRole, type ProInfo, type UserDetail } from "@/lib/admin/api";
-import * as f from "@/lib/admin/format";
+import { AdminRole, isForever, ProForever, SuperAdminRole, type ProInfo, type UserDetail } from "@/lib/api";
+import * as f from "@/lib/format";
 import { Badges, Bars, Info, Status, Tiles, useAct, useAdmin, useLoad } from "./ui";
 import s from "./admin.module.css";
 

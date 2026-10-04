@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { AdminApi, SessionExpiredError, type UserRow } from "@/lib/admin/api";
+import { AdminApi, SessionExpiredError, type UserRow } from "@/lib/api";
 import s from "./admin.module.css";
 
 /** What every screen gets: the API, moving to another screen, and a short confirmation. */

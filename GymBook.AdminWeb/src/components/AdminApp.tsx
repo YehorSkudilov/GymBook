@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
-import { AdminApi, apiUrl } from "@/lib/admin/api";
+import { AdminApi, apiUrl } from "@/lib/api";
 import { AiUsage } from "./AiUsage";
 import { Dashboard } from "./Dashboard";
 import { Reports } from "./Reports";

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { UserRow } from "@/lib/admin/api";
-import * as f from "@/lib/admin/format";
+import type { UserRow } from "@/lib/api";
+import * as f from "@/lib/format";
 import { Badges, Chips, Head, Status, useAdmin, useLoad } from "./ui";
 import s from "./admin.module.css";
 

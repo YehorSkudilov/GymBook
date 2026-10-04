@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { RankReportRow } from "@/lib/admin/api";
-import * as f from "@/lib/admin/format";
+import type { RankReportRow } from "@/lib/api";
+import * as f from "@/lib/format";
 import { Chips, Head, Status, useAct, useAdmin, useLoad } from "./ui";
 import s from "./admin.module.css";
 

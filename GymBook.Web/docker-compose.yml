@@ -16,7 +16,6 @@ services:
         NEXT_PUBLIC_PLAY_STORE_URL: ${NEXT_PUBLIC_PLAY_STORE_URL:-}
         NEXT_PUBLIC_MS_STORE_URL: ${NEXT_PUBLIC_MS_STORE_URL:-}
         NEXT_PUBLIC_MAC_STORE_URL: ${NEXT_PUBLIC_MAC_STORE_URL:-}
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
     restart: unless-stopped
     # Plain HTTP on every interface; the reverse proxy terminates TLS in front of it.
     ports:

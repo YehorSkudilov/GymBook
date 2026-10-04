@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import * as f from "@/lib/admin/format";
+import * as f from "@/lib/format";
 import { Bars, Chips, Head, Status, Tiles, useAct, useAdmin, useLoad } from "./ui";
 import s from "./admin.module.css";
 

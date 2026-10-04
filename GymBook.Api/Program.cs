@@ -160,7 +160,7 @@ builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<GymBook.Ap
 builder.Services.AddScoped<GymBook.Api.Admin.ServerSettings>();
 builder.Services.AddScoped<GymBook.Api.Billing.Subscriptions>();
 builder.Services.AddHostedService<GymBook.Api.Billing.SubscriptionRefresher>();
-// The web admin (GymBook.Web's /admin) calls the API from the website: its origins, from Cors__AllowedOrigins
+// The web admin (GymBook.AdminWeb) calls the API from its own site: its origins, from Cors__AllowedOrigins
 // (comma-separated). Bearer tokens, no cookies, so no credentials. Unset: no browser origin may call it.
 var corsOrigins = (builder.Configuration["Cors:AllowedOrigins"] ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
     .Select(o => o.TrimEnd('/')).ToArray();
