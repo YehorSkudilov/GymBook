@@ -8,8 +8,7 @@
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:AccountViewModel">
 
-    <!-- Phone-width on a desktop window too, rather than stretched across it -->
-    <VerticalStackLayout Spacing="{OnIdiom Default=12, Desktop=8}" MaximumWidthRequest="{OnIdiom Default=100000, Desktop=400}" HorizontalOptions="Fill">
+    <VerticalStackLayout Spacing="{OnIdiom Default=12, Desktop=8}" HorizontalOptions="Fill">
         <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="{OnIdiom Default=28, Desktop=24}" />
         <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="{OnIdiom Default=15, Desktop=14}" />
 

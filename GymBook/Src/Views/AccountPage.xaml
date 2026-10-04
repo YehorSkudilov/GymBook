@@ -14,7 +14,6 @@
     <Border x:Name="Card" Margin="{OnIdiom Default='0,28,0,0', Desktop='24,40'}" BackgroundColor="{StaticResource Bg}" Padding="0"
             StrokeShape="{OnIdiom Default='RoundRectangle 28,28,0,0', Desktop='RoundRectangle 20'}"
             StrokeThickness="{OnIdiom Default=0, Desktop=1}" Stroke="{StaticResource Stroke}"
-            MaximumWidthRequest="{OnIdiom Default=100000, Desktop=920}"
             HorizontalOptions="Fill" VerticalOptions="{OnIdiom Default=Fill, Desktop=Center}">
     <Grid x:Name="Columns" ColumnDefinitions="0,*">
 
@@ -39,7 +38,6 @@
                     BackgroundColor="{StaticResource Surface2}" HorizontalOptions="{OnIdiom Default=Start, Desktop=End}" VerticalOptions="Start"
                     Margin="{OnIdiom Default=0, Desktop='0,-16,-24,0'}" ZIndex="1"
                     Command="{Binding CloseCommand}" IsVisible="{Binding CanClose}" />
-
             <ScrollView Grid.Row="{OnIdiom Default=1, Desktop=0}" Margin="{OnIdiom Default='0,20,0,0', Desktop=0}" VerticalOptions="{OnIdiom Default=Fill, Desktop=Center}">
                 <views:AccountForm />
             </ScrollView>
