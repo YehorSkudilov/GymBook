@@ -10,7 +10,8 @@ public enum AccountMode { SignIn, Register, ResetPassword }
 
 /// <summary>
 /// Sign in, create an account, or reset a forgotten password with a code sent by email. Shown modally from Profile,
-/// and by <see cref="Views.SignInGate"/> as the required sign-in that can't be closed.
+/// by <see cref="Views.SignInGate"/> as the required sign-in that can't be closed, and as a step of the first-run
+/// wizard (<see cref="IsInline"/>).
 /// </summary>
 public partial class AccountViewModel(AccountService account, IServiceProvider services) : BaseViewModel
 {
@@ -46,13 +47,21 @@ public partial class AccountViewModel(AccountService account, IServiceProvider s
     readonly bool _hasLocalData = services.GetRequiredService<DataStore>() is var store
         && (store.Profile.OnboardingDone || store.Data.Plans.Count > 0 || store.Data.Sessions.Count > 0);
 
-    public bool CanClose => !IsRequired;
+    public bool CanClose => !IsRequired && !IsInline;
+
+    /// <summary>
+    /// A step of the first-run wizard rather than a sheet: nothing to close, and <see cref="SignedIn"/> moves the wizard on.
+    /// </summary>
+    public bool IsInline { get; init; }
+
+    /// <summary>Signed in (or the account was made); raised after the sheet, if this is one, has closed.</summary>
+    public event EventHandler? SignedIn;
 
     /// <summary>
     /// Someone with data on this device and no connection isn't locked out of it: they carry on offline and are
     /// asked again once they're back online. A new install has nothing to carry on with, so it waits for a connection.
     /// </summary>
-    public bool CanContinueOffline => IsRequired && IsOffline && _hasLocalData;
+    public bool CanContinueOffline => IsRequired && !IsInline && IsOffline && _hasLocalData;
 
     public bool IsSignIn => Mode == AccountMode.SignIn;
     public bool IsRegister => Mode == AccountMode.Register;
@@ -69,6 +78,7 @@ public partial class AccountViewModel(AccountService account, IServiceProvider s
     {
         AccountMode.ResetPassword when CodeSent => $"If {Email.Trim()} has an account, we sent a code to it. Enter it with your new password.",
         AccountMode.ResetPassword => "Enter your account's email and we'll send you a code to set a new password.",
+        _ when IsInline => "Your workouts and plans are kept in your account, so you can pick up where you left off on any device. Gym Book works offline too.",
         _ when IsRequired && _hasLocalData =>
             "Sign in or create an account to keep using Gym Book. Your workouts on this device move into your account, and the app still works offline.",
         _ when IsRequired => "Sign in or create an account to get started. After that, Gym Book works offline too.",
@@ -178,9 +188,11 @@ public partial class AccountViewModel(AccountService account, IServiceProvider s
     async Task SignedInAsync()
     {
         Password = ConfirmPassword = Code = "";
-        await Close();
+        if (!IsInline)
+            await Close();
         // Signing in on a fresh device can bring back a finished profile: skip the first-run wizard.
         App.ShowMainShellIfOnboarded();
+        SignedIn?.Invoke(this, EventArgs.Empty);
         // A new account (or one never verified) verifies its email before going on.
         await Views.VerifyEmailPage.ShowIfNeededAsync(services);
     }

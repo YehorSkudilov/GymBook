@@ -15,6 +15,12 @@ public class GoogleOptions
     /// client), so its tokens' audience is this one. Optional: empty means only the Web client's tokens are accepted.
     /// </summary>
     public string IosClientId { get; set; } = "";
+
+    /// <summary>
+    /// The Desktop app OAuth client ID. The Windows app signs in with it directly, in the browser, so its tokens' audience
+    /// is this one. Optional, like <see cref="IosClientId"/>.
+    /// </summary>
+    public string DesktopClientId { get; set; } = "";
 }
 
 /// <summary>Checks ID tokens from Google sign-in on the device: signed by Google, for this app, not expired.</summary>
@@ -31,7 +37,7 @@ public class GoogleTokenVerifier(GoogleOptions options)
             return null;
         try
         {
-            string[] audience = string.IsNullOrWhiteSpace(options.IosClientId) ? [options.ClientId] : [options.ClientId, options.IosClientId];
+            string[] audience = [.. new[] { options.ClientId, options.IosClientId, options.DesktopClientId }.Where(id => !string.IsNullOrWhiteSpace(id))];
             return await GoogleJsonWebSignature.ValidateAsync(idToken, new GoogleJsonWebSignature.ValidationSettings { Audience = audience });
         }
         catch (InvalidJwtException)

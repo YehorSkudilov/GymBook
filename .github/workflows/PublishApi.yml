@@ -97,6 +97,8 @@ jobs:
             Google__ClientId=${{ vars.GOOGLE_WEB_CLIENT_ID }}
             # iOS OAuth client ID: the iOS app's tokens are addressed to it (leave unset without iOS sign-in)
             Google__IosClientId=${{ vars.GOOGLE_IOS_CLIENT_ID }}
+            # Desktop OAuth client ID: the Windows app's tokens are addressed to it (leave unset without Windows sign-in)
+            Google__DesktopClientId=${{ vars.GOOGLE_DESKTOP_CLIENT_ID }}
 
             # Gym Book Pro subscriptions, checked with each store (a store stays off while its settings are empty)
             GooglePlay__PackageName=${{ vars.ANDROID_PACKAGE_NAME || 'com.yehorskudilov.gymbook' }}

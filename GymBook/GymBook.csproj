@@ -163,6 +163,17 @@
 		<GoogleIosClientId Condition="'$(GoogleIosClientId)' == '' and '$(_EnvFileContent)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvFileContent)', '(?m)^GOOGLE_IOS_CLIENT_ID=(.*?)\r?$').Groups[1].Value)</GoogleIosClientId>
 	</PropertyGroup>
 
+	<!-- The Desktop OAuth client (Google Cloud Console, type Desktop app) Windows signs in with, and its secret, which Google
+	     doesn't treat as confidential for Desktop clients. The ID is the same value as the API's Google__DesktopClientId.
+	     Found the same ways (-p:GoogleDesktopClientId / -p:GoogleDesktopClientSecret, GOOGLE_DESKTOP_CLIENT_ID /
+	     GOOGLE_DESKTOP_CLIENT_SECRET, GymBook/.env). Optional: without the ID the Google button is hidden on Windows. -->
+	<PropertyGroup>
+		<GoogleDesktopClientId Condition="'$(GoogleDesktopClientId)' == ''">$(GOOGLE_DESKTOP_CLIENT_ID)</GoogleDesktopClientId>
+		<GoogleDesktopClientId Condition="'$(GoogleDesktopClientId)' == '' and '$(_EnvFileContent)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvFileContent)', '(?m)^GOOGLE_DESKTOP_CLIENT_ID=(.*?)\r?$').Groups[1].Value)</GoogleDesktopClientId>
+		<GoogleDesktopClientSecret Condition="'$(GoogleDesktopClientSecret)' == ''">$(GOOGLE_DESKTOP_CLIENT_SECRET)</GoogleDesktopClientSecret>
+		<GoogleDesktopClientSecret Condition="'$(GoogleDesktopClientSecret)' == '' and '$(_EnvFileContent)' != ''">$([System.Text.RegularExpressions.Regex]::Match('$(_EnvFileContent)', '(?m)^GOOGLE_DESKTOP_CLIENT_SECRET=(.*?)\r?$').Groups[1].Value)</GoogleDesktopClientSecret>
+	</PropertyGroup>
+
 	<Target Name="ValidateApiBaseUrl" BeforeTargets="BeforeBuild;CoreCompile">
 		<Error Condition="'$(ApiBaseUrl)' == ''" Text="ApiBaseUrl is not set. Set it via -p:ApiBaseUrl=https://..., an API_BASE_URL environment variable, or GymBook/.env (see .env.example)." />
 	</Target>
@@ -171,6 +182,8 @@
 		<AssemblyMetadata Include="ApiBaseUrl" Value="$(ApiBaseUrl)" />
 		<AssemblyMetadata Include="GoogleWebClientId" Value="$(GoogleWebClientId)" />
 		<AssemblyMetadata Include="GoogleIosClientId" Value="$(GoogleIosClientId)" />
+		<AssemblyMetadata Include="GoogleDesktopClientId" Value="$(GoogleDesktopClientId)" />
+		<AssemblyMetadata Include="GoogleDesktopClientSecret" Value="$(GoogleDesktopClientSecret)" />
 	</ItemGroup>
 
 </Project>

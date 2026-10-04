@@ -623,7 +623,9 @@ jobs:
             /p:GenerateAppxPackageOnBuild=true `
             /p:AppxPackageSigningEnabled=false `
             "/p:ApiBaseUrl=${{ vars.API_BASE_URL }}" `
-            "/p:GoogleWebClientId=${{ vars.GOOGLE_WEB_CLIENT_ID }}"
+            "/p:GoogleWebClientId=${{ vars.GOOGLE_WEB_CLIENT_ID }}" `
+            "/p:GoogleDesktopClientId=${{ vars.GOOGLE_DESKTOP_CLIENT_ID }}" `
+            "/p:GoogleDesktopClientSecret=${{ secrets.GOOGLE_DESKTOP_CLIENT_SECRET }}"
 
       # =========================
       # FIND MSIX

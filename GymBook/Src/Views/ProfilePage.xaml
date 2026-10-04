@@ -139,6 +139,7 @@
                     <Grid Style="{StaticResource Row}">
                         <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding SignOutCommand}" /></Grid.GestureRecognizers>
                         <Label Text="Sign out" VerticalOptions="Center" />
+                        <Label Grid.Column="2" Text="Syncing…" Style="{StaticResource RowValue}" IsVisible="{Binding IsSyncingToSignOut}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}">

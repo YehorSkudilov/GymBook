@@ -283,15 +283,39 @@ public partial class ProfileViewModel(
         Refresh();
     }
 
+    /// <summary>Syncing before signing out: the Sign out row says so.</summary>
+    [ObservableProperty] bool isSyncingToSignOut;
+
     [RelayCommand]
     async Task SignOut()
     {
-        var unsynced = await account.HasUnsyncedChangesAsync();
-        var message = unsynced
-            ? "Some changes haven't reached your account yet (you seem to be offline). Signing out now deletes them from this device."
-            : "Your data stays in your account and will come back when you sign in again. It is removed from this device.";
-        if (!await dialogs.Confirm("Sign out?", message, unsynced ? "Sign out anyway" : "Sign out"))
+        // Last chance to get changes to the account: everything is removed from this device on signing out.
+        IsSyncingToSignOut = true;
+        bool unsynced;
+        try
+        {
+            unsynced = await account.HasUnsyncedChangesAsync();
+        }
+        finally
+        {
+            IsSyncingToSignOut = false;
+        }
+        if (unsynced)
+        {
+            var count = sync.PendingItems().Count;
+            var reason = sync.State == SyncState.Offline ? "you seem to be offline" : sync.Status is { Length: > 0 } s ? s.TrimEnd('.') : "the sync failed";
+            if (!await dialogs.Confirm("Changes will be lost",
+                    $"{count} change{(count == 1 ? "" : "s")} couldn't be synced to your account ({reason}). If you sign out now, "
+                    + "all unsynced data is permanently deleted from this device. Try again when you're back online to keep it.",
+                    "Sign out and lose them", "Keep me signed in"))
+                return;
+        }
+        else if (!await dialogs.Confirm("Sign out?",
+                     "Everything is synced. Your data stays in your account and comes back when you sign in again; it is removed from this device.",
+                     "Sign out"))
+        {
             return;
+        }
         await account.SignOutAsync();
         ShowOnboarding();
     }

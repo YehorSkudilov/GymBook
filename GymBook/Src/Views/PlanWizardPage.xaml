@@ -31,8 +31,13 @@
                     <Image Source="logo.png" HeightRequest="140" />
                 </VerticalStackLayout>
 
-                <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="28" />
-                <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="15" />
+                <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="28" IsVisible="{Binding IsAccount, Converter={StaticResource Not}}" />
+                <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="15" IsVisible="{Binding IsAccount, Converter={StaticResource Not}}" />
+
+                <!-- Account: create one (or sign in) before the plan; the form's own button goes on -->
+                <ContentView IsVisible="{Binding IsAccount}">
+                    <views:AccountForm BindingContext="{Binding Account}" />
+                </ContentView>
 
                 <!-- Welcome feature list -->
                 <VerticalStackLayout IsVisible="{Binding IsWelcome}" Spacing="12" Margin="0,14,0,0">
@@ -238,11 +243,7 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <VerticalStackLayout Grid.Row="2" Spacing="6">
-            <Button Text="{Binding NextText}" Style="{StaticResource PrimaryButton}" Command="{Binding NextCommand}"
-                    IsEnabled="{Binding IsGenerating, Converter={StaticResource Not}}" />
-            <Button Text="I already have an account" Style="{StaticResource GhostButton}" Command="{Binding SignInCommand}"
-                    HorizontalOptions="Center" IsVisible="{Binding ShowSignIn}" />
-        </VerticalStackLayout>
+        <Button Grid.Row="2" Text="{Binding NextText}" Style="{StaticResource PrimaryButton}" Command="{Binding NextCommand}"
+                IsEnabled="{Binding IsGenerating, Converter={StaticResource Not}}" IsVisible="{Binding IsAccount, Converter={StaticResource Not}}" />
     </Grid>
 </views:BasePage>

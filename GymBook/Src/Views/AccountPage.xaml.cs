@@ -12,30 +12,6 @@ public partial class AccountPage : SheetPage
         BindingContext = viewModel;
     }
 
-    // The keyboard's return key moves to the next field shown, and submits from the last one.
-    void OnEmailCompleted(object? sender, EventArgs e)
-    {
-        if (ViewModel.ShowCode)
-            CodeEntry.Focus();
-        else if (ViewModel.ShowPassword)
-            PasswordEntry.Focus();
-        else
-            ViewModel.SubmitCommand.Execute(null);
-    }
-
-    void OnCodeCompleted(object? sender, EventArgs e) => PasswordEntry.Focus();
-
-    void OnPasswordCompleted(object? sender, EventArgs e)
-    {
-        if (ViewModel.ShowConfirm)
-            ConfirmEntry.Focus();
-        else
-            ViewModel.SubmitCommand.Execute(null);
-    }
-
-    void OnConfirmCompleted(object? sender, EventArgs e) => ViewModel.SubmitCommand.Execute(null);
-
-    /// <summary>Opens the page as a sheet over whatever is showing, inside or outside the shell.</summary>
     // A required sign-in taken away by something else (e.g. a notification opening a page) comes straight back.
     protected override void OnDisappearing()
     {
@@ -52,6 +28,7 @@ public partial class AccountPage : SheetPage
         return true;
     }
 
+    /// <summary>Opens the page as a sheet over whatever is showing, inside or outside the shell.</summary>
     /// <param name="required">From <see cref="SignInGate"/>: it can't be closed without signing in.</param>
     public static Task ShowAsync(IServiceProvider services, bool register = false, bool required = false)
     {

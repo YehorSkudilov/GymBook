@@ -56,8 +56,11 @@ public class SyncService
         }, TaskScheduler.Default);
     }
 
-    /// <summary>Runs a full sync. Returns false if it couldn't complete (offline, signed out, rejected).</summary>
-    public async Task<bool> SyncNowAsync()
+    /// <summary>
+    /// Runs a full sync. Returns false if it couldn't complete (offline, signed out, rejected), or if one was already
+    /// running and <paramref name="waitForRunning"/> is false (it then runs again once that one finishes).
+    /// </summary>
+    public async Task<bool> SyncNowAsync(bool waitForRunning = false)
     {
         await _session.EnsureLoadedAsync();
         if (!_session.IsSignedIn)
@@ -82,7 +85,7 @@ public class SyncService
                 return false;
             }
         }
-        if (!await _gate.WaitAsync(0))
+        if (!await _gate.WaitAsync(waitForRunning ? Timeout.Infinite : 0))
         {
             // One is already running; go again when it finishes so the latest edits aren't left behind.
             _rerun = true;
@@ -134,6 +137,25 @@ public class SyncService
             }
         }
         return false;
+    }
+
+    /// <summary>
+    /// Runs <paramref name="action"/> with no sync in flight and none queued, so a sync can't write back into the device
+    /// what <paramref name="action"/> removes (signing out).
+    /// </summary>
+    public async Task WhileIdleAsync(Func<Task> action)
+    {
+        _debounce?.Cancel();
+        await _gate.WaitAsync();
+        try
+        {
+            await action();
+        }
+        finally
+        {
+            _rerun = false;
+            _gate.Release();
+        }
     }
 
     /// <summary>Local changes not on the server yet, for the sync details list; <c>Blocked</c> ones won't sync until fixed.</summary>

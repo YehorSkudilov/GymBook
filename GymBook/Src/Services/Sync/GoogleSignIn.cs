@@ -26,6 +26,11 @@ public static class GoogleConfig
     // The iOS OAuth client, from GoogleIosClientId / GOOGLE_IOS_CLIENT_ID / GymBook/.env. iOS signs in with it directly.
     public static string IosClientId { get; } = Metadata("GoogleIosClientId");
 
+    // The Desktop OAuth client and its secret (not confidential for Desktop clients), from GoogleDesktopClientId /
+    // GoogleDesktopClientSecret, GOOGLE_DESKTOP_CLIENT_ID / GOOGLE_DESKTOP_CLIENT_SECRET or GymBook/.env. Windows signs in with it.
+    public static string DesktopClientId { get; } = Metadata("GoogleDesktopClientId");
+    public static string DesktopClientSecret { get; } = Metadata("GoogleDesktopClientSecret");
+
     static string Metadata(string key) =>
         typeof(GoogleConfig).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().FirstOrDefault(a => a.Key == key)?.Value ?? "";
 }

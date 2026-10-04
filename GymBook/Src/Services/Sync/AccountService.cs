@@ -106,10 +106,13 @@ public class AccountService(ApiClient api, AuthSession session, DataStore store,
         await sync.SyncNowAsync();
     }
 
-    /// <summary>Whether signing out now would lose changes that haven't reached the server.</summary>
+    /// <summary>
+    /// Syncs before signing out (after any sync already running) and says whether signing out now would lose changes that
+    /// haven't reached the server (the sync failed, or held some back).
+    /// </summary>
     public async Task<bool> HasUnsyncedChangesAsync()
     {
-        await sync.SyncNowAsync();
+        await sync.SyncNowAsync(waitForRunning: true);
         return store.Local.HasPendingChanges;
     }
 
@@ -117,9 +120,7 @@ public class AccountService(ApiClient api, AuthSession session, DataStore store,
     public async Task SignOutAsync()
     {
         await api.LogoutAsync();
-        session.Clear();
-        store.WipeDevice();
-        await ForgetGoogleAccountAsync();
+        await ClearDeviceAsync();
     }
 
     /// <summary>Deletes the account and all of its data on the server, then clears this device.</summary>
@@ -141,11 +142,40 @@ public class AccountService(ApiClient api, AuthSession session, DataStore store,
         return true;
     }
 
-    async Task FinishDeleteAsync()
+    Task FinishDeleteAsync() => ClearDeviceAsync();
+
+    /// <summary>
+    /// Leaves nothing of the account on this device: the session, the database, everything kept in preferences (the
+    /// username, AI plan reviews, Pro status, health read and write-back state) and exported files. Waits out any sync
+    /// first, so one in flight can't write the data back.
+    /// </summary>
+    async Task ClearDeviceAsync()
     {
-        session.Clear();
-        store.WipeDevice();
+        await sync.WhileIdleAsync(() =>
+        {
+            session.Clear();
+            // Write-back's record of what it sent goes too, and with it write-back itself: left on with nothing here, it
+            // would take the account's records back out of the health app.
+            Preferences.Default.Clear();
+            store.WipeDevice();
+            DeleteExports();
+            return Task.CompletedTask;
+        });
         await ForgetGoogleAccountAsync();
+    }
+
+    // Exports are written to the cache to share, all named gymbook-*.
+    static void DeleteExports()
+    {
+        try
+        {
+            foreach (var file in Directory.EnumerateFiles(FileSystem.CacheDirectory, "gymbook-*"))
+                File.Delete(file);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            // The OS clears the cache eventually; not worth failing sign-out over.
+        }
     }
 
     // So the next Google sign-in asks which account instead of reusing this one.

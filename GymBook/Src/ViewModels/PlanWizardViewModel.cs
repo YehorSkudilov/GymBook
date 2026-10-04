@@ -14,10 +14,10 @@ namespace GymBook.ViewModels;
 /// users also get the AI's follow-up questions before the plan is built, and can chat with the AI to change it.
 /// </summary>
 public partial class PlanWizardViewModel(DataStore store, Units units, DialogService dialogs, AiPlanService ai,
-    GymBook.Services.Billing.SubscriptionService subscriptions)
+    GymBook.Services.Billing.SubscriptionService subscriptions, GymBook.Services.Sync.AccountService accounts, IServiceProvider services)
     : BaseViewModel, IQueryAttributable
 {
-    enum Step { Welcome, About, Goal, Experience, Days, Duration, Equipment, Neck, BuildWith, Programs, Questions, Result }
+    enum Step { Welcome, Account, About, Goal, Experience, Days, Duration, Equipment, Neck, BuildWith, Programs, Questions, Result }
 
     List<Step> _steps = [];
     int _index;
@@ -53,7 +53,14 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     [ObservableProperty] string subtitle = "";
     [ObservableProperty] double progress;
     [ObservableProperty] bool isWelcome;
+    [ObservableProperty] bool isAccount;
     [ObservableProperty] bool isAbout;
+
+    /// <summary>
+    /// The account step of first-run onboarding: creating one (or signing in) before the plan. Its own button submits, and
+    /// signing in moves on; someone coming back whose profile is finished skips the rest (see App.ShowMainShellIfOnboarded).
+    /// </summary>
+    public AccountViewModel Account { get; } = new(accounts, services) { IsInline = true, Mode = AccountMode.Register };
     [ObservableProperty] bool isOptions;
     [ObservableProperty] bool isPrograms;
     [ObservableProperty]
@@ -111,10 +118,9 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     public void Start(bool onboarding)
     {
         IsOnboarding = onboarding;
-        // Signing in from the welcome screen without a finished profile stays here: the link goes.
+        Account.SignedIn -= OnSignedIn;
         if (onboarding)
-            IPlatformApplication.Current!.Services.GetRequiredService<GymBook.Services.Sync.AccountService>().Changed +=
-                (_, _) => MainThread.BeginInvokeOnMainThread(UpdateShowSignIn);
+            Account.SignedIn += OnSignedIn;
         // Ready by the last steps, so a used-up quota skips straight to the signature programs.
         _ = ai.RefreshQuotaAsync();
         var p = store.Profile;
@@ -127,7 +133,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             _days = Math.Clamp(_regenerating.Workouts.Count > 0 ? _regenerating.Workouts.Count : _regenerating.DaysPerWeek, 2, 6);
         }
         _steps = onboarding
-            ? [Step.Welcome, Step.About, Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Programs, Step.Questions, Step.Result]
+            ? [Step.Welcome, Step.Account, Step.About, Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Programs, Step.Questions, Step.Result]
             : [Step.Goal, Step.Experience, Step.Days, Step.Duration, Step.Equipment, Step.Neck, Step.BuildWith, Step.Programs, Step.Questions, Step.Result];
 
         UnitChips.Clear();
@@ -162,6 +168,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
     /// </summary>
     bool Skipped(Step step) => step switch
     {
+        Step.Account => accounts.IsSignedIn,
         Step.BuildWith => !AiUsable,
         Step.Programs => AiUsable && _useAi,
         Step.Questions => !AiUsable || !_useAi || _questionsFor == AnswersKey() && Questions.Count == 0,
@@ -180,12 +187,12 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         Progress = (_index + 1.0) / _steps.Count;
         CanGoBack = _index > 0;
         IsWelcome = step == Step.Welcome;
-        UpdateShowSignIn();
+        IsAccount = step == Step.Account;
         IsAbout = step == Step.About;
         IsQuestions = step == Step.Questions;
         IsResult = step == Step.Result;
         IsPrograms = step == Step.Programs;
-        IsOptions = !IsWelcome && !IsAbout && !IsQuestions && !IsResult && !IsPrograms;
+        IsOptions = !IsWelcome && !IsAccount && !IsAbout && !IsQuestions && !IsResult && !IsPrograms;
         NextText = step switch
         {
             Step.Welcome => "Get started",
@@ -200,6 +207,10 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             case Step.Welcome:
                 Title = "Welcome to Gym Book";
                 Subtitle = "Your training log that tells you what to lift next. Answer a few questions and we'll build a plan around you.";
+                break;
+            case Step.Account:
+                // The form has its own title, which follows sign in / create account / reset.
+                Title = Subtitle = "";
                 break;
             case Step.About:
                 Title = "About you";
@@ -548,20 +559,14 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             _index++;
         while (_index < _steps.Count - 1 && Skipped(_steps[_index]));
         Show();
-        // Past the welcome screen, which holds the account back: a new user makes one.
-        if (step == Step.Welcome)
-            _ = Views.SignInGate.AskAsync(IPlatformApplication.Current!.Services, register: true);
     }
 
-    /// <summary>On the welcome screen: someone coming back signs in, which can skip the wizard (see <see cref="App.ShowMainShellIfOnboarded"/>).</summary>
-    [RelayCommand]
-    Task SignIn() => Views.SignInGate.AskAsync(IPlatformApplication.Current!.Services, register: false);
-
-    /// <summary>The welcome screen's "I already have an account", while there's no account on the device.</summary>
-    [ObservableProperty] bool showSignIn;
-
-    void UpdateShowSignIn() =>
-        ShowSignIn = IsWelcome && !IPlatformApplication.Current!.Services.GetRequiredService<GymBook.Services.Sync.AccountService>().IsSignedIn;
+    // Signed in on the account step: on to the plan, unless a finished profile came back and the app took over.
+    void OnSignedIn(object? sender, EventArgs e)
+    {
+        if (IsAccount)
+            _ = Next();
+    }
 
     [RelayCommand]
     async Task Back()
