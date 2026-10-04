@@ -34,8 +34,8 @@
                 </Grid>
                 <VerticalStackLayout Grid.Column="2" VerticalOptions="Center">
                     <Label Text="{Binding Username, StringFormat='@{0}'}" FontFamily="OpenSansSemibold" LineBreakMode="TailTruncation" />
-                    <!-- On the streak board: the best streak, when it's longer than the current one -->
-                    <Label Text="{Binding Tier}" TextColor="{Binding TierColor}" FontSize="12" />
+                    <!-- The tier on this board, and on the streak board the best streak when it's longer than the current one -->
+                    <Label Text="{Binding Tier}" TextColor="{Binding TierColor}" FontSize="12" FontFamily="OpenSansSemibold" />
                 </VerticalStackLayout>
                 <HorizontalStackLayout Grid.Column="3" Spacing="4" VerticalOptions="Center">
                     <Image Source="{StaticResource IconFlame}" WidthRequest="14" HeightRequest="14" VerticalOptions="Center" />
@@ -71,28 +71,46 @@
         </VerticalStackLayout>
 
         <VerticalStackLayout Spacing="14" IsVisible="{Binding InRanks}">
-            <!-- Your numbers: what the boards rank you on and why it's that, like the categories in Progress's Ranks -->
+            <!-- The nutrition rank, Bronze to Elite like Progress's overall: the streak's and days on target's tiers averaged -->
+            <Border Style="{StaticResource Card}" IsVisible="{Binding HasMine}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="NUTRITION RANK" Style="{StaticResource Overline}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="{Binding OverallTier}" TextColor="{Binding OverallColor}" FontFamily="OpenSansSemibold" FontSize="30" />
+                        <Label Grid.Column="1" Text="{Binding OverallScore}" Style="{StaticResource Caption}" VerticalOptions="Center" />
+                    </Grid>
+                    <ProgressBar Progress="{Binding OverallProgress}" ProgressColor="{Binding OverallColor}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Your numbers: what the boards rank you on, each with its tier, and why it's that, like the categories in Progress's Ranks -->
             <Border Style="{StaticResource Card}" IsVisible="{Binding HasMine}">
                 <VerticalStackLayout Spacing="14">
                     <Label Text="YOUR NUMBERS" Style="{StaticResource Overline}" />
                     <VerticalStackLayout Spacing="4">
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Text="Streak" FontFamily="OpenSansSemibold" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="Streak" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                                <Label Text="{Binding StreakTier}" TextColor="{Binding StreakColor}" FontFamily="OpenSansSemibold" FontSize="13" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
                             <HorizontalStackLayout Grid.Column="1" Spacing="4">
                                 <Image Source="{StaticResource IconFlame}" WidthRequest="14" HeightRequest="14" VerticalOptions="Center" />
                                 <Label Text="{Binding StreakText}" FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" />
                             </HorizontalStackLayout>
                         </Grid>
-                        <!-- How far to the best streak -->
-                        <ProgressBar Progress="{Binding StreakProgress}" ProgressColor="#FF7A45" />
+                        <!-- How far through its tier -->
+                        <ProgressBar Progress="{Binding StreakProgress}" ProgressColor="{Binding StreakColor}" />
                         <Label Text="{Binding StreakDetail}" Style="{StaticResource Caption}" FontSize="12" />
                     </VerticalStackLayout>
                     <VerticalStackLayout Spacing="4">
                         <Grid ColumnDefinitions="*,Auto">
-                            <Label Text="On target" FontFamily="OpenSansSemibold" />
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="On target" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                                <Label Text="{Binding OnTargetTier}" TextColor="{Binding OnTargetColor}" FontFamily="OpenSansSemibold" FontSize="13" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
                             <Label Grid.Column="1" Text="{Binding OnTargetText}" TextColor="{StaticResource Success}" FontFamily="OpenSansSemibold" FontSize="14" />
                         </Grid>
-                        <ProgressBar Progress="{Binding OnTargetProgress}" ProgressColor="{StaticResource Success}" />
+                        <ProgressBar Progress="{Binding OnTargetProgress}" ProgressColor="{Binding OnTargetColor}" />
                         <Label Text="{Binding OnTargetDetail}" Style="{StaticResource Caption}" FontSize="12" />
                     </VerticalStackLayout>
                     <Label Text="{Binding PlaceText}" Style="{StaticResource Caption}" />

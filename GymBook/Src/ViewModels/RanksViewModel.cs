@@ -372,5 +372,6 @@ public partial class RanksViewModel(ApiClient api, DialogService dialogs, Units 
         _ => "#C77DFF",
     });
 
-    static double Progress(double score) => score >= 600 ? 1 : score % 100 / 100;
+    /// <summary>0–1 through a score's tier.</summary>
+    public static double Progress(double score) => score >= 600 ? 1 : score % 100 / 100;
 }

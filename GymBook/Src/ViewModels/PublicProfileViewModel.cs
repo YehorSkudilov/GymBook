@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Contracts;
+using GymBook.Models;
 using GymBook.Services;
 using GymBook.Services.Sync;
 
@@ -12,7 +13,7 @@ namespace GymBook.ViewModels;
 /// code to give friends. Nothing else about the user is public. It needs the account.
 /// </summary>
 public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs, AccountService account,
-    GymBook.Services.Billing.SubscriptionService subscriptions, IServiceProvider services, RanksViewModel ranks) : BaseViewModel
+    GymBook.Services.Billing.SubscriptionService subscriptions, IServiceProvider services, RanksViewModel ranks, NutritionService nutrition) : BaseViewModel
 {
     /// <summary>The picture as sent: a JPEG this many pixels on its longer side.</summary>
     const int AvatarPixels = 320;
@@ -30,6 +31,43 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
     bool inRanks;
     public Color RanksIconColor => InRanks ? Color.FromArgb("#FFC857") : Color.FromArgb("#626B7E");
     [ObservableProperty] bool isBusy;
+
+    // ---- The badges under the profile, on the leaderboards only: the overall tiers of Progress's and Nutrition's Ranks ----
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowBadges))]
+    bool hasBadges;
+    public bool ShowBadges => ShowProfile && InRanks && HasBadges;
+    [ObservableProperty] string strengthTier = "";
+    [ObservableProperty] Color strengthColor = Colors.Gray;
+    [ObservableProperty] string nutritionTier = "";
+    [ObservableProperty] Color nutritionColor = Colors.Gray;
+
+    partial void OnInRanksChanged(bool value) => OnPropertyChanged(nameof(ShowBadges));
+
+    /// <summary>
+    /// Strength from the server (it ranks the synced workouts); nutrition as the app works it out, the numbers it sends to
+    /// Nutrition's boards. Left as they were when the server can't be reached.
+    /// </summary>
+    async Task LoadBadgesAsync()
+    {
+        if (!InRanks)
+            return;
+        var streaks = nutrition.Streaks();
+        var food = Ranks.Tier(Ranks.NutritionScore(streaks.Logging, streaks.OnTargetLast30));
+        NutritionTier = RanksViewModel.TierName(food);
+        NutritionColor = RanksViewModel.TierColor(food);
+        try
+        {
+            var strength = Ranks.Tier((await api.GetRanksAsync()).Score);
+            StrengthTier = RanksViewModel.TierName(strength);
+            StrengthColor = RanksViewModel.TierColor(strength);
+            HasBadges = true;
+        }
+        catch (Exception e) when (Online.Message(e) != null)
+        {
+        }
+    }
 
     public string Initial => Username.Length > 0 ? Username[..1].ToUpperInvariant() : "?";
     public bool HasAvatar => AvatarUrl != null;
@@ -92,6 +130,7 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
         OnPropertyChanged(nameof(ShowProfile));
         OnPropertyChanged(nameof(ShowLoadFailed));
         OnPropertyChanged(nameof(ShowLoading));
+        OnPropertyChanged(nameof(ShowBadges));
     }
 
     partial void OnUsernameChanged(string value) => OnPropertyChanged(nameof(Initial));
@@ -115,6 +154,7 @@ public partial class PublicProfileViewModel(ApiClient api, DialogService dialogs
         {
             Show(await api.GetMyPublicProfileAsync());
             LoadFailed = false;
+            await LoadBadgesAsync();
         }
         catch (Exception e) when (Online.Message(e) != null)
         {

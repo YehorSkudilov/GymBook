@@ -188,6 +188,33 @@ public static class Ranks
     /// <summary>0–600 for workouts a week (over the last <see cref="ConsistencyWeeks"/>).</summary>
     public static double ConsistencyScore(double workoutsPerWeek) => Score(ConsistencyThresholds, workoutsPerWeek);
 
+    /// <summary>Days in a row with food logged that start Silver, Gold, Platinum, Diamond and Elite on the nutrition streak.</summary>
+    public static readonly int[] NutritionStreakDays = [3, 7, 14, 30, 60];
+
+    /// <summary>Days on target in the last 30 that start Silver, Gold, Platinum, Diamond and Elite.</summary>
+    public static readonly int[] OnTargetDays = [5, 10, 15, 20, 25];
+
+    /// <summary>0–600 for a food logging streak in days.</summary>
+    public static double NutritionStreakScore(int days) => Score([.. NutritionStreakDays.Select(d => (double)d)], days);
+
+    /// <summary>0–600 for days on target in the last 30 (all 30 is the top of Elite).</summary>
+    public static double OnTargetScore(int daysLast30) => Score([.. OnTargetDays.Select(d => (double)d)], daysLast30);
+
+    /// <summary>The nutrition rank: the streak and days on target, averaged, so logging and hitting the goals both count.</summary>
+    public static double NutritionScore(int streak, int onTargetLast30) => (NutritionStreakScore(streak) + OnTargetScore(onTargetLast30)) / 2;
+
+    /// <summary>
+    /// The next tier up for a value against thresholds where Silver and up start (<see cref="NutritionStreakDays"/>,
+    /// <see cref="OnTargetDays"/>), and where it starts; null at Elite.
+    /// </summary>
+    public static (RankTier Tier, int From)? NextTier(int[] thresholds, int value)
+    {
+        for (var i = 0; i < thresholds.Length; i++)
+            if (value < thresholds[i])
+                return ((RankTier)(i + 1), thresholds[i]);
+        return null;
+    }
+
     /// <summary>
     /// 0–600 for a value against tier thresholds (where Silver and up start): the tier times 100, plus how far through the
     /// tier. Elite tops out one tier-width past where it starts.

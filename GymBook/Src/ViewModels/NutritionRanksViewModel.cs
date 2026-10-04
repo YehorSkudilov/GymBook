@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Contracts;
+using GymBook.Models;
 using GymBook.Services;
 using GymBook.Services.Sync;
 
@@ -37,6 +38,15 @@ public partial class NutritionRanksViewModel(ApiClient api, AccountService accou
     // ---- Your numbers: what the boards rank the user on, and why it's that (like the strength categories in Progress) ----
 
     [ObservableProperty] bool hasMine;
+    /// <summary>The nutrition rank: the streak's and days on target's scores averaged (see <see cref="Ranks.NutritionScore"/>).</summary>
+    [ObservableProperty] string overallTier = "";
+    [ObservableProperty] Color overallColor = Colors.Gray;
+    [ObservableProperty] string overallScore = "";
+    [ObservableProperty] double overallProgress;
+    [ObservableProperty] string streakTier = "";
+    [ObservableProperty] Color streakColor = Colors.Gray;
+    [ObservableProperty] string onTargetTier = "";
+    [ObservableProperty] Color onTargetColor = Colors.Gray;
     [ObservableProperty] string streakText = "";
     [ObservableProperty] string streakDetail = "";
     [ObservableProperty] double streakProgress;
@@ -56,21 +66,41 @@ public partial class NutritionRanksViewModel(ApiClient api, AccountService accou
     {
         _mine = s;
         HasMine = true;
+        var overall = Ranks.NutritionScore(s.Logging, s.OnTargetLast30);
+        var tier = Ranks.Tier(overall);
+        OverallTier = RanksViewModel.TierName(tier);
+        OverallColor = RanksViewModel.TierColor(tier);
+        OverallScore = $"{overall:0} points";
+        OverallProgress = RanksViewModel.Progress(overall);
+
+        var streak = Ranks.NutritionStreakScore(s.Logging);
+        StreakTier = RanksViewModel.TierName(Ranks.Tier(streak));
+        StreakColor = RanksViewModel.TierColor(Ranks.Tier(streak));
         StreakText = $"{Days(s.Logging)} in a row";
-        StreakProgress = s.BestLogging > 0 ? Math.Clamp(s.Logging / (double)s.BestLogging, 0, 1) : 0;
-        StreakDetail = s.Logging == 0 ? $"No streak right now: log any food today to start one. Your best is {Days(s.BestLogging)}."
+        // How far through the streak's tier
+        StreakProgress = RanksViewModel.Progress(streak);
+        StreakDetail = (s.Logging == 0 ? $"No streak right now: log any food today to start one. Your best is {Days(s.BestLogging)}."
             : !s.TodayLogged ? $"Counted to yesterday: log something today to keep it going. Your best is {Days(s.BestLogging)}."
             : s.Logging >= s.BestLogging ? "Your longest streak yet. Every day you log any food adds one."
-            : $"Your best is {Days(s.BestLogging)}. Every day you log any food adds one.";
+            : $"Your best is {Days(s.BestLogging)}. Every day you log any food adds one.")
+            + Next(Ranks.NutritionStreakDays, s.Logging, "in a row");
 
+        var onTarget = Ranks.OnTargetScore(s.OnTargetLast30);
+        OnTargetTier = RanksViewModel.TierName(Ranks.Tier(onTarget));
+        OnTargetColor = RanksViewModel.TierColor(Ranks.Tier(onTarget));
         OnTargetText = $"{s.OnTargetLast30} of the last 30 days";
-        OnTargetProgress = s.OnTargetLast30 / 30.0;
+        OnTargetProgress = RanksViewModel.Progress(onTarget);
         OnTargetDetail = calorieGoal is not > 0
             ? "Set a calorie goal (Goals, at the top of Nutrition) to count days on target."
             : $"A day counts when its calories land within {NutritionService.TargetRange:P0} of your {calorieGoal} kcal goal"
-              + (proteinGoal is > 0 ? $" and protein reaches {NutritionService.ProteinReached:P0} of your {proteinGoal} g goal." : ".");
+              + (proteinGoal is > 0 ? $" and protein reaches {NutritionService.ProteinReached:P0} of your {proteinGoal} g goal." : ".")
+              + Next(Ranks.OnTargetDays, s.OnTargetLast30, "in the last 30");
         ShowPlace();
     }
+
+    /// <summary>" 3 days in a row for Gold.", or nothing at Elite.</summary>
+    static string Next(int[] thresholds, int value, string what) =>
+        Ranks.NextTier(thresholds, value) is { } next ? $" {Days(next.From)} {what} for {RanksViewModel.TierName(next.Tier)}." : "";
 
     /// <summary>The user's place on the board showing: their row on it, or why they're not there.</summary>
     void ShowPlace()
@@ -175,14 +205,18 @@ public partial class NutritionRanksViewModel(ApiClient api, AccountService accou
         Username = e.Username,
         Initial = e.Username[..1].ToUpperInvariant(),
         AvatarUrl = ApiClient.AvatarUrl(e.AvatarPath),
-        // Under the name: on the streak board, the best streak.
-        Tier = _board == NutritionBoard.Streak && e.BestStreak > e.Days ? $"Best {Days(e.BestStreak)}" : "",
-        TierColor = Color.FromArgb("#9AA3B5"),
+        // Under the name: the tier on this board, and on the streak board the best streak.
+        Tier = RanksViewModel.TierName(BoardTier(e.Days))
+               + (_board == NutritionBoard.Streak && e.BestStreak > e.Days ? $" · Best {Days(e.BestStreak)}" : ""),
+        TierColor = RanksViewModel.TierColor(BoardTier(e.Days)),
         Value = Days(e.Days),
         IsMe = e.IsMe,
         IsPro = e.IsPro,
         OpenCommand = new AsyncRelayCommand(() => ranks.OpenUserAsync(e.Username, e.IsMe, e.IsFriend)),
     };
+
+    RankTier BoardTier(int days) =>
+        Ranks.Tier(_board == NutritionBoard.Streak ? Ranks.NutritionStreakScore(days) : Ranks.OnTargetScore(days));
 
     static string Days(int n) => n == 1 ? "1 day" : $"{n} days";
 

@@ -81,5 +81,27 @@
                 </VerticalStackLayout>
             </Grid>
         </VerticalStackLayout>
+
+        <!-- The badges, on the leaderboards only: the overall tier from Progress's Ranks and the one from Nutrition's -->
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Padding="16,0,16,14" IsVisible="{Binding ShowBadges}">
+            <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="12,8">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                    <Label Text="emoji_events" FontFamily="OutlinedIcons" FontSize="22" TextColor="{Binding StrengthColor}" VerticalOptions="Center" />
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="Strength" Style="{StaticResource Caption}" FontSize="11" />
+                        <Label Text="{Binding StrengthTier}" TextColor="{Binding StrengthColor}" FontFamily="OpenSansSemibold" FontSize="14" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+            <Border Grid.Column="1" BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="12,8">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+                    <Label Text="restaurant" FontFamily="OutlinedIcons" FontSize="22" TextColor="{Binding NutritionColor}" VerticalOptions="Center" />
+                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="Nutrition" Style="{StaticResource Caption}" FontSize="11" />
+                        <Label Text="{Binding NutritionTier}" TextColor="{Binding NutritionColor}" FontFamily="OpenSansSemibold" FontSize="14" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+        </Grid>
     </VerticalStackLayout>
 </ContentView>
