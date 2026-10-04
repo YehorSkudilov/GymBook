@@ -18,6 +18,17 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
+      # Purchases are checked with the same Play service account that uploads builds (SERVICE_ACCOUNT_JSON), as one
+      # base64 line for .env (the JSON spans lines). In Play Console it needs, besides releasing, the permissions to
+      # view financial data and to manage orders and subscriptions.
+      - name: Prepare the Google Play key
+        env:
+          KEY: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+        run: |
+          b64=$(printf '%s' "$KEY" | base64 -w0)
+          if [ -n "$b64" ]; then echo "::add-mask::$b64"; fi
+          echo "PLAY_KEY_B64=$b64" >> "$GITHUB_ENV"
+
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.2
         with:
@@ -89,7 +100,7 @@ jobs:
 
             # Gym Book Pro subscriptions, checked with each store (a store stays off while its settings are empty)
             GooglePlay__PackageName=${{ vars.ANDROID_PACKAGE_NAME || 'com.yehorskudilov.gymbook' }}
-            GooglePlay__ServiceAccountJson=${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
+            GooglePlay__ServiceAccountJson=${{ env.PLAY_KEY_B64 }}
             GooglePlay__NotificationToken=${{ secrets.GOOGLE_PLAY_NOTIFICATION_TOKEN }}
             AppStore__BundleId=${{ vars.IOS_BUNDLE_ID || 'com.yehorskudilov.gymbook' }}
             AppStore__IssuerId=${{ vars.APP_STORE_ISSUER_ID }}
