@@ -13,6 +13,15 @@ public interface IGoogleSignIn
 
     /// <summary>Forgets the picked account, so the next sign-in shows the picker again instead of reusing it.</summary>
     Task SignOutAsync();
+
+    /// <summary>
+    /// Signing in happens in the browser, outside the app, which can't tell when it's abandoned: the app offers to cancel
+    /// while it waits. Elsewhere the platform's picker has its own way back.
+    /// </summary>
+    bool WaitsInBrowser => false;
+
+    /// <summary>Gives up the sign-in waiting on the browser; its <see cref="SignInAsync"/> returns null.</summary>
+    void CancelPending() { }
 }
 
 public class GoogleSignInException(string message) : Exception(message);

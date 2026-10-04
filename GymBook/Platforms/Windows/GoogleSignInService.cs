@@ -28,6 +28,10 @@ public class GoogleSignInService : IGoogleSignIn
 
     public bool IsAvailable => !string.IsNullOrWhiteSpace(GoogleConfig.DesktopClientId);
 
+    public bool WaitsInBrowser => true;
+
+    public void CancelPending() => _pending?.Cancel();
+
     public async Task<string?> SignInAsync()
     {
         if (!IsAvailable)

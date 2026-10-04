@@ -8,7 +8,8 @@
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:AccountViewModel">
 
-    <VerticalStackLayout Spacing="12">
+    <!-- Phone-width on a desktop window too, rather than stretched across it -->
+    <VerticalStackLayout Spacing="12" WidthRequest="{OnIdiom Default=-1, Desktop=440}" HorizontalOptions="{OnIdiom Default=Fill, Desktop=Center}">
         <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="28" />
         <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="15" />
 
@@ -71,6 +72,11 @@
                          BackgroundColor="{StaticResource Surface2}" HorizontalOptions="Center"
                          SemanticProperties.Description="Sign in with Google"
                          Command="{Binding GoogleCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+            <!-- Windows: signing in goes on in the browser, which may be left unfinished -->
+            <VerticalStackLayout Spacing="4" IsVisible="{Binding IsWaitingForGoogle}">
+                <Label Text="Finish signing in with Google in your browser." Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                <Button Text="Cancel" Style="{StaticResource GhostButton}" Command="{Binding CancelGoogleCommand}" HorizontalOptions="Center" />
+            </VerticalStackLayout>
         </VerticalStackLayout>
 
         <Button Text="{Binding ToggleText}" Style="{StaticResource GhostButton}" Command="{Binding ToggleCommand}" HorizontalOptions="Center" />

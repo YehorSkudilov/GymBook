@@ -188,6 +188,9 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         CanGoBack = _index > 0;
         IsWelcome = step == Step.Welcome;
         IsAccount = step == Step.Account;
+        // Went back from the account step while Google sign-in waited on the browser: stop waiting.
+        if (!IsAccount && Account.IsWaitingForGoogle)
+            Account.CancelGoogleCommand.Execute(null);
         IsAbout = step == Step.About;
         IsQuestions = step == Step.Questions;
         IsResult = step == Step.Result;

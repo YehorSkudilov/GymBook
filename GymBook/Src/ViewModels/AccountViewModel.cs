@@ -180,10 +180,26 @@ public partial class AccountViewModel(AccountService account, IServiceProvider s
         Error = "";
         return RunAsync(async () =>
         {
-            if (await account.SignInWithGoogleAsync())
-                await SignedInAsync();
+            IsWaitingForGoogle = account.GoogleWaitsInBrowser;
+            try
+            {
+                if (!await account.SignInWithGoogleAsync())
+                    return;
+            }
+            finally
+            {
+                IsWaitingForGoogle = false;
+            }
+            await SignedInAsync();
         });
     }
+
+    /// <summary>Google sign-in is going on in the browser (Windows): the form says so and offers to cancel it.</summary>
+    [ObservableProperty] bool isWaitingForGoogle;
+
+    /// <summary>Left the browser without finishing: back to the form.</summary>
+    [RelayCommand]
+    void CancelGoogle() => account.CancelGoogleSignIn();
 
     async Task SignedInAsync()
     {

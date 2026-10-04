@@ -9,9 +9,12 @@
     Shell.NavBarIsVisible="False"
     Backdrop="#B3000000">
 
-    <!-- A sheet over whatever is showing, like the other sheets -->
-    <Border Margin="0,28,0,0" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0">
-    <Grid RowDefinitions="Auto,*" Padding="10,16,10,20">
+    <!-- A sheet over whatever is showing, like the other sheets; on a desktop window, a card sized to the form instead -->
+    <Border Margin="{OnIdiom Default='0,28,0,0', Desktop='0,40'}" BackgroundColor="{StaticResource Bg}" StrokeThickness="0" Padding="0"
+            StrokeShape="{OnIdiom Default='RoundRectangle 28,28,0,0', Desktop='RoundRectangle 28'}"
+            WidthRequest="{OnIdiom Default=-1, Desktop=520}"
+            HorizontalOptions="{OnIdiom Default=Fill, Desktop=Center}" VerticalOptions="{OnIdiom Default=Fill, Desktop=Center}">
+    <Grid RowDefinitions="Auto,*" Padding="{OnIdiom Default='10,16,10,20', Desktop='24,20,24,28'}">
         <Button Text="✕" FontSize="18" Style="{StaticResource StepButton}" WidthRequest="40" HeightRequest="40"
                 BackgroundColor="{StaticResource Surface2}" HorizontalOptions="Start" Command="{Binding CloseCommand}"
                 IsVisible="{Binding CanClose}" />

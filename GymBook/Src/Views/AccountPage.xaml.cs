@@ -16,6 +16,9 @@ public partial class AccountPage : SheetPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
+        // Closed while Google sign-in waits on the browser: stop waiting.
+        if (ViewModel.IsWaitingForGoogle)
+            ViewModel.CancelGoogleCommand.Execute(null);
         if (ViewModel.IsRequired)
             _ = SignInGate.ShowIfNeededAsync(Handler?.MauiContext?.Services ?? IPlatformApplication.Current!.Services);
     }

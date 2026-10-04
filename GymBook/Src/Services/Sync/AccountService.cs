@@ -10,6 +10,12 @@ public class AccountService(ApiClient api, AuthSession session, DataStore store,
     public bool HasPassword => session.HasPassword;
     public bool CanUseGoogle => google.IsAvailable;
 
+    /// <summary>Google sign-in goes on in the browser (Windows), so the app offers to cancel it while it waits.</summary>
+    public bool GoogleWaitsInBrowser => google.WaitsInBrowser;
+
+    /// <summary>Gives up a Google sign-in left unfinished in the browser.</summary>
+    public void CancelGoogleSignIn() => google.CancelPending();
+
     /// <summary>
     /// The account's username (its public profile's), what the app calls the user everywhere. As last loaded from the
     /// server, kept on the device so it shows offline; null when signed out or without one yet.
