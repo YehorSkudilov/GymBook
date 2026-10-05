@@ -16,16 +16,14 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- Portrait only: an iPad app that doesn't support every orientation must opt out of split-screen multitasking. -->
+	<key>UIRequiresFullScreen</key>
+	<true/>
 	<!-- Only standard HTTPS, which is exempt from export compliance: skips the encryption question on every TestFlight build. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
