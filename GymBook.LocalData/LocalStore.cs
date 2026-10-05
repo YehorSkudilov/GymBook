@@ -93,6 +93,35 @@ public sealed class LocalStore
         }
     }
 
+    /// <summary>
+    /// Like <see cref="Save"/>, for a change to <paramref name="session"/> alone (a set ticked, a weight typed): only it is
+    /// compared with what's stored, not every record, which <see cref="Save"/> serializes each time and grows with the
+    /// history. A session that isn't one of the data's (removed meanwhile) gets a full <see cref="Save"/> instead.
+    /// </summary>
+    public void SaveSession(WorkoutSession session)
+    {
+        lock (_gate)
+        {
+            if (!WithActive(Data).Contains(session))
+            {
+                Save();
+                return;
+            }
+            var json = LocalJson.Serialize(session);
+            if (_sessions.Live.TryGetValue(session.Id, out var old) && old == json)
+                return;
+            using var db = NewDb();
+            var commit = new List<Action>();
+            session.UpdatedAt = Now();
+            session.IsDeleted = false;
+            json = LocalJson.Serialize(session);
+            Stage(db, _sessions, LocalJson.Deserialize<WorkoutSession>(json), dirty: true, commit);
+            commit.Add(() => _sessions.Live[session.Id] = json);
+            db.SaveChanges();
+            commit.ForEach(a => a());
+        }
+    }
+
     /// <summary>Deletes everything; the deletions sync to the account if signed in.</summary>
     public void Reset()
     {

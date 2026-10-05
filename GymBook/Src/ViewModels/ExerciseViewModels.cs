@@ -36,7 +36,20 @@ public abstract partial class ExerciseListViewModel : BaseViewModel
     [ObservableProperty] bool hasFilterBadge;
     [ObservableProperty] bool canClearFilters;
 
-    partial void OnSearchTextChanged(string value) => Filter();
+    // Searched once typing pauses, not on every key: each search goes through the whole library and rebuilds the list,
+    // which made typing lag. Cleared, the list comes back at once.
+    partial void OnSearchTextChanged(string value) => _ = FilterSoon(value.Trim().Length == 0 ? 0 : 160);
+
+    int _filterId;
+
+    async Task FilterSoon(int delayMs)
+    {
+        var id = ++_filterId;
+        if (delayMs > 0)
+            await Task.Delay(delayMs);
+        if (id == _filterId)
+            Filter();
+    }
 
     // A chip turns its filter off (the switches and the order notify the list themselves).
     void RemoveChip(ChipItem chip)

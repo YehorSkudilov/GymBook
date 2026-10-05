@@ -180,6 +180,16 @@ public partial class WorkoutViewModel(
 
     internal void Save() => workouts.Save();
 
+    // A change to this workout's sets and times alone (a tick, a skip, the rest): only it is written, which stays quick
+    // however long the history is (a full save goes through every record).
+    void SaveSession()
+    {
+        if (_session != null)
+            workouts.SaveSession(_session);
+        else
+            workouts.Save();
+    }
+
     IDispatcherTimer? _saveTimer;
 
     /// <summary>
@@ -196,7 +206,7 @@ public partial class WorkoutViewModel(
             _saveTimer.Tick += (_, _) =>
             {
                 if (_session != null && (workouts.Active == _session || IsReviewing))
-                    workouts.Save();
+                    workouts.SaveSession(_session);
             };
         }
         _saveTimer.Stop();
@@ -599,7 +609,7 @@ public partial class WorkoutViewModel(
         {
             SetTimes.Uncomplete(set.Model);
         }
-        workouts.Save();
+        SaveSession();
         UpdateProgress();
         Tick();
         OfferFinishWhenDone();
@@ -613,7 +623,7 @@ public partial class WorkoutViewModel(
     /// <summary>Sets of <paramref name="exercise"/> were skipped (or brought back): with none left to do, on to the next exercise.</summary>
     internal void OnSkipped(WorkoutExerciseViewModel exercise)
     {
-        workouts.Save();
+        SaveSession();
         UpdateProgress();
         // Skipping what was left can finish the workout too.
         if (_session != null && NextSet() == null)
@@ -695,7 +705,7 @@ public partial class WorkoutViewModel(
         // Always from when it's due: below zero, +15 takes 15 seconds off what's over (−0:40 becomes −0:25).
         SetTimes.MoveRestDue(rest, due.AddSeconds(int.Parse(delta)));
         _restCounting = rest.RestDueAt > now;
-        workouts.Save();
+        SaveSession();
         Tick();
     }
 
@@ -707,7 +717,7 @@ public partial class WorkoutViewModel(
             return;
         SetTimes.EndRest(_session, DateTime.Now);
         _restCounting = false;
-        workouts.Save();
+        SaveSession();
         Tick();
     }
 
@@ -719,7 +729,7 @@ public partial class WorkoutViewModel(
             return;
         SetTimes.ResumeRest(last);
         _restCounting = last.RestDueAt > DateTime.Now;
-        workouts.Save();
+        SaveSession();
         Tick();
     }
 

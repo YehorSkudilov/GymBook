@@ -24,7 +24,11 @@ public partial class WorkoutPage : SheetPage
 
         ExercisePager.CNavIconItems = _pages;
         // Swiped to an exercise: the pager is already showing it, so it just becomes the current one.
-        ExercisePager.SwipeNavigationCommand = new Command<CNavItem>(item => _ = viewModel.SelectExercise((WorkoutExerciseViewModel)item.Page.BindingContext));
+        ExercisePager.SwipeNavigationCommand = new Command<CNavItem>(item =>
+        {
+            _shown = item;
+            _ = viewModel.SelectExercise((WorkoutExerciseViewModel)item.Page.BindingContext);
+        });
         viewModel.Exercises.CollectionChanged += (_, _) =>
         {
             SyncPages(viewModel);
@@ -49,7 +53,7 @@ public partial class WorkoutPage : SheetPage
         var wanted = vm.Exercises.Select(e =>
         {
             if (!_pageFor.TryGetValue(e, out var item))
-                _pageFor[e] = item = new CNavItem { PageName = e.Name, Page = new WorkoutExerciseView { BindingContext = e } };
+                _pageFor[e] = item = new CNavItem { PageName = e.Name, Page = new ExercisePage(e) };
             return item;
         }).ToList();
         if (wanted.SequenceEqual(_pages))
@@ -72,9 +76,50 @@ public partial class WorkoutPage : SheetPage
             _showQueued = false;
             if (vm.CurrentExercise is not { } current || !_pageFor.TryGetValue(current, out var item))
                 return;
+            BuildAround(item);
             ExercisePager.SetContent(item);
+            _shown = item;
             ScrollStripTo(vm.CurrentIndex);
         });
+    }
+
+    CNavItem? _shown;
+
+    // Before going to an exercise: its page, the pages either side (where a swipe goes; it wraps round at the ends), and
+    // the ones a jump from the page on screen slides past.
+    void BuildAround(CNavItem target)
+    {
+        var to = _pages.IndexOf(target);
+        if (to < 0)
+            return;
+        var from = _shown == null ? -1 : _pages.IndexOf(_shown);
+        if (from < 0)
+            from = to;
+        for (var i = Math.Min(from, to); i <= Math.Max(from, to); i++)
+            ((ExercisePage)_pages[i].Page).Build();
+        var n = _pages.Count;
+        ((ExercisePage)_pages[(to + 1) % n].Page).Build();
+        ((ExercisePage)_pages[(to - 1 + n) % n].Page).Build();
+    }
+
+    /// <summary>
+    /// An exercise's page in the pager, its sets built only the first time it's needed (see <see cref="BuildAround"/>):
+    /// building every exercise's as the workout opened made it slow to open.
+    /// </summary>
+    sealed class ExercisePage : PageBase
+    {
+        readonly WorkoutExerciseViewModel _exercise;
+
+        public ExercisePage(WorkoutExerciseViewModel exercise)
+        {
+            _exercise = exercise;
+            BindingContext = exercise;
+            Padding = 0;
+            // Like the page's own, so one sliding in covers the one going out even before it's built.
+            BackgroundColor = (Color)Application.Current!.Resources["Bg"];
+        }
+
+        public void Build() => Content ??= new WorkoutExerciseView { BindingContext = _exercise };
     }
 
     int _celebrationId;

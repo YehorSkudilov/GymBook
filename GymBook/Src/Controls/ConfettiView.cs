@@ -15,6 +15,9 @@ public class ConfettiView : AnimatedDrawingView
     const int Count = 90;
     readonly Piece[] _pieces;
 
+    // Falls and flutters quickly: every display frame.
+    protected override double MinFrameInterval => 0;
+
     public ConfettiView()
     {
         var random = new Random(7);

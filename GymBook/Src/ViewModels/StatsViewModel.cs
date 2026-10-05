@@ -281,6 +281,24 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             ShowDay();
             return Task.CompletedTask;
         }
+        // Worked out again only when the data changed (or the day did) since last time: it goes through all the history.
+        // Either way it plays in again.
+        if (_trendsVersion != store.Version || _trendsDay != DateTime.Today)
+        {
+            _trendsVersion = store.Version;
+            _trendsDay = DateTime.Today;
+            ShowTrends();
+        }
+        // Last, so everything bound plays in (charts draw, numbers count, cards rise).
+        IsShowing = true;
+        return Task.CompletedTask;
+    }
+
+    int _trendsVersion = -1;
+    DateTime _trendsDay;
+
+    void ShowTrends()
+    {
         var history = store.History.ToList();
         TotalWorkouts = history.Count.ToString();
         var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
@@ -329,9 +347,6 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         ShowHabits(history);
         ShowActivity(nutrition.Day(DateTime.Today));
         ShowBody();
-        // Last, so everything bound above plays in (charts draw, numbers count, cards rise).
-        IsShowing = true;
-        return Task.CompletedTask;
     }
 
     const int TrendWeeks = 12;

@@ -10,14 +10,22 @@ namespace GymBook.Views;
 /// lands on. The check saves what's shown; Cancel, the dimmed area or back leaves it as it was.
 /// Tapping a value or typing jumps the wheel there at once (no animation to wait for), and the scroll events of a turn
 /// made by code are ignored until it gets there, so they can't put a value it passed on the way back in its place.
+/// The wheel scrolls an empty spacer as tall as all its values; only the few on screen are views, moved along with
+/// the scroll and given the value they're over (weights go up to 500 kg, a view each made it slow to open).
 /// </summary>
 public class NumberPadSheet : SheetPage
 {
     const double ItemHeight = 58, Visible = 5;
+    // Room above and below the values, so the first and last can sit in the middle.
+    const double WheelPadding = ItemHeight * (Visible - 1) / 2;
+    // Enough rows to cover the wheel at any scroll position, with one coming in at each edge.
+    const int Rows = (int)Visible + 2;
 
     readonly TaskCompletionSource<double?> _result = new();
     readonly List<double> _values = [];
-    readonly List<Border> _items = [];
+    // The rows on screen: row i % Rows shows value i, so a value keeps its row for as long as it's in view.
+    readonly Border[] _rows = new Border[Rows];
+    readonly int[] _rowValue = new int[Rows];
     readonly ScrollView _wheel;
     readonly Label _display;
     readonly string _unit;
@@ -48,36 +56,46 @@ public class NumberPadSheet : SheetPage
         for (var v = min; v <= max + step / 2; v += step)
             _values.Add(Math.Round(v, 3));
 
-        // The wheel: room above and below so the first and last values can sit in the middle.
-        var column = new VerticalStackLayout { Padding = new Thickness(0, ItemHeight * (Visible - 1) / 2) };
-        for (var i = 0; i < _values.Count; i++)
+        // The wheel: a spacer as tall as every value to scroll, and over it the rows that show the ones in view.
+        var spacer = new ContentView { HeightRequest = WheelPadding * 2 + _values.Count * ItemHeight, BackgroundColor = Colors.Transparent };
+        var tap = new TapGestureRecognizer();
+        tap.Tapped += (_, e) =>
         {
-            var index = i;
-            var item = new Border
+            if (e.GetPosition(spacer) is { } p && (p.Y - WheelPadding) / ItemHeight is var at && at >= 0 && (int)at < _values.Count)
+                _ = TurnTo((int)at, animate: false);
+        };
+        spacer.GestureRecognizers.Add(tap);
+        _wheel = new ScrollView { Content = spacer, VerticalScrollBarVisibility = ScrollBarVisibility.Never };
+        _wheel.Scrolled += OnWheelScrolled;
+
+        // Touches go through the rows to the wheel under them.
+        var rows = new Grid { InputTransparent = true, IsClippedToBounds = true };
+        for (var r = 0; r < Rows; r++)
+        {
+            _rowValue[r] = -1;
+            rows.Add(_rows[r] = new Border
             {
                 HeightRequest = ItemHeight - 10,
-                Margin = new Thickness(0, 5),
+                Margin = new Thickness(0, 5, 0, 0),
                 WidthRequest = 210,
                 HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Start,
                 StrokeShape = new RoundRectangle { CornerRadius = 18 },
                 StrokeThickness = 0,
-                BackgroundColor = Color.FromArgb("#1D212C"),
+                Opacity = 0,
                 Content = new Label
                 {
-                    Text = Label(_values[i]),
                     FontFamily = "OpenSansSemibold",
                     FontSize = 22,
-                    TextColor = Color.FromArgb("#9AA3B5"),
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
                 },
-            };
-            item.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => _ = TurnTo(index, animate: false)) });
-            _items.Add(item);
-            column.Add(item);
+            });
         }
-        _wheel = new ScrollView { Content = column, HeightRequest = ItemHeight * Visible, VerticalScrollBarVisibility = ScrollBarVisibility.Never };
-        _wheel.Scrolled += OnWheelScrolled;
+        var wheelArea = new Grid { HeightRequest = ItemHeight * Visible };
+        wheelArea.Add(_wheel);
+        wheelArea.Add(rows);
+        PlaceRows(0);
 
         _display = new Label
         {
@@ -118,7 +136,7 @@ public class NumberPadSheet : SheetPage
 
         var layout = new VerticalStackLayout { Padding = new Thickness(16, 10, 16, 24), Spacing = 14 };
         layout.Add(cancel);
-        layout.Add(_wheel);
+        layout.Add(wheelArea);
         layout.Add(displayRow);
         layout.Add(pad);
 
@@ -260,6 +278,7 @@ public class NumberPadSheet : SheetPage
             _targetSince = DateTime.Now;
         }
         await _wheel.ScrollToAsync(0, index * ItemHeight, animate);
+        PlaceRows(_wheel.ScrollY);
         _turningByCode = false;
     }
 
@@ -267,21 +286,51 @@ public class NumberPadSheet : SheetPage
     {
         if (index == _centered)
             return;
-        if (_centered >= 0 && _centered < _items.Count)
-            Paint(_items[_centered], false);
+        // Repainted only if in view; one out of view is painted as it comes in (see PlaceRows).
+        if (_centered >= 0 && _rowValue[_centered % Rows] == _centered)
+            Paint(_rows[_centered % Rows], false);
         _centered = index;
-        Paint(_items[index], true);
+        if (_rowValue[index % Rows] == index)
+            Paint(_rows[index % Rows], true);
     }
+
+    // The rows over the values in view at this scroll position, each moved to where its value is.
+    void PlaceRows(double scrollY)
+    {
+        var first = (int)Math.Floor((scrollY - WheelPadding) / ItemHeight);
+        for (var i = first; i < first + Rows; i++)
+        {
+            var r = (i % Rows + Rows) % Rows;
+            var row = _rows[r];
+            if (i < 0 || i >= _values.Count)
+            {
+                row.Opacity = 0;
+                continue;
+            }
+            if (_rowValue[r] != i)
+            {
+                _rowValue[r] = i;
+                ((Label)row.Content!).Text = Label(_values[i]);
+                Paint(row, i == _centered);
+            }
+            row.Opacity = 1;
+            row.TranslationY = WheelPadding + i * ItemHeight - scrollY;
+        }
+    }
+
+    static readonly Color RowOn = Color.FromArgb("#3A4050"), RowOff = Color.FromArgb("#1D212C");
+    static readonly Color TextOn = Color.FromArgb("#F4F6FB"), TextOff = Color.FromArgb("#9AA3B5");
 
     static void Paint(Border item, bool on)
     {
-        item.BackgroundColor = Color.FromArgb(on ? "#3A4050" : "#1D212C");
-        ((Label)item.Content!).TextColor = Color.FromArgb(on ? "#F4F6FB" : "#9AA3B5");
+        item.BackgroundColor = on ? RowOn : RowOff;
+        ((Label)item.Content!).TextColor = on ? TextOn : TextOff;
     }
 
     // Swiped: the value in the middle shows as it passes, and once it stops it settles exactly on one.
     async void OnWheelScrolled(object? sender, ScrolledEventArgs e)
     {
+        PlaceRows(e.ScrollY);
         // A turn made by code, on its way: not the user's, even when the event comes after the turn's task ended (it
         // can, and its position is one it passed). Over once it gets there, or after a moment in case it never does.
         if (_target >= 0)

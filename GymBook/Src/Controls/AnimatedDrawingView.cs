@@ -37,7 +37,11 @@ public abstract class AnimatedDrawingView : GraphicsView
     }
 
     /// <summary>Plays the animation again from its start (e.g. another burst of confetti).</summary>
-    public void Restart() => _clock.Restart();
+    public void Restart()
+    {
+        _clock.Restart();
+        _lastFrame = double.NegativeInfinity;
+    }
 
     /// <summary>Draws the picture as it is <paramref name="seconds"/> into the animation.</summary>
     protected abstract void DrawFrame(ICanvas canvas, RectF rect, float seconds);
@@ -56,10 +60,23 @@ public abstract class AnimatedDrawingView : GraphicsView
         // the clock, so it carries on just where it would have been once it's back.
         new Animation(_ =>
         {
-            if (IsOnScreen())
-                Invalidate();
+            // Every few display frames for a slow decoration (still on a frame, so evenly spaced): each redraw makes the
+            // whole window draw again, and Home has several of these going at once.
+            var now = _clock.Elapsed.TotalMilliseconds;
+            if (now - _lastFrame < MinFrameInterval || !IsOnScreen())
+                return;
+            _lastFrame = now;
+            Invalidate();
         }).Commit(this, FramesAnimation, rate: 16, length: 1000, repeat: () => IsRunning && IsLoaded);
     }
+
+    double _lastFrame = double.NegativeInfinity;
+
+    /// <summary>
+    /// The least time between frames, in ms: about 30 a second by default (a little under 33, so a 60 Hz screen's every
+    /// other frame makes it). 0 for every display frame, for quick movement like confetti.
+    /// </summary>
+    protected virtual double MinFrameInterval => 30;
 
 #if ANDROID
     Android.Graphics.Rect? _visibleRect;

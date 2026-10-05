@@ -102,6 +102,9 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
 
     public void Save() => store.Save();
 
+    /// <summary>Saves a change to <paramref name="session"/> alone (sets, times, a note): see <see cref="DataStore.SaveSession"/>.</summary>
+    public void SaveSession(WorkoutSession session) => store.SaveSession(session);
+
     public WorkoutSession? Finish()
     {
         var session = Active;

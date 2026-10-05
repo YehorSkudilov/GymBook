@@ -20,6 +20,12 @@ public class DataStore
     /// <summary>Raised after any data change, local or pulled from the server.</summary>
     public event EventHandler? Changed;
 
+    /// <summary>
+    /// Goes up with every <see cref="Changed"/>: a page that works a lot out from the data can keep what it showed until
+    /// this moves on, without listening (and so being kept alive by the store).
+    /// </summary>
+    public int Version { get; private set; }
+
     /// <summary>Raised after the user changed something locally; the sync service listens to push it.</summary>
     public event EventHandler? Saved;
 
@@ -27,7 +33,15 @@ public class DataStore
     {
         _local.Save();
         Saved?.Invoke(this, EventArgs.Empty);
-        Changed?.Invoke(this, EventArgs.Empty);
+        RaiseChanged();
+    }
+
+    /// <summary>A <see cref="Save"/> after a change to <paramref name="session"/> only: much quicker with a long history.</summary>
+    public void SaveSession(WorkoutSession session)
+    {
+        _local.SaveSession(session);
+        Saved?.Invoke(this, EventArgs.Empty);
+        RaiseChanged();
     }
 
     /// <summary>Deletes all data. When signed in, the deletion syncs to the account as well.</summary>
@@ -35,7 +49,7 @@ public class DataStore
     {
         _local.Reset();
         Saved?.Invoke(this, EventArgs.Empty);
-        Changed?.Invoke(this, EventArgs.Empty);
+        RaiseChanged();
     }
 
     /// <summary>
@@ -186,10 +200,14 @@ public class DataStore
     public void WipeDevice()
     {
         _local.WipeDevice();
-        Changed?.Invoke(this, EventArgs.Empty);
+        RaiseChanged();
     }
 
-    internal void RaiseChanged() => Changed?.Invoke(this, EventArgs.Empty);
+    internal void RaiseChanged()
+    {
+        Version++;
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
 
     /// <summary>Writes all data as a single JSON file for sharing and returns its path.</summary>
     public string ExportJson()

@@ -141,14 +141,45 @@ public class NutritionService(DataStore store)
 
     UserProfile Profile => store.Profile;
 
+    // The food log, health days and weights by day, so a day is a lookup: trends ask for every day of up to a year, and
+    // going through all of them for each day made the Nutrition tab slow. Made again when the data has changed.
+    sealed record Index(int Version, List<FoodEntry> FoodList, int FoodCount, List<HealthDay> HealthList, int HealthCount,
+        List<BodyWeightEntry> WeightList, int WeightCount,
+        Dictionary<DateTime, List<FoodEntry>> Foods, Dictionary<DateTime, HealthDay> Health, List<BodyWeightEntry> Weights);
+
+    Index? _index;
+
+    Index Current()
+    {
+        var data = store.Data;
+        // Also when the lists change before they're saved (or are replaced), which doesn't move the version.
+        if (_index is { } i && i.Version == store.Version && i.FoodList == data.FoodEntries && i.FoodCount == data.FoodEntries.Count
+            && i.HealthList == data.HealthDays && i.HealthCount == data.HealthDays.Count
+            && i.WeightList == data.BodyWeights && i.WeightCount == data.BodyWeights.Count)
+            return i;
+        var foods = new Dictionary<DateTime, List<FoodEntry>>();
+        foreach (var f in data.FoodEntries)
+        {
+            if (!foods.TryGetValue(f.Date.Date, out var list))
+                foods[f.Date.Date] = list = [];
+            list.Add(f);
+        }
+        var health = new Dictionary<DateTime, HealthDay>();
+        foreach (var h in data.HealthDays)
+            health.TryAdd(h.Date.Date, h);
+        var weights = data.BodyWeights.Where(b => b.WeightKg > 0).OrderBy(b => b.Date).ToList();
+        return _index = new Index(store.Version, data.FoodEntries, data.FoodEntries.Count, data.HealthDays, data.HealthDays.Count,
+            data.BodyWeights, data.BodyWeights.Count, foods, health, weights);
+    }
+
     public DayNutrition Day(DateTime date)
     {
         date = date.Date;
+        var index = Current();
         // Foods logged in the health apps are in their meals with the rest.
-        var foods = store.Data.FoodEntries
-            .Where(f => f.Date.Date == date)
+        var foods = (index.Foods.GetValueOrDefault(date) ?? [])
             .OrderBy(f => f.Meal).ThenBy(f => f.LoggedAt).ToList();
-        var health = store.Data.HealthDays.FirstOrDefault(h => h.Date.Date == date);
+        var health = index.Health.GetValueOrDefault(date);
         // Read before foods were read one by one: only the day's total from the health app, counted on its own.
         var asTotal = health is { FoodKcal: > 0 } && !foods.Any(f => f.Source != null);
 
@@ -214,9 +245,21 @@ public class NutritionService(DataStore store)
     }
 
     /// <summary>Body weight on a day: the last weighed by then, else the profile's.</summary>
-    double WeightOn(DateTime date) =>
-        store.Data.BodyWeights.Where(b => b.Date.Date <= date && b.WeightKg > 0).OrderBy(b => b.Date).LastOrDefault()?.WeightKg
-        ?? Profile.BodyWeightKg;
+    double WeightOn(DateTime date)
+    {
+        // The last weighed by then, found by halves in the weights in order.
+        var weights = Current().Weights;
+        var (lo, hi) = (0, weights.Count);
+        while (lo < hi)
+        {
+            var mid = (lo + hi) / 2;
+            if (weights[mid].Date.Date <= date)
+                lo = mid + 1;
+            else
+                hi = mid;
+        }
+        return lo > 0 ? weights[lo - 1].WeightKg : Profile.BodyWeightKg;
+    }
 
     /// <summary>
     /// The <paramref name="days"/> days before <paramref name="before"/> (today by default: today isn't over, so it isn't
