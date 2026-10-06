@@ -68,6 +68,8 @@ jobs:
             done
 
             echo "Removing dangling images..."
-            docker image prune -f
+            # Deploys running side by side take turns (Docker runs one prune at a time), and a failed cleanup doesn't fail
+            # a deploy that already succeeded.
+            flock /tmp/gymbook-docker-prune.lock docker image prune -f || echo "Couldn't remove dangling images; skipped."
 
             echo "Deployment complete!"
