@@ -47,6 +47,9 @@ public partial class FeedbackService(
             issues = mine.Count == 0 ? [] : [.. (await github.GetIssuesAsync(mine, full: false, ct)).OrderByDescending(i => i.CreatedAt)];
             await ForgetDeletedAsync(mine.Except(issues.Select(i => i.Number)), ct);
         }
+        // With a board, it's what's shown: one taken off it (or archived) is gone from the app too.
+        if (await github.HasBoardAsync(ct))
+            issues = [.. issues.Where(i => i.ProjectItemId != null)];
         return new FeedbackListResponse
         {
             Tickets = await TicketsAsync(issues, me, baseUrl, ct),
@@ -106,6 +109,9 @@ public partial class FeedbackService(
             await ForgetDeletedAsync([number], ct);
             throw Missing();
         }
+        // Taken off the board (or archived): not shown, though it's still on GitHub.
+        if (issue.ProjectItemId == null && await github.HasBoardAsync(ct))
+            throw Missing();
         var owner = await db.FeedbackTickets.AsNoTracking().FirstOrDefaultAsync(t => t.Number == number, ct);
         if (!IsFeature(issue) && owner?.UserId != me)
             throw Missing();

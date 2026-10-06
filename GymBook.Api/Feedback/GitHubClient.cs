@@ -158,6 +158,8 @@ public sealed class GitHubClient
     /// The board's Status columns, in the board's order (none without a board). Asked for each time, so a column added
     /// or renamed shows straight away.
     /// </summary>
+    public async Task<bool> HasBoardAsync(CancellationToken ct) => (await ReadyAsync(ct)).ProjectId != null;
+
     public async Task<List<string>> GetStatusesAsync(CancellationToken ct)
     {
         var board = await ReadyAsync(ct);
@@ -177,7 +179,7 @@ public sealed class GitHubClient
 
     const string IssueFields = """
         number id title body state createdAt updatedAt comments { totalCount } labels(first: 20) { nodes { name } }
-        projectItems(first: 10) { nodes { id project { id } fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } }
+        projectItems(first: 10, includeArchived: false) { nodes { id project { id } fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } }
         """;
 
     /// <summary>Issues by number (with their text when <paramref name="full"/>); ones that don't exist (any more) are left out.</summary>

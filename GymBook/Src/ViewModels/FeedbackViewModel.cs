@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using GymBook.Contracts;
 using GymBook.Services;
 using GymBook.Services.Sync;
+using GymBook.Views;
 
 namespace GymBook.ViewModels;
 
@@ -56,8 +57,6 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
 
     public ObservableCollection<ChipItem> Tabs { get; } = [];
     public ObservableCollection<ChipItem> Sorts { get; } = [];
-    /// <summary>By status, and Mine for feature requests (see <see cref="BuildFilters"/>).</summary>
-    public ObservableCollection<ChipItem> Filters { get; } = [];
     public ObservableCollection<FeedbackItem> Items { get; } = [];
     [ObservableProperty] string searchPlaceholder = "Search requests";
 
@@ -105,7 +104,7 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
         _tickets = [];
         _statuses = [];
         Search = "";
-        Filters.Clear();
+        HasFilters = false;
         Describe();
         Items.Clear();
         _ = LoadAsync(quiet: false);
@@ -169,42 +168,51 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
 
     // ---- Filters ----
 
-    // The Mine chip's value, apart from the statuses' (strings; null for All).
-    static readonly object MineFilter = new();
     string? _status;
     bool _mine;
     // The project board's Status columns, in its order.
     List<string> _statuses = [];
 
+    /// <summary>The filter button, lit while a filter is on.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FilterIconColor), nameof(FilterBackground))]
+    bool hasFilters;
+    public Color FilterIconColor => HasFilters ? Colors.White : Color.FromArgb("#9AA3B5");
+    public Color FilterBackground => HasFilters ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#1D212C");
+
     /// <summary>
-    /// The status chips: All, then the board's Status columns in its order; then Open and Closed when there are tickets
-    /// off the board; and for feature requests, Mine. A status that's gone drops back to All.
+    /// The statuses to filter by: the board's Status columns in its order, then Open and Closed when there are tickets
+    /// off the board.
     /// </summary>
+    List<string> FilterStatuses() =>
+        [.. _statuses.Concat(new[] { "Open", "Closed" }.Where(s => !_statuses.Contains(s) && _tickets.Any(t => t.Status == s)))];
+
+    /// <summary>After loading: a status that's gone drops back to All.</summary>
     void BuildFilters()
     {
-        var statuses = _statuses.Concat(new[] { "Open", "Closed" }.Where(s => !_statuses.Contains(s) && _tickets.Any(t => t.Status == s))).ToList();
-        if (_status != null && !statuses.Contains(_status))
+        if (_status != null && !FilterStatuses().Contains(_status))
             _status = null;
-        Filters.Clear();
-        Filters.Add(new ChipItem("All", null, SelectFilter) { IsSelected = _status == null });
-        foreach (var status in statuses)
-            Filters.Add(new ChipItem(status, status, SelectFilter) { IsSelected = status == _status });
-        if (_kind == FeedbackKind.Feature)
-            Filters.Add(new ChipItem("Mine", MineFilter, SelectFilter) { IsSelected = _mine });
+        HasFilters = _status != null || _mine;
     }
 
-    void SelectFilter(ChipItem chip)
+    /// <summary>The filter button: a status (or All), and for feature requests, only the user's own.</summary>
+    [RelayCommand]
+    async Task OpenFilters()
     {
-        if (chip.Value == MineFilter)
-        {
-            _mine = chip.IsSelected = !_mine;
-        }
-        else
-        {
-            _status = (string?)chip.Value;
-            foreach (var c in Filters.Where(c => c.Value != MineFilter))
-                c.IsSelected = c == chip;
-        }
+        List<string?> options = [null, .. FilterStatuses()];
+        var labels = options.Select(s => (s == _status ? "✓  " : "") + (s ?? "All")).ToArray();
+        IReadOnlyList<MenuSwitch> switches = _kind == FeedbackKind.Feature
+            ? [new MenuSwitch("Only mine", "Feature requests you suggested", _mine, on =>
+            {
+                _mine = on;
+                HasFilters = _status != null || _mine;
+                Show();
+            })]
+            : [];
+        var choice = await dialogs.ActionSheet("Filter by status", null, switches, labels);
+        if (choice != null && Array.IndexOf(labels, choice) is >= 0 and var index)
+            _status = options[index];
+        HasFilters = _status != null || _mine;
         Show();
     }
 
