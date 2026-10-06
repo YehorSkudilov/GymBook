@@ -103,7 +103,7 @@ public class PlanDayItem
 
     public bool HasThumbnails => Thumbnails.Count > 0;
     public bool HasMore => More.Length > 0;
-    public string Badge => IsRunning ? "▶" : IsDone ? "✓" : IsSkipped ? "»" : Number;
+    public string Badge => IsRunning ? "▶\uFE0E" : IsDone ? "✓" : IsSkipped ? "»" : Number;
     public Color BadgeColor => IsDone || IsRunning ? Color.FromArgb("#2ED47A") : IsSkipped ? Color.FromArgb("#9AA3B5") : IsNext ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#626B7E");
     public Color NameColor => IsRest || IsSkipped ? Color.FromArgb("#9AA3B5") : Color.FromArgb("#F4F6FB");
     public string Status => IsRunning ? "In progress · tap to open" : IsNext ? "Up next" : IsSkipped ? "Skipped" : "";

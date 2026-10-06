@@ -44,7 +44,7 @@ public partial class HomeViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowNextCard))]
     bool isWorkoutRunning;
-    [ObservableProperty] string startText = "▶  Start";
+    [ObservableProperty] string startText = "▶\uFE0E  Start";
     public bool ShowNextCard => HasPlan || IsWorkoutRunning;
     /// <summary>Workouts put aside unfinished, newest first, each with Resume.</summary>
     [ObservableProperty]
@@ -233,7 +233,7 @@ public partial class HomeViewModel(
     {
         var active = workouts.Active;
         IsWorkoutRunning = active != null;
-        StartText = active != null ? "▶  Resume" : "▶  Start";
+        StartText = active != null ? "▶\uFE0E  Resume" : "▶\uFE0E  Start";
         if (active == null)
             return;
         var sets = active.Exercises.SelectMany(e => e.Sets).Where(s => !s.IsWarmup).ToList();

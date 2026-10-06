@@ -58,7 +58,7 @@
                                     <Label Text="{Binding Name}" Style="{StaticResource H3}" LineBreakMode="TailTruncation" />
                                     <Label Text="{Binding Detail}" Style="{StaticResource Caption}" LineBreakMode="TailTruncation" />
                                 </VerticalStackLayout>
-                                <Button Grid.Column="2" Text="▶  Resume" BackgroundColor="{StaticResource Success}" TextColor="#06200F" CornerRadius="12"
+                                <Button Grid.Column="2" Text="▶&#xFE0E;  Resume" BackgroundColor="{StaticResource Success}" TextColor="#06200F" CornerRadius="12"
                                         Padding="14,6" HeightRequest="40" MinimumHeightRequest="40" VerticalOptions="Center" Command="{Binding ResumeCommand}" />
                             </Grid>
                         </Border>

@@ -245,7 +245,7 @@
                  resume it (it becomes the workout in progress again). Discarding it is in the ···. -->
             <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10" Margin="10,8,10,16" IsVisible="{Binding CanOpen}">
                 <Button Text="Open workout" Style="{StaticResource SecondaryButton}" Command="{Binding OpenWorkoutCommand}" />
-                <Button Grid.Column="1" Text="▶  Resume" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Success}"
+                <Button Grid.Column="1" Text="▶&#xFE0E;  Resume" Style="{StaticResource SecondaryButton}" TextColor="{StaticResource Success}"
                         Command="{Binding ResumeCommand}" />
             </Grid>
         </Grid>

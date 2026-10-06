@@ -175,7 +175,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
                     worked.Add(x.ex.PrimaryMuscle);
                 return IsSkipped ? SkippedExercise(x.pe, x.ex, steps) : Planned(x.pe, x.ex, steps);
             }).ToList();
-            ActionText = $"▶  Start {workout.Name}";
+            ActionText = $"▶\uFE0E  Start {workout.Name}";
             HasAction = true;
         }
         HasWhen = When.Length > 0;
