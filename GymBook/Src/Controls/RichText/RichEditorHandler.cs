@@ -463,7 +463,21 @@ public class RichEditorHandler : ViewHandler<RichEditor, RichEditBox>, IRichText
         platformView.TextChanged += OnTextChanged;
         platformView.SelectionChanged += OnSelectionChanged;
         platformView.Paste += OnPaste;
-        VirtualView.Attach(this);
+        _ = AttachAsync();
+    }
+
+    // The grey box first (a moment), so pictures in the text have something to go in as.
+    async Task AttachAsync()
+    {
+        try
+        {
+            await MakePlaceholderAsync();
+        }
+        catch (Exception)
+        {
+            // Without it, pictures hold their place with a space until they're downloaded.
+        }
+        VirtualView?.Attach(this);
     }
 
     protected override void DisconnectHandler(RichEditBox platformView)
@@ -507,8 +521,67 @@ public class RichEditorHandler : ViewHandler<RichEditor, RichEditBox>, IRichText
     public int SelectionLength => PlatformView.Document.Selection.EndPosition - PlatformView.Document.Selection.StartPosition;
     public bool IsComposing => false;
 
-    public void Replace(int start, int length, string text) =>
-        PlatformView.Document.GetRange(start, start + length).SetText(TextSetOptions.None, text.Replace('\n', '\r'));
+    /// <summary>
+    /// The text in place of the range. A picture's character can't go in as text (RichEditBox keeps it for embedded
+    /// objects and drops it), so each goes in as an embedded picture: a grey one until <see cref="ShowPicture"/> puts
+    /// the real one in. Either way it reads back as the same character.
+    /// </summary>
+    public void Replace(int start, int length, string text)
+    {
+        var document = PlatformView.Document;
+        var parts = text.Replace('\n', '\r').Split(RichDocument.ImageChar);
+        if (parts.Length == 1)
+        {
+            document.GetRange(start, start + length).SetText(TextSetOptions.None, parts[0]);
+            return;
+        }
+        document.GetRange(start, start + length).SetText(TextSetOptions.None, "");
+        var at = start;
+        for (var i = 0; i < parts.Length; i++)
+        {
+            document.GetRange(at, at).SetText(TextSetOptions.None, parts[i]);
+            at += parts[i].Length;
+            if (i == parts.Length - 1)
+                break;
+            InsertPlaceholder(document.GetRange(at, at));
+            at++;
+        }
+    }
+
+    // A picture not downloaded yet: a grey box, its name telling it apart from a real one (named by its address).
+    const string PlaceholderName = "gymbook-placeholder";
+    const int PlaceholderWidth = 160, PlaceholderHeight = 100;
+    static Windows.Storage.Streams.InMemoryRandomAccessStream? _placeholder;
+
+    static void InsertPlaceholder(ITextRange range)
+    {
+        if (_placeholder == null)
+        {
+            // Not drawn yet (it's made when the editor opens): a space holds the place; painting puts the picture in.
+            range.SetText(TextSetOptions.None, " ");
+            return;
+        }
+        using var copy = _placeholder.CloneStream();
+        range.InsertImage(PlaceholderWidth, PlaceholderHeight, PlaceholderHeight, VerticalCharacterAlignment.Baseline, PlaceholderName, copy);
+    }
+
+    /// <summary>The grey box, as a picture: drawn once, when the first editor opens.</summary>
+    static async Task MakePlaceholderAsync()
+    {
+        if (_placeholder != null)
+            return;
+        const int width = 16, height = 10;
+        var pixels = new byte[width * height * 4];
+        for (var i = 0; i < pixels.Length; i += 4)
+            (pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]) = (0x40, 0x30, 0x2A, 0xFF);
+        var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+        var encoder = await Windows.Graphics.Imaging.BitmapEncoder.CreateAsync(Windows.Graphics.Imaging.BitmapEncoder.PngEncoderId, stream);
+        encoder.SetPixelData(Windows.Graphics.Imaging.BitmapPixelFormat.Bgra8, Windows.Graphics.Imaging.BitmapAlphaMode.Premultiplied,
+            width, height, 96, 96, pixels);
+        await encoder.FlushAsync();
+        stream.Seek(0);
+        _placeholder = stream;
+    }
 
     public void Select(int start, int length) => PlatformView.Document.Selection.SetRange(start, start + length);
 
@@ -567,17 +640,24 @@ public class RichEditorHandler : ViewHandler<RichEditor, RichEditBox>, IRichText
     void ShowPicture(RichEditTextDocument document, int at, string url)
     {
         var range = document.GetRange(at, at + 1);
+        // An embedded picture's own text is its name: the address when it's the real one.
         range.GetText(TextGetOptions.UseObjectText, out var shown);
-        if (shown != RichDocument.ImageChar.ToString())
+        if (shown == url)
             return;
         if (!_pictures.TryGetValue(url, out var picture))
         {
             _ = MeasureAsync(url);
+            // Not an embedded picture at all yet (put in before the grey box was drawn): the grey box for now.
+            if (shown != PlaceholderName && _placeholder != null)
+            {
+                range.SetText(TextSetOptions.None, "");
+                InsertPlaceholder(range);
+            }
             return;
         }
         using var copy = picture.Stream.CloneStream();
         range.SetText(TextSetOptions.None, "");
-        range.InsertImage(picture.Width, picture.Height, picture.Height, VerticalCharacterAlignment.Baseline, "image", copy);
+        range.InsertImage(picture.Width, picture.Height, picture.Height, VerticalCharacterAlignment.Baseline, url, copy);
     }
 
     async Task MeasureAsync(string url)
