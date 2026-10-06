@@ -37,15 +37,18 @@ public class SessionItem
         return string.Join(" · ", new[] { plan.Name, s.PlanWeek is { } week ? $"Week {week}" : null, day != null && day != s.Name ? day : null }.OfType<string>());
     }
 
-    /// <summary><paramref name="open"/>: what tapping it does; by default the finished-workout sheet.</summary>
-    public static SessionItem Create(WorkoutSession s, DataStore store, StatsService stats, Units units, ICommand? open = null)
+    /// <summary>
+    /// <paramref name="open"/>: what tapping it does; by default the finished-workout sheet. <paramref name="paused"/>:
+    /// put aside unfinished, said in place of its plan (in the calendar).
+    /// </summary>
+    public static SessionItem Create(WorkoutSession s, DataStore store, StatsService stats, Units units, ICommand? open = null, bool paused = false)
     {
         var photos = s.Exercises.Select(e => ExerciseLibrary.Thumbnail(e.ExerciseId)).OfType<string>().ToList();
         var plan = store.GetPlan(s.PlanId);
         return new()
         {
-            PlanText = PlanLink(s, plan),
-            IsLinked = plan != null,
+            PlanText = paused ? "Paused · tap to resume" : PlanLink(s, plan),
+            IsLinked = plan != null && !paused,
             Id = s.Id,
             Name = s.Name,
             DateText = s.StartedAt.ToString("ddd, d MMM · HH:mm"),
@@ -96,6 +99,8 @@ public class PlanDayItem
     public bool IsNext { get; init; }
     /// <summary>The workout in progress right now: it opens that workout instead of the day.</summary>
     public bool IsRunning { get; init; }
+    /// <summary>Started and put aside unfinished: it resumes (or discards) that workout instead of opening the day.</summary>
+    public bool IsPaused { get; init; }
     public bool IsRest { get; init; }
     public required List<ExerciseThumb> Thumbnails { get; init; }
     public required string More { get; init; }
@@ -103,12 +108,12 @@ public class PlanDayItem
 
     public bool HasThumbnails => Thumbnails.Count > 0;
     public bool HasMore => More.Length > 0;
-    public string Badge => IsRunning ? "▶\uFE0E" : IsDone ? "✓" : IsSkipped ? "»" : Number;
-    public Color BadgeColor => IsDone || IsRunning ? Color.FromArgb("#2ED47A") : IsSkipped ? Color.FromArgb("#9AA3B5") : IsNext ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#626B7E");
+    public string Badge => IsRunning ? "▶\uFE0E" : IsPaused ? "II" : IsDone ? "✓" : IsSkipped ? "»" : Number;
+    public Color BadgeColor => IsDone || IsRunning ? Color.FromArgb("#2ED47A") : IsPaused ? Color.FromArgb("#FFB020") : IsSkipped ? Color.FromArgb("#9AA3B5") : IsNext ? Color.FromArgb("#3F7DFF") : Color.FromArgb("#626B7E");
     public Color NameColor => IsRest || IsSkipped ? Color.FromArgb("#9AA3B5") : Color.FromArgb("#F4F6FB");
-    public string Status => IsRunning ? "In progress · tap to open" : IsNext ? "Up next" : IsSkipped ? "Skipped" : "";
+    public string Status => IsRunning ? "In progress · tap to open" : IsPaused ? "Paused · tap to resume" : IsNext ? "Up next" : IsSkipped ? "Skipped" : "";
     public bool HasStatus => Status.Length > 0;
-    public Color StatusColor => IsRunning ? Color.FromArgb("#2ED47A") : IsSkipped ? Color.FromArgb("#9AA3B5") : Color.FromArgb("#3F7DFF");
+    public Color StatusColor => IsRunning ? Color.FromArgb("#2ED47A") : IsPaused ? Color.FromArgb("#FFB020") : IsSkipped ? Color.FromArgb("#9AA3B5") : Color.FromArgb("#3F7DFF");
 }
 
 public class WorkoutPreviewItem

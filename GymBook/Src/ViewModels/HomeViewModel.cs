@@ -46,11 +46,8 @@ public partial class HomeViewModel(
     bool isWorkoutRunning;
     [ObservableProperty] string startText = "▶\uFE0E  Start";
     public bool ShowNextCard => HasPlan || IsWorkoutRunning;
-    /// <summary>Workouts put aside unfinished, newest first, each with Resume.</summary>
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasPaused))]
-    List<PausedWorkoutItem> pausedWorkouts = [];
-    public bool HasPaused => PausedWorkouts.Count > 0;
+    /// <summary>Skip on the Up next card: not for a workout that's going or paused (it's been started).</summary>
+    [ObservableProperty] bool canSkipNext;
 
     static readonly Color Muted = Color.FromArgb("#2C3240"), Amber = Color.FromArgb("#FFB020"),
         Blue = Color.FromArgb("#3F7DFF"), Green = Color.FromArgb("#2ED47A");
@@ -124,6 +121,8 @@ public partial class HomeViewModel(
     // What "Start" in the Up next card starts: the first workout left in the shown week, else in the week after.
     int _nextWeek;
     PlanWorkout? _next;
+    // Up next put aside unfinished: the card shows it paused, and Start resumes it.
+    WorkoutSession? _nextPaused;
 
     public override Task OnAppearingAsync()
     {
@@ -202,8 +201,8 @@ public partial class HomeViewModel(
             PlanDays = [];
         }
 
+        _nextPaused = plan != null && _next != null ? PausedFor(plan, _next, _nextWeek) : null;
         ShowActiveWorkout();
-        ShowPausedWorkouts();
 
         WelcomeBack = progression.DaysAway() is { } away
             ? $"It's been {away} days since your last workout. Your weights are set lighter for a safe return and build back up over the next few sessions."
@@ -234,8 +233,13 @@ public partial class HomeViewModel(
         var active = workouts.Active;
         IsWorkoutRunning = active != null;
         StartText = active != null ? "▶\uFE0E  Resume" : "▶\uFE0E  Start";
+        CanSkipNext = active == null && _nextPaused == null;
         if (active == null)
+        {
+            if (_nextPaused != null)
+                ShowPausedNext(_nextPaused);
             return;
+        }
         var sets = active.Exercises.SelectMany(e => e.Sets).Where(s => !s.IsWarmup).ToList();
         var done = sets.Count(s => s.IsCompleted);
         var exercises = active.Exercises.Select(e => store.GetExercise(e.ExerciseId)).OfType<Exercise>().ToList();
@@ -254,36 +258,32 @@ public partial class HomeViewModel(
         StartTextColor = Color.FromArgb("#06200F");
     }
 
-    void ShowPausedWorkouts() => PausedWorkouts = store.Data.PausedSessions.Select(session =>
+    // Up next was started and put aside: the card says so, and Start (Resume) carries on with it.
+    void ShowPausedNext(WorkoutSession paused)
     {
-        var sets = session.Exercises.SelectMany(e => e.Sets).Where(s => !s.IsWarmup).ToList();
-        var paused = session.PausedAt ?? session.StartedAt;
-        var when = paused.Date == DateTime.Today ? $"{paused:t}" : paused.Date == DateTime.Today.AddDays(-1) ? $"yesterday {paused:t}" : $"{paused:ddd d MMM}";
-        return new PausedWorkoutItem
-        {
-            Name = session.Name,
-            Detail = $"Paused {when} · {sets.Count(s => s.IsCompleted)}/{sets.Count} sets · {Units.Duration(session.Duration)}",
-            ResumeCommand = new AsyncRelayCommand(() => ResumeWorkoutAsync(workouts, dialogs, session)),
-            MenuCommand = new AsyncRelayCommand(() => PausedMenu(session)),
-        };
-    }).ToList();
+        var sets = paused.Exercises.SelectMany(e => e.Sets).Where(s => !s.IsWarmup).ToList();
+        var done = sets.Count(s => s.IsCompleted);
+        var at = paused.PausedAt ?? paused.StartedAt;
+        var when = at.Date == DateTime.Today ? $"{at:HH:mm}" : at.Date == DateTime.Today.AddDays(-1) ? $"yesterday {at:HH:mm}" : $"{at:ddd d MMM}";
+        NextLabel = _nextWeek == _week ? "PAUSED" : $"PAUSED · WEEK {_nextWeek}";
+        NextWorkoutMeta = $"{done}/{sets.Count} sets done\nPaused {when} · {Units.Duration(paused.Duration)} in";
+        NextReadiness = sets.Count == 0 ? 0 : (double)done / sets.Count;
+        NextReadyText = "Paused · pick up where you left off";
+        NextTint = Amber;
+        NextGlow = 0.6;
+        StartText = "▶\uFE0E  Resume";
+        StartColor = Amber;
+        StartTextColor = Color.FromArgb("#2A1C00");
+    }
 
-    /// <summary>Tapping a paused workout: resume it, or discard it (it can be brought back from Recently deleted).</summary>
+    /// <summary>The paused workout of <paramref name="workout"/> in plan week <paramref name="week"/>, if it was started and put aside.</summary>
+    WorkoutSession? PausedFor(WorkoutPlan plan, PlanWorkout workout, int week) =>
+        store.Data.PausedSessions.FirstOrDefault(s => s.PlanId == plan.Id && s.PlanWorkoutId == workout.Id && (s.PlanWeek ?? week) == week);
+
     async Task PausedMenu(WorkoutSession session)
     {
-        switch (await dialogs.ActionSheet(session.Name, "Discard workout", "Resume"))
-        {
-            case "Resume":
-                await ResumeWorkoutAsync(workouts, dialogs, session);
-                break;
-            case "Discard workout":
-                if (!await dialogs.Confirm("Discard workout?", "It's paused, not finished: everything logged in it goes. It can be brought back from Recently deleted for a while.", "Discard"))
-                    return;
-                store.Data.PausedSessions.Remove(session);
-                store.Save();
-                Refresh();
-                break;
-        }
+        if (await PausedMenuAsync(workouts, dialogs, store, session))
+            Refresh();
     }
 
     /// <summary>The shown plan week's days in order. Tapping a day opens it in the day sheet, where it can be started or marked finished.</summary>
@@ -299,9 +299,13 @@ public partial class HomeViewModel(
         PlanDays = progress.Days.Select((w, day) =>
         {
             var isRunning = w != null && w.Id == running;
+            // Started and put aside (not the one going now, and not finished since): tapping it resumes or discards it.
+            var paused = w != null && !isRunning && progress.SessionFor(w, week) == null ? PausedFor(plan, w, week) : null;
             var open = isRunning
                 ? new AsyncRelayCommand(() => GoTo(Routes.Workout))
-                : new AsyncRelayCommand(() => GoTo($"{Routes.PlanDay}?id={plan.Id}&day={day}&week={week}"));
+                : paused != null
+                    ? new AsyncRelayCommand(() => PausedMenu(paused))
+                    : new AsyncRelayCommand(() => GoTo($"{Routes.PlanDay}?id={plan.Id}&day={day}&week={week}"));
             if (w == null)
                 return new PlanDayItem { Name = "Rest", Number = "–", IsRest = true, IsDone = progress.IsRestDone(day, week), Thumbnails = [], More = "", OpenCommand = open };
             var thumbs = w.Exercises
@@ -315,8 +319,9 @@ public partial class HomeViewModel(
                 Number = (plan.Workouts.IndexOf(w) + 1).ToString(),
                 IsDone = progress.SessionFor(w, week) != null,
                 IsSkipped = progress.SessionFor(w, week) == null && progress.IsSkipped(day, week),
-                IsNext = w == next && !isRunning && running == null,
+                IsNext = w == next && !isRunning && running == null && paused == null,
                 IsRunning = isRunning,
+                IsPaused = paused != null,
                 Thumbnails = thumbs.Take(3).ToList(),
                 More = w.Exercises.Count > 3 ? $"+{w.Exercises.Count - 3}" : "",
                 OpenCommand = open,
@@ -353,6 +358,11 @@ public partial class HomeViewModel(
             await GoTo(Routes.Workout);
             return;
         }
+        if (_nextPaused != null)
+        {
+            await ResumeWorkoutAsync(workouts, dialogs, _nextPaused);
+            return;
+        }
         var plan = store.ActivePlan;
         if (plan == null || _next is not { } next)
             return;
@@ -365,7 +375,7 @@ public partial class HomeViewModel(
     async Task SkipNext()
     {
         var plan = store.ActivePlan;
-        if (workouts.Active != null || plan == null || _next is not { } next)
+        if (workouts.Active != null || _nextPaused != null || plan == null || _next is not { } next)
             return;
         var day = PlanSchedule.Days(plan).IndexOf(next);
         if (day < 0 || !await dialogs.Confirm($"Skip {next.Name}?", $"It's marked skipped for week {_nextWeek} and Up next moves on. You can still do it, or undo the skip, from its day.", "Skip"))
@@ -381,6 +391,8 @@ public partial class HomeViewModel(
     {
         if (workouts.Active != null)
             return GoTo(Routes.Workout);
+        if (_nextPaused != null)
+            return PausedMenu(_nextPaused);
         var plan = store.ActivePlan;
         if (plan == null || _next is not { } next)
             return Task.CompletedTask;
@@ -495,14 +507,4 @@ public partial class HomeViewModel(
 
     [RelayCommand]
     void RecoveryNow() => RecoveryHours = 0;
-}
-
-/// <summary>A workout put aside unfinished, on the Workout tab.</summary>
-public class PausedWorkoutItem
-{
-    public required string Name { get; init; }
-    /// <summary>"Paused 18:02 · 6/14 sets · 34 min".</summary>
-    public required string Detail { get; init; }
-    public required IAsyncRelayCommand ResumeCommand { get; init; }
-    public required IAsyncRelayCommand MenuCommand { get; init; }
 }

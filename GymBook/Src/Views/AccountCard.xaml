@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Signing in, the one control for it: the sign-in sheet (AccountPage) and the first-run wizard's account step. On a
+     desktop window, the whole window: the app's side on the left and the form on the right, the app's side folding away
+     when the window is narrow (code-behind). On a phone, the form alone (the sheet is the card). The whole of it scrolls
+     when it's taller than the window. -->
+<ContentView
+    x:Class="GymBook.Views.AccountCard"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:AccountViewModel">
+
+    <ScrollView BackgroundColor="{OnIdiom Default=Transparent, Desktop={StaticResource Bg}}">
+    <Grid x:Name="Columns" ColumnDefinitions="0,*" Padding="{OnIdiom Default=0, Desktop=10}">
+
+        <!-- Desktop: the app's side -->
+        <Border x:Name="Brand" IsVisible="False" Background="{StaticResource AccentGradient}" Padding="36,32" StrokeShape="RoundRectangle 20" StrokeThickness="0">
+            <VerticalStackLayout Spacing="10" VerticalOptions="Center">
+                <Image Source="logo.png" HeightRequest="96" HorizontalOptions="Start" />
+                <Label Text="Gym Book" TextColor="White" FontFamily="OpenSansSemibold" FontAttributes="Bold" FontSize="28" Margin="0,6,0,0" />
+                <Label Text="Your plans, workouts and progress, kept in sync on every device."
+                       TextColor="#E6FFFFFF" FontSize="15" LineHeight="1.3" />
+                <VerticalStackLayout Spacing="8" Margin="0,10,0,0">
+                    <Label Text="✓  Plans that progress with you" TextColor="White" FontSize="14" />
+                    <Label Text="✓  Every set logged, on phone or desktop" TextColor="White" FontSize="14" />
+                    <Label Text="✓  Stats, records and strength ranks" TextColor="White" FontSize="14" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- On desktop the close button sits in the corner over the form rather than in a row of its own. Only the sheet
+             can be closed (CanClose): the wizard's step goes on with the form's own button. -->
+        <Grid Grid.Column="1" RowDefinitions="Auto,*" Padding="{OnIdiom Default=0, Desktop=10}">
+            <Button Text="✕" FontSize="18" Style="{StaticResource StepButton}" WidthRequest="40" HeightRequest="40"
+                    BackgroundColor="{StaticResource Surface2}" HorizontalOptions="{OnIdiom Default=Start, Desktop=End}" VerticalOptions="Start"
+                    ZIndex="1"
+                    Command="{Binding CloseCommand}" IsVisible="{Binding CanClose}" />
+            <views:AccountForm Grid.Row="{OnIdiom Default=1, Desktop=0}" Grid.RowSpan="{OnIdiom Default=1, Desktop=2}" Margin="{OnIdiom Default='0,20,0,0', Desktop=0}" VerticalOptions="{OnIdiom Default=Start, Desktop=Center}" />
+        </Grid>
+    </Grid>
+    </ScrollView>
+</ContentView>

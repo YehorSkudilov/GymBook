@@ -80,6 +80,28 @@ public abstract class BaseViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Tapping a paused workout (its day in the plan week, Up next, the calendar): resume it, or discard it (it can be
+    /// brought back from Recently deleted). True when it was discarded, for the caller to show that.
+    /// </summary>
+    protected static async Task<bool> PausedMenuAsync(WorkoutService workouts, DialogService dialogs, DataStore store, WorkoutSession session)
+    {
+        switch (await dialogs.ActionSheet(session.Name, "Discard workout", "Resume"))
+        {
+            case "Resume":
+                await ResumeWorkoutAsync(workouts, dialogs, session);
+                return false;
+            case "Discard workout":
+                if (!await dialogs.Confirm("Discard workout?", "It's paused, not finished: everything logged in it goes. It can be brought back from Recently deleted for a while.", "Discard"))
+                    return false;
+                store.Data.PausedSessions.Remove(session);
+                store.Save();
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
     /// The workout to start after the recovery check: the same one, a fresher one from the plan, or null to not train now.
     /// Asks on <see cref="RecoveryWarningViewModel"/>'s sheet when muscles it works are still recovering.
     /// </summary>

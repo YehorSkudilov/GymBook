@@ -9,39 +9,9 @@
     Shell.NavBarIsVisible="False"
     Backdrop="#B3000000">
 
-    <!-- A sheet over whatever is showing, like the other sheets. On a desktop window, a centred card instead: the app's
-         side on the left and the form on the right, the app's side folding away when the window is narrow (code-behind). -->
-    <Border x:Name="Card" Margin="{OnIdiom Default='0,28,0,0', Desktop='24,40'}" BackgroundColor="{StaticResource Bg}" Padding="0"
-            StrokeShape="{OnIdiom Default='RoundRectangle 28,28,0,0', Desktop='RoundRectangle 20'}"
-            StrokeThickness="{OnIdiom Default=0, Desktop=1}" Stroke="{StaticResource Stroke}"
-            HorizontalOptions="Fill" VerticalOptions="{OnIdiom Default=Fill, Desktop=Center}">
-    <Grid x:Name="Columns" ColumnDefinitions="0,*">
-
-        <!-- Desktop: the app's side -->
-        <Grid x:Name="Brand" IsVisible="False" Background="{StaticResource AccentGradient}" Padding="36,32">
-            <VerticalStackLayout Spacing="10" VerticalOptions="Center">
-                <Image Source="logo.png" HeightRequest="52" HorizontalOptions="Start" />
-                <Label Text="Gym Book" TextColor="White" FontFamily="OpenSansSemibold" FontAttributes="Bold" FontSize="28" Margin="0,6,0,0" />
-                <Label Text="Your plans, workouts and progress, kept in sync on every device."
-                       TextColor="#E6FFFFFF" FontSize="15" LineHeight="1.3" />
-                <VerticalStackLayout Spacing="8" Margin="0,10,0,0">
-                    <Label Text="✓  Plans that progress with you" TextColor="White" FontSize="14" />
-                    <Label Text="✓  Every set logged, on phone or desktop" TextColor="White" FontSize="14" />
-                    <Label Text="✓  Stats, records and strength ranks" TextColor="White" FontSize="14" />
-                </VerticalStackLayout>
-            </VerticalStackLayout>
-        </Grid>
-
-        <!-- On desktop the close button sits in the corner over the form rather than in a row of its own -->
-        <Grid Grid.Column="1" RowDefinitions="Auto,*" Padding="{OnIdiom Default='10,16,10,20', Desktop='36,28,36,28'}">
-            <Button Text="✕" FontSize="18" Style="{StaticResource StepButton}" WidthRequest="40" HeightRequest="40"
-                    BackgroundColor="{StaticResource Surface2}" HorizontalOptions="{OnIdiom Default=Start, Desktop=End}" VerticalOptions="Start"
-                    Margin="{OnIdiom Default=0, Desktop='0,-16,-24,0'}" ZIndex="1"
-                    Command="{Binding CloseCommand}" IsVisible="{Binding CanClose}" />
-            <ScrollView Grid.Row="{OnIdiom Default=1, Desktop=0}" Margin="{OnIdiom Default='0,20,0,0', Desktop=0}" VerticalOptions="{OnIdiom Default=Fill, Desktop=Center}">
-                <views:AccountForm />
-            </ScrollView>
-        </Grid>
-    </Grid>
+    <!-- A sheet over whatever is showing, like the other sheets; on a desktop window the card fills the window (AccountCard). -->
+    <Border Margin="{OnIdiom Default='0,28,0,0', Desktop=0}" Padding="{OnIdiom Default='10,16,10,20', Desktop=0}"
+            BackgroundColor="{OnIdiom Default={StaticResource Bg}, Desktop=Transparent}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0">
+        <views:AccountCard />
     </Border>
 </views:SheetPage>

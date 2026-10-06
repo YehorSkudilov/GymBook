@@ -8,11 +8,13 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>Month-by-month view of finished workouts; tap a day to list what was done on it.</summary>
-public partial class CalendarViewModel(DataStore store, StatsService stats, Units units, RecoveryService recovery, DialogService dialogs) : BaseViewModel
+public partial class CalendarViewModel(DataStore store, StatsService stats, Units units, RecoveryService recovery, DialogService dialogs, WorkoutService workouts) : BaseViewModel
 {
     DateTime _month = FirstOfMonth(DateTime.Today);
     DateTime? _selected = DateTime.Today;
     ILookup<DateTime, WorkoutSession> _byDay = Enumerable.Empty<WorkoutSession>().ToLookup(s => s.StartedAt.Date);
+    // Workouts started and put aside unfinished, on the day they were started: marked, and listed with the day's others.
+    ILookup<DateTime, WorkoutSession> _pausedByDay = Enumerable.Empty<WorkoutSession>().ToLookup(s => s.StartedAt.Date);
 
     [ObservableProperty] string monthSummary = "";
     [ObservableProperty] string avgPerWeek = "";
@@ -52,6 +54,7 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     {
         // Reload every time: a workout may have been deleted from its detail page.
         _byDay = store.History.ToLookup(s => s.StartedAt.Date);
+        _pausedByDay = store.Data.PausedSessions.ToLookup(s => s.StartedAt.Date);
         WeekdayLetters = Enumerable.Range(0, 7).Select(i => StatsService.WeekStart(DateTime.Today).AddDays(i).ToString("ddd")[..1]).ToList();
         WeeklyTarget = stats.WeeklyTarget.ToString();
         var streakWeeks = stats.WeekStreak();
@@ -96,6 +99,7 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
                 IsToday = d == DateTime.Today,
                 IsSelected = d == _selected,
                 Count = _byDay[d].Count(),
+                IsPaused = _pausedByDay[d].Any(),
                 SelectCommand = new RelayCommand(() => Select(d), () => inMonth),
                 WeekHit = hitWeeks.Contains(i / 7),
                 Weekday = i % 7,
@@ -108,8 +112,12 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
             var day = _selected!.Value;
             SelectedTitle = day.ToString("dddd, d MMMM");
             // Tapping one opens the finished-workout sheet: what was done, its stats and the fatigue it left.
-            SelectedSessions = _byDay[day].OrderBy(s => s.StartedAt)
-                .Select(s => SessionItem.Create(s, store, stats, units, new AsyncRelayCommand(() => GoTo($"{Routes.PlanDay}?session={s.Id}"))))
+            // A paused one resumes (or is discarded) instead.
+            SelectedSessions = _byDay[day].Select(s => (s, paused: false)).Concat(_pausedByDay[day].Select(s => (s, paused: true)))
+                .OrderBy(x => x.s.StartedAt)
+                .Select(x => x.paused
+                    ? SessionItem.Create(x.s, store, stats, units, new AsyncRelayCommand(() => PausedMenu(x.s)), paused: true)
+                    : SessionItem.Create(x.s, store, stats, units, new AsyncRelayCommand(() => GoTo($"{Routes.PlanDay}?session={x.s.Id}"))))
                 .ToList();
             UpdateRecovery(day);
         }
@@ -118,6 +126,12 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
             SelectedSessions = [];
         }
         SelectedIsEmpty = HasSelection && SelectedSessions.Count == 0;
+    }
+
+    async Task PausedMenu(WorkoutSession session)
+    {
+        if (await PausedMenuAsync(workouts, dialogs, store, session))
+            await OnAppearingAsync();
     }
 
     void UpdateRecovery(DateTime day)
@@ -260,6 +274,8 @@ public class CalendarDayItem
     public required bool IsToday { get; init; }
     public required bool IsSelected { get; init; }
     public required int Count { get; init; }
+    /// <summary>A workout started this day was put aside unfinished: an amber ring.</summary>
+    public bool IsPaused { get; init; }
     public required ICommand SelectCommand { get; init; }
     /// <summary>Its week reached the weekly workout target: the row gets a band behind it.</summary>
     public bool WeekHit { get; init; }
@@ -275,6 +291,7 @@ public class CalendarDayItem
     public bool ShowMulti => InMonth && Count > 1;
 
     public Color Background => !InMonth ? Colors.Transparent : Done ? Color.FromArgb("#3F7DFF") : IsToday ? Color.FromArgb("#272C39") : Colors.Transparent;
-    public Color Border => InMonth && IsSelected ? Colors.White : InMonth && IsToday && !Done ? Color.FromArgb("#3F7DFF") : Colors.Transparent;
+    public Color Border => !InMonth ? Colors.Transparent : IsSelected ? Colors.White : IsPaused ? Color.FromArgb("#FFB020")
+        : IsToday && !Done ? Color.FromArgb("#3F7DFF") : Colors.Transparent;
     public Color DayColor => Done || IsToday ? Colors.White : Color.FromArgb("#9AA3B5");
 }

@@ -23,7 +23,7 @@
                          IsVisible="{Binding IsOnboarding, Converter={StaticResource Not}}" />
         </Grid>
 
-        <ScrollView Grid.Row="1" Margin="0,20,0,12">
+        <ScrollView Grid.Row="1" Margin="0,20,0,12" IsVisible="{Binding IsAccount, Converter={StaticResource Not}}">
             <VerticalStackLayout Spacing="14">
 
                 <!-- Welcome art -->
@@ -33,11 +33,6 @@
 
                 <Label Text="{Binding Title}" Style="{StaticResource Title}" FontSize="28" IsVisible="{Binding IsAccount, Converter={StaticResource Not}}" />
                 <Label Text="{Binding Subtitle}" Style="{StaticResource Caption}" FontSize="15" IsVisible="{Binding IsAccount, Converter={StaticResource Not}}" />
-
-                <!-- Account: create one (or sign in) before the plan; the form's own button goes on -->
-                <ContentView IsVisible="{Binding IsAccount}">
-                    <views:AccountForm BindingContext="{Binding Account}" />
-                </ContentView>
 
                 <!-- Welcome feature list -->
                 <VerticalStackLayout IsVisible="{Binding IsWelcome}" Spacing="12" Margin="0,14,0,0">
@@ -254,6 +249,12 @@
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
+
+        <!-- Account: create one (or sign in) before the plan, on the same card as the sign-in sheet; the form's own button goes on -->
+        <!-- Desktop: out to the window's edges (past the page's padding), so the card's own spacing is the same all round -->
+        <ContentView Grid.Row="1" Grid.RowSpan="2" Margin="{OnIdiom Default=0, Desktop='-10,10,-10,-20'}" IsVisible="{Binding IsAccount}">
+            <views:AccountCard BindingContext="{Binding Account}" />
+        </ContentView>
 
         <Button Grid.Row="2" Text="{Binding NextText}" Style="{StaticResource PrimaryButton}" Command="{Binding NextCommand}"
                 IsEnabled="{Binding IsGenerating, Converter={StaticResource Not}}" IsVisible="{Binding IsAccount, Converter={StaticResource Not}}" />
