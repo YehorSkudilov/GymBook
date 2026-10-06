@@ -29,16 +29,19 @@ public record DayNutrition(
 {
     public double EatenKcal => LoggedKcal + ImportedKcal;
 
-    /// <summary>Something was eaten (logged here or in the health app); a day with nothing logged has no balance.</summary>
+    /// <summary>Something was eaten (logged here or in the health app).</summary>
     public bool HasFood => EatenKcal > 0;
 
-    /// <summary>Eaten minus burned: positive is a surplus, negative a deficit. Null without food or a burn.</summary>
-    public double? Balance => HasFood && BurnedKcal is { } burned ? EatenKcal - burned : null;
+    /// <summary>
+    /// Eaten minus burned: positive is a surplus, negative a deficit. Nothing eaten still counts (all of the burn is a
+    /// deficit); null only without a burn.
+    /// </summary>
+    public double? Balance => BurnedKcal is { } burned ? EatenKcal - burned : null;
 
     public bool IsToday => Date == DateTime.Today;
 }
 
-/// <summary>The energy balance over finished days that have both food and a burn.</summary>
+/// <summary>The energy balance over finished days that have a burn (with or without food).</summary>
 public record PeriodBalance(int Days, double TotalBalance, double AverageEaten, double AverageBurned)
 {
     public double AverageBalance => Days > 0 ? TotalBalance / Days : 0;
@@ -264,7 +267,7 @@ public class NutritionService(DataStore store)
 
     /// <summary>
     /// The <paramref name="days"/> days before <paramref name="before"/> (today by default: today isn't over, so it isn't
-    /// counted), only those with food logged and a burn known. Null when there are none.
+    /// counted), only those with a burn known (nothing eaten counts as 0 eaten). Null when there are none.
     /// </summary>
     public PeriodBalance? Balance(int days, DateTime? before = null)
     {
