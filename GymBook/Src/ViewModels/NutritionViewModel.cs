@@ -206,6 +206,8 @@ public partial class NutritionViewModel(
             _ = ShowRanksAsync();
             return;
         }
+        // The streak pill is at the top whichever is showing, so it keeps up with food read from the health apps on Trends too.
+        ShowStreaks();
         if (IsTrends)
         {
             ShowTrends();
@@ -214,7 +216,6 @@ public partial class NutritionViewModel(
         }
         var day = nutrition.Day(_date);
         ShowDay(day);
-        ShowStreaks();
         ShowCreatine();
     }
 

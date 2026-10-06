@@ -209,7 +209,7 @@
                             <Label Text="{Binding ConsistencyText}" Style="{StaticResource Caption}" FontSize="12" />
                         </VerticalStackLayout>
                     </Grid>
-                    <GraphicsView Drawable="{Binding ConsistencyChart}" HeightRequest="150" controls:ChartReveal.When="{Binding IsShowing}" />
+                    <GraphicsView Drawable="{Binding ConsistencyChart}" HeightRequest="150" controls:ChartHeight.Fit="True" controls:ChartReveal.When="{Binding IsShowing}" />
                 </VerticalStackLayout>
             </Border>
 

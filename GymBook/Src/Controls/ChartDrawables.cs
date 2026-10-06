@@ -148,66 +148,98 @@ public class LineChartDrawable(IReadOnlyList<ChartPoint> points, Color color, Fu
 }
 
 /// <summary>
-/// Training days as a grid of squares, a column per week (oldest on the left) and a row per weekday: the more work
-/// that day, the brighter its square. Today is outlined. The columns pop in from the left as it's revealed.
+/// Training days as a grid, a column per week (oldest on the left) and a row per weekday: the more work that day, the
+/// brighter its square. Today is outlined. The weeks fill the width; when there are too many for the squares to stay a
+/// readable size they wrap onto more rows of weeks, each with its own months over it. Its height follows (see
+/// <see cref="ChartHeight"/>). The columns pop in from the left as it's revealed.
 /// </summary>
-public class HeatmapDrawable(DateTime firstMonday, IReadOnlyList<double> days, Color color) : IDrawable, IRevealable
+public class HeatmapDrawable(DateTime firstMonday, IReadOnlyList<double> days, Color color) : IDrawable, IRevealable, ISizedChart
 {
     static readonly Color Empty = Color.FromArgb("#1D212C"), LabelColor = Color.FromArgb("#626B7E"), TodayRing = Color.FromArgb("#F4F6FB");
     static readonly string[] Weekdays = ["M", "", "W", "", "F", "", "S"];
+    // The smallest a square gets before the weeks wrap; the tallest a row gets when a few weeks leave the cells wide.
+    const float LabelW = 16, HeaderH = 16, Gap = 3, BandGap = 10, MinCell = 13, MaxCellH = 22;
 
     public float Reveal { get; set; } = 1;
 
+    int Weeks => (days.Count + 6) / 7;
+
+    /// <summary>How many rows of weeks, how many weeks in each, and each day's width and height, for <paramref name="width"/>.</summary>
+    (int Bands, int Columns, float CellW, float CellH) Layout(float width)
+    {
+        var fit = Math.Max(1, (int)((width - LabelW + Gap) / (MinCell + Gap)));
+        var bands = (Weeks + fit - 1) / fit;
+        // The weeks shared out evenly between the rows, so the last isn't a stub.
+        var columns = (Weeks + bands - 1) / bands;
+        var cellW = (width - LabelW - Gap * (columns - 1)) / columns;
+        return (bands, columns, cellW, Math.Min(cellW, MaxCellH));
+    }
+
+    static float BandHeight(float cellH) => HeaderH + 7 * cellH + 6 * Gap;
+
+    public float HeightFor(float width)
+    {
+        if (Weeks == 0)
+            return 0;
+        var (bands, _, _, cellH) = Layout(width);
+        return bands * BandHeight(cellH) + (bands - 1) * BandGap;
+    }
+
     public void Draw(ICanvas canvas, RectF rect)
     {
-        var weeks = (days.Count + 6) / 7;
+        var weeks = Weeks;
         if (weeks == 0)
             return;
-        const float labelW = 16, headerH = 16;
-        var gap = 3f;
-        var cell = Math.Min((rect.Width - labelW - gap * (weeks - 1)) / weeks, (rect.Height - headerH - gap * 6) / 7);
-        var left = rect.Left + labelW + (rect.Width - labelW - (cell * weeks + gap * (weeks - 1))) / 2;
-        var top = rect.Top + headerH;
+        var (bands, columns, cellW, cellH) = Layout(rect.Width);
+        var radius = Math.Min(cellW, cellH) * 0.25f;
         var max = days.DefaultIfEmpty(0).Max();
+        var todayIndex = (DateTime.Today - firstMonday).Days;
 
         canvas.FontSize = 9;
-        canvas.FontColor = LabelColor;
-        for (var d = 0; d < 7; d++)
-            canvas.DrawString(Weekdays[d], rect.Left, top + d * (cell + gap), labelW - 4, cell, HorizontalAlignment.Left, VerticalAlignment.Center);
-
-        var todayIndex = (DateTime.Today - firstMonday).Days;
-        for (var w = 0; w < weeks; w++)
+        for (var band = 0; band < bands; band++)
         {
-            var x = left + w * (cell + gap);
-            // The month's name over the first week of each month.
-            var monday = firstMonday.AddDays(7 * w);
-            if (w == 0 || monday.Month != monday.AddDays(-7).Month)
-            {
-                canvas.FontColor = LabelColor;
-                canvas.DrawString(monday.ToString("MMM"), x, rect.Top, 40, headerH - 3, HorizontalAlignment.Left, VerticalAlignment.Top);
-            }
-            // The grid is always there; the training days light up in it, a week at a time from the left.
-            var pop = Math.Clamp((Reveal - 0.6f * w / weeks) / 0.4f, 0, 1);
+            var bandTop = rect.Top + band * (BandHeight(cellH) + BandGap);
+            var top = bandTop + HeaderH;
+            canvas.FontColor = LabelColor;
             for (var d = 0; d < 7; d++)
+                canvas.DrawString(Weekdays[d], rect.Left, top + d * (cellH + Gap), LabelW - 4, cellH, HorizontalAlignment.Left, VerticalAlignment.Center);
+
+            for (var c = 0; c < columns; c++)
             {
-                var i = w * 7 + d;
-                if (i >= days.Count)
+                var w = band * columns + c;
+                if (w >= weeks)
                     break;
-                var y = top + d * (cell + gap);
-                canvas.FillColor = Empty;
-                canvas.FillRoundedRectangle(x, y, cell, cell, cell * 0.25f);
-                var level = max <= 0 || days[i] <= 0 ? 0 : 0.35f + 0.65f * (float)(days[i] / max);
-                if (level > 0 && pop > 0)
+                var x = rect.Left + LabelW + c * (cellW + Gap);
+                // The month's name over the first week of each month, and over each row's first.
+                var monday = firstMonday.AddDays(7 * w);
+                if (c == 0 || monday.Month != monday.AddDays(-7).Month)
                 {
-                    var size = cell * (0.4f + 0.6f * pop);
-                    canvas.FillColor = color.WithAlpha(level * pop);
-                    canvas.FillRoundedRectangle(x + (cell - size) / 2, y + (cell - size) / 2, size, size, size * 0.25f);
+                    canvas.FontColor = LabelColor;
+                    canvas.DrawString(monday.ToString("MMM"), x, bandTop, 40, HeaderH - 3, HorizontalAlignment.Left, VerticalAlignment.Top);
                 }
-                if (i == todayIndex)
+                // The grid is always there; the training days light up in it, a week at a time from the first.
+                var pop = Math.Clamp((Reveal - 0.6f * w / weeks) / 0.4f, 0, 1);
+                for (var d = 0; d < 7; d++)
                 {
-                    canvas.StrokeColor = TodayRing.WithAlpha(0.8f);
-                    canvas.StrokeSize = 1.5f;
-                    canvas.DrawRoundedRectangle(x + 0.75f, y + 0.75f, cell - 1.5f, cell - 1.5f, cell * 0.25f);
+                    var i = w * 7 + d;
+                    if (i >= days.Count)
+                        break;
+                    var y = top + d * (cellH + Gap);
+                    canvas.FillColor = Empty;
+                    canvas.FillRoundedRectangle(x, y, cellW, cellH, radius);
+                    var level = max <= 0 || days[i] <= 0 ? 0 : 0.35f + 0.65f * (float)(days[i] / max);
+                    if (level > 0 && pop > 0)
+                    {
+                        var scale = 0.4f + 0.6f * pop;
+                        canvas.FillColor = color.WithAlpha(level * pop);
+                        canvas.FillRoundedRectangle(x + cellW * (1 - scale) / 2, y + cellH * (1 - scale) / 2, cellW * scale, cellH * scale, radius * scale);
+                    }
+                    if (i == todayIndex)
+                    {
+                        canvas.StrokeColor = TodayRing.WithAlpha(0.8f);
+                        canvas.StrokeSize = 1.5f;
+                        canvas.DrawRoundedRectangle(x + 0.75f, y + 0.75f, cellW - 1.5f, cellH - 1.5f, radius);
+                    }
                 }
             }
         }
@@ -317,5 +349,47 @@ public static class ChartReveal
             chart.Reveal = 1;
             view.Invalidate();
         });
+    }
+}
+
+/// <summary>A chart whose height depends on how wide it's drawn (see <see cref="ChartHeight"/>).</summary>
+public interface ISizedChart
+{
+    float HeightFor(float width);
+}
+
+/// <summary>
+/// Sizes a chart's GraphicsView to the chart: <c>controls:ChartHeight.Fit="True"</c> sets its height from its width
+/// whenever either the width or the chart changes, for charts that are <see cref="ISizedChart"/>.
+/// </summary>
+public static class ChartHeight
+{
+    public static readonly BindableProperty FitProperty =
+        BindableProperty.CreateAttached("Fit", typeof(bool), typeof(ChartHeight), false, propertyChanged: OnFitChanged);
+
+    public static bool GetFit(BindableObject view) => (bool)view.GetValue(FitProperty);
+    public static void SetFit(BindableObject view, bool value) => view.SetValue(FitProperty, value);
+
+    static void OnFitChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is not GraphicsView view || newValue is not true)
+            return;
+        view.SizeChanged += (_, _) => Update(view);
+        view.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(GraphicsView.Drawable))
+                Update(view);
+        };
+        Update(view);
+    }
+
+    static void Update(GraphicsView view)
+    {
+        if (view.Width <= 0 || view.Drawable is not ISizedChart chart)
+            return;
+        var height = chart.HeightFor((float)view.Width);
+        if (height > 0 && Math.Abs(view.HeightRequest - height) > 0.5)
+            view.HeightRequest = height;
+        view.Invalidate();
     }
 }
