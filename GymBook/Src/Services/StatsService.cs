@@ -28,34 +28,69 @@ public class StatsService(DataStore store, RecoveryService recovery)
             return e.Sets.Where(s => s.IsCompleted && !s.IsWarmup).Sum(s => SetVolume(ex, s));
         });
 
-    public List<ChartPoint> WeeklyVolume(int weeks) => Weekly(weeks, list => list.Sum(SessionVolume));
+    /// <summary>The workouts from <paramref name="first"/> to <paramref name="last"/>, both days included.</summary>
+    public List<WorkoutSession> SessionsIn(DateTime first, DateTime last) =>
+        [.. store.History.Where(s => s.StartedAt >= first.Date && s.StartedAt < last.Date.AddDays(1))];
 
-    public List<ChartPoint> WorkoutsPerWeek(int weeks) => Weekly(weeks, list => list.Count);
+    public List<ChartPoint> Volume(DateTime first, DateTime last) => Grouped(first, last, list => list.Sum(SessionVolume));
 
-    /// <summary>Average workout length in minutes, per week with any workouts (the empty ones left out).</summary>
-    public List<ChartPoint> MinutesPerWeek(int weeks) =>
-        Weekly(weeks, list => list.Count == 0 ? 0 : list.Average(s => s.Duration.TotalMinutes)).Where(p => p.Value > 0).ToList();
+    public List<ChartPoint> Workouts(DateTime first, DateTime last) => Grouped(first, last, list => list.Count);
 
-    /// <summary>The Monday <paramref name="weeks"/> weeks back (this week included), and the volume of every day since.</summary>
-    public (DateTime FirstMonday, List<double> Days) DailyVolume(int weeks)
+    /// <summary>Average workout length in minutes, per day, week or month with any workouts (the empty ones left out).</summary>
+    public List<ChartPoint> Minutes(DateTime first, DateTime last) =>
+        Grouped(first, last, list => list.Count == 0 ? 0 : list.Average(s => s.Duration.TotalMinutes)).Where(p => p.Value > 0).ToList();
+
+    /// <summary>The Monday of <paramref name="first"/>'s week, and the volume of every day from it to <paramref name="last"/>.</summary>
+    public (DateTime FirstMonday, List<double> Days) DailyVolume(DateTime first, DateTime last)
     {
-        var start = WeekStart(DateTime.Today).AddDays(-7 * (weeks - 1));
-        var byDay = store.History.Where(s => s.StartedAt >= start).GroupBy(s => s.StartedAt.Date).ToDictionary(g => g.Key, g => g.Sum(SessionVolume));
-        var count = (DateTime.Today - start).Days + 1;
+        var start = WeekStart(first);
+        var byDay = SessionsIn(start, last).GroupBy(s => s.StartedAt.Date).ToDictionary(g => g.Key, g => g.Sum(SessionVolume));
+        var count = (last.Date - start).Days + 1;
         return (start, Enumerable.Range(0, count).Select(i => byDay.GetValueOrDefault(start.AddDays(i))).ToList());
     }
 
-    List<ChartPoint> Weekly(int weeks, Func<List<WorkoutSession>, double> value)
+    /// <summary>How a range's charts group it: by day up to a fortnight, by week up to about four months, by month beyond.</summary>
+    public static Period PeriodFor(DateTime first, DateTime last) => ((last.Date - first.Date).Days + 1) switch
     {
-        var start = WeekStart(DateTime.Today).AddDays(-7 * (weeks - 1));
-        var sessions = store.History.Where(s => s.StartedAt >= start).ToList();
-        return Enumerable.Range(0, weeks).Select(i =>
+        <= 14 => Period.Day,
+        <= 120 => Period.Week,
+        _ => Period.Month,
+    };
+
+    /// <summary>
+    /// The range's days, weeks or months (see <see cref="PeriodFor"/>), oldest first: each one's start, the day after its
+    /// end, and its label. Weeks start on a Monday and months on the 1st, so the first can start before the range does.
+    /// </summary>
+    public static List<(DateTime From, DateTime To, string Label)> Periods(DateTime first, DateTime last)
+    {
+        var period = PeriodFor(first, last);
+        var from = period switch
         {
-            var from = start.AddDays(7 * i);
-            var to = from.AddDays(7);
-            var inWeek = sessions.Where(s => s.StartedAt >= from && s.StartedAt < to).ToList();
-            return new ChartPoint(from.ToString("d MMM", CultureInfo.CurrentCulture), value(inWeek));
-        }).ToList();
+            Period.Day => first.Date,
+            Period.Week => WeekStart(first),
+            _ => new DateTime(first.Year, first.Month, 1),
+        };
+        var format = period switch
+        {
+            Period.Day when (last.Date - first.Date).Days < 7 => "ddd",
+            Period.Month => from.Year == last.Year ? "MMM" : "MMM yy",
+            _ => "d MMM",
+        };
+        var list = new List<(DateTime, DateTime, string)>();
+        while (from <= last.Date)
+        {
+            var to = period switch { Period.Day => from.AddDays(1), Period.Week => from.AddDays(7), _ => from.AddMonths(1) };
+            list.Add((from, to, from.ToString(format, CultureInfo.CurrentCulture)));
+            from = to;
+        }
+        return list;
+    }
+
+    List<ChartPoint> Grouped(DateTime first, DateTime last, Func<List<WorkoutSession>, double> value)
+    {
+        var periods = Periods(first, last);
+        var sessions = SessionsIn(periods[0].From, last);
+        return [.. periods.Select(p => new ChartPoint(p.Label, value([.. sessions.Where(s => s.StartedAt >= p.From && s.StartedAt < p.To)])))];
     }
 
     public Dictionary<MuscleGroup, double> SetsPerMuscleSince(DateTime from) => SetsPerMuscle(store.History.Where(s => s.StartedAt >= from));
@@ -82,14 +117,11 @@ public class StatsService(DataStore store, RecoveryService recovery)
         return total;
     }
 
-    public List<ChartPoint> E1RmHistory(string exerciseId) =>
-        store.History.Reverse()
-            .Select(s => (s.StartedAt, best: s.Exercises.Where(e => e.ExerciseId == exerciseId)
-                .SelectMany(e => e.Sets).Where(x => x.IsCompleted && !x.IsWarmup)
-                .Select(x => ProgressionEngine.E1Rm(x.WeightKg, x.Reps, x.Rir)).DefaultIfEmpty(0).Max()))
-            .Where(p => p.best > 0)
-            .Select(p => new ChartPoint(p.StartedAt.ToString("d MMM", CultureInfo.CurrentCulture), p.best))
-            .ToList();
+    /// <summary>Each session's best estimated 1RM for the exercise, oldest first: all of them, or those from <paramref name="first"/> to <paramref name="last"/>.</summary>
+    public List<ChartPoint> E1RmHistory(string exerciseId, DateTime? first = null, DateTime? last = null) =>
+        [.. BestPerSession(exerciseId)
+            .Where(p => (first == null || p.Date >= first.Value.Date) && (last == null || p.Date < last.Value.Date.AddDays(1)))
+            .Select(p => new ChartPoint(p.Date.ToString("d MMM", CultureInfo.CurrentCulture), p.E1Rm))];
 
     /// <summary>The loaded lifts trained in the most sessions, most first: the ones worth charting strength for.</summary>
     public List<Exercise> TrackedLifts(int max) =>
@@ -111,42 +143,38 @@ public class StatsService(DataStore store, RecoveryService recovery)
             .Where(p => p.best > 0)];
 
     /// <summary>
-    /// Overall strength, week by week: for each of <paramref name="lifts"/>, the latest estimated 1RM by that week's end
-    /// against its first one, averaged, with 100 as where the lifts started (110 = 10% stronger). Weeks before any of the
-    /// lifts were trained are left out.
+    /// Overall strength over the range, a point a day, week or month (see <see cref="Periods"/>): for each of
+    /// <paramref name="lifts"/>, the latest estimated 1RM by that period's end against its first one, averaged, with 100
+    /// as where the lifts started (110 = 10% stronger). Periods before any of the lifts were trained are left out.
     /// </summary>
-    public List<ChartPoint> StrengthTrend(IReadOnlyList<Exercise> lifts, int weeks)
+    public List<ChartPoint> StrengthTrend(IReadOnlyList<Exercise> lifts, DateTime first, DateTime last)
     {
         var histories = lifts.Select(l => BestPerSession(l.Id)).Where(h => h.Count > 0).ToList();
-        var start = WeekStart(DateTime.Today).AddDays(-7 * (weeks - 1));
         var points = new List<ChartPoint>();
-        for (var i = 0; i < weeks; i++)
+        foreach (var (_, end, label) in Periods(first, last))
         {
-            var from = start.AddDays(7 * i);
-            var end = from.AddDays(7);
             var ratios = histories
                 .Select(h => (First: h[0].E1Rm, Latest: h.LastOrDefault(p => p.Date < end)))
                 .Where(x => x.Latest.E1Rm > 0)
                 .Select(x => x.Latest.E1Rm / x.First)
                 .ToList();
             if (ratios.Count > 0)
-                points.Add(new ChartPoint(from.ToString("d MMM", CultureInfo.CurrentCulture), ratios.Average() * 100));
+                points.Add(new ChartPoint(label, ratios.Average() * 100));
         }
         return points;
     }
 
-    /// <summary>How a lift's estimated 1RM changed over the last <paramref name="days"/>: its first session then against the better of its last two (so one off day doesn't hide the trend).</summary>
+    /// <summary>How a lift's estimated 1RM changed over a range: its first session there then against the better of its last two (so one off day doesn't hide the trend).</summary>
     public record LiftGain(Exercise Exercise, double FromKg, double ToKg, int Sessions)
     {
         public double Percent => FromKg > 0 ? (ToKg / FromKg - 1) * 100 : 0;
     }
 
-    /// <summary>The lifts trained at least twice in the last <paramref name="days"/>, biggest gain first.</summary>
-    public List<LiftGain> Gains(int days, int max)
+    /// <summary>The lifts trained at least twice from <paramref name="first"/> to <paramref name="last"/>, biggest gain first.</summary>
+    public List<LiftGain> Gains(DateTime first, DateTime last, int max)
     {
-        var since = DateTime.Today.AddDays(-days);
         return [.. TrackedLifts(30)
-            .Select(l => (Lift: l, History: BestPerSession(l.Id).Where(p => p.Date >= since).ToList()))
+            .Select(l => (Lift: l, History: BestPerSession(l.Id).Where(p => p.Date >= first.Date && p.Date < last.Date.AddDays(1)).ToList()))
             .Where(x => x.History.Count >= 2)
             .Select(x => new LiftGain(x.Lift, x.History[0].E1Rm, x.History.TakeLast(2).Max(p => p.E1Rm), x.History.Count))
             .OrderByDescending(g => g.Percent)
@@ -231,3 +259,6 @@ public class StatsService(DataStore store, RecoveryService recovery)
         return streak;
     }
 }
+
+/// <summary>What each point of a range's charts covers: a day, a week or a month of it (see <see cref="StatsService.PeriodFor"/>).</summary>
+public enum Period { Day, Week, Month }

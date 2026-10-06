@@ -144,19 +144,80 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     static readonly Color Green = Color.FromArgb("#2ED47A");
     static readonly Color Orange = Color.FromArgb("#FF8A3D");
 
+    // ---- Trends: over a range of days, picked like Nutrition's (7 days, 30, 90, a year, or one's own) ----
+
+    public System.Collections.ObjectModel.ObservableCollection<ChipItem> RangeChips { get; } = [];
+    int _rangeDays = 90;
+    /// <summary>The range's last day: today for the presets, any day for a custom range.</summary>
+    DateTime _rangeEnd = DateTime.Today;
+    bool _customRange;
+    DateTime RangeStart => _rangeEnd.AddDays(1 - _rangeDays);
+
+    /// <summary>"in the last 90 days", or a custom range's "from 3 Sep to 20 Sep", to end a sentence with.</summary>
+    string RangePhrase => _customRange
+        ? $"from {RangeStart.ToString("d MMM", CultureInfo.CurrentCulture)} to {_rangeEnd.ToString("d MMM", CultureInfo.CurrentCulture)}"
+        : _rangeDays == 365 ? "in the last year" : $"in the last {_rangeDays} days";
+
+    void SelectRange(ChipItem chip)
+    {
+        if ((int)chip.Value! == 0)
+        {
+            _ = PickRange(chip);
+            return;
+        }
+        _rangeDays = (int)chip.Value!;
+        _rangeEnd = DateTime.Today;
+        _customRange = false;
+        foreach (var c in RangeChips)
+            c.IsSelected = c == chip;
+        ShowRange();
+    }
+
+    /// <summary>A range of one's own, picked on one calendar (first day, last day, Done; dots on days with a workout). Up to two years.</summary>
+    async Task PickRange(ChipItem chip)
+    {
+        var days = store.History.Select(s => s.StartedAt.Date).ToHashSet();
+        if (await dialogs.RangeCalendar("Pick a range", RangeStart, _rangeEnd, DateTime.Today, days.Contains) is not { } picked)
+            return;
+        var (start, end) = picked;
+        if ((end - start).Days >= 731)
+            start = end.AddDays(-730);
+        _rangeDays = (end - start).Days + 1;
+        _rangeEnd = end.Date;
+        _customRange = true;
+        foreach (var c in RangeChips)
+            c.IsSelected = c == chip;
+        ShowRange();
+    }
+
+    /// <summary>The trends worked out again for the new range, and played in.</summary>
+    void ShowRange()
+    {
+        IsShowing = false;
+        ShowTrends();
+        IsShowing = true;
+    }
+
     [ObservableProperty] string totalWorkouts = "0";
-    [ObservableProperty] string thisMonth = "0";
+    [ObservableProperty] string perWeek = "0";
     [ObservableProperty] string totalVolume = "0";
     [ObservableProperty] string streak = "0";
     [ObservableProperty] IDrawable? volumeChart;
+    [ObservableProperty] string volumeTitle = "";
     [ObservableProperty] IDrawable? workoutsChart;
+    [ObservableProperty] string workoutsTitle = "";
     [ObservableProperty] IDrawable? bodyWeightChart;
     [ObservableProperty] string bodyWeightText = "";
     [ObservableProperty] string bodyWeightChange = "";
     [ObservableProperty] IDrawable muscleMap = MuscleMapDrawable.Empty;
     [ObservableProperty] List<MuscleBarItem> muscleSets = [];
+    [ObservableProperty] string muscleSetsCaption = "";
     [ObservableProperty] List<LineItem> records = [];
     [ObservableProperty] bool hasRecords;
+    [ObservableProperty] string recordsCaption = "";
+    [ObservableProperty] string noRecordsText = "";
+    [ObservableProperty] string gainsCaption = "";
+    [ObservableProperty] string splitCaption = "";
 
     // Strength: the overall trend, one lift at a time, and the biggest recent gains.
     [ObservableProperty] IDrawable? strengthTrendChart;
@@ -189,7 +250,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     [ObservableProperty] List<SplitItem> split = [];
     [ObservableProperty] bool hasSplit;
 
-    const int ConsistencyWeeks = 16;
+    const int ConsistencyMinDays = 28;
 
     // The training split: muscles grouped the way plans are.
     static readonly (string Name, Color Color, MuscleGroup[] Muscles)[] SplitGroups =
@@ -246,7 +307,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             ? "No measurements from your health apps yet. Connect your health data in the Profile tab to bring in your scale's and watch's."
             : $"Last measured {latest.Date:d MMM} · {latest.Source}";
 
-        var fats = entries.Where(b => b.BodyFatPercent != null).TakeLast(12).ToList();
+        var fats = entries.Where(b => b.BodyFatPercent != null && b.Date >= RangeStart && b.Date <= _rangeEnd).ToList();
         HasBodyFatChart = fats.Count >= 2;
         BodyFatChart = new LineChartDrawable(
             [.. fats.Select(b => new ChartPoint(b.Date.ToString("d MMM", CultureInfo.CurrentCulture), b.BodyFatPercent!.Value))],
@@ -281,12 +342,17 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             ShowDay();
             return Task.CompletedTask;
         }
+        if (RangeChips.Count == 0)
+        {
+            foreach (var (label, days) in new[] { ("7 days", 7), ("30 days", 30), ("90 days", 90), ("1 year", 365), ("Custom", 0) })
+                RangeChips.Add(new ChipItem(label, days, SelectRange) { IsSelected = days == _rangeDays });
+        }
         // Worked out again only when the data changed (or the day did) since last time: it goes through all the history.
-        // Either way it plays in again.
+        // Either way it plays in again. A preset range moves on with the day; a custom one stays where it was put.
         if (_trendsVersion != store.Version || _trendsDay != DateTime.Today)
         {
-            _trendsVersion = store.Version;
-            _trendsDay = DateTime.Today;
+            if (!_customRange)
+                _rangeEnd = DateTime.Today;
             ShowTrends();
         }
         // Last, so everything bound plays in (charts draw, numbers count, cards rise).
@@ -297,35 +363,46 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     int _trendsVersion = -1;
     DateTime _trendsDay;
 
+    /// <summary>Everything on Trends, over the range (but the week streak, today's activity and the latest body measurements).</summary>
     void ShowTrends()
     {
-        var history = store.History.ToList();
-        TotalWorkouts = history.Count.ToString();
-        var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        ThisMonth = history.Count(s => s.StartedAt >= monthStart).ToString();
-        TotalVolume = units.FormatVolume(history.Sum(stats.SessionVolume));
+        _trendsVersion = store.Version;
+        _trendsDay = DateTime.Today;
+        var first = RangeStart;
+        var last = _rangeEnd;
+        var weeks = Math.Max(1, _rangeDays / 7.0);
+        var sessions = stats.SessionsIn(first, last);
+        TotalWorkouts = sessions.Count.ToString();
+        PerWeek = (sessions.Count / weeks).ToString("0.#", CultureInfo.CurrentCulture);
+        TotalVolume = units.FormatVolume(sessions.Sum(stats.SessionVolume));
         Streak = stats.WeekStreak().ToString();
 
-        VolumeChart = new BarChartDrawable(stats.WeeklyVolume(8).Select(p => p with { Value = units.ToDisplay(p.Value) }).ToList(), Accent,
+        var period = StatsService.PeriodFor(first, last).ToString().ToLowerInvariant();
+        VolumeTitle = $"Volume per {period}";
+        VolumeChart = new BarChartDrawable(stats.Volume(first, last).Select(p => p with { Value = units.ToDisplay(p.Value) }).ToList(), Accent,
             v => v >= 1000 ? $"{v / 1000:0.#}k" : $"{v:0}");
-        WorkoutsChart = new BarChartDrawable(stats.WorkoutsPerWeek(8), Violet, v => $"{v:0}");
+        WorkoutsTitle = $"Workouts per {period}";
+        WorkoutsChart = new BarChartDrawable(stats.Workouts(first, last), Violet, v => $"{v:0}");
 
         var weights = store.Data.BodyWeights.OrderBy(b => b.Date).ToList();
+        var inRange = weights.Where(b => b.Date >= first && b.Date <= last).ToList();
         BodyWeightChart = new LineChartDrawable(
-            weights.TakeLast(12).Select(b => new ChartPoint(b.Date.ToString("d MMM", CultureInfo.CurrentCulture), units.ToDisplay(b.WeightKg))).ToList(),
+            inRange.Select(b => new ChartPoint(b.Date.ToString("d MMM", CultureInfo.CurrentCulture), units.ToDisplay(b.WeightKg))).ToList(),
             Green, v => $"{v:0.#}");
         BodyWeightText = weights.Count > 0 ? units.FormatWithUnit(weights[^1].WeightKg) : units.FormatWithUnit(store.Profile.BodyWeightKg);
-        if (weights.Count > 1)
+        if (inRange.Count > 1)
         {
-            var diff = units.ToDisplay(weights[^1].WeightKg) - units.ToDisplay(weights[0].WeightKg);
-            BodyWeightChange = $"{(diff >= 0 ? "+" : "−")}{Math.Abs(diff):0.#} {units.Label} since {weights[0].Date:d MMM}";
+            var diff = units.ToDisplay(inRange[^1].WeightKg) - units.ToDisplay(inRange[0].WeightKg);
+            BodyWeightChange = $"{(diff >= 0 ? "+" : "−")}{Math.Abs(diff):0.#} {units.Label} since {inRange[0].Date:d MMM}";
         }
         else
         {
             BodyWeightChange = "Log your weight regularly to see the trend";
         }
 
-        var sets = stats.SetsPerPartSince(StatsService.WeekStart(DateTime.Today));
+        // A week's worth, averaged over the range, so it reads against the 10–20 sets a week target whatever the range.
+        var sets = stats.SetsPerPart(sessions).ToDictionary(p => p.Key, p => p.Value / weeks);
+        MuscleSetsCaption = $"Average {RangePhrase}. 10–20 hard sets per muscle per week is a good target for growth.";
         MuscleMap = MuscleMapDrawable.ForVolume(sets);
         MuscleSets = PartTotals(sets).OrderByDescending(s => s.Value).Select(s => new MuscleBarItem
         {
@@ -335,7 +412,11 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             Color = s.Value >= 10 ? Green : s.Value > 0 ? Accent : Color.FromArgb("#272C39"),
         }).ToList();
 
-        Records = stats.PersonalRecords().Take(10).Select(r => new LineItem
+        // The records still standing that were set in the range.
+        var records = stats.PersonalRecords();
+        RecordsCaption = $"Best estimated one-rep max per exercise, set {RangePhrase}.";
+        NoRecordsText = records.Count == 0 ? "No records yet. Finish a workout to set your first." : $"No new records {RangePhrase}.";
+        Records = records.Where(r => r.Date >= first && r.Date < last.AddDays(1)).Take(10).Select(r => new LineItem
         {
             Title = r.Exercise.Name,
             Detail = $"{units.Format(r.WeightKg)} {units.Label} × {r.Reps} · {r.Date:d MMM}",
@@ -344,7 +425,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         }).ToList();
         HasRecords = Records.Count > 0;
         ShowStrength();
-        ShowHabits(history);
+        ShowHabits(sessions);
         ShowActivity(nutrition.Day(DateTime.Today));
         ShowBody();
     }
@@ -358,25 +439,24 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             ? g.Where(p => p.Value > 0).Select(p => (p.Key.Display(), p.Value))
             : [(g.Key.Display(), 0.0)]);
 
-    const int TrendWeeks = 12;
-
-    /// <summary>How often and how long you train, and how the work is split across the body.</summary>
-    void ShowHabits(List<WorkoutSession> history)
+    /// <summary>How often and how long you train over the range, and how the work is split across the body.</summary>
+    void ShowHabits(List<WorkoutSession> sessions)
     {
-        var (monday, days) = stats.DailyVolume(ConsistencyWeeks);
+        // At least four weeks of the grid, so a short range still has some around it; only the range's days are counted.
+        var (monday, days) = stats.DailyVolume(_rangeEnd.AddDays(1 - Math.Max(_rangeDays, ConsistencyMinDays)), _rangeEnd);
         ConsistencyChart = new HeatmapDrawable(monday, days, Accent);
-        var trained = days.Count(d => d > 0);
-        var weeks = Math.Max(1, days.Count / 7.0);
+        var trained = sessions.Select(s => s.StartedAt.Date).Distinct().Count();
         ConsistencyText = trained == 0
             ? "Every workout lights up a day here."
-            : $"{trained} training day{(trained == 1 ? "" : "s")} in {ConsistencyWeeks} weeks · {trained / weeks:0.#} a week";
+            : $"{trained} training day{(trained == 1 ? "" : "s")} {RangePhrase} · {trained / Math.Max(1, _rangeDays / 7.0):0.#} a week";
 
-        var minutes = stats.MinutesPerWeek(TrendWeeks);
-        HasDuration = minutes.Count > 0;
+        var minutes = stats.Minutes(RangeStart, _rangeEnd);
+        HasDuration = sessions.Count > 0;
         DurationChart = new LineChartDrawable(minutes, Violet, v => $"{v:0} min");
-        DurationText = HasDuration ? $"About {minutes.Average(p => p.Value):0} minutes a workout lately" : "";
+        DurationText = HasDuration ? $"About {sessions.Average(s => s.Duration.TotalMinutes):0} minutes a workout {RangePhrase}" : "";
 
-        var sets = stats.SetsPerMuscleSince(DateTime.Today.AddDays(-30));
+        SplitCaption = $"Working sets by movement, {RangePhrase}";
+        var sets = stats.SetsPerMuscle(sessions);
         var slices = SplitGroups.Select(g => new DonutSlice(g.Name, g.Muscles.Sum(m => sets.GetValueOrDefault(m)), g.Color)).ToList();
         var total = slices.Sum(s => s.Value);
         HasSplit = total > 0;
@@ -389,13 +469,13 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         var lifts = stats.TrackedLifts(8);
         HasLifts = lifts.Count > 0;
 
-        var trend = stats.StrengthTrend(lifts.Take(5).ToList(), TrendWeeks);
+        var trend = stats.StrengthTrend(lifts.Take(5).ToList(), RangeStart, _rangeEnd);
         HasStrengthTrend = trend.Count >= 2;
         StrengthTrendChart = new LineChartDrawable(trend, Orange, v => $"{v - 100:+0;−0;0}%");
         var change = trend.Count >= 2 ? trend[^1].Value - trend[0].Value : 0;
         StrengthTrendText = !HasStrengthTrend
             ? "Train your main lifts for a couple of weeks to see the trend."
-            : $"{(change >= 0 ? "Up" : "Down")} {Math.Abs(change):0.#}% across your top {Math.Min(5, lifts.Count)} lifts since {trend[0].Label}";
+            : $"{(change >= 0 ? "Up" : "Down")} {Math.Abs(change):0.#}% across your top {Math.Min(5, lifts.Count)} lifts {RangePhrase}";
 
         LiftChips.Clear();
         if (_liftId == null || lifts.All(l => l.Id != _liftId))
@@ -404,7 +484,8 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             LiftChips.Add(new ChipItem(lift.Name, lift.Id, SelectLift) { IsSelected = lift.Id == _liftId });
         ShowLift();
 
-        Gains = [.. stats.Gains(90, 5).Select(g => new LineItem
+        GainsCaption = $"Estimated one-rep max, {RangePhrase}.";
+        Gains = [.. stats.Gains(RangeStart, _rangeEnd, 5).Select(g => new LineItem
         {
             Title = g.Exercise.Name,
             Detail = $"{units.FormatWithUnit(g.FromKg)} → {units.FormatWithUnit(g.ToKg)} · {g.Sessions} sessions",
@@ -431,11 +512,11 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             LiftSummary = "";
             return;
         }
-        var history = stats.E1RmHistory(_liftId);
-        LiftChart = new LineChartDrawable(history.TakeLast(20).Select(p => p with { Value = units.ToDisplay(p.Value) }).ToList(), Accent, v => $"{v:0.#}");
+        var history = stats.E1RmHistory(_liftId, RangeStart, _rangeEnd);
+        LiftChart = new LineChartDrawable(history.Select(p => p with { Value = units.ToDisplay(p.Value) }).ToList(), Accent, v => $"{v:0.#}");
         if (history.Count == 0)
         {
-            LiftSummary = "";
+            LiftSummary = $"Not trained {RangePhrase}.";
             return;
         }
         var first = history[0].Value;
