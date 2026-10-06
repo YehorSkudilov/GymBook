@@ -6,7 +6,7 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>
-/// A plan's settings, from its ··· menu: its training goal, rest times, warm-ups and training. Each of the last three uses the profile's
+/// A plan's settings, from its ··· menu: its training goal, rest times and training. Each of the last two uses the profile's
 /// defaults, following them as they change, or is the plan's own, starting from them. And for each, a way to put every
 /// exercise that has its own back on the plan's. Edits go into the Edit plan page's draft, like any other edit there.
 /// </summary>
@@ -43,15 +43,6 @@ public partial class PlanSettingsViewModel : ObservableObject
     [ObservableProperty] string ownRestExercisesText = "";
     [ObservableProperty] bool hasOwnRestExercises;
 
-    // ---- Warm-ups ----
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(WarmupsOpacity))]
-    bool ownWarmups;
-    public double WarmupsOpacity => OwnWarmups ? 1 : 0.5;
-    [ObservableProperty] WarmupSettingsViewModel? warmups;
-    [ObservableProperty] string ownWarmupsExercisesText = "";
-    [ObservableProperty] bool hasOwnWarmupsExercises;
-
     // ---- Training ----
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TrainingOpacity))]
@@ -83,22 +74,6 @@ public partial class PlanSettingsViewModel : ObservableObject
         WarmupRestText = Units.Rest(PlanRest.Warmup(_plan, P));
         var ownRest = exercises.Count(e => e.CustomRest);
         (HasOwnRestExercises, OwnRestExercisesText) = (ownRest > 0, Count(ownRest, "rest"));
-
-        OwnWarmups = _plan.Warmups != null;
-        Warmups = new WarmupSettingsViewModel(
-            () => WarmupSettings.For(_plan, P),
-            () => WarmupSettings.Global(P),
-            // Kept as the plan's own even when the same as the defaults, so it stays put when they change.
-            s =>
-            {
-                _plan.Warmups = (s ?? WarmupSettings.Global(P)).ToJson();
-                _edited();
-            },
-            // No reset row: Use defaults above is the way back.
-            () => false,
-            "", OwnWarmups ? "this plan's own warm-ups" : "your default warm-ups", _dialogs, _units);
-        var ownWarmups = exercises.Count(e => e.Warmups != null);
-        (HasOwnWarmupsExercises, OwnWarmupsExercisesText) = (ownWarmups > 0, Count(ownWarmups, "warm-ups"));
 
         OwnTraining = _plan.OwnTraining;
         (UseRir, Deloads, Periodization) = (_plan.UseRir, _plan.Deloads, _plan.Periodization);
@@ -210,27 +185,6 @@ public partial class PlanSettingsViewModel : ObservableObject
         if (!await _dialogs.Confirm("Use the plan's rest for every exercise?", $"{OwnRestExercisesText}; it goes back to the plan's.", "Use the plan's"))
             return;
         PlanRest.ApplyToAll(_plan, P, _store.GetExercise);
-        Changed();
-    }
-
-    // ---- Warm-ups ----
-
-    partial void OnOwnWarmupsChanged(bool value)
-    {
-        if (_loading)
-            return;
-        // Its own start as a copy of the defaults.
-        _plan.Warmups = value ? WarmupSettings.Global(P).ToJson() : null;
-        Changed();
-    }
-
-    [RelayCommand]
-    async Task WarmupsToAll()
-    {
-        if (!await _dialogs.Confirm("Use the plan's warm-ups for every exercise?", $"{OwnWarmupsExercisesText}; they go back to the plan's.", "Use the plan's"))
-            return;
-        foreach (var pe in Exercises)
-            pe.Warmups = null;
         Changed();
     }
 

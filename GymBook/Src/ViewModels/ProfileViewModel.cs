@@ -34,6 +34,7 @@ public partial class ProfileViewModel(
     [ObservableProperty] string bodyWeightText = "";
     [ObservableProperty] string compoundRestText = "";
     [ObservableProperty] string isolationRestText = "";
+    [ObservableProperty] string warmupRestText = "";
     [ObservableProperty] string experienceText = "";
     [ObservableProperty] string sexText = "";
     [ObservableProperty] bool trackRir;
@@ -58,20 +59,6 @@ public partial class ProfileViewModel(
     [ObservableProperty] string syncDetailsSummary = "";
 
     UserProfile P => store.Profile;
-
-    WarmupSettingsViewModel? _warmupSettings;
-
-    /// <summary>The Warm-ups section: the defaults every plan uses unless it has its own.</summary>
-    public WarmupSettingsViewModel WarmupSettings => _warmupSettings ??= new(
-        () => Services.WarmupSettings.Global(P),
-        Services.WarmupSettings.Defaults,
-        s =>
-        {
-            Services.WarmupSettings.SaveGlobal(P, s);
-            store.Save();
-        },
-        () => !Services.WarmupSettings.Global(P).SameAs(Services.WarmupSettings.Defaults()),
-        "Reset to recommended defaults", "the recommended defaults", dialogs, units);
 
     public override Task OnAppearingAsync()
     {
@@ -125,7 +112,7 @@ public partial class ProfileViewModel(
         IsolationRestText = RestLabel(P.IsolationRestSeconds);
         ExperienceText = P.Experience.Display();
         SexText = P.Sex switch { Sex.Male => "Male", Sex.Female => "Female", _ => "Not set" };
-        WarmupSettings.Refresh();
+        WarmupRestText = Units.Rest(P.WarmupRestSeconds);
         TrackRir = P.TrackRir;
         DefaultDeloads = P.DefaultDeloads;
         DefaultPeriodization = P.DefaultPeriodization;
@@ -199,6 +186,20 @@ public partial class ProfileViewModel(
 
     [RelayCommand]
     Task EditIsolationRest() => EditRest("Isolation exercises", Mechanic.Isolation, s => P.IsolationRestSeconds = s);
+
+    /// <summary>The rest after a warm-up set, in plans without rest times of their own.</summary>
+    [RelayCommand]
+    async Task EditWarmupRest()
+    {
+        int[] times = [30, 45, 60, 75, 90, 120, 150];
+        var labels = times.Select(Units.Rest).ToList();
+        var index = labels.IndexOf(await dialogs.ActionSheet("Rest after a warm-up set", null, [.. labels]) ?? "");
+        if (index < 0)
+            return;
+        P.WarmupRestSeconds = times[index];
+        store.Save();
+        Refresh();
+    }
 
     /// <summary>
     /// Picks the rest for one kind of exercise. Plans without their own rest for it follow along, except exercises
@@ -315,6 +316,14 @@ public partial class ProfileViewModel(
     /// <summary>The exercise library: browse, search and filter every exercise, and make custom ones.</summary>
     [RelayCommand]
     Task OpenExercises() => GoTo(Routes.ExerciseLibrary);
+
+    /// <summary>Everyone's feature requests, to vote for, and suggesting one.</summary>
+    [RelayCommand]
+    Task OpenFeatureRequests() => GoTo($"{Routes.Feedback}?kind={FeedbackKind.Feature}");
+
+    /// <summary>The user's bug reports, and reporting one.</summary>
+    [RelayCommand]
+    Task OpenBugReports() => GoTo($"{Routes.Feedback}?kind={FeedbackKind.Bug}");
 
     /// <summary>Workouts deleted, or discarded while in progress, to bring back.</summary>
     [RelayCommand]

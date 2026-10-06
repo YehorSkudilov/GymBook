@@ -163,12 +163,6 @@
                                                             <Label Text="{Binding WarmupsText, StringFormat='{0} ▾'}" FontFamily="OpenSansSemibold" FontSize="14" HorizontalOptions="Center" />
                                                         </Border>
                                                         <Label Text="{Binding WarmupsSource}" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="Center" HorizontalTextAlignment="Center" />
-                                                        <Label Text="Use the plan's" TextColor="{StaticResource Accent}" FontSize="12" FontFamily="OpenSansSemibold"
-                                                               HorizontalOptions="Center" IsVisible="{Binding IsCustomWarmups}" Padding="0,2">
-                                                            <Label.GestureRecognizers>
-                                                                <TapGestureRecognizer Command="{Binding ResetWarmupsCommand}" />
-                                                            </Label.GestureRecognizers>
-                                                        </Label>
                                                     </VerticalStackLayout>
                                                 </Border>
                                                 <Border Grid.Row="{Binding WeeksRow}" Grid.Column="{Binding WeeksColumn}" Grid.ColumnSpan="{Binding WeeksSpan}" Style="{StaticResource InnerCard}" Padding="10,8" VerticalOptions="Fill">

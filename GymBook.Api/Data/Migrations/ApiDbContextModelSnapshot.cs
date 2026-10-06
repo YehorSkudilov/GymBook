@@ -184,6 +184,70 @@ namespace GymBook.Api.Data.Migrations
                     b.ToTable("avatars", (string)null);
                 });
 
+            modelBuilder.Entity("GymBook.Api.Data.FeedbackCommentOwner", b =>
+                {
+                    b.Property<long>("CommentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("CommentId");
+
+                    b.HasIndex("Number");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("feedback_comments", (string)null);
+                });
+
+            modelBuilder.Entity("GymBook.Api.Data.FeedbackTicketOwner", b =>
+                {
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Number");
+
+                    b.HasIndex("UserId", "Kind");
+
+                    b.ToTable("feedback_tickets", (string)null);
+                });
+
+            modelBuilder.Entity("GymBook.Api.Data.FeedbackVote", b =>
+                {
+                    b.Property<int>("Number")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Number", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("feedback_votes", (string)null);
+                });
+
             modelBuilder.Entity("GymBook.Api.Data.Friendship", b =>
                 {
                     b.Property<string>("UserId")
@@ -1241,6 +1305,33 @@ namespace GymBook.Api.Data.Migrations
                     b.HasOne("GymBook.Api.Data.AppUser", null)
                         .WithOne()
                         .HasForeignKey("GymBook.Api.Data.Avatar", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GymBook.Api.Data.FeedbackCommentOwner", b =>
+                {
+                    b.HasOne("GymBook.Api.Data.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GymBook.Api.Data.FeedbackTicketOwner", b =>
+                {
+                    b.HasOne("GymBook.Api.Data.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GymBook.Api.Data.FeedbackVote", b =>
+                {
+                    b.HasOne("GymBook.Api.Data.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

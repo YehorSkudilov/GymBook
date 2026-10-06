@@ -19,6 +19,7 @@ public class AccountController(
     TokenService tokens,
     GoogleTokenVerifier google,
     EmailSender email,
+    GymBook.Api.Feedback.FeedbackService feedback,
     ILogger<AccountController> log) : ControllerBase
 {
     [HttpGet]
@@ -243,6 +244,8 @@ public class AccountController(
                 return Problem(statusCode: StatusCodes.Status403Forbidden, title: "Confirm with the Google account you signed in with.");
         }
 
+        // Bug reports and comments sent from the app go from GitHub too; feature requests stay, without the username.
+        await feedback.ForgetUserAsync(user.Id, CancellationToken.None);
         var result = await users.DeleteAsync(user);
         if (!result.Succeeded)
             return Problem(statusCode: StatusCodes.Status500InternalServerError, title: "Couldn't delete the account.");

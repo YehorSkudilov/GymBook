@@ -301,6 +301,43 @@ public class ApiClient(HttpClient http, AuthSession session)
     public Task<CopyPlanResponse> CopySharedPlanAsync(string shareId, CancellationToken ct = default) =>
         PostAuthorizedAsync<CopyPlanResponse>(SharePath(shareId, "copy"), ct);
 
+    // ---- Feature requests and bug reports (the API's FeedbackController) ----
+
+    /// <summary>Every feature request, or the user's own bug reports.</summary>
+    public async Task<List<FeedbackTicket>> GetFeedbackAsync(FeedbackKind kind, CancellationToken ct = default) =>
+        (await GetAuthorizedAsync<FeedbackListResponse>($"api/feedback?kind={kind}", ct)).Tickets;
+
+    public Task<FeedbackThread> GetFeedbackTicketAsync(int number, CancellationToken ct = default) =>
+        GetAuthorizedAsync<FeedbackThread>($"api/feedback/{number}", ct);
+
+    public Task<FeedbackThread> SendFeedbackAsync(SaveFeedbackRequest request, CancellationToken ct = default) =>
+        SendAuthorizedAsync<SaveFeedbackRequest, FeedbackThread>("api/feedback", request, ct);
+
+    public Task<FeedbackThread> UpdateFeedbackAsync(int number, SaveFeedbackRequest request, CancellationToken ct = default) =>
+        SendAuthorizedAsync<SaveFeedbackRequest, FeedbackThread>($"api/feedback/{number}", request, ct);
+
+    public Task DeleteFeedbackAsync(int number, CancellationToken ct = default) => SendEmptyAsync($"api/feedback/{number}/delete", ct);
+
+    public Task<FeedbackVoteResponse> VoteFeedbackAsync(int number, CancellationToken ct = default) =>
+        PostAuthorizedAsync<FeedbackVoteResponse>($"api/feedback/{number}/vote", ct);
+
+    public Task<FeedbackThread> AddFeedbackCommentAsync(int number, string body, CancellationToken ct = default) =>
+        SendAuthorizedAsync<SaveFeedbackCommentRequest, FeedbackThread>($"api/feedback/{number}/comments", new() { Body = body }, ct);
+
+    public Task<FeedbackThread> UpdateFeedbackCommentAsync(long id, string body, CancellationToken ct = default) =>
+        SendAuthorizedAsync<SaveFeedbackCommentRequest, FeedbackThread>($"api/feedback/comments/{id}", new() { Body = body }, ct);
+
+    public Task<FeedbackThread> DeleteFeedbackCommentAsync(long id, CancellationToken ct = default) =>
+        PostAuthorizedAsync<FeedbackThread>($"api/feedback/comments/{id}/delete", ct);
+
+    /// <summary>Uploads a file for a ticket or comment; a big one can take a while on a slow connection.</summary>
+    public Task<FeedbackAttachmentResponse> AttachFeedbackFileAsync(string fileName, byte[] data, CancellationToken ct = default) =>
+        SendAuthorizedAsync<FeedbackAttachmentRequest, FeedbackAttachmentResponse>("api/feedback/attachments",
+            new() { FileName = fileName, DataBase64 = Convert.ToBase64String(data) }, ct, TimeSpan.FromMinutes(2));
+
+    public Task<FeedbackPreviewResponse> PreviewFeedbackAsync(string body, CancellationToken ct = default) =>
+        SendAuthorizedAsync<FeedbackPreviewRequest, FeedbackPreviewResponse>("api/feedback/preview", new() { Body = body }, ct);
+
     static string SharePath(string shareId, string? action = null) =>
         "api/plan-shares/" + Uri.EscapeDataString(shareId) + (action == null ? "" : "/" + action);
 

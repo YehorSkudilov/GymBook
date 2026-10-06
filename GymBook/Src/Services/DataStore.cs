@@ -255,6 +255,20 @@ public class DataStore
     }
 
     /// <summary>
+    /// Every plan exercise without warm-ups yet (a new plan, one imported or synced in) gets its own, which stay as they
+    /// are from then on; the warm-up settings there used to be move into the plans first (see <see cref="Warmups"/>).
+    /// Saving is up to the caller.
+    /// </summary>
+    /// <returns>Whether anything was changed.</returns>
+    public bool DecideWarmups()
+    {
+        var changed = Warmups.MoveSettingsIntoPlans(Data.Plans, Profile, GetExercise);
+        foreach (var plan in Data.Plans)
+            changed |= Warmups.Decide(plan, GetExercise);
+        return changed;
+    }
+
+    /// <summary>
     /// After workouts are deleted or a week is reset: every plan's weeks renumbered so none is left empty before one
     /// with progress (see <see cref="PlanProgress.CompactWeeks"/>). Also on showing the plan, for gaps from before this
     /// existed (or synced from another device). Saving is up to the caller.

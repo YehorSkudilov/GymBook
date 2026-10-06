@@ -114,6 +114,9 @@ public static class MauiProgram
         AddPage<PlanSharePage, PlanShareViewModel>(builder.Services);
         AddPage<SharedPlanPage, SharedPlanViewModel>(builder.Services);
         AddPage<ProPage, ProViewModel>(builder.Services);
+        AddPage<FeedbackPage, FeedbackViewModel>(builder.Services);
+        AddPage<FeedbackTicketPage, FeedbackTicketViewModel>(builder.Services);
+        AddPage<FeedbackEditPage, FeedbackEditViewModel>(builder.Services);
 
 #if IOS
         // Drag reordering with a long-press, as on Android, so swipes elsewhere still scroll.

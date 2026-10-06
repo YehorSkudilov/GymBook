@@ -167,11 +167,10 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             // Skipped this week: no time spent, and every set shows as skipped, as in a workout. It can still be done.
             When = IsSkipped ? "0 min" : WorkoutEstimator.Format(estimator.Minutes(workout, plan.Goal));
             // Its warm-ups as a workout of it would have them: lighter once an earlier exercise worked the same muscle.
-            var warmups = WarmupSettings.For(plan, store.Profile);
             var worked = new HashSet<MuscleGroup>();
             Exercises = planned.Select(x =>
             {
-                var steps = x.ex == null ? [] : warmups.StepsFor(x.pe, x.ex, worked.Contains(x.ex.PrimaryMuscle));
+                var steps = x.ex == null ? [] : Warmups.Of(x.pe, x.ex, worked.Contains(x.ex.PrimaryMuscle));
                 if (x.ex != null)
                     worked.Add(x.ex.PrimaryMuscle);
                 return IsSkipped ? SkippedExercise(x.pe, x.ex, steps) : Planned(x.pe, x.ex, steps);

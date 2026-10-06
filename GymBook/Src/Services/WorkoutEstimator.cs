@@ -24,8 +24,8 @@ public class WorkoutEstimator(DataStore store)
 
     double Seconds(IEnumerable<(Exercise? Exercise, int Sets, int RepMin, int RepMax, int RestSeconds)> exercises, Goal goal)
     {
-        // The warm-ups as set in the profile: each exercise's ramp, or the lighter one once its muscle is warm.
-        var warmups = WarmupSettings.Global(store.Profile);
+        // About the warm-ups an exercise gets: its kind's ramp, or the lighter one once its muscle is warm.
+        var warmupRest = store.Profile.WarmupRestSeconds;
         var worked = new HashSet<MuscleGroup>();
         var seconds = 0.0;
         var count = 0;
@@ -35,9 +35,9 @@ public class WorkoutEstimator(DataStore store)
                 continue;
             var perRep = TrainingGoals.SecondsPerRep(goal, ex);
             seconds += sets * (SetupSeconds + (repMin + repMax) / 2.0 * perRep) + (sets - 1) * rest;
-            if (warmups.Enabled && ex is { IsBodyweight: false } && !TrainingGoals.IsExplosive(ex))
-                seconds += warmups.Steps(WarmupSettings.KindOf(ex, worked.Contains(ex.PrimaryMuscle)))
-                    .Sum(s => SetupSeconds + s.Reps * perRep + warmups.RestSeconds);
+            if (ex is { IsBodyweight: false } && !TrainingGoals.IsExplosive(ex))
+                seconds += Warmups.Recommended(ex, worked.Contains(ex.PrimaryMuscle))
+                    .Sum(s => SetupSeconds + s.Reps * perRep + warmupRest);
             if (ex != null)
                 worked.Add(ex.PrimaryMuscle);
             count++;
@@ -118,7 +118,7 @@ public class WorkoutEstimator(DataStore store)
     public TimeSpan Remaining(WorkoutSession session, LivePace pace, DateTime now, DateTime? setSince)
     {
         var goal = store.GetPlan(session.PlanId)?.Goal ?? store.Profile.Goal;
-        var warmupRest = WarmupSettings.For(store.GetPlan(session.PlanId), store.Profile).RestSeconds;
+        var warmupRest = PlanRest.Warmup(store.GetPlan(session.PlanId), store.Profile);
 
         // This workout's own pace counts first.
         var setSeconds = new Dictionary<string, List<double>>();

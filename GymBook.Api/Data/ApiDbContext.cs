@@ -85,6 +85,9 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
     public DbSet<PlanShareMembership> PlanShareMembers => Set<PlanShareMembership>();
     public DbSet<StoreSubscription> Subscriptions => Set<StoreSubscription>();
     public DbSet<ServerSetting> Settings => Set<ServerSetting>();
+    public DbSet<FeedbackTicketOwner> FeedbackTickets => Set<FeedbackTicketOwner>();
+    public DbSet<FeedbackCommentOwner> FeedbackComments => Set<FeedbackCommentOwner>();
+    public DbSet<FeedbackVote> FeedbackVotes => Set<FeedbackVote>();
 
     /// <summary>Read by the query filters on every query; null (no signed-in user) matches nothing.</summary>
     string? CurrentUserId => currentUser.UserId;
@@ -234,6 +237,33 @@ public class ApiDbContext(DbContextOptions<ApiDbContext> options, ICurrentUser c
             b.HasKey(s => s.Key);
             b.Property(s => s.Key).HasMaxLength(64);
             b.Property(s => s.Value).HasMaxLength(1024);
+        });
+
+        model.Entity<FeedbackTicketOwner>(b =>
+        {
+            b.ToTable("feedback_tickets");
+            b.HasKey(t => t.Number);
+            b.Property(t => t.Number).ValueGeneratedNever();
+            b.HasIndex(t => new { t.UserId, t.Kind });
+            b.HasOne<AppUser>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<FeedbackCommentOwner>(b =>
+        {
+            b.ToTable("feedback_comments");
+            b.HasKey(c => c.CommentId);
+            b.Property(c => c.CommentId).ValueGeneratedNever();
+            b.HasIndex(c => c.Number);
+            b.HasIndex(c => c.UserId);
+            b.HasOne<AppUser>().WithMany().HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        model.Entity<FeedbackVote>(b =>
+        {
+            b.ToTable("feedback_votes");
+            b.HasKey(v => new { v.Number, v.UserId });
+            b.HasIndex(v => v.UserId);
+            b.HasOne<AppUser>().WithMany().HasForeignKey(v => v.UserId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 

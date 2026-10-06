@@ -17,7 +17,6 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             PlanWorkoutId = workout.Id,
             PlanWeek = week ?? new PlanProgress(plan, store.History).FirstOpenWeek(workout),
         };
-        var warmups = WarmupSettings.For(plan, store.Profile);
         var worked = new HashSet<MuscleGroup>();
         foreach (var planned in workout.Exercises)
         {
@@ -27,7 +26,8 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             if (ex == null)
                 continue;
             // A muscle an earlier exercise already worked needs only a lighter warm-up.
-            session.Exercises.Add(CreateExercise(ex, pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir, pe.RestSeconds, warmups, worked.Contains(ex.PrimaryMuscle), planned));
+            session.Exercises.Add(CreateExercise(ex, pe.Sets, pe.RepMin, pe.RepMax, pe.TargetRir, pe.RestSeconds,
+                Warmups.Of(planned, ex, worked.Contains(ex.PrimaryMuscle)), planned));
             worked.Add(ex.PrimaryMuscle);
         }
         return Begin(session);
@@ -42,8 +42,8 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         return session;
     }
 
-    /// <summary>An exercise of a workout: its suggested sets, after its warm-ups (its own, from <paramref name="planned"/>, or the settings').</summary>
-    public SessionExercise CreateExercise(Exercise ex, int sets, int repMin, int repMax, int rir, int rest, WarmupSettings warmups, bool alreadyWarm,
+    /// <summary>An exercise of a workout: its suggested sets, after its <paramref name="warmups"/>.</summary>
+    public SessionExercise CreateExercise(Exercise ex, int sets, int repMin, int repMax, int rir, int rest, IReadOnlyList<WarmupStep> warmups,
         PlanExercise? planned = null)
     {
         var suggestion = engine.Suggest(ex, sets, repMin, repMax, rir);
@@ -59,16 +59,15 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             Note = planned?.Note,
             NotePinned = planned?.Note != null,
         };
-        var steps = warmups.StepsFor(planned, ex, alreadyWarm);
-        if (steps.Count > 0 && suggestion.Sets.Count > 0)
-            se.Sets.AddRange(engine.Warmups(ex, suggestion.Sets[0].WeightKg, warmups, steps));
+        if (warmups.Count > 0 && suggestion.Sets.Count > 0)
+            se.Sets.AddRange(engine.Warmups(ex, suggestion.Sets[0].WeightKg, warmups));
         se.Sets.AddRange(suggestion.Sets);
         return se;
     }
 
     /// <summary>
     /// Defaults for an exercise added on the fly to <paramref name="session"/>, based on the user's goal, with the
-    /// warm-ups and rest of the session's plan (if it's from one).
+    /// recommended warm-ups and the rest of the session's plan (if it's from one).
     /// </summary>
     public SessionExercise CreateAdHoc(Exercise ex, WorkoutSession? session)
     {
@@ -76,7 +75,7 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         var p = PlanGenerator.Prescription(store.Profile, ex);
         var rest = plan == null ? p.RestSeconds : PlanRest.DefaultFor(plan, store.Profile, ex);
         var warm = session?.Exercises.Any(e => store.GetExercise(e.ExerciseId)?.PrimaryMuscle == ex.PrimaryMuscle) == true;
-        return CreateExercise(ex, p.Sets, p.RepMin, p.RepMax, p.TargetRir, rest, WarmupSettings.For(plan, store.Profile), warm);
+        return CreateExercise(ex, p.Sets, p.RepMin, p.RepMax, p.TargetRir, rest, Warmups.Recommended(ex, warm));
     }
 
     /// <summary>
@@ -97,8 +96,8 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         return null;
     }
 
-    /// <summary>The warm-up settings for <paramref name="session"/>: its plan's, or the profile's.</summary>
-    public WarmupSettings WarmupsFor(WorkoutSession? session) => WarmupSettings.For(store.GetPlan(session?.PlanId), store.Profile);
+    /// <summary>The rest after a warm-up set in <paramref name="session"/>: its plan's, or the profile's.</summary>
+    public int WarmupRest(WorkoutSession? session) => PlanRest.Warmup(store.GetPlan(session?.PlanId), store.Profile);
 
     public void Save() => store.Save();
 
@@ -251,9 +250,12 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         var proposed = new List<PlanExercise>();
         var changes = new List<string>();
         string Name(string id) => store.GetExercise(id)?.Name ?? "an exercise";
+        var worked = new HashSet<MuscleGroup>();
 
         foreach (var se in session.Exercises)
         {
+            var ex = store.GetExercise(se.ExerciseId);
+            var warm = ex != null && !worked.Add(ex.PrimaryMuscle);
             var sets = se.Sets.Count(s => !s.IsWarmup);
             if (sets == 0)
                 continue;
@@ -261,7 +263,12 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             if (planned == null)
             {
                 var note = se.NotePinned ? se.Note : null;
-                proposed.Add(new PlanExercise { ExerciseId = se.ExerciseId, Sets = sets, RepMin = se.RepMin, RepMax = se.RepMax, TargetRir = se.TargetRir, RestSeconds = se.RestSeconds, Note = note });
+                proposed.Add(new PlanExercise
+                {
+                    ExerciseId = se.ExerciseId, Sets = sets, RepMin = se.RepMin, RepMax = se.RepMax, TargetRir = se.TargetRir, RestSeconds = se.RestSeconds, Note = note,
+                    // The warm-ups it had (none if they were all taken out); null when there's no weight to take them from.
+                    Warmups = se.Sets.Any(s => s.IsWarmup) ? Warmups.FromSets(se.Sets) is { } done ? Warmups.FormatSteps(done) : null : "",
+                });
                 changes.Add($"Add {Name(se.ExerciseId)} ({sets} sets)");
                 if (note != null)
                     changes.Add($"{Name(se.ExerciseId)}: pin the note “{note}”");
@@ -269,8 +276,18 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             }
             unused.Remove(planned);
             var expected = PlanCycle.ForWeek(plan, planned, week).Sets;
-            // Everything else about it (warm-ups, deloads, its own RIR, ...) stays as the plan has it.
+            // Everything else about it (deloads, its own RIR, ...) stays as the plan has it.
             var updated = LocalJson.Clone(planned);
+            // Warm-ups taken out (or added, or sets marked as warm-ups) during the workout: these from now on. The plan's
+            // are what it would have had at this weight, so ones left out for a light weight aren't a change.
+            if (ex != null && Warmups.Of(planned, ex, warm) is var planSteps
+                && se.Sets.Count(s => s.IsWarmup) is var warmupCount
+                && warmupCount != engine.Warmups(ex, se.Sets.FirstOrDefault(s => !s.IsWarmup)?.WeightKg ?? 0, planSteps).Count
+                && (warmupCount == 0 ? new List<WarmupStep>() : Warmups.FromSets(se.Sets)) is { } doneSteps)
+            {
+                updated.Warmups = Warmups.FormatSteps(doneSteps);
+                changes.Add($"{Name(planned.ExerciseId)}: warm-ups {WarmupCount(planSteps.Count)} → {WarmupCount(doneSteps.Count)}");
+            }
             updated.Sets = Math.Clamp(planned.Sets + sets - expected, 1, 10);
             updated.RestSeconds = se.RestSeconds;
             // Rest changed during the workout: this exercise's own from now on.
@@ -304,6 +321,8 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             changes.Add("New exercise order");
 
         return changes.Count == 0 ? null : new PlanUpdate(plan, workout, proposed, changes);
+
+        static string WarmupCount(int n) => n switch { 0 => "none", 1 => "1 set", _ => $"{n} sets" };
     }
 
     /// <summary>Makes <paramref name="update"/> the plan workout, for next time. The finished workout keeps what was done.</summary>

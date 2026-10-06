@@ -10,8 +10,8 @@
     Shell.NavBarIsVisible="False"
     Backdrop="#B3000000">
 
-    <!-- A plan's goal, rest times, warm-ups and training, from its ··· menu. The last three are each the profile's defaults (followed as they change)
-         or the plan's own. Saved with the plan's other changes. -->
+    <!-- A plan's goal, rest times and training, from its ··· menu. The last two are each the profile's defaults (followed as they change)
+         or the plan's own. Saved with the plan's other changes. Warm-ups are each exercise's own, set on its row. -->
     <views:SheetPage.Resources>
         <Style x:Key="Row" TargetType="Grid">
             <Setter Property="Padding" Value="16,14" />
@@ -112,18 +112,6 @@
                     <Grid Style="{StaticResource ToAllRow}" IsVisible="{Binding HasOwnRestExercises}">
                         <Label Text="{Binding OwnRestExercisesText}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
                         <Button Grid.Column="1" Text="Use plan's for all" Style="{StaticResource SmallButton}" Command="{Binding RestToAllCommand}" />
-                    </Grid>
-
-                    <!-- Warm-ups -->
-                    <Label Text="Warm-ups" Style="{StaticResource SectionTitle}" />
-                    <controls:ModeToggle IsOwn="{Binding OwnWarmups}" />
-                    <!-- Dimmed and untouchable on the defaults; the view itself is bound to the warm-up settings. -->
-                    <ContentView Opacity="{Binding WarmupsOpacity}" InputTransparent="{Binding OwnWarmups, Converter={StaticResource Not}}">
-                        <views:WarmupSettingsView BindingContext="{Binding Warmups}" />
-                    </ContentView>
-                    <Grid Style="{StaticResource ToAllRow}" IsVisible="{Binding HasOwnWarmupsExercises}">
-                        <Label Text="{Binding OwnWarmupsExercisesText}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
-                        <Button Grid.Column="1" Text="Use plan's for all" Style="{StaticResource SmallButton}" Command="{Binding WarmupsToAllCommand}" />
                     </Grid>
 
                     <!-- Training -->

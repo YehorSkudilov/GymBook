@@ -70,8 +70,8 @@ public class PlanDetailDay
 
 /// <summary>
 /// An exercise of the day on the Edit plan page. Its sets and reps are picked from the pills on the row itself; opened,
-/// it has its target RIR, rest, warm-ups, and deloads and periodization. Each of those is the plan's unless set here,
-/// and can go back to it.
+/// it has its target RIR, rest, warm-ups, and deloads and periodization. Each of those but the warm-ups is the plan's
+/// unless set here, and can go back to it; the warm-ups are always its own (see <see cref="Services.Warmups"/>).
 /// </summary>
 public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, WorkoutPlan plan, UserProfile profile, Action changed, DialogService dialogs)
     : ObservableObject
@@ -131,7 +131,8 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
     // What the plan gives it, when it has none of its own.
     int PlanRest => exercise == null ? Model.RestSeconds : Services.PlanRest.DefaultFor(plan, profile, exercise);
     int PlanRir => exercise == null ? Model.TargetRir : PlanTraining.RirFor(plan, profile, exercise);
-    IReadOnlyList<WarmupStep> PlanWarmups => exercise == null ? [] : WarmupSettings.For(plan, profile).StepsFor(null, exercise, false);
+    // Its own; one just added has them decided on saving (see Warmups.Decide), much like these.
+    IReadOnlyList<WarmupStep> OwnWarmups => exercise == null ? [] : Warmups.Of(Model, exercise, false);
 
     public string Sets => Model.Sets == 1 ? "1 set" : $"{Model.Sets} sets";
     public string Reps => Model.RepMin == Model.RepMax ? $"{Model.RepMin} reps" : $"{Model.RepMin}–{Model.RepMax} reps";
@@ -148,9 +149,8 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
     public string RestSource => Model.CustomRest ? $"Plan: {Units.Rest(PlanRest)}" : "Plan's";
 
     static string SetCount(int n) => n switch { 0 => "None", 1 => "1 set", _ => $"{n} sets" };
-    public string WarmupsText => SetCount((WarmupSettings.ParseSteps(Model.Warmups) ?? PlanWarmups).Count);
-    public bool IsCustomWarmups => Model.Warmups != null;
-    public string WarmupsSource => WarmupSettings.ParseSteps(Model.Warmups) is { } steps ? WarmupSettings.Describe(steps) : "Plan's";
+    public string WarmupsText => SetCount(OwnWarmups.Count);
+    public string WarmupsSource => Warmups.Describe(OwnWarmups);
 
     public string WeeksText
     {
@@ -185,7 +185,7 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
         foreach (var p in new[]
         {
             nameof(Sets), nameof(Reps), nameof(SetsText), nameof(RepsText), nameof(RirText), nameof(IsCustomRir), nameof(RirSource),
-            nameof(RestText), nameof(IsCustomRest), nameof(RestSource), nameof(WarmupsText), nameof(IsCustomWarmups), nameof(WarmupsSource),
+            nameof(RestText), nameof(IsCustomRest), nameof(RestSource), nameof(WarmupsText), nameof(WarmupsSource),
             nameof(WeeksText), nameof(IsCustomWeeks), nameof(WeeksSource),
         })
             OnPropertyChanged(p);
@@ -212,14 +212,6 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
     void ResetRir()
     {
         (Model.TargetRir, Model.CustomRir) = (PlanRir, false);
-        Changed();
-    }
-
-    /// <summary>Back to the plan's warm-ups.</summary>
-    [RelayCommand]
-    void ResetWarmups()
-    {
-        Model.Warmups = null;
         Changed();
     }
 
@@ -261,30 +253,23 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
 
     const string CustomWarmups = "Custom…";
 
-    /// <summary>The warm-ups pill: the plan's, none, a common ramp, or typed in.</summary>
+    /// <summary>The warm-ups pill: none, a common ramp, or typed in.</summary>
     [RelayCommand]
     async Task PickWarmups()
     {
-        var planLabel = $"The plan's ({WarmupSettings.Describe(PlanWarmups)})";
-        var presets = WarmupSettingsViewModel.Presets;
-        var labels = presets.Select(p => p.Length == 0 ? "None" : $"{SetCount(p.Length)}: {WarmupSettings.Describe(p)}").ToList();
-        var choice = await dialogs.ActionSheet($"{Name} · warm-ups, % of the working weight × reps", null, [planLabel, .. labels, CustomWarmups]);
+        var presets = Warmups.Presets;
+        var labels = presets.Select(p => p.Length == 0 ? "None" : $"{SetCount(p.Length)}: {Warmups.Describe(p)}").ToList();
+        var choice = await dialogs.ActionSheet($"{Name} · warm-ups, % of the working weight × reps", null, [.. labels, CustomWarmups]);
         if (choice == null)
             return;
-        if (choice == planLabel)
-        {
-            ResetWarmups();
-            return;
-        }
         List<WarmupStep>? steps;
         if (choice == CustomWarmups)
         {
-            var current = WarmupSettings.ParseSteps(Model.Warmups) ?? PlanWarmups;
             var text = await dialogs.Prompt(Name, "Each warm-up set as percent × reps, lightest first, e.g. 50x8, 75x4",
-                WarmupSettings.FormatSteps(current), Keyboard.Text, "Save");
+                Warmups.FormatSteps(OwnWarmups), Keyboard.Text, "Save");
             if (text == null)
                 return;
-            steps = WarmupSettings.ParseSteps(text);
+            steps = Warmups.ParseSteps(text);
             if (steps == null)
             {
                 await dialogs.Alert("Couldn't read that", "Write each set as percent x reps (10–95% and 1–20 reps, up to 5 sets), e.g. 50x8, 75x4. Leave it empty for none.");
@@ -295,7 +280,7 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
         {
             steps = [.. presets[labels.IndexOf(choice)]];
         }
-        Model.Warmups = WarmupSettings.FormatSteps(steps);
+        Model.Warmups = Warmups.FormatSteps(steps);
         Changed();
     }
 

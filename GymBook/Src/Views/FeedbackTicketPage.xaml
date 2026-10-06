@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.FeedbackTicketPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:FeedbackTicketViewModel"
+    Title="{Binding PageTitle}"
+    Shell.TabBarIsVisible="False">
+
+    <!-- The ticket and its comments as GitHub shows them (see FeedbackHtml), with voting, commenting and the user's own changes below -->
+    <Grid RowDefinitions="*,Auto">
+        <WebView x:Name="Web" Source="{Binding Page}" BackgroundColor="{StaticResource Bg}" Navigating="OnNavigating" IsVisible="{Binding IsLoaded}" />
+
+        <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" VerticalOptions="Center" HorizontalOptions="Center" />
+
+        <VerticalStackLayout Padding="24" Spacing="12" VerticalOptions="Center" IsVisible="{Binding HasError}">
+            <Label Text="Couldn't open it" Style="{StaticResource H3}" HorizontalTextAlignment="Center" />
+            <Label Text="{Binding Error}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Button Text="Try again" Style="{StaticResource PrimaryButton}" Command="{Binding RetryCommand}" />
+        </VerticalStackLayout>
+
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Padding="12,8,12,16" IsVisible="{Binding IsLoaded}">
+            <Button Text="{Binding VoteText}" IsVisible="{Binding IsFeature}" BackgroundColor="{Binding VoteBackground}" TextColor="{Binding VoteColor}"
+                    CornerRadius="14" FontFamily="OpenSansSemibold" Padding="16,0" HeightRequest="48" Command="{Binding VoteCommand}" />
+            <Button Grid.Column="1" Text="Comment" Style="{StaticResource SecondaryButton}" Command="{Binding CommentCommand}" IsVisible="{Binding CanComment}" />
+            <ImageButton Grid.Column="2" Source="{StaticResource IconMore}" WidthRequest="48" HeightRequest="48" Padding="12" CornerRadius="14"
+                         BackgroundColor="{StaticResource Surface2}" Command="{Binding MenuCommand}" IsVisible="{Binding IsMine}"
+                         SemanticProperties.Description="Edit or delete" />
+        </Grid>
+    </Grid>
+</views:BasePage>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.FeedbackPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:FeedbackViewModel"
+    Title="Feedback"
+    Shell.TabBarIsVisible="False">
+
+    <!-- Feature requests (everyone's, to vote for) and the user's own bug reports -->
+    <views:BasePage.Resources>
+        <DataTemplate x:Key="Chip" x:DataType="vm:ChipItem">
+            <Border BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="14,7">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                </Border.GestureRecognizers>
+                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" />
+            </Border>
+        </DataTemplate>
+    </views:BasePage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+        <HorizontalStackLayout Spacing="8" Padding="12,10,12,0" BindableLayout.ItemsSource="{Binding Tabs}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
+
+        <Label Grid.Row="1" Text="{Binding Intro}" Style="{StaticResource Caption}" Margin="14,10,14,0" />
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8" Padding="12,10,12,0" IsVisible="{Binding IsFeatures}">
+            <skeleton:CInputField HeightRequest="42" Icon="{StaticResource IconSearch}" Text="{Binding Search}" Placeholder="Search requests"
+                                  ClearButtonVisibility="WhileEditing" />
+            <HorizontalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center"
+                                   BindableLayout.ItemsSource="{Binding Sorts}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
+        </Grid>
+
+        <RefreshView Grid.Row="3" IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}" Margin="0,10,0,0">
+            <CollectionView ItemsSource="{Binding Items}">
+                <CollectionView.EmptyView>
+                    <Label Text="{Binding EmptyText}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" Margin="32,40"
+                           IsVisible="{Binding IsLoading, Converter={StaticResource Not}}" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:FeedbackItem">
+                        <Border Style="{StaticResource Card}" Padding="12" Margin="12,0,12,10">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <!-- Votes: tap to vote, or to take it back -->
+                                <Border IsVisible="{Binding IsFeature}" BackgroundColor="{Binding VoteBackground}" StrokeShape="RoundRectangle 12" StrokeThickness="0"
+                                        WidthRequest="52" Padding="0,8" VerticalOptions="Start">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding VoteCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <VerticalStackLayout Spacing="0">
+                                        <Label Text="▲" TextColor="{Binding VoteColor}" FontSize="12" HorizontalOptions="Center" />
+                                        <Label Text="{Binding Votes}" TextColor="{Binding VoteColor}" FontFamily="OpenSansSemibold" FontSize="16" HorizontalOptions="Center" />
+                                    </VerticalStackLayout>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="6" VerticalOptions="Center">
+                                    <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="15" LineBreakMode="WordWrap" MaxLines="3" />
+                                    <HorizontalStackLayout Spacing="8">
+                                        <Border BackgroundColor="{Binding StatusBackground}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="9,2">
+                                            <Label Text="{Binding Status}" TextColor="{Binding StatusColor}" FontSize="11" FontFamily="OpenSansSemibold" />
+                                        </Border>
+                                        <Label Text="{Binding Meta}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <ActivityIndicator Grid.Row="3" IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" VerticalOptions="Center" HorizontalOptions="Center" />
+
+        <VerticalStackLayout Grid.Row="3" Padding="24" Spacing="12" VerticalOptions="Center" IsVisible="{Binding HasError}" BackgroundColor="{StaticResource Bg}">
+            <Label Text="Couldn't load" Style="{StaticResource H3}" HorizontalTextAlignment="Center" />
+            <Label Text="{Binding Error}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+            <Button Text="Try again" Style="{StaticResource PrimaryButton}" Command="{Binding RetryCommand}" />
+        </VerticalStackLayout>
+
+        <Button Grid.Row="4" Text="{Binding NewText}" Style="{StaticResource PrimaryButton}" Command="{Binding NewCommand}" Margin="12,8,12,16" />
+    </Grid>
+</views:BasePage>

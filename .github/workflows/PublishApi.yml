@@ -115,6 +115,14 @@ jobs:
 
             # Admin app: accounts made SuperAdmin at startup (comma-separated; sign up in the app first)
             Admin__BootstrapEmails=${{ vars.ADMIN_BOOTSTRAP_EMAILS }}
+
+            # Feature requests and bug reports, kept as issues of a private GitHub repository on a project board (leave
+            # the secret unset to turn them off) - see GymBook.Api/.env.example
+            GitHub__Token=${{ secrets.FEEDBACK_GITHUB_TOKEN }}
+            GitHub__Owner=${{ vars.FEEDBACK_GITHUB_OWNER }}
+            GitHub__Repo=${{ vars.FEEDBACK_GITHUB_REPO }}
+            GitHub__ProjectOwner=${{ vars.FEEDBACK_GITHUB_PROJECT_OWNER }}
+            GitHub__ProjectNumber=${{ vars.FEEDBACK_GITHUB_PROJECT_NUMBER || '0' }}
             # Web admin (GymBook.AdminWeb): its address, the only site allowed to call the API from a browser
             Cors__AllowedOrigins=${{ vars.ADMIN_WEB_URL }}
 

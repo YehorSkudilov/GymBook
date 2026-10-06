@@ -138,8 +138,6 @@ public partial class WorkoutViewModel(
     public bool TrackRir => store.Profile.TrackRir && store.GetPlan(_session?.PlanId)?.UseRir != false;
 
     internal Units Units => units;
-    /// <summary>The warm-up settings of this workout's plan, or the profile's.</summary>
-    internal WarmupSettings Warmups => workouts.WarmupsFor(_session);
     internal ProgressionEngine Engine => engine;
     internal DialogService Dialogs => dialogs;
     /// <summary>The goal the exercises are coached for: the plan's, or the profile's for a workout outside a plan.</summary>
@@ -163,8 +161,8 @@ public partial class WorkoutViewModel(
 
     /// <summary>
     /// The warm-ups <paramref name="se"/> would get before working sets of <paramref name="workingKg"/>: from the same
-    /// steps as when the workout was started (its plan exercise's own, else the settings', lighter once an earlier
-    /// exercise worked the same muscle).
+    /// steps as when the workout was started (its plan exercise's own, lighter once an earlier exercise worked the same
+    /// muscle).
     /// </summary>
     internal List<SetEntry> WarmupsFor(SessionExercise se, Exercise ex, double workingKg)
     {
@@ -174,8 +172,7 @@ public partial class WorkoutViewModel(
         var nth = session.Exercises.TakeWhile(e => e != se).Count(e => e.ExerciseId == se.ExerciseId);
         var planned = day?.Exercises.Where(e => e.ExerciseId == se.ExerciseId).ElementAtOrDefault(nth);
         var warm = session.Exercises.TakeWhile(e => e != se).Any(e => store.GetExercise(e.ExerciseId)?.PrimaryMuscle == ex.PrimaryMuscle);
-        var settings = Warmups;
-        return engine.Warmups(ex, workingKg, settings, settings.StepsFor(planned, ex, warm));
+        return engine.Warmups(ex, workingKg, Services.Warmups.Of(planned, ex, warm));
     }
 
     internal void Save() => workouts.Save();
@@ -600,7 +597,7 @@ public partial class WorkoutViewModel(
             // The last set: no rest after it, the workout's done.
             if (NextSet() != null && !IsReviewing)
             {
-                var seconds = set.Model.IsWarmup ? Warmups.RestSeconds : exercise.Model.RestSeconds;
+                var seconds = set.Model.IsWarmup ? workouts.WarmupRest(_session) : exercise.Model.RestSeconds;
                 SetTimes.StartRest(_session, set.Model, now, now.AddSeconds(Math.Max(0, seconds)));
                 _restCounting = seconds > 0;
             }
@@ -1447,53 +1444,48 @@ public partial class WorkoutExerciseViewModel : ObservableObject
 
     Task NothingOpen() => _parent.Dialogs.Alert("No sets left to do", "Every set of this exercise is done or skipped. Add a set to log another.");
 
-    [RelayCommand]
     /// <summary>
-    /// The first working set's weight changed: the warm-ups still to do (not done or skipped) follow it, worked out again
-    /// from the warm-up steps. Warm-up n takes the step n; ones no longer needed go, and ones now needed are added. Done
-    /// and skipped warm-ups stay as they are, and with no warm-ups for the new weight (none set up, or too light) nothing
-    /// changes.
+    /// The first working set's weight changed from <paramref name="oldKg"/>: the warm-ups still to do (not done or
+    /// skipped) follow it, each keeping its share of the working weight. Warm-ups are never added back or taken away
+    /// here: the ones taken out stay out. Only an exercise that had no weight to work them out from (and so none yet)
+    /// gets its warm-ups once it has one.
     /// </summary>
-    internal void OnWorkingWeightChanged(SetRowViewModel row)
+    internal void OnWorkingWeightChanged(SetRowViewModel row, double oldKg)
     {
-        if (row.Model.IsWarmup || Sets.FirstOrDefault(s => !s.Model.IsWarmup) != row || row.Model.WeightKg <= 0)
-            return;
-        var fresh = _parent.WarmupsFor(Model, Exercise, row.Model.WeightKg);
-        if (fresh.Count == 0)
+        var newKg = row.Model.WeightKg;
+        if (row.Model.IsWarmup || Sets.FirstOrDefault(s => !s.Model.IsWarmup) != row || newKg <= 0 || Math.Abs(newKg - oldKg) < 0.001)
             return;
         var warmups = Sets.Where(s => s.Model.IsWarmup).ToList();
-        var changed = false;
-        for (var i = 0; i < warmups.Count; i++)
+        if (warmups.Count == 0)
         {
-            var w = warmups[i];
-            if (w.IsSettled)
-                continue;
-            if (i >= fresh.Count)
-            {
-                Model.Sets.Remove(w.Model);
-                Sets.Remove(w);
-                changed = true;
-                continue;
-            }
-            w.WeightText = Units.Format(fresh[i].WeightKg);
-            w.RepsText = fresh[i].Reps.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            if (oldKg <= 0)
+                AddWarmups(_parent.WarmupsFor(Model, Exercise, newKg));
+            return;
         }
-        // Now needed: after the last warm-up (or first, before the working sets).
-        foreach (var set in fresh.Skip(warmups.Count))
+        if (oldKg <= 0)
+            return;
+        // Never lighter than the empty bar, nor as heavy as the working set.
+        var floor = Exercise.Equipment == Equipment.Barbell ? 20 : 0;
+        foreach (var w in warmups.Where(w => !w.IsSettled && w.Model.WeightKg > 0))
         {
-            var after = Sets.LastOrDefault(s => s.Model.IsWarmup);
-            var at = after == null ? 0 : Sets.IndexOf(after) + 1;
-            Model.Sets.Insert(after == null ? 0 : Model.Sets.IndexOf(after.Model) + 1, set);
-            Sets.Insert(at, new SetRowViewModel(this, set));
-            changed = true;
-        }
-        if (changed)
-        {
-            Renumber();
-            _parent.OnStructureChanged();
+            var kg = Math.Max(floor, Units.Round(w.Model.WeightKg * newKg / oldKg, Exercise));
+            if (kg < newKg)
+                w.WeightText = Units.Format(kg);
         }
     }
 
+    void AddWarmups(List<SetEntry> fresh)
+    {
+        if (fresh.Count == 0)
+            return;
+        Model.Sets.InsertRange(0, fresh);
+        foreach (var (set, i) in fresh.Select((s, i) => (s, i)))
+            Sets.Insert(i, new SetRowViewModel(this, set));
+        Renumber();
+        _parent.OnStructureChanged();
+    }
+
+    [RelayCommand]
     void AddSet()
     {
         var last = Model.Sets.LastOrDefault(s => !s.IsWarmup) ?? Model.Sets.LastOrDefault();
@@ -1644,12 +1636,13 @@ public partial class SetRowViewModel : ObservableObject
     // Each edit is kept straight away (see WorkoutViewModel.SaveSoon), not only when the set is ticked.
     partial void OnWeightTextChanged(string value)
     {
+        var old = Model.WeightKg;
         if (_parent.Units.TryParse(value, out var kg))
             Model.WeightKg = kg;
         else if (string.IsNullOrWhiteSpace(value))
             Model.WeightKg = 0;
         // The first working set's weight: the warm-ups still to do follow it.
-        _parent.OnWorkingWeightChanged(this);
+        _parent.OnWorkingWeightChanged(this, old);
         _parent.SaveSoon();
     }
 

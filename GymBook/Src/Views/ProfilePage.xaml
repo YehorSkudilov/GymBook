@@ -27,7 +27,7 @@
             <Setter Property="HeightRequest" Value="16" />
             <Setter Property="VerticalOptions" Value="Center" />
         </Style>
-        <!-- A part of Defaults (Rest, Warm-ups, Training): an icon, its name and what it applies to, above its card -->
+        <!-- A part of Defaults (Rest, Training): an icon, its name and what it applies to, above its card -->
         <Style x:Key="SubsectionHeader" TargetType="Grid">
             <Setter Property="ColumnDefinitions" Value="Auto,*" />
             <Setter Property="ColumnSpacing" Value="12" />
@@ -295,7 +295,31 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- The app's own settings: the weight unit, then the defaults plans start from (rest and warm-ups every plan follows
+            <!-- Feature requests (everyone's, to vote for) and bug reports (the user's own), kept on GitHub by the API -->
+            <Label Text="FEEDBACK" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+            <Border Style="{StaticResource Card}" Padding="0">
+                <VerticalStackLayout>
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenFeatureRequestsCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Feature requests" />
+                            <Label Text="Vote for what Gym Book does next, or suggest something" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenBugReportsCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Report a bug" />
+                            <Label Text="Tell us what went wrong. Only you and our team see it" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- The app's own settings: the weight unit, then the defaults plans start from (rest every plan follows
                  unless it has its own, in its ··· menu, and how a new plan runs its weeks). -->
             <Label Text="APP SETTINGS" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0">
@@ -356,33 +380,17 @@
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
-                    <!-- Part of the warm-up settings, but it's a rest time, so it's with these -->
                     <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding WarmupSettings.EditRestCommand}" /></Grid.GestureRecognizers>
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding EditWarmupRestCommand}" /></Grid.GestureRecognizers>
                         <VerticalStackLayout VerticalOptions="Center">
                             <Label Text="Rest: warm-up sets" />
                             <Label Text="After each warm-up set, before the next" Style="{StaticResource Caption}" FontSize="12" />
                         </VerticalStackLayout>
-                        <Label Grid.Column="1" Text="{Binding WarmupSettings.RestText}" Style="{StaticResource RowValue}" />
+                        <Label Grid.Column="1" Text="{Binding WarmupRestText}" Style="{StaticResource RowValue}" />
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                 </VerticalStackLayout>
             </Border>
-
-            <Grid Style="{StaticResource SubsectionHeader}">
-                <Border Style="{StaticResource SubsectionIcon}">
-                    <Image WidthRequest="18" HeightRequest="18" HorizontalOptions="Center" VerticalOptions="Center">
-                        <Image.Source>
-                            <FontImageSource FontFamily="OutlinedIcons" Glyph="local_fire_department" Color="{StaticResource Accent}" Size="32" />
-                        </Image.Source>
-                    </Image>
-                </Border>
-                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                    <Label Text="Warm-ups" Style="{StaticResource SubsectionTitle}" />
-                    <Label Text="In plans using the defaults. Percentages are of your first working set" Style="{StaticResource Caption}" FontSize="12" />
-                </VerticalStackLayout>
-            </Grid>
-            <views:WarmupSettingsView BindingContext="{Binding WarmupSettings}" />
 
             <Grid Style="{StaticResource SubsectionHeader}">
                 <Border Style="{StaticResource SubsectionIcon}">

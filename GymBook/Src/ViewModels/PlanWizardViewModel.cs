@@ -660,12 +660,15 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         }
         else if (_plan != null)
         {
-            // A new plan follows the profile's defaults (rest, warm-ups, training) until given its own; a regenerated one
-            // keeps its own settings.
+            // A new plan follows the profile's defaults (rest, training) until given its own; a regenerated one keeps its
+            // own settings.
             PlanTraining.Apply(_plan, p);
             store.Data.Plans.Add(_plan);
             store.Data.ActivePlanId = _plan.Id;
         }
+        // Each exercise's warm-ups are decided now, with the plan, and stay as they are from then on.
+        if ((_regenerating ?? _plan) is { } made)
+            Warmups.Decide(made, store.GetExercise);
         var wasOnboarding = IsOnboarding;
         p.OnboardingDone = true;
         store.Save();

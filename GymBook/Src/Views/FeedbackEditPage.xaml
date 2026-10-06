@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:BasePage
+    x:Class="GymBook.Views.FeedbackEditPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:FeedbackEditViewModel"
+    Title="{Binding PageTitle}"
+    Shell.TabBarIsVisible="False">
+
+    <!-- Back with something written asks first -->
+    <Shell.BackButtonBehavior>
+        <BackButtonBehavior Command="{Binding BackCommand}" />
+    </Shell.BackButtonBehavior>
+
+    <views:BasePage.Resources>
+        <!-- A formatting button: an OutlinedIcons glyph; what it does is its ClassId (see OnFormat) -->
+        <Style x:Key="FormatButton" TargetType="ImageButton">
+            <Setter Property="WidthRequest" Value="40" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="Padding" Value="9" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="BackgroundColor" Value="{StaticResource Surface2}" />
+        </Style>
+    </views:BasePage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Padding="12,10,12,0" RowSpacing="10">
+        <Border Style="{StaticResource InnerCard}" Padding="12,2" IsVisible="{Binding IsTicket}">
+            <Entry Text="{Binding Title}" Placeholder="Title" MaxLength="120" FontFamily="OpenSansSemibold" FontSize="16"
+                   PlaceholderColor="{StaticResource TextSecondary}" ReturnType="Next" />
+        </Border>
+
+        <!-- Formatting, as Markdown; Preview shows it as it will look -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" IsVisible="{Binding IsWriting}">
+                <HorizontalStackLayout Spacing="6">
+                    <ImageButton Style="{StaticResource FormatButton}" ClassId="bold" Clicked="OnFormat" SemanticProperties.Description="Bold">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="format_bold" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                    <ImageButton Style="{StaticResource FormatButton}" ClassId="italic" Clicked="OnFormat" SemanticProperties.Description="Italic">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="format_italic" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                    <ImageButton Style="{StaticResource FormatButton}" ClassId="strike" Clicked="OnFormat" SemanticProperties.Description="Strikethrough">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="strikethrough_s" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                    <ImageButton Style="{StaticResource FormatButton}" ClassId="heading" Clicked="OnFormat" SemanticProperties.Description="Heading">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="title" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                    <ImageButton Style="{StaticResource FormatButton}" ClassId="bullets" Clicked="OnFormat" SemanticProperties.Description="Bulleted list">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="format_list_bulleted" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                    <ImageButton Style="{StaticResource FormatButton}" ClassId="numbers" Clicked="OnFormat" SemanticProperties.Description="Numbered list">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="format_list_numbered" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                    <ImageButton Style="{StaticResource FormatButton}" ClassId="tasks" Clicked="OnFormat" SemanticProperties.Description="Checklist">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="checklist" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                    <ImageButton Style="{StaticResource FormatButton}" ClassId="quote" Clicked="OnFormat" SemanticProperties.Description="Quote">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="format_quote" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                    <ImageButton Style="{StaticResource FormatButton}" ClassId="code" Clicked="OnFormat" SemanticProperties.Description="Code">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="code" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                    <ImageButton Style="{StaticResource FormatButton}" ClassId="link" Clicked="OnFormat" SemanticProperties.Description="Link">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="link" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                    <ImageButton Style="{StaticResource FormatButton}" Command="{Binding AttachCommand}" SemanticProperties.Description="Attach a picture or file">
+                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="attach_file" Color="{StaticResource Accent}" Size="32" /></ImageButton.Source>
+                    </ImageButton>
+                </HorizontalStackLayout>
+            </ScrollView>
+            <Button Grid.Column="1" Text="{Binding PreviewText}" Style="{StaticResource SmallButton}" Command="{Binding TogglePreviewCommand}" VerticalOptions="Center" />
+        </Grid>
+
+        <Border Grid.Row="2" Style="{StaticResource InnerCard}" Padding="10,4">
+            <Grid>
+                <Editor x:Name="BodyEditor" Text="{Binding Body}" Placeholder="{Binding BodyPlaceholder}" PlaceholderColor="{StaticResource TextSecondary}"
+                        FontSize="15" IsVisible="{Binding IsWriting}" IsSpellCheckEnabled="True" IsTextPredictionEnabled="True" />
+                <WebView Source="{Binding Preview}" BackgroundColor="{StaticResource Bg}" IsVisible="{Binding IsPreview}" Navigating="OnPreviewNavigating" />
+                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" VerticalOptions="Center" HorizontalOptions="Center" />
+                <Label Text="{Binding Error}" IsVisible="{Binding HasError}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" VerticalOptions="Center" Margin="16" />
+            </Grid>
+        </Border>
+
+        <Label Grid.Row="3" Text="{Binding Hint}" Style="{StaticResource Caption}" FontSize="12" Margin="4,0" />
+
+        <Grid Grid.Row="4" ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,0,0,16">
+            <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsBusy}" VerticalOptions="Center">
+                <ActivityIndicator IsRunning="{Binding IsBusy}" HeightRequest="20" WidthRequest="20" />
+                <Label Text="{Binding BusyText}" Style="{StaticResource Caption}" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+            <Button Grid.Column="1" Text="{Binding SendText}" Style="{StaticResource PrimaryButton}" Command="{Binding SendCommand}" Padding="28,0"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource Not}}" />
+        </Grid>
+    </Grid>
+</views:BasePage>

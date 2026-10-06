@@ -159,9 +159,10 @@ public partial class HomeViewModel(
         Greeting = account.Username is { } username ? $"{part}, {username}" : part;
         DateText = DateTime.Today.ToString("dddd, d MMMM");
 
-        // Close any gap in the plan weeks (an empty week before one with progress) before showing them, and move any
-        // exercise ids from an earlier library to today's (both, so neither short-circuits the other).
-        if (store.CompactPlanWeeks() | store.MigrateExerciseIds())
+        // Close any gap in the plan weeks (an empty week before one with progress) before showing them, move any
+        // exercise ids from an earlier library to today's, and give plan exercises without warm-ups yet theirs (all
+        // three, so none short-circuits the others).
+        if (store.CompactPlanWeeks() | store.MigrateExerciseIds() | store.DecideWarmups())
             store.Save();
 
         var plan = store.ActivePlan;

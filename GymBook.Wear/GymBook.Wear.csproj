@@ -81,7 +81,7 @@
 		<Compile Include="..\GymBook\Src\Models\ExerciseDetails.cs" Link="Shared\ExerciseDetails.cs" />
 		<Compile Include="..\GymBook\Src\Services\ProgressionEngine.cs" Link="Shared\ProgressionEngine.cs" />
 		<Compile Include="..\GymBook\Src\Services\WorkoutService.cs" Link="Shared\WorkoutService.cs" />
-		<Compile Include="..\GymBook\Src\Services\WarmupSettings.cs" Link="Shared\WarmupSettings.cs" />
+		<Compile Include="..\GymBook\Src\Services\Warmups.cs" Link="Shared\Warmups.cs" />
 		<Compile Include="..\GymBook\Src\Services\TrainingGoals.cs" Link="Shared\TrainingGoals.cs" />
 		<Compile Include="..\GymBook\Src\Services\PlanCycle.cs" Link="Shared\PlanCycle.cs" />
 		<Compile Include="..\GymBook\Src\Services\PlanGenerator.cs" Link="Shared\PlanGenerator.cs" />

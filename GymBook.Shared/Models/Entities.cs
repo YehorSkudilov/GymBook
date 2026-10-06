@@ -76,9 +76,9 @@ public class WorkoutPlan : ISyncEntity
     [Range(0, 10)]
     public int? TargetRir { get; set; }
     /// <summary>
-    /// This plan's own warm-up settings, as JSON (the app's WarmupSettings), kept as they are when the profile's change.
-    /// Null: the profile's, which are the defaults for every plan. The rest after a warm-up set is with the other rest
-    /// times (<see cref="WarmupRestSeconds"/>).
+    /// No longer used: the warm-up settings a plan could have, as JSON. The app moves them into its exercises' own
+    /// (<see cref="PlanExercise.Warmups"/>) and clears this. The rest after a warm-up set is with the other rest times
+    /// (<see cref="WarmupRestSeconds"/>).
     /// </summary>
     [MaxLength(SyncLimits.TextLength)]
     public string? Warmups { get; set; }
@@ -136,8 +136,9 @@ public class PlanExercise
     /// <summary>The target RIR was set for this exercise itself; otherwise it's kept at the plan's (see WorkoutPlan.TargetRir).</summary>
     public bool CustomRir { get; set; }
     /// <summary>
-    /// This exercise's own warm-up sets, as percent × reps ("50x8, 75x4"; empty for none). Null: the plan's, for its kind
-    /// of exercise.
+    /// This exercise's warm-up sets, as percent × reps ("50x8, 75x4"; empty for none), decided when it's put in the plan
+    /// and changed only on purpose. Null: not decided yet (from before, or an older app); the app gives it the usual ones
+    /// for its kind of exercise.
     /// </summary>
     [MaxLength(SyncLimits.NameLength)]
     public string? Warmups { get; set; }
@@ -448,9 +449,9 @@ public class UserProfile
     [Range(15, 600)]
     public int WarmupRestSeconds { get; set; } = 60;
     /// <summary>
-    /// The warm-up sets for each kind of exercise, as JSON (the app's WarmupSettings); null for the defaults. On/off and
-    /// the rest after them are <see cref="WarmupSuggestions"/> and <see cref="WarmupRestSeconds"/>. Every plan uses these
-    /// unless it has its own.
+    /// No longer used, nor <see cref="WarmupSuggestions"/>: the warm-up settings there were for every plan, as JSON. The
+    /// app moves them into the plans' exercises (<see cref="PlanExercise.Warmups"/>) and clears them. The rest after a
+    /// warm-up set is still <see cref="WarmupRestSeconds"/>.
     /// </summary>
     [MaxLength(SyncLimits.TextLength)]
     public string? Warmups { get; set; }

@@ -262,7 +262,7 @@ public partial class WorkoutViewModel : ObservableObject
         {
         }
         // Rest as the phone would: the warm-up rest after a warm-up, the exercise's own after a working set.
-        _restTotal = set.IsWarmup ? _workouts.WarmupsFor(Session).RestSeconds : se.RestSeconds;
+        _restTotal = set.IsWarmup ? _workouts.WarmupRest(Session) : se.RestSeconds;
         // Every set done is followed by a rest, as on the phone.
         _restEndsAt = now.AddSeconds(Math.Max(0, _restTotal));
         SetTimes.StartRest(Session!, set, now, _restEndsAt.Value);

@@ -157,6 +157,10 @@ var billingHttp = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
 builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<GymBook.Api.Billing.GooglePlayVerifier>(sp, billingHttp));
 builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<GymBook.Api.Billing.AppStoreVerifier>(sp, billingHttp));
 builder.Services.AddSingleton(sp => ActivatorUtilities.CreateInstance<GymBook.Api.Billing.MicrosoftStoreVerifier>(sp, billingHttp));
+// Feature requests and bug reports, kept on GitHub (see Feedback/). Off while GitHub__Token, __Owner or __Repo is unset.
+builder.Services.AddSingleton(builder.Configuration.GetSection("GitHub").Get<GymBook.Api.Feedback.GitHubOptions>() ?? new GymBook.Api.Feedback.GitHubOptions());
+builder.Services.AddSingleton<GymBook.Api.Feedback.GitHubClient>();
+builder.Services.AddScoped<GymBook.Api.Feedback.FeedbackService>();
 // Settings admins change while the server runs (whether the AI features need Pro).
 builder.Services.AddScoped<GymBook.Api.Admin.ServerSettings>();
 builder.Services.AddScoped<GymBook.Api.Billing.Subscriptions>();

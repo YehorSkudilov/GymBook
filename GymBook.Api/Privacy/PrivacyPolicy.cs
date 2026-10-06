@@ -7,7 +7,7 @@ namespace GymBook.Api.Privacy;
 /// </summary>
 public static class PrivacyPolicy
 {
-    public const string LastUpdated = "4 October 2026";
+    public const string LastUpdated = "6 October 2026";
     public const string ContactEmail = "yskudilov@gmail.com";
 
     public static IResult Page() =>
@@ -151,6 +151,7 @@ public static class PrivacyPolicy
           What YouTube collects is covered by Google's privacy policy. "Open in YouTube" opens the video (for your own exercises, a YouTube search) in your browser or the YouTube app.</li>
           <li><strong>Email:</strong> codes to verify your email address, reset your password or change your email are sent through our email provider, which receives the address and the message.</li>
           <li><strong>Sign in with Google:</strong> Google receives your sign-in to GymBook, as with any app you sign in to with Google.</li>
+          <li><strong>Feature requests and bug reports</strong> you send from the app are kept in a private GitHub repository that only our team can see, with your username, and for a bug report your device's platform, system version, model and app version. Your email address isn't sent. Feature requests are shown to everyone in the app with your username, as are comments on them; a bug report and its comments are only shown to you. We keep which of them are yours and which requests you voted for. When you delete your account, your bug reports and comments are deleted and your feature requests stay without your username.</li>
         </ul>
 
         <h2>Security</h2>

@@ -247,13 +247,13 @@ public class ProgressionEngine(DataStore store, Units units)
 
     /// <summary>
     /// Warm-up sets <paramref name="steps"/> before a first working set of <paramref name="workingKg"/> (see
-    /// <see cref="WarmupSettings.StepsFor"/>). None for bodyweight moves, or when the working weight is too light to need
-    /// them by <paramref name="settings"/>.
+    /// <see cref="Services.Warmups.Of"/>). None for bodyweight moves, or when the working weight is too light to need them
+    /// (<see cref="Services.Warmups.MinWorkingKg"/>).
     /// </summary>
-    public List<SetEntry> Warmups(Exercise ex, double workingKg, WarmupSettings settings, IReadOnlyList<WarmupStep> steps)
+    public List<SetEntry> Warmups(Exercise ex, double workingKg, IReadOnlyList<WarmupStep> steps)
     {
         var list = new List<SetEntry>();
-        if (ex.IsBodyweight || workingKg <= 0 || workingKg < settings.MinWorkingKg)
+        if (ex.IsBodyweight || workingKg <= 0 || workingKg < Services.Warmups.MinWorkingKg)
             return list;
 
         // Never lighter than the empty bar.

@@ -24,6 +24,7 @@ public class AdminUsersController(
     PlanQuotaSettings quotas,
     EmailSender email,
     TimeProvider time,
+    GymBook.Api.Feedback.FeedbackService feedback,
     ILogger<AdminUsersController> log) : ControllerBase
 {
     const int ListLimit = 300;
@@ -313,6 +314,7 @@ public class AdminUsersController(
         if (user == null)
             return error!;
 
+        await feedback.ForgetUserAsync(user.Id, CancellationToken.None);
         var result = await users.DeleteAsync(user);
         if (!result.Succeeded)
             return Problem(statusCode: StatusCodes.Status500InternalServerError, title: "Couldn't delete the account.");
