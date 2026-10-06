@@ -19,7 +19,7 @@ public class MuscleRow
 /// <summary>
 /// Which muscles a plan day (or the whole plan, one pass through its workouts) trains and with how many sets.
 /// Direct sets count toward an exercise's primary muscle; auxiliary sets toward its secondary muscles. The lists split
-/// the groups into their parts (front, side and rear delts, …; see <see cref="SubMuscles"/>), the map shows whole groups.
+/// the groups into their parts (front, side and rear delts, …; see <see cref="SubMuscles"/>), and so does the map.
 /// The map uses the app's usual weighting: a direct set counts 1, an auxiliary set ½.
 /// </summary>
 public partial class MuscleBreakdownViewModel : ObservableObject
@@ -100,9 +100,8 @@ public partial class MuscleBreakdownViewModel : ObservableObject
                 Add(indirect, SubMuscles.For(ex, m), sets, ex.Name);
         }
 
-        double Sets(Dictionary<SubMuscle, (double Sets, HashSet<string> Names)> of, MuscleGroup m) =>
-            of.Where(kv => kv.Key.Group() == m).Sum(kv => kv.Value.Sets);
-        var load = Enum.GetValues<MuscleGroup>().ToDictionary(m => m, m => Sets(direct, m) + Sets(indirect, m) * 0.5);
+        var load = Enum.GetValues<SubMuscle>().ToDictionary(m => m,
+            m => direct.GetValueOrDefault(m).Sets + indirect.GetValueOrDefault(m).Sets * 0.5);
         Map = MuscleMapDrawable.ForLoad(load);
 
         TotalExercises = entries.Select(e => e.Exercise.Id).Distinct().Count().ToString();

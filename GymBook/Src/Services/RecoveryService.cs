@@ -200,14 +200,14 @@ public class RecoveryService(DataStore store)
             var during = at < session.EndedAt!.Value;
             var hours = during ? 0 : (at - session.EndedAt!.Value).TotalHours;
             var sleep = SleepFactor(nights, session.EndedAt!.Value, at);
-            foreach (var (part, sets) in PartSets(session, during ? at : null))
+            foreach (var (part, sets) in SetsPerPart(session, during ? at : null))
                 result[part] = Math.Min(result[part], RecoveredAfter(hours / (HoursToRecover(part.Group(), sets) * sleep)));
         }
         return result;
     }
 
-    /// <summary>Like <see cref="SetsPerMuscle"/>, by the part of each muscle each exercise works.</summary>
-    Dictionary<SubMuscle, double> PartSets(WorkoutSession session, DateTime? upTo)
+    /// <summary>Like <see cref="SetsPerMuscle"/>, by the part of each muscle each exercise works (front, side and rear delts, …).</summary>
+    public Dictionary<SubMuscle, double> SetsPerPart(WorkoutSession session, DateTime? upTo = null)
     {
         var sets = new Dictionary<SubMuscle, double>();
         foreach (var se in session.Exercises)

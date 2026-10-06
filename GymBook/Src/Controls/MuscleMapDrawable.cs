@@ -15,8 +15,8 @@ public class MuscleMapDrawable : IDrawable
     static readonly Color Groove = Color.FromArgb("#1B1E26");
 
     readonly Func<MuscleGroup, Color> _fill;
-    // For shapes that show only part of a muscle (the front view's delts, the back view's rear delts, lats and upper
-    // back): their colour from those parts, when it's known. Otherwise the whole group's.
+    // For shapes that show only part of a muscle (the front view's front and side delts, the back view's rear delts, lats
+    // and upper back): their colour from those parts, when it's known. Otherwise the whole group's.
     readonly Func<SubMuscle[], Color>? _partFill;
 
     MuscleMapDrawable(Func<MuscleGroup, Color> fill, Func<SubMuscle[], Color>? partFill = null) => (_fill, _partFill) = (fill, partFill);
@@ -32,44 +32,43 @@ public class MuscleMapDrawable : IDrawable
         new(m => RecoveryService.ColorFor(recovery.GetValueOrDefault(m, 1)),
             parts == null ? null : shown => RecoveryService.ColorFor(shown.Min(p => parts.GetValueOrDefault(p, 1))));
 
-    public static MuscleMapDrawable ForExercise(Exercise ex)
-    {
-        var accent = Color.FromArgb("#3F7DFF");
-        return new(m => m == ex.PrimaryMuscle ? accent : ex.SecondaryMuscles.Contains(m) ? accent.WithAlpha(0.45f) : Neutral);
-    }
+    public static MuscleMapDrawable ForExercise(Exercise ex) => ForWorkout([ex]);
 
-    /// <summary>Muscles a workout trains: primary movers solid, secondary ones faded.</summary>
+    /// <summary>
+    /// Muscles a workout trains: primary movers solid, secondary ones faded. The delts and the back's shapes by the part
+    /// each exercise works (see <see cref="SubMuscles"/>): lateral raises light the side delts, not the front ones.
+    /// </summary>
     public static MuscleMapDrawable ForWorkout(IEnumerable<Exercise> exercises)
     {
         var list = exercises.ToList();
         var primary = list.Select(e => e.PrimaryMuscle).ToHashSet();
         var secondary = list.SelectMany(e => e.SecondaryMuscles).ToHashSet();
+        var primaryParts = list.Select(e => SubMuscles.For(e, e.PrimaryMuscle)).ToHashSet();
+        var secondaryParts = list.SelectMany(e => e.SecondaryMuscles.Select(m => SubMuscles.For(e, m))).ToHashSet();
         var accent = Color.FromArgb("#3F7DFF");
-        return new(m => primary.Contains(m) ? accent : secondary.Contains(m) ? accent.WithAlpha(0.45f) : Neutral);
+        return new(m => primary.Contains(m) ? accent : secondary.Contains(m) ? accent.WithAlpha(0.45f) : Neutral,
+            shown => shown.Any(primaryParts.Contains) ? accent : shown.Any(secondaryParts.Contains) ? accent.WithAlpha(0.45f) : Neutral);
     }
 
-    /// <summary>Shades muscles by load relative to the most-worked one, so any amount of work reads clearly.</summary>
-    public static MuscleMapDrawable ForLoad(IReadOnlyDictionary<MuscleGroup, double> load)
+    /// <summary>Shades muscles by load relative to the most-worked part, so any amount of work reads clearly.</summary>
+    public static MuscleMapDrawable ForLoad(IReadOnlyDictionary<SubMuscle, double> load)
     {
         var max = load.Values.DefaultIfEmpty(0).Max();
         var accent = Color.FromArgb("#3F7DFF");
-        return new(m =>
-        {
-            var v = load.GetValueOrDefault(m);
-            return v <= 0 || max <= 0 ? Neutral : accent.WithAlpha((float)(0.3 + 0.7 * v / max));
-        });
+        return ByParts(load, v => v <= 0 || max <= 0 ? Neutral : accent.WithAlpha((float)Math.Min(1, 0.3 + 0.7 * v / max)));
     }
 
-    /// <summary>Colours muscles by weekly set count relative to the 10–20 sets hypertrophy range.</summary>
-    public static MuscleMapDrawable ForVolume(IReadOnlyDictionary<MuscleGroup, double> sets)
+    /// <summary>Colours muscles by weekly set count relative to the 10–20 sets hypertrophy range, each delt head on its own.</summary>
+    public static MuscleMapDrawable ForVolume(IReadOnlyDictionary<SubMuscle, double> sets)
     {
         var accent = Color.FromArgb("#3F7DFF");
-        return new(m =>
-        {
-            var s = sets.GetValueOrDefault(m);
-            return s <= 0 ? Neutral : accent.WithAlpha((float)Math.Clamp(0.25 + s / 20 * 0.75, 0.25, 1));
-        });
+        return ByParts(sets, s => s <= 0 ? Neutral : accent.WithAlpha((float)Math.Clamp(0.25 + s / 20 * 0.75, 0.25, 1)));
     }
+
+    /// <summary>A whole muscle by its parts' total; a shape showing only some parts by theirs.</summary>
+    static MuscleMapDrawable ByParts(IReadOnlyDictionary<SubMuscle, double> parts, Func<double, Color> color) =>
+        new(m => color(parts.Where(p => p.Key.Group() == m).Sum(p => p.Value)),
+            shown => color(shown.Sum(p => parts.GetValueOrDefault(p))));
 
     public void Draw(ICanvas canvas, RectF rect)
     {
@@ -185,8 +184,9 @@ public class MuscleMapDrawable : IDrawable
         [
             S(MuscleGroup.Neck, "M 28.5 26.7 C 30 28.7 32.3 30 35 30.3 L 35 38.4 C 32.3 37.1 29.7 34.7 27.9 31.7 C 28.3 30.3 28.5 28.4 28.5 26.7 Z"),
             S(MuscleGroup.Traps, "M 27.4 32.4 C 25 33.7 21.7 34.8 18 35.7 C 15.7 36.3 13.7 36.6 12.1 37.1 C 16 36.7 20 36.7 24.1 37.1 C 25.4 35.7 26.6 34.1 27.4 32.4 Z"),
-            // From the front: the front and side delts.
-            P([SubMuscle.FrontDelts, SubMuscle.SideDelts], "M 23.7 37.9 C 20.3 40 17.7 42.8 16.3 45.7 C 15.5 47.9 15.5 50.1 15.9 52.4 C 14.3 53.5 12.3 53.9 10.3 53.8 C 9 53.7 7.9 53.5 7.1 53.1 C 6.5 50.7 6.5 47.7 6.7 45 C 7.3 41.7 9 39.3 11.7 38.3 C 15 37.3 19.7 37.3 23.7 37.9 Z", "M 13 38.7 C 10.7 42.3 9.4 46.7 9 52"),
+            // From the front: the front delts, by the chest, and the side delts on the outside of the shoulder.
+            P([SubMuscle.FrontDelts], "M 13.27 37.91 C 16.39 37.31 20.3 37.39 23.7 37.9 C 20.3 40 17.7 42.8 16.3 45.7 C 15.5 47.9 15.5 50.1 15.9 52.4 C 14.3 53.5 12.3 53.9 10.3 53.8 C 9.85 53.77 9.42 53.72 9.01 53.65 C 9.3 46.8 10.8 41.8 13.27 37.91 Z", "M 13.27 37.91 C 10.8 41.8 9.3 46.8 9.01 53.65"),
+            P([SubMuscle.SideDelts], "M 13.27 37.91 C 10.8 41.8 9.3 46.8 9.01 53.65 C 8.27 53.54 7.62 53.36 7.1 53.1 C 6.5 50.7 6.5 47.7 6.7 45 C 7.3 41.7 9 39.3 11.7 38.3 C 12.2 38.15 12.72 38.02 13.27 37.91 Z"),
             S(MuscleGroup.Chest, "M 35 39.6 C 31.3 39 28 38.7 25 38.5 C 21.7 40.8 18.7 43.5 17.2 46.5 C 16.6 49.2 16.9 51.9 18.3 53.8 C 20.6 55.9 24.1 56.5 27.7 56.1 C 30.3 55.9 33 55.3 35 54.7 Z", "M 33.7 42.7 C 28.3 43.2 23 44.7 18 47.7", "M 33.7 49 C 28.3 49.6 23 50.3 18.2 51.7"),
             S(MuscleGroup.Triceps, "M 7 54.8 C 8 55.2 8.7 56.4 8.9 58.4 C 8.7 62.7 8.9 67.3 9.5 71.9 C 8.5 72.7 7.6 72.7 6.9 72.1 C 7.1 67.3 7.1 60.7 7 54.8 Z"),
             S(MuscleGroup.Biceps, "M 10.7 54.7 C 13.3 54.3 15.7 54.9 16.7 57.1 C 17 61.3 16.9 66.7 16.6 71.3 C 15.2 72.9 12.7 73.2 10.7 72.3 C 9.8 68 9.4 62.7 9.5 58 C 9.7 56.4 10.1 55.3 10.7 54.7 Z"),

@@ -93,11 +93,11 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         DaySessions = [.. sessions.Select(s => SessionItem.Create(s, store, stats, units))];
 
         // A day's sets per muscle: about 10 hard sets is a full session's worth for one muscle.
-        var sets = stats.SetsPerMuscle(sessions);
+        var sets = stats.SetsPerPart(sessions);
         DayMuscleMap = MuscleMapDrawable.ForVolume(sets);
-        DayMuscles = [.. sets.Where(s => s.Value > 0).OrderByDescending(s => s.Value).Select(s => new MuscleBarItem
+        DayMuscles = [.. PartTotals(sets).Where(s => s.Value > 0).OrderByDescending(s => s.Value).Select(s => new MuscleBarItem
         {
-            Name = s.Key.Display(),
+            Name = s.Name,
             Value = $"{s.Value:0.#} sets",
             Progress = Math.Clamp(s.Value / 10, 0, 1),
             Color = Accent,
@@ -325,11 +325,11 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             BodyWeightChange = "Log your weight regularly to see the trend";
         }
 
-        var sets = stats.SetsPerMuscleSince(StatsService.WeekStart(DateTime.Today));
+        var sets = stats.SetsPerPartSince(StatsService.WeekStart(DateTime.Today));
         MuscleMap = MuscleMapDrawable.ForVolume(sets);
-        MuscleSets = sets.OrderByDescending(s => s.Value).Select(s => new MuscleBarItem
+        MuscleSets = PartTotals(sets).OrderByDescending(s => s.Value).Select(s => new MuscleBarItem
         {
-            Name = s.Key.Display(),
+            Name = s.Name,
             Value = $"{s.Value:0.#} sets",
             Progress = Math.Clamp(s.Value / 20, 0, 1),
             Color = s.Value >= 10 ? Green : s.Value > 0 ? Accent : Color.FromArgb("#272C39"),
@@ -348,6 +348,15 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         ShowActivity(nutrition.Day(DateTime.Today));
         ShowBody();
     }
+
+    /// <summary>
+    /// Sets for each worked part of each muscle (front, side and rear delts, …), and one line for each muscle with
+    /// none at all, so the list doesn't fill with every untrained part.
+    /// </summary>
+    static IEnumerable<(string Name, double Value)> PartTotals(Dictionary<SubMuscle, double> parts) =>
+        parts.GroupBy(p => p.Key.Group()).SelectMany(g => g.Sum(p => p.Value) > 0
+            ? g.Where(p => p.Value > 0).Select(p => (p.Key.Display(), p.Value))
+            : [(g.Key.Display(), 0.0)]);
 
     const int TrendWeeks = 12;
 

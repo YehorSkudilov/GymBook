@@ -70,6 +70,18 @@ public class StatsService(DataStore store, RecoveryService recovery)
         return total;
     }
 
+    public Dictionary<SubMuscle, double> SetsPerPartSince(DateTime from) => SetsPerPart(store.History.Where(s => s.StartedAt >= from));
+
+    /// <summary>Like <see cref="SetsPerMuscle"/>, by the part of each muscle (front, side and rear delts, …; see <see cref="SubMuscles"/>).</summary>
+    public Dictionary<SubMuscle, double> SetsPerPart(IEnumerable<WorkoutSession> sessions)
+    {
+        var total = Enum.GetValues<SubMuscle>().ToDictionary(m => m, _ => 0.0);
+        foreach (var s in sessions)
+            foreach (var (m, sets) in recovery.SetsPerPart(s))
+                total[m] += sets;
+        return total;
+    }
+
     public List<ChartPoint> E1RmHistory(string exerciseId) =>
         store.History.Reverse()
             .Select(s => (s.StartedAt, best: s.Exercises.Where(e => e.ExerciseId == exerciseId)
