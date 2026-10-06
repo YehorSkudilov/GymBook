@@ -101,9 +101,16 @@ public partial class App : Application
     }
 
     /// <summary>Back to the first-run welcome screen, e.g. after signing out.</summary>
-    public static void ShowOnboarding()
+    public static void ShowOnboarding() => _ = ShowOnboardingAsync();
+
+    static async Task ShowOnboardingAsync()
     {
         var window = Current?.Windows.FirstOrDefault();
+        // Sheets over the old root go first: one left there (the sign-in sheet the gate puts up as the session ends,
+        // while signing out still finishes) stays on screen over the new root on Android, and nothing can close it.
+        if (window?.Page is { } old)
+            while (old.Navigation.ModalStack.Count > 0)
+                await old.Navigation.PopModalAsync(false);
         if (window != null)
             window.Page = Current!.Handler!.MauiContext!.Services.GetRequiredService<PlanWizardPage>().ForOnboarding();
         // Signed out: the welcome screen waits behind the sign-in sheet.
