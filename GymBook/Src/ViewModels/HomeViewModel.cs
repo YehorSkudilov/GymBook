@@ -131,12 +131,21 @@ public partial class HomeViewModel(
         Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
         Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
         ShowConnection();
-        Refresh();
+        // Worked out again only when the data changed, a minute went by (the greeting and recovery go by the clock) or
+        // a workout is going (its time ticks): doing it every time took a tenth of a second and laid the tab out anew
+        // just as it slid in.
+        if (_refreshedVersion != store.Version || DateTime.Now - _refreshedAt > TimeSpan.FromMinutes(1) || workouts.Active != null)
+            Refresh();
         return Task.CompletedTask;
     }
 
+    int _refreshedVersion = -1;
+    DateTime _refreshedAt;
+
     void Refresh()
     {
+        _refreshedVersion = store.Version;
+        _refreshedAt = DateTime.Now;
         DayPart = TimeOfDayView.For(DateTime.Now);
         var part = DayPart switch
         {

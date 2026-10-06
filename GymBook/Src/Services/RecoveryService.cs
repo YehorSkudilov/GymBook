@@ -40,8 +40,44 @@ public class RecoveryService(DataStore store)
     static double FactorFor(double hours) => Math.Clamp(1 + (TypicalSleepHours - hours) * 0.1, 0.85, 1.35);
 
     /// <summary>Minutes slept each day (the night woken up from on it), from the health apps.</summary>
-    Dictionary<DateTime, int> SleepByDay() =>
-        store.Data.HealthDays.Where(h => h.SleepMinutes is > 0).GroupBy(h => h.Date.Date).ToDictionary(g => g.Key, g => g.First().SleepMinutes!.Value);
+    Dictionary<DateTime, int> SleepByDay()
+    {
+        CheckCache();
+        return _sleep ??= store.Data.HealthDays.Where(h => h.SleepMinutes is > 0).GroupBy(h => h.Date.Date)
+            .ToDictionary(g => g.Key, g => g.First().SleepMinutes!.Value);
+    }
+
+    static readonly MuscleGroup[] AllMuscles = Enum.GetValues<MuscleGroup>();
+    static readonly SubMuscle[] AllParts = Enum.GetValues<SubMuscle>();
+
+    // Home asks for the same moment's recovery for every day of the plan (NotReady, Readiness, a fresher workout), and
+    // each went through the whole history again: about a tenth of a second whenever it showed. Kept until the data
+    // changes, like NutritionService's index; handed out as copies, so callers can't change what's kept.
+    int _cacheVersion = -1;
+    List<WorkoutSession>? _cacheSessions;
+    int _cacheSessionCount;
+    List<HealthDay>? _cacheHealthDays;
+    int _cacheHealthDayCount;
+    Dictionary<DateTime, int>? _sleep;
+    DateTime _detailsAt, _partsAt;
+    List<MuscleRecovery>? _details;
+    Dictionary<SubMuscle, double>? _parts;
+
+    void CheckCache()
+    {
+        var data = store.Data;
+        if (_cacheVersion == store.Version && _cacheSessions == data.Sessions && _cacheSessionCount == data.Sessions.Count
+            && _cacheHealthDays == data.HealthDays && _cacheHealthDayCount == data.HealthDays.Count)
+            return;
+        _cacheVersion = store.Version;
+        _cacheSessions = data.Sessions;
+        _cacheSessionCount = data.Sessions.Count;
+        _cacheHealthDays = data.HealthDays;
+        _cacheHealthDayCount = data.HealthDays.Count;
+        _sleep = null;
+        _details = null;
+        _parts = null;
+    }
 
     /// <summary>
     /// The latest night slept by <paramref name="at"/> and what it does to recovery, for showing: "Last night: 6 h 10 min
@@ -65,7 +101,18 @@ public class RecoveryService(DataStore store)
 
     public List<MuscleRecovery> Details(DateTime at)
     {
-        var result = Enum.GetValues<MuscleGroup>().ToDictionary(m => m, m => new MuscleRecovery(m, 1, null, null, 0));
+        CheckCache();
+        if (_details == null || _detailsAt != at)
+        {
+            _details = ComputeDetails(at);
+            _detailsAt = at;
+        }
+        return [.. _details];
+    }
+
+    List<MuscleRecovery> ComputeDetails(DateTime at)
+    {
+        var result = AllMuscles.ToDictionary(m => m, m => new MuscleRecovery(m, 1, null, null, 0));
         var nights = SleepByDay();
 
         // Workouts that ended by then, and one still going on at that moment, counted by the sets done so far (so a
@@ -135,7 +182,18 @@ public class RecoveryService(DataStore store)
     /// </summary>
     public Dictionary<SubMuscle, double> PartRecovery(DateTime at)
     {
-        var result = Enum.GetValues<SubMuscle>().ToDictionary(m => m, _ => 1.0);
+        CheckCache();
+        if (_parts == null || _partsAt != at)
+        {
+            _parts = ComputePartRecovery(at);
+            _partsAt = at;
+        }
+        return new Dictionary<SubMuscle, double>(_parts);
+    }
+
+    Dictionary<SubMuscle, double> ComputePartRecovery(DateTime at)
+    {
+        var result = AllParts.ToDictionary(m => m, _ => 1.0);
         var nights = SleepByDay();
         foreach (var session in store.History.Where(s => s.StartedAt <= at).TakeWhile(s => (at - s.EndedAt!.Value).TotalHours < MaxHours))
         {

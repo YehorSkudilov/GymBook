@@ -372,6 +372,23 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
         // The weekly AI check can finish while the tab is showing.
         ai.SuggestionsChanged -= OnSuggestionsChanged;
         ai.SuggestionsChanged += OnSuggestionsChanged;
+        // The lists are built again only when the data (or the day) changed since: building them again every time the
+        // tab showed made it lay out all its cards anew as it slid in.
+        if (_shownVersion != store.Version || _shownDay != DateTime.Today)
+            ShowPlans();
+        ShowQuota();
+        _ = RefreshQuotaAsync();
+        _ = RefreshInvitesAsync();
+        return Task.CompletedTask;
+    }
+
+    int _shownVersion = -1;
+    DateTime _shownDay;
+
+    void ShowPlans()
+    {
+        _shownVersion = store.Version;
+        _shownDay = DateTime.Today;
         var items = store.Data.Plans.OrderByDescending(p => p.CreatedAt).Select(p => new PlanItem
         {
             Name = p.Name,
@@ -390,13 +407,9 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
         HasOtherPlans = OtherPlans.Count > 0;
         var unlinked = store.History.Count(s => store.GetPlan(s.PlanId) == null);
         UnlinkedText = unlinked > 0 ? $"Unlinked workouts ({unlinked})" : "Unlinked workouts";
-        ShowQuota();
-        _ = RefreshQuotaAsync();
-        _ = RefreshInvitesAsync();
-        return Task.CompletedTask;
     }
 
-    void OnSuggestionsChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(() => _ = OnAppearingAsync());
+    void OnSuggestionsChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(ShowPlans);
 
     async Task RefreshQuotaAsync()
     {

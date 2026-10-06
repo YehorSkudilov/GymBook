@@ -144,6 +144,13 @@ public static class MauiProgram
                 // Still let the slider itself handle the touch.
                 e.Handled = false;
             });
+
+        // MAUI gives every Border its own hardware layer, an offscreen copy redrawn whenever anything inside it changes.
+        // With a few hundred Borders that was most of each frame: Home's plan-day thumbnail strips were redrawn into
+        // fresh layers every frame while its decorations animated. The rounded clip doesn't need one (it's a clip path
+        // on the canvas).
+        Microsoft.Maui.Handlers.BorderHandler.Mapper.AppendToMapping("NoHardwareLayer", (handler, _) =>
+            handler.PlatformView?.SetLayerType(Android.Views.LayerType.None, null));
 #endif
 
         // Every button gives a little under the finger and springs back, so taps feel alive.

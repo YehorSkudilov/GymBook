@@ -112,6 +112,30 @@ public partial class MainPage : ContentPage
         _current?.Page.Load();
         UpdateActiveBar();
         _store.Changed += OnDataChanged;
+        PreloadTabs();
+    }
+
+    bool _preloaded;
+
+    // Every tab works out what it shows once, soon after the app opens, so the first time each is opened it's already
+    // there instead of filling in as it slides in. One at a time with a pause between, so the tab on screen keeps
+    // moving smoothly; later visits only redo what changed since.
+    async void PreloadTabs()
+    {
+        if (_preloaded)
+            return;
+        _preloaded = true;
+        await Task.Delay(800);
+        foreach (var tab in _tabs)
+        {
+            if (!_visible)
+                return;
+            if (tab == _current)
+                continue;
+            tab.Page.Load();
+            tab.Page.Unload();
+            await Task.Delay(250);
+        }
     }
 
     // A workout can also arrive (or end) through sync, e.g. after signing in on a fresh install.

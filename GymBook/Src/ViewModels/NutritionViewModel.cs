@@ -163,7 +163,9 @@ public partial class NutritionViewModel(
             _visible = true;
             store.Changed += OnDataChanged;
         }
-        Refresh();
+        // Worked out again only when the data or the day changed since (choices on the tab work it out themselves).
+        if (IsRanks || _refreshedVersion != store.Version || _refreshedDay != DateTime.Today)
+            Refresh();
         IsShowing = true;
         await SyncHealthAsync(force: false);
     }
@@ -184,8 +186,13 @@ public partial class NutritionViewModel(
     /// <summary>Reads the health apps (connected in the Profile tab) now and then; what changes refreshes the tab.</summary>
     Task SyncHealthAsync(bool force) => health.IsConnected ? health.SyncAsync(force) : Task.CompletedTask;
 
+    int _refreshedVersion = -1;
+    DateTime _refreshedDay;
+
     void Refresh()
     {
+        _refreshedVersion = store.Version;
+        _refreshedDay = DateTime.Today;
         if (_date > DateTime.Today)
             _date = DateTime.Today;
         if (IsRanks)
