@@ -152,7 +152,9 @@ public partial class NutritionViewModel(
     public override async Task OnAppearingAsync()
     {
         IsShowing = false;
-        ShowModeChips();
+        // Made once here; a choice remakes them (SelectMode), and nothing else changes which one is lit.
+        if (ModeChips.Count == 0)
+            ShowModeChips();
         if (RangeChips.Count == 0)
         {
             foreach (var (label, days) in new[] { ("7 days", 7), ("30 days", 30), ("90 days", 90), ("1 year", 365), ("Custom", 0) })
@@ -227,7 +229,7 @@ public partial class NutritionViewModel(
     }
 
     /// <summary>
-    /// Day | Trends | Ranks, the chosen one lit. Made afresh each time (on a choice, and whenever the tab shows) rather than
+    /// Day | Trends | Ranks, the chosen one lit. Made afresh on each choice rather than
     /// recoloured in place, which didn't always redraw: the lit chip could stay on Day while Trends showed.
     /// </summary>
     void ShowModeChips()

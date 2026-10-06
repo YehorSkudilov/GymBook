@@ -117,9 +117,9 @@ public partial class MainPage : ContentPage
 
     bool _preloaded;
 
-    // Every tab works out what it shows once, soon after the app opens, so the first time each is opened it's already
-    // there instead of filling in as it slides in. One at a time with a pause between, so the tab on screen keeps
-    // moving smoothly; later visits only redo what changed since.
+    // Every tab makes its views and works out what it shows once, soon after the app opens, so the first time each is
+    // opened it's already there instead of building and filling in as it slides in. One at a time with a pause between,
+    // so the tab on screen keeps moving smoothly; later visits only redo what changed since.
     async void PreloadTabs()
     {
         if (_preloaded)
@@ -131,6 +131,10 @@ public partial class MainPage : ContentPage
             if (!_visible)
                 return;
             if (tab == _current)
+                continue;
+            TabContent.Preload(tab.Page);
+            await Task.Delay(100);
+            if (!_visible || tab == _current)
                 continue;
             tab.Page.Load();
             tab.Page.Unload();
