@@ -260,7 +260,7 @@ public class RichEditorHandler : ViewHandler<RichEditor, UITextView>, IRichTextP
             storage.AddAttributes(Attributes(run.Style).Dictionary, new NSRange(run.Start, run.Length));
         storage.EndEditing();
         // What's typed next starts plain; RichEditor paints it as it should be.
-        PlatformView.TypingAttributes2 = plain;
+        PlatformView.TypingAttributes2 = plain.Dictionary;
         UpdatePlaceholder();
     }
 
