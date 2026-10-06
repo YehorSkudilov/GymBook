@@ -4,7 +4,6 @@ using CommunityToolkit.Mvvm.Input;
 using GymBook.Contracts;
 using GymBook.Services;
 using GymBook.Services.Sync;
-using GymBook.Views;
 
 namespace GymBook.ViewModels;
 
@@ -51,12 +50,10 @@ public partial class FeedbackItem(FeedbackTicket ticket, Func<FeedbackItem, Task
 public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : BaseViewModel, IQueryAttributable
 {
     FeedbackKind _kind = FeedbackKind.Feature;
-    bool _top = true;
     List<FeedbackTicket> _tickets = [];
     bool _loaded;
 
     public ObservableCollection<ChipItem> Tabs { get; } = [];
-    public ObservableCollection<ChipItem> Sorts { get; } = [];
     public ObservableCollection<FeedbackItem> Items { get; } = [];
     [ObservableProperty] string searchPlaceholder = "Search requests";
 
@@ -84,10 +81,8 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
     {
         if (Tabs.Count == 0)
         {
-            Tabs.Add(new ChipItem("Feature requests", FeedbackKind.Feature, SelectTab) { IsSelected = _kind == FeedbackKind.Feature });
-            Tabs.Add(new ChipItem("My bug reports", FeedbackKind.Bug, SelectTab) { IsSelected = _kind == FeedbackKind.Bug });
-            Sorts.Add(new ChipItem("Top", true, SelectSort) { IsSelected = true });
-            Sorts.Add(new ChipItem("New", false, SelectSort));
+            Tabs.Add(new ChipItem("Feature requests", FeedbackKind.Feature, SelectTab) { Icon = "lightbulb", IsSelected = _kind == FeedbackKind.Feature });
+            Tabs.Add(new ChipItem("My bug reports", FeedbackKind.Bug, SelectTab) { Icon = "bug_report", IsSelected = _kind == FeedbackKind.Bug });
             Describe();
         }
         // Back from a ticket (voted, commented, changed or deleted it): as it is now.
@@ -100,7 +95,7 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
             c.IsSelected = c == chip;
         _kind = (FeedbackKind)chip.Value!;
         // Each tab starts unfiltered.
-        (_status, _mine) = (null, false);
+        _filter = FeedbackFilter.Default(chip.Value is FeedbackKind.Feature);
         _tickets = [];
         _statuses = [];
         Search = "";
@@ -108,14 +103,6 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
         Describe();
         Items.Clear();
         _ = LoadAsync(quiet: false);
-    }
-
-    void SelectSort(ChipItem chip)
-    {
-        foreach (var c in Sorts)
-            c.IsSelected = c == chip;
-        _top = (bool)chip.Value!;
-        Show();
     }
 
     void Describe()
@@ -166,14 +153,13 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
         await LoadAsync(quiet: false);
     }
 
-    // ---- Filters ----
+    // ---- Filters and order ----
 
-    string? _status;
-    bool _mine;
+    FeedbackFilter _filter = FeedbackFilter.Default(features: true);
     // The project board's Status columns, in its order.
     List<string> _statuses = [];
 
-    /// <summary>The filter button, lit while a filter is on.</summary>
+    /// <summary>The filter button, lit while the list is filtered or in another order.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FilterIconColor), nameof(FilterBackground))]
     bool hasFilters;
@@ -187,47 +173,42 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
     List<string> FilterStatuses() =>
         [.. _statuses.Concat(new[] { "Open", "Closed" }.Where(s => !_statuses.Contains(s) && _tickets.Any(t => t.Status == s)))];
 
-    /// <summary>After loading: a status that's gone drops back to All.</summary>
+    /// <summary>After loading: statuses that are gone are dropped from the filter.</summary>
     void BuildFilters()
     {
-        if (_status != null && !FilterStatuses().Contains(_status))
-            _status = null;
-        HasFilters = _status != null || _mine;
+        var known = FilterStatuses();
+        if (_filter.Statuses.Any(s => !known.Contains(s)))
+            _filter = _filter with { Statuses = _filter.Statuses.Where(known.Contains).ToHashSet() };
+        HasFilters = !_filter.IsDefault(IsFeatures);
     }
 
-    /// <summary>The filter button: a status (or All), and for feature requests, only the user's own.</summary>
+    /// <summary>The filter button: the filter sheet, each change applied as it's made.</summary>
     [RelayCommand]
-    async Task OpenFilters()
-    {
-        List<string?> options = [null, .. FilterStatuses()];
-        var labels = options.Select(s => (s == _status ? "✓  " : "") + (s ?? "All")).ToArray();
-        IReadOnlyList<MenuSwitch> switches = _kind == FeedbackKind.Feature
-            ? [new MenuSwitch("Only mine", "Feature requests you suggested", _mine, on =>
-            {
-                _mine = on;
-                HasFilters = _status != null || _mine;
-                Show();
-            })]
-            : [];
-        var choice = await dialogs.ActionSheet("Filter by status", null, switches, labels);
-        if (choice != null && Array.IndexOf(labels, choice) is >= 0 and var index)
-            _status = options[index];
-        HasFilters = _status != null || _mine;
-        Show();
-    }
+    Task OpenFilters() =>
+        Shell.Current.Navigation.PushModalAsync(new Views.FeedbackFilterPage(new FeedbackFilterViewModel(FilterStatuses(), _filter, IsFeatures, filter =>
+        {
+            _filter = filter;
+            HasFilters = !_filter.IsDefault(IsFeatures);
+            Show();
+        })), false);
 
-    bool IsFiltered => _status != null || _mine || Search.Trim().Length > 0;
+    bool IsFiltered => _filter.Statuses.Count > 0 || _filter.Mine || Search.Trim().Length > 0;
 
-    /// <summary>Filtered by status, Mine and the search, then the most voted first (open before closed), or the newest.</summary>
+    /// <summary>Filtered by status, Mine and the search, in the order picked (newest first among equals).</summary>
     void Show()
     {
         var words = Search.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         var shown = _tickets.Where(t => words.All(w => t.Title.Contains(w, StringComparison.OrdinalIgnoreCase))
-            && (_status == null || t.Status == _status)
-            && (!_mine || t.IsMine));
-        shown = _top && _kind == FeedbackKind.Feature
-            ? shown.OrderBy(t => t.IsClosed).ThenByDescending(t => t.Votes).ThenByDescending(t => t.CreatedAt)
-            : shown.OrderByDescending(t => t.CreatedAt);
+            && (_filter.Statuses.Count == 0 || _filter.Statuses.Contains(t.Status))
+            && (!_filter.Mine || t.IsMine));
+        Func<FeedbackTicket, IComparable> key = _filter.Sort switch
+        {
+            FeedbackSort.Votes => t => t.Votes,
+            FeedbackSort.Updated => t => t.UpdatedAt,
+            FeedbackSort.Comments => t => t.CommentCount,
+            _ => t => t.CreatedAt,
+        };
+        shown = (_filter.Descending ? shown.OrderByDescending(key) : shown.OrderBy(key)).ThenByDescending(t => t.CreatedAt);
         Items.Clear();
         foreach (var t in shown)
             Items.Add(new FeedbackItem(t, VoteAsync, OpenAsync));

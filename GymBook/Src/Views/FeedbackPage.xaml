@@ -23,20 +23,35 @@
     </views:BasePage.Resources>
 
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
-        <HorizontalStackLayout Spacing="8" Padding="12,10,12,0" BindableLayout.ItemsSource="{Binding Tabs}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
+        <!-- Feature requests | My bug reports: a full-width switch, like Nutrition's and Progress' -->
+        <Border Margin="12,10,12,0" BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="3" HorizontalOptions="Fill">
+            <FlexLayout BindableLayout.ItemsSource="{Binding Tabs}" Direction="Row">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ChipItem">
+                        <Border FlexLayout.Grow="1" FlexLayout.Basis="0" BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="0,10">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding SelectCommand}" /></Border.GestureRecognizers>
+                            <HorizontalStackLayout Spacing="6" HorizontalOptions="Center">
+                                <Image WidthRequest="18" HeightRequest="18" VerticalOptions="Center" IsVisible="{Binding HasIcon}">
+                                    <Image.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="{Binding Icon}" Color="{Binding TextColor}" Size="100" /></Image.Source>
+                                </Image>
+                                <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="15" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+        </Border>
 
         <Label Grid.Row="1" Text="{Binding Intro}" Style="{StaticResource Caption}" Margin="14,10,14,0" />
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" Padding="12,10,12,0">
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8" Padding="12,10,12,0">
             <skeleton:CInputField HeightRequest="42" Icon="{StaticResource IconSearch}" Text="{Binding Search}" Placeholder="{Binding SearchPlaceholder}"
                                   ClearButtonVisibility="WhileEditing" />
-            <!-- Filters (by status, and Mine for feature requests) in a popup; lit while one is on -->
+            <!-- Filters and order in a sheet (FeedbackFilterPage); lit while the list is filtered or reordered -->
             <skeleton:CButton Grid.Column="1" Icon="filter_list" IconFontFamily="OutlinedIcons" IconColor="{Binding FilterIconColor}"
                               IconWidthRequest="22" IconHeightRequest="22" WidthRequest="42" HeightRequest="42" CornerRadius="12"
                               CButtonBackgroundColor="{Binding FilterBackground}" CButtonStroke="Transparent" VerticalOptions="Center"
                               Command="{Binding OpenFiltersCommand}" SemanticProperties.Description="Filter" />
-            <HorizontalStackLayout Grid.Column="2" Spacing="6" VerticalOptions="Center" IsVisible="{Binding IsFeatures}"
-                                   BindableLayout.ItemsSource="{Binding Sorts}" BindableLayout.ItemTemplate="{StaticResource Chip}" />
         </Grid>
 
         <RefreshView Grid.Row="3" IsRefreshing="{Binding IsRefreshing}" Command="{Binding RefreshCommand}" Margin="0,10,0,0">

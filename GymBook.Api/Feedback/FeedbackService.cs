@@ -187,7 +187,7 @@ public partial class FeedbackService(
         var issue = (await github.GetIssuesAsync([number], full: true, ct)).FirstOrDefault() ?? throw Missing();
         // The footer stays as it was sent (the device a bug was found on).
         var at = issue.Body.IndexOf(Marker, StringComparison.Ordinal);
-        var footer = at >= 0 ? "\n\n" + issue.Body[at..] : Footer((await usernames.EnsureAsync(me, null, ct)).Username, null);
+        var footer = at >= 0 ? "\n\n" + WithoutMention(issue.Body[at..]) : Footer((await usernames.EnsureAsync(me, null, ct)).Username, null);
         await github.UpdateIssueAsync(number, title, ToGitHub(request.Body) + footer, ct);
         return await GetAsync(number, me, baseUrl, ct);
     }
@@ -287,7 +287,7 @@ public partial class FeedbackService(
 
     string Comment(string text, string username) =>
         text.Trim() is { Length: > 0 } t
-            ? ToGitHub(t) + $"\n\n{Marker}\n<sub>@{username} in Gym Book</sub>"
+            ? ToGitHub(t) + CommentFooter(username)
             : throw new FeedbackException(400, "Write something first.");
 
     // ---- Attachments ----
@@ -397,19 +397,35 @@ public partial class FeedbackService(
 
     // ---- Text as it's kept on GitHub and as the app shows it ----
 
-    /// <summary>The footer that marks a ticket as from the app: who sent it, and for a bug the device.</summary>
+    /// <summary>
+    /// The footer that marks a ticket as from the app: who sent it (their Gym Book username, never as an @mention: GitHub
+    /// would link and notify whoever has that name there), and for a bug the device.
+    /// </summary>
     static string Footer(string? username, FeedbackDevice? device)
     {
-        var parts = new List<string> { username == null ? "Sent from Gym Book" : $"Sent from Gym Book by @{username}" };
+        var parts = new List<string> { username == null ? "Sent from Gym Book" : $"Sent from Gym Book by Gym Book user {Name(username)}" };
         if (device != null)
         {
-            parts.Add($"{device.Platform} {device.OsVersion}".Trim());
-            parts.Add(device.Model.Trim());
+            parts.Add(Plain($"{device.Platform} {device.OsVersion}".Trim()));
+            parts.Add(Plain(device.Model.Trim()));
             if (device.AppVersion.Trim().Length > 0)
-                parts.Add("app " + device.AppVersion.Trim());
+                parts.Add("app " + Plain(device.AppVersion.Trim()));
         }
-        return $"\n\n{Marker}\n\n---\n<sub>{WebUtility.HtmlEncode(string.Join(" · ", parts.Where(p => p.Length > 0)))}</sub>";
+        return $"\n\n{Marker}\n\n---\n<sub>{string.Join(" · ", parts.Where(p => p.Length > 0))}</sub>";
     }
+
+    /// <summary>A Gym Book username as GitHub shows it: as written, its _ and . not read as formatting.</summary>
+    static string Name(string username) => Plain(username);
+
+    /// <summary>Text GitHub shows as it is: HTML and Markdown characters escaped, and no @ (it would mention someone).</summary>
+    static string Plain(string text) =>
+        MarkdownChars().Replace(WebUtility.HtmlEncode(text), @"\$0").Replace("@", "&#64;");
+
+    /// <summary>A comment's footer: who wrote it, by their Gym Book username (never an @mention).</summary>
+    static string CommentFooter(string username) => $"\n\n{Marker}\n<sub>From Gym Book user {Name(username)}</sub>";
+
+    /// <summary>Earlier footers said "by @name", which GitHub reads as a mention: kept as they were but without it.</summary>
+    static string WithoutMention(string footer) => OldMention().Replace(footer, m => "by Gym Book user " + Name(m.Groups["name"].Value));
 
     static string StripFooter(string body) =>
         body.IndexOf(Marker, StringComparison.Ordinal) is >= 0 and var at ? body[..at].TrimEnd() : body;
@@ -446,8 +462,15 @@ public partial class FeedbackService(
     [GeneratedRegex("""<hr\s*/?>\s*(?:<p[^>]*>)?\s*<sub>Sent from Gym Book[\s\S]*$""")]
     private static partial Regex TicketFooterHtml();
 
-    [GeneratedRegex("""(?:<p[^>]*>)?\s*<sub>@[^<]*? in Gym Book</sub>[\s\S]*$""")]
+    // The comment footer as it is now ("From Gym Book user name"), or as it was ("@name in Gym Book", the @name a link).
+    [GeneratedRegex("""(?:<p[^>]*>)?\s*<sub>(?:From Gym Book user [^<]*|(?:<a [^>]*>)?@[^<]*?(?:</a>)? in Gym Book)</sub>[\s\S]*$""")]
     private static partial Regex CommentFooterHtml();
+
+    [GeneratedRegex(@"by @(?<name>[A-Za-z0-9_.]+)")]
+    private static partial Regex OldMention();
+
+    [GeneratedRegex(@"[\\`*_\[\]~|]")]
+    private static partial Regex MarkdownChars();
 
     [GeneratedRegex("^[0-9a-f]{32}$")]
     private static partial Regex FileIdPattern();

@@ -17,53 +17,54 @@
     </Shell.BackButtonBehavior>
 
     <views:BasePage.Resources>
-        <!-- A formatting button: an OutlinedIcons glyph; what it does is its ClassId (see OnFormat) -->
+        <!-- A formatting button in the editor's toolbar: an OutlinedIcons glyph; what it does is its ClassId (see OnFormat) -->
         <Style x:Key="FormatButton" TargetType="skeleton:CButton">
-            <Setter Property="WidthRequest" Value="40" />
-            <Setter Property="HeightRequest" Value="40" />
-            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="WidthRequest" Value="36" />
+            <Setter Property="HeightRequest" Value="36" />
+            <Setter Property="CornerRadius" Value="10" />
             <Setter Property="IconFontFamily" Value="OutlinedIcons" />
-            <Setter Property="IconWidthRequest" Value="22" />
-            <Setter Property="IconHeightRequest" Value="22" />
+            <Setter Property="IconWidthRequest" Value="20" />
+            <Setter Property="IconHeightRequest" Value="20" />
             <Setter Property="IconColor" Value="{StaticResource TextPrimary}" />
-            <Setter Property="CButtonBackgroundColor" Value="{StaticResource Surface2}" />
+            <Setter Property="CButtonBackgroundColor" Value="Transparent" />
             <Setter Property="CButtonStroke" Value="Transparent" />
         </Style>
     </views:BasePage.Resources>
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Padding="12,10,12,0" RowSpacing="10">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Padding="12,10,12,0" RowSpacing="10">
         <skeleton:CInputField Text="{Binding Title}" Placeholder="Title" MaxLength="120" ReturnType="Next" IsVisible="{Binding IsTicket}" />
 
-        <!-- Formatting, shown as it's typed in the text box below -->
-        <ScrollView Grid.Row="1" Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
-            <HorizontalStackLayout Spacing="6">
-                <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="bold" Icon="format_bold" Clicked="OnFormat" SemanticProperties.Description="Bold" />
-                <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="italic" Icon="format_italic" Clicked="OnFormat" SemanticProperties.Description="Italic" />
-                <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="strike" Icon="strikethrough_s" Clicked="OnFormat" SemanticProperties.Description="Strikethrough" />
-                <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="heading" Icon="title" Clicked="OnFormat" SemanticProperties.Description="Heading" />
-                <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="bullets" Icon="format_list_bulleted" Clicked="OnFormat" SemanticProperties.Description="Bulleted list" />
-                <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="numbers" Icon="format_list_numbered" Clicked="OnFormat" SemanticProperties.Description="Numbered list" />
-                <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="tasks" Icon="checklist" Clicked="OnFormat" SemanticProperties.Description="Checklist: tap again to tick" />
-                <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="quote" Icon="format_quote" Clicked="OnFormat" SemanticProperties.Description="Quote" />
-                <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="code" Icon="code" Clicked="OnFormat" SemanticProperties.Description="Code" />
-                <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="link" Icon="link" Clicked="OnFormat" SemanticProperties.Description="Link" />
-                <skeleton:CButton Style="{StaticResource FormatButton}" Icon="attach_file" IconColor="{StaticResource Accent}" Command="{Binding AttachCommand}"
-                                  SemanticProperties.Description="Attach a picture or file" />
-            </HorizontalStackLayout>
-        </ScrollView>
-
-        <!-- The text, formatted as it's typed: Markdown underneath (see RichEditor) -->
-        <Border Grid.Row="2" Style="{StaticResource InnerCard}" Padding="12,6">
-            <Grid>
-                <richtext:RichEditor x:Name="BodyEditor" Markdown="{Binding Body}" Placeholder="{Binding BodyPlaceholder}" FontSize="15" />
-                <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" VerticalOptions="Center" HorizontalOptions="Center" />
-                <Label Text="{Binding Error}" IsVisible="{Binding HasError}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" VerticalOptions="Center" Margin="16" />
+        <!-- The editor: its formatting toolbar along the top, then the text, formatted as it's typed (Markdown underneath, see RichEditor) -->
+        <Border Grid.Row="1" Style="{StaticResource InnerCard}" Padding="0">
+            <Grid RowDefinitions="Auto,Auto,*">
+                <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never">
+                    <HorizontalStackLayout Spacing="2" Padding="6,6">
+                        <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="bold" Icon="format_bold" Clicked="OnFormat" SemanticProperties.Description="Bold" />
+                        <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="italic" Icon="format_italic" Clicked="OnFormat" SemanticProperties.Description="Italic" />
+                        <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="strike" Icon="strikethrough_s" Clicked="OnFormat" SemanticProperties.Description="Strikethrough" />
+                        <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="heading" Icon="title" Clicked="OnFormat" SemanticProperties.Description="Heading" />
+                        <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="bullets" Icon="format_list_bulleted" Clicked="OnFormat" SemanticProperties.Description="Bulleted list" />
+                        <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="numbers" Icon="format_list_numbered" Clicked="OnFormat" SemanticProperties.Description="Numbered list" />
+                        <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="tasks" Icon="checklist" Clicked="OnFormat" SemanticProperties.Description="Checklist: tap again to tick" />
+                        <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="quote" Icon="format_quote" Clicked="OnFormat" SemanticProperties.Description="Quote" />
+                        <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="code" Icon="code" Clicked="OnFormat" SemanticProperties.Description="Code" />
+                        <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="link" Icon="link" Clicked="OnFormat" SemanticProperties.Description="Link" />
+                        <skeleton:CButton Style="{StaticResource FormatButton}" Icon="attach_file" IconColor="{StaticResource Accent}" Command="{Binding AttachCommand}"
+                                          SemanticProperties.Description="Attach a picture or file" />
+                    </HorizontalStackLayout>
+                </ScrollView>
+                <BoxView Grid.Row="1" HeightRequest="1" Color="{StaticResource Bg}" />
+                <Grid Grid.Row="2" Padding="12,6">
+                    <richtext:RichEditor x:Name="BodyEditor" Markdown="{Binding Body}" Placeholder="{Binding BodyPlaceholder}" FontSize="15" />
+                    <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}" VerticalOptions="Center" HorizontalOptions="Center" />
+                    <Label Text="{Binding Error}" IsVisible="{Binding HasError}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" VerticalOptions="Center" Margin="16" />
+                </Grid>
             </Grid>
         </Border>
 
-        <Label Grid.Row="3" Text="{Binding Hint}" Style="{StaticResource Caption}" FontSize="12" Margin="4,0" />
+        <Label Grid.Row="2" Text="{Binding Hint}" Style="{StaticResource Caption}" FontSize="12" Margin="4,0" />
 
-        <Grid Grid.Row="4" ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,0,0,16">
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,0,0,16">
             <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsBusy}" VerticalOptions="Center">
                 <ActivityIndicator IsRunning="{Binding IsBusy}" HeightRequest="20" WidthRequest="20" />
                 <Label Text="{Binding BusyText}" Style="{StaticResource Caption}" VerticalOptions="Center" />
