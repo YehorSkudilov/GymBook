@@ -317,13 +317,9 @@ public partial class ProfileViewModel(
     [RelayCommand]
     Task OpenExercises() => GoTo(Routes.ExerciseLibrary);
 
-    /// <summary>Everyone's feature requests, to vote for, and suggesting one.</summary>
+    /// <summary>Feature requests (everyone's, to vote for) and the user's bug reports, each a tab of the Feedback page.</summary>
     [RelayCommand]
-    Task OpenFeatureRequests() => GoTo($"{Routes.Feedback}?kind={FeedbackKind.Feature}");
-
-    /// <summary>The user's bug reports, and reporting one.</summary>
-    [RelayCommand]
-    Task OpenBugReports() => GoTo($"{Routes.Feedback}?kind={FeedbackKind.Bug}");
+    Task OpenFeedback() => GoTo(Routes.Feedback);
 
     /// <summary>Workouts deleted, or discarded while in progress, to bring back.</summary>
     [RelayCommand]

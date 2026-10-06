@@ -409,37 +409,26 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Feature requests (everyone's, to vote for) and bug reports (the user's own), kept on GitHub by the API -->
-            <Label Text="FEEDBACK" Style="{StaticResource Overline}" Margin="4,6,0,0" />
+            <Label Text="INFO" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0">
                 <VerticalStackLayout>
+                    <!-- Feature requests (everyone's, to vote for) and bug reports (the user's own), kept on GitHub by the API:
+                         both on the Feedback page, in its tabs -->
                     <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenFeatureRequestsCommand}" /></Grid.GestureRecognizers>
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenFeedbackCommand}" /></Grid.GestureRecognizers>
                         <VerticalStackLayout VerticalOptions="Center">
-                            <Label Text="Feature requests" />
-                            <Label Text="Vote for what Gym Book does next, or suggest something" Style="{StaticResource Caption}" FontSize="12" />
+                            <Label Text="Feedback" />
+                            <Label Text="Suggest features, vote on ideas, or report a bug" Style="{StaticResource Caption}" FontSize="12" />
                         </VerticalStackLayout>
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenBugReportsCommand}" /></Grid.GestureRecognizers>
-                        <VerticalStackLayout VerticalOptions="Center">
-                            <Label Text="Report a bug" />
-                            <Label Text="Tell us what went wrong. Only you and our team see it" Style="{StaticResource Caption}" FontSize="12" />
-                        </VerticalStackLayout>
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenPrivacyCommand}" /></Grid.GestureRecognizers>
+                        <Label Text="Privacy policy" VerticalOptions="Center" />
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                 </VerticalStackLayout>
-            </Border>
-
-            <Label Text="INFO" Style="{StaticResource Overline}" Margin="4,6,0,0" />
-            <Border Style="{StaticResource Card}" Padding="0">
-                <Grid Style="{StaticResource Row}">
-                    <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenPrivacyCommand}" /></Grid.GestureRecognizers>
-                    <Label Text="Privacy policy" VerticalOptions="Center" />
-                    <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                </Grid>
             </Border>
 
             <Label Text="{Binding Version}" Style="{StaticResource Caption}" FontSize="12" HorizontalOptions="Center" Margin="0,8,0,0" />
