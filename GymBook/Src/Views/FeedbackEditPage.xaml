@@ -4,6 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:skeleton="clr-namespace:AppSkeleton;assembly=AppSkeleton"
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:FeedbackEditViewModel"
     Title="{Binding PageTitle}"
@@ -16,61 +17,43 @@
 
     <views:BasePage.Resources>
         <!-- A formatting button: an OutlinedIcons glyph; what it does is its ClassId (see OnFormat) -->
-        <Style x:Key="FormatButton" TargetType="ImageButton">
+        <Style x:Key="FormatButton" TargetType="skeleton:CButton">
             <Setter Property="WidthRequest" Value="40" />
             <Setter Property="HeightRequest" Value="40" />
-            <Setter Property="Padding" Value="9" />
             <Setter Property="CornerRadius" Value="12" />
-            <Setter Property="BackgroundColor" Value="{StaticResource Surface2}" />
+            <Setter Property="IconFontFamily" Value="OutlinedIcons" />
+            <Setter Property="IconWidthRequest" Value="22" />
+            <Setter Property="IconHeightRequest" Value="22" />
+            <Setter Property="IconColor" Value="{StaticResource TextPrimary}" />
+            <Setter Property="CButtonBackgroundColor" Value="{StaticResource Surface2}" />
+            <Setter Property="CButtonStroke" Value="Transparent" />
         </Style>
     </views:BasePage.Resources>
 
     <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Padding="12,10,12,0" RowSpacing="10">
-        <Border Style="{StaticResource InnerCard}" Padding="12,2" IsVisible="{Binding IsTicket}">
-            <Entry Text="{Binding Title}" Placeholder="Title" MaxLength="120" FontFamily="OpenSansSemibold" FontSize="16"
-                   PlaceholderColor="{StaticResource TextSecondary}" ReturnType="Next" />
-        </Border>
+        <skeleton:CInputField Text="{Binding Title}" Placeholder="Title" MaxLength="120" ReturnType="Next" IsVisible="{Binding IsTicket}" />
 
         <!-- Formatting, as Markdown; Preview shows it as it will look -->
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
             <ScrollView Orientation="Horizontal" HorizontalScrollBarVisibility="Never" IsVisible="{Binding IsWriting}">
                 <HorizontalStackLayout Spacing="6">
-                    <ImageButton Style="{StaticResource FormatButton}" ClassId="bold" Clicked="OnFormat" SemanticProperties.Description="Bold">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="format_bold" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
-                    <ImageButton Style="{StaticResource FormatButton}" ClassId="italic" Clicked="OnFormat" SemanticProperties.Description="Italic">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="format_italic" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
-                    <ImageButton Style="{StaticResource FormatButton}" ClassId="strike" Clicked="OnFormat" SemanticProperties.Description="Strikethrough">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="strikethrough_s" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
-                    <ImageButton Style="{StaticResource FormatButton}" ClassId="heading" Clicked="OnFormat" SemanticProperties.Description="Heading">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="title" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
-                    <ImageButton Style="{StaticResource FormatButton}" ClassId="bullets" Clicked="OnFormat" SemanticProperties.Description="Bulleted list">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="format_list_bulleted" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
-                    <ImageButton Style="{StaticResource FormatButton}" ClassId="numbers" Clicked="OnFormat" SemanticProperties.Description="Numbered list">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="format_list_numbered" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
-                    <ImageButton Style="{StaticResource FormatButton}" ClassId="tasks" Clicked="OnFormat" SemanticProperties.Description="Checklist">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="checklist" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
-                    <ImageButton Style="{StaticResource FormatButton}" ClassId="quote" Clicked="OnFormat" SemanticProperties.Description="Quote">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="format_quote" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
-                    <ImageButton Style="{StaticResource FormatButton}" ClassId="code" Clicked="OnFormat" SemanticProperties.Description="Code">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="code" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
-                    <ImageButton Style="{StaticResource FormatButton}" ClassId="link" Clicked="OnFormat" SemanticProperties.Description="Link">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="link" Color="{StaticResource TextPrimary}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
-                    <ImageButton Style="{StaticResource FormatButton}" Command="{Binding AttachCommand}" SemanticProperties.Description="Attach a picture or file">
-                        <ImageButton.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="attach_file" Color="{StaticResource Accent}" Size="32" /></ImageButton.Source>
-                    </ImageButton>
+                    <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="bold" Icon="format_bold" Clicked="OnFormat" SemanticProperties.Description="Bold" />
+                    <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="italic" Icon="format_italic" Clicked="OnFormat" SemanticProperties.Description="Italic" />
+                    <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="strike" Icon="strikethrough_s" Clicked="OnFormat" SemanticProperties.Description="Strikethrough" />
+                    <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="heading" Icon="title" Clicked="OnFormat" SemanticProperties.Description="Heading" />
+                    <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="bullets" Icon="format_list_bulleted" Clicked="OnFormat" SemanticProperties.Description="Bulleted list" />
+                    <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="numbers" Icon="format_list_numbered" Clicked="OnFormat" SemanticProperties.Description="Numbered list" />
+                    <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="tasks" Icon="checklist" Clicked="OnFormat" SemanticProperties.Description="Checklist" />
+                    <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="quote" Icon="format_quote" Clicked="OnFormat" SemanticProperties.Description="Quote" />
+                    <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="code" Icon="code" Clicked="OnFormat" SemanticProperties.Description="Code" />
+                    <skeleton:CButton Style="{StaticResource FormatButton}" ClassId="link" Icon="link" Clicked="OnFormat" SemanticProperties.Description="Link" />
+                    <skeleton:CButton Style="{StaticResource FormatButton}" Icon="attach_file" IconColor="{StaticResource Accent}" Command="{Binding AttachCommand}"
+                                      SemanticProperties.Description="Attach a picture or file" />
                 </HorizontalStackLayout>
             </ScrollView>
-            <Button Grid.Column="1" Text="{Binding PreviewText}" Style="{StaticResource SmallButton}" Command="{Binding TogglePreviewCommand}" VerticalOptions="Center" />
+            <skeleton:CButton Grid.Column="1" Text="{Binding PreviewText}" FontAttributes="Bold" HeightRequest="40" WidthRequest="84" CornerRadius="12"
+                              CButtonBackgroundColor="{StaticResource Surface2}" CButtonStroke="Transparent" Command="{Binding TogglePreviewCommand}"
+                              VerticalOptions="Center" />
         </Grid>
 
         <Border Grid.Row="2" Style="{StaticResource InnerCard}" Padding="10,4">
