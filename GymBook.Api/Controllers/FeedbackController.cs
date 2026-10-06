@@ -27,7 +27,7 @@ public class FeedbackController(FeedbackService feedback, ICurrentUser currentUs
     /// <summary>Every feature request (?kind=Feature), or the user's own bug reports (?kind=Bug).</summary>
     [HttpGet]
     public Task<ActionResult<FeedbackListResponse>> List([FromQuery] FeedbackKind kind, CancellationToken ct) =>
-        RunAsync(async () => new FeedbackListResponse { Tickets = await feedback.ListAsync(kind, Me, BaseUrl, ct) });
+        RunAsync(() => feedback.ListAsync(kind, Me, BaseUrl, ct));
 
     [HttpGet("{number:int}")]
     public Task<ActionResult<FeedbackThread>> Get(int number, CancellationToken ct) =>

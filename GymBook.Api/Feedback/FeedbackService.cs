@@ -26,34 +26,44 @@ public partial class FeedbackService(
     const string Marker = "<!-- gymbook -->";
     const string TeamName = "Gym Book";
     const string FormerMember = "Former member";
-    const string FeaturesKey = "feedback:features";
     const int TicketsPerDay = 10, CommentsPerDay = 30, AttachmentsPerDay = 30;
 
     // ---- Reading ----
 
-    /// <summary>Every feature request, or the user's own bug reports; newest first.</summary>
-    public async Task<List<FeedbackTicket>> ListAsync(FeedbackKind kind, string me, string baseUrl, CancellationToken ct)
+    /// <summary>
+    /// Every feature request, or the user's own bug reports, newest first, as they are on GitHub now (nothing kept here,
+    /// so what's changed or deleted there shows at once); with the board's statuses, to filter by.
+    /// </summary>
+    public async Task<FeedbackListResponse> ListAsync(FeedbackKind kind, string me, string baseUrl, CancellationToken ct)
     {
         List<GitHubIssue> issues;
         if (kind == FeedbackKind.Feature)
         {
-            issues = await FeaturesAsync(ct);
+            issues = await github.ListIssuesAsync(GitHubClient.FeatureLabel, ct);
         }
         else
         {
             var mine = await db.FeedbackTickets.AsNoTracking().Where(t => t.UserId == me && t.Kind == FeedbackKind.Bug).Select(t => t.Number).ToListAsync(ct);
             issues = mine.Count == 0 ? [] : [.. (await github.GetIssuesAsync(mine, full: false, ct)).OrderByDescending(i => i.CreatedAt)];
+            await ForgetDeletedAsync(mine.Except(issues.Select(i => i.Number)), ct);
         }
-        return await TicketsAsync(issues, me, baseUrl, ct);
+        return new FeedbackListResponse
+        {
+            Tickets = await TicketsAsync(issues, me, baseUrl, ct),
+            Statuses = await github.GetStatusesAsync(ct),
+        };
     }
 
-    /// <summary>Feature requests change rarely and are asked for often: kept a minute, or until one is sent or changed here.</summary>
-    async Task<List<GitHubIssue>> FeaturesAsync(CancellationToken ct) =>
-        await cache.GetOrCreateAsync(FeaturesKey, entry =>
-        {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
-            return github.ListIssuesAsync(GitHubClient.FeatureLabel, ct);
-        }) ?? [];
+    /// <summary>Tickets deleted on GitHub: who sent them, their votes and comments go from here too.</summary>
+    async Task ForgetDeletedAsync(IEnumerable<int> numbers, CancellationToken ct)
+    {
+        var gone = numbers.ToList();
+        if (gone.Count == 0)
+            return;
+        await db.FeedbackTickets.Where(t => gone.Contains(t.Number)).ExecuteDeleteAsync(ct);
+        await db.FeedbackVotes.Where(v => gone.Contains(v.Number)).ExecuteDeleteAsync(ct);
+        await db.FeedbackComments.Where(c => gone.Contains(c.Number)).ExecuteDeleteAsync(ct);
+    }
 
     /// <summary>A ticket with its comments, when the user may see it: any feature request, or their own bug report.</summary>
     public async Task<FeedbackThread> GetAsync(int number, string me, string baseUrl, CancellationToken ct)
@@ -90,7 +100,12 @@ public partial class FeedbackService(
     /// <summary>The issue and who sent it, if the user may see it; otherwise as if it didn't exist.</summary>
     async Task<(GitHubIssue Issue, FeedbackTicketOwner? Owner)> VisibleAsync(int number, string me, CancellationToken ct)
     {
-        var issue = (await github.GetIssuesAsync([number], full: true, ct)).FirstOrDefault() ?? throw Missing();
+        if ((await github.GetIssuesAsync([number], full: true, ct)).FirstOrDefault() is not { } issue)
+        {
+            // Deleted on GitHub.
+            await ForgetDeletedAsync([number], ct);
+            throw Missing();
+        }
         var owner = await db.FeedbackTickets.AsNoTracking().FirstOrDefaultAsync(t => t.Number == number, ct);
         if (!IsFeature(issue) && owner?.UserId != me)
             throw Missing();
@@ -155,7 +170,6 @@ public partial class FeedbackService(
         var number = await github.CreateIssueAsync(title, body, label, ct);
         db.FeedbackTickets.Add(new FeedbackTicketOwner { Number = number, UserId = me, Kind = request.Kind, CreatedAt = time.GetUtcNow() });
         await db.SaveChangesAsync(ct);
-        cache.Remove(FeaturesKey);
         return await GetAsync(number, me, baseUrl, ct);
     }
 
@@ -169,7 +183,6 @@ public partial class FeedbackService(
         var at = issue.Body.IndexOf(Marker, StringComparison.Ordinal);
         var footer = at >= 0 ? "\n\n" + issue.Body[at..] : Footer((await usernames.EnsureAsync(me, null, ct)).Username, null);
         await github.UpdateIssueAsync(number, title, ToGitHub(request.Body) + footer, ct);
-        cache.Remove(FeaturesKey);
         return await GetAsync(number, me, baseUrl, ct);
     }
 
@@ -183,7 +196,6 @@ public partial class FeedbackService(
         await db.FeedbackVotes.Where(v => v.Number == number).ExecuteDeleteAsync(ct);
         await db.FeedbackComments.Where(c => c.Number == number).ExecuteDeleteAsync(ct);
         await db.SaveChangesAsync(ct);
-        cache.Remove(FeaturesKey);
     }
 
     async Task<FeedbackTicketOwner> OwnedAsync(int number, string me, CancellationToken ct)
@@ -370,7 +382,6 @@ public partial class FeedbackService(
             var comments = await db.FeedbackComments.AsNoTracking().Where(c => c.UserId == userId).ToListAsync(ct);
             foreach (var comment in comments.Where(c => !deleted.Contains(c.Number)))
                 await github.DeleteCommentAsync(comment.CommentId, ct);
-            cache.Remove(FeaturesKey);
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {

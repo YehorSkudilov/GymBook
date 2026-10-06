@@ -303,9 +303,9 @@ public class ApiClient(HttpClient http, AuthSession session)
 
     // ---- Feature requests and bug reports (the API's FeedbackController) ----
 
-    /// <summary>Every feature request, or the user's own bug reports.</summary>
-    public async Task<List<FeedbackTicket>> GetFeedbackAsync(FeedbackKind kind, CancellationToken ct = default) =>
-        (await GetAuthorizedAsync<FeedbackListResponse>($"api/feedback?kind={kind}", ct)).Tickets;
+    /// <summary>Every feature request, or the user's own bug reports, with the project board's statuses.</summary>
+    public Task<FeedbackListResponse> GetFeedbackAsync(FeedbackKind kind, CancellationToken ct = default) =>
+        GetAuthorizedAsync<FeedbackListResponse>($"api/feedback?kind={kind}", ct);
 
     public Task<FeedbackThread> GetFeedbackTicketAsync(int number, CancellationToken ct = default) =>
         GetAuthorizedAsync<FeedbackThread>($"api/feedback/{number}", ct);

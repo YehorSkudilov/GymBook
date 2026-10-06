@@ -56,7 +56,10 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
 
     public ObservableCollection<ChipItem> Tabs { get; } = [];
     public ObservableCollection<ChipItem> Sorts { get; } = [];
+    /// <summary>By status, and Mine for feature requests (see <see cref="BuildFilters"/>).</summary>
+    public ObservableCollection<ChipItem> Filters { get; } = [];
     public ObservableCollection<FeedbackItem> Items { get; } = [];
+    [ObservableProperty] string searchPlaceholder = "Search requests";
 
     [ObservableProperty] bool isLoading;
     [ObservableProperty] bool isRefreshing;
@@ -97,6 +100,12 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
         foreach (var c in Tabs)
             c.IsSelected = c == chip;
         _kind = (FeedbackKind)chip.Value!;
+        // Each tab starts unfiltered.
+        (_status, _mine) = (null, false);
+        _tickets = [];
+        _statuses = [];
+        Search = "";
+        Filters.Clear();
         Describe();
         Items.Clear();
         _ = LoadAsync(quiet: false);
@@ -117,6 +126,7 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
             ? "Ideas for Gym Book, from everyone using it. Vote for the ones you want most: the most wanted come first."
             : "Bugs you've reported. Only you and the Gym Book team can see them.";
         NewText = IsFeatures ? "Suggest a feature" : "Report a bug";
+        SearchPlaceholder = IsFeatures ? "Search requests" : "Search your reports";
         EmptyText = IsFeatures ? "No feature requests yet. Be the first to suggest one." : "You haven't reported any bugs.";
     }
 
@@ -126,12 +136,13 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
         try
         {
             var kind = _kind;
-            var tickets = await api.GetFeedbackAsync(kind);
+            var list = await api.GetFeedbackAsync(kind);
             if (kind != _kind)
                 return;
-            _tickets = tickets;
+            (_tickets, _statuses) = (list.Tickets, list.Statuses);
             _loaded = true;
             Error = null;
+            BuildFilters();
             Show();
         }
         catch (Exception e) when (Online.Message(e) is { } message)
@@ -156,17 +167,64 @@ public partial class FeedbackViewModel(ApiClient api, DialogService dialogs) : B
         await LoadAsync(quiet: false);
     }
 
-    /// <summary>Filtered by the search, then the most voted first (open before closed), or the newest.</summary>
+    // ---- Filters ----
+
+    // The Mine chip's value, apart from the statuses' (strings; null for All).
+    static readonly object MineFilter = new();
+    string? _status;
+    bool _mine;
+    // The project board's Status columns, in its order.
+    List<string> _statuses = [];
+
+    /// <summary>
+    /// The status chips: All, then the board's Status columns in its order; then Open and Closed when there are tickets
+    /// off the board; and for feature requests, Mine. A status that's gone drops back to All.
+    /// </summary>
+    void BuildFilters()
+    {
+        var statuses = _statuses.Concat(new[] { "Open", "Closed" }.Where(s => !_statuses.Contains(s) && _tickets.Any(t => t.Status == s))).ToList();
+        if (_status != null && !statuses.Contains(_status))
+            _status = null;
+        Filters.Clear();
+        Filters.Add(new ChipItem("All", null, SelectFilter) { IsSelected = _status == null });
+        foreach (var status in statuses)
+            Filters.Add(new ChipItem(status, status, SelectFilter) { IsSelected = status == _status });
+        if (_kind == FeedbackKind.Feature)
+            Filters.Add(new ChipItem("Mine", MineFilter, SelectFilter) { IsSelected = _mine });
+    }
+
+    void SelectFilter(ChipItem chip)
+    {
+        if (chip.Value == MineFilter)
+        {
+            _mine = chip.IsSelected = !_mine;
+        }
+        else
+        {
+            _status = (string?)chip.Value;
+            foreach (var c in Filters.Where(c => c.Value != MineFilter))
+                c.IsSelected = c == chip;
+        }
+        Show();
+    }
+
+    bool IsFiltered => _status != null || _mine || Search.Trim().Length > 0;
+
+    /// <summary>Filtered by status, Mine and the search, then the most voted first (open before closed), or the newest.</summary>
     void Show()
     {
         var words = Search.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var shown = _tickets.Where(t => words.All(w => t.Title.Contains(w, StringComparison.OrdinalIgnoreCase)));
+        var shown = _tickets.Where(t => words.All(w => t.Title.Contains(w, StringComparison.OrdinalIgnoreCase))
+            && (_status == null || t.Status == _status)
+            && (!_mine || t.IsMine));
         shown = _top && _kind == FeedbackKind.Feature
             ? shown.OrderBy(t => t.IsClosed).ThenByDescending(t => t.Votes).ThenByDescending(t => t.CreatedAt)
             : shown.OrderByDescending(t => t.CreatedAt);
         Items.Clear();
         foreach (var t in shown)
             Items.Add(new FeedbackItem(t, VoteAsync, OpenAsync));
+        EmptyText = IsFiltered && _tickets.Count > 0 ? "Nothing matches these filters."
+            : IsFeatures ? "No feature requests yet. Be the first to suggest one." : "You haven't reported any bugs.";
     }
 
     async Task VoteAsync(FeedbackItem item)

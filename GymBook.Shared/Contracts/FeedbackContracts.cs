@@ -70,6 +70,8 @@ public class FeedbackThread
 public class FeedbackListResponse
 {
     public List<FeedbackTicket> Tickets { get; set; } = [];
+    /// <summary>The project board's Status columns, in its order, to filter by (empty without a board).</summary>
+    public List<string> Statuses { get; set; } = [];
 }
 
 /// <summary>About the device a bug was found on, added to the report for the team.</summary>

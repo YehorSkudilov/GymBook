@@ -196,7 +196,7 @@ public class RichEditorHandler : ViewHandler<RichEditor, UITextView>, IRichTextP
             AllowsEditingTextAttributes = false,
         };
         view.TextContainer.LineFragmentPadding = 0;
-        _placeholder.Font = view.Font;
+        _placeholder.Font = view.Font ?? UIFont.SystemFontOfSize(15);
         _placeholder.TranslatesAutoresizingMaskIntoConstraints = false;
         view.AddSubview(_placeholder);
         NSLayoutConstraint.ActivateConstraints(
@@ -260,7 +260,7 @@ public class RichEditorHandler : ViewHandler<RichEditor, UITextView>, IRichTextP
             storage.AddAttributes(Attributes(run.Style).Dictionary, new NSRange(run.Start, run.Length));
         storage.EndEditing();
         // What's typed next starts plain; RichEditor paints it as it should be.
-        PlatformView.TypingAttributes = plain.Dictionary;
+        PlatformView.TypingAttributes2 = plain;
         UpdatePlaceholder();
     }
 
@@ -271,13 +271,14 @@ public class RichEditorHandler : ViewHandler<RichEditor, UITextView>, IRichTextP
         UIFont font;
         if ((style & (RunStyle.Code | RunStyle.CodeBlock)) != 0)
         {
-            font = UIFont.MonospacedSystemFont(size * 0.92f, bold ? UIFontWeight.Bold : UIFontWeight.Regular);
+            font = UIFont.GetMonospacedSystemFont(size * 0.92f, bold ? UIFontWeight.Bold : UIFontWeight.Regular);
         }
         else
         {
             var traits = (bold ? UIFontDescriptorSymbolicTraits.Bold : 0) | (style.HasFlag(RunStyle.Italic) ? UIFontDescriptorSymbolicTraits.Italic : 0);
             var system = UIFont.SystemFontOfSize(size);
-            font = traits == 0 ? system : UIFont.FromDescriptor(system.FontDescriptor.CreateWithTraits(traits) ?? system.FontDescriptor, size);
+            var descriptor = system.FontDescriptor;
+            font = traits == 0 || descriptor == null ? system : UIFont.FromDescriptor(descriptor.CreateWithTraits(traits) ?? descriptor, size);
         }
         var attributes = new UIStringAttributes { Font = font };
         if (style.HasFlag(RunStyle.Strike))

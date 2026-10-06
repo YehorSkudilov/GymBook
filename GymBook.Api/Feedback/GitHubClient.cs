@@ -154,6 +154,25 @@ public sealed class GitHubClient
         return new Board(null, null);
     }
 
+    /// <summary>
+    /// The board's Status columns, in the board's order (none without a board). Asked for each time, so a column added
+    /// or renamed shows straight away.
+    /// </summary>
+    public async Task<List<string>> GetStatusesAsync(CancellationToken ct)
+    {
+        var board = await ReadyAsync(ct);
+        if (board.ProjectId == null)
+            return [];
+        var data = await GraphQlAsync("""
+            query($p: ID!) {
+              node(id: $p) { ... on ProjectV2 { field(name: "Status") { ... on ProjectV2SingleSelectField { options { name } } } } }
+            }
+            """, new { p = board.ProjectId }, ct, allowErrors: true);
+        return [.. (data?["node"]?["field"]?["options"]?.AsArray() ?? new JsonArray())
+            .Select(o => o?["name"]?.GetValue<string>())
+            .OfType<string>()];
+    }
+
     // ---- Issues ----
 
     const string IssueFields = """
