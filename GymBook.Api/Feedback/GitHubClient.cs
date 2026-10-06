@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 namespace GymBook.Api.Feedback;
 
 /// <summary>
-/// Where feature requests and bug reports go: a private GitHub repository's issues, put on a GitHub project board. From
+/// Where feature requests and bug reports go: a GitHub repository's issues, put on a GitHub project board. From
 /// GitHub__* in .env; feedback is off while the token, owner or repository is unset.
 /// <para>
 /// The token is a classic personal access token with the "repo" and "project" scopes (fine-grained tokens can't reach a
@@ -16,7 +16,7 @@ namespace GymBook.Api.Feedback;
 public class GitHubOptions
 {
     public string Token { get; set; } = "";
-    /// <summary>The repository's owner (user or organization) and name. It must be private: bug reports are.</summary>
+    /// <summary>The repository's owner (user or organization) and name.</summary>
     public string Owner { get; set; } = "";
     public string Repo { get; set; } = "";
     /// <summary>
@@ -97,12 +97,6 @@ public sealed class GitHubClient
             if (_board is { } again)
                 return again;
             var repo = await RestAsync(HttpMethod.Get, RepoPath, null, ct) ?? throw Unavailable();
-            if (repo["private"]?.GetValue<bool>() != true)
-            {
-                // Bug reports are private: never send them to a repository everyone can read.
-                _log.LogError("Feedback is off: GitHub repository {Owner}/{Repo} isn't private", _options.Owner, _options.Repo);
-                throw Unavailable();
-            }
             await EnsureLabelAsync(FeatureLabel, "a2eeef", "Asked for in Gym Book", ct);
             await EnsureLabelAsync(BugLabel, "d73a4a", "Reported in Gym Book", ct);
             await EnsureBranchAsync(repo["default_branch"]?.GetValue<string>() ?? "main", ct);

@@ -116,7 +116,7 @@ jobs:
             # Admin app: accounts made SuperAdmin at startup (comma-separated; sign up in the app first)
             Admin__BootstrapEmails=${{ vars.ADMIN_BOOTSTRAP_EMAILS }}
 
-            # Feature requests and bug reports, kept as issues of a private GitHub repository on a project board (leave
+            # Feature requests and bug reports, kept as issues of a GitHub repository on a project board (leave
             # the secret unset to turn them off) - see GymBook.Api/.env.example
             GitHub__Token=${{ secrets.FEEDBACK_GITHUB_TOKEN }}
             GitHub__Owner=${{ vars.FEEDBACK_GITHUB_OWNER }}
