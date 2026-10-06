@@ -118,6 +118,9 @@ public static class MauiProgram
         AddPage<FeedbackTicketPage, FeedbackTicketViewModel>(builder.Services);
         AddPage<FeedbackEditPage, FeedbackEditViewModel>(builder.Services);
 
+        // The formatted text box for feedback: each platform's own rich text control (see Controls/RichText).
+        builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.RichText.RichEditor, Controls.RichText.RichEditorHandler>());
+
 #if IOS
         // Drag reordering with a long-press, as on Android, so swipes elsewhere still scroll.
         builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.ReorderItem, ReorderItemHandler>());

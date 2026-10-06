@@ -335,9 +335,6 @@ public class ApiClient(HttpClient http, AuthSession session)
         SendAuthorizedAsync<FeedbackAttachmentRequest, FeedbackAttachmentResponse>("api/feedback/attachments",
             new() { FileName = fileName, DataBase64 = Convert.ToBase64String(data) }, ct, TimeSpan.FromMinutes(2));
 
-    public Task<FeedbackPreviewResponse> PreviewFeedbackAsync(string body, CancellationToken ct = default) =>
-        SendAuthorizedAsync<FeedbackPreviewRequest, FeedbackPreviewResponse>("api/feedback/preview", new() { Body = body }, ct);
-
     static string SharePath(string shareId, string? action = null) =>
         "api/plan-shares/" + Uri.EscapeDataString(shareId) + (action == null ? "" : "/" + action);
 

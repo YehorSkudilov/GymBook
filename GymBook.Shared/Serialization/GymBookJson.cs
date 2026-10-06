@@ -117,7 +117,5 @@ public static class GymBookJson
 [JsonSerializable(typeof(SaveFeedbackCommentRequest))]
 [JsonSerializable(typeof(FeedbackAttachmentRequest))]
 [JsonSerializable(typeof(FeedbackAttachmentResponse))]
-[JsonSerializable(typeof(FeedbackPreviewRequest))]
-[JsonSerializable(typeof(FeedbackPreviewResponse))]
 [JsonSerializable(typeof(FeedbackVoteResponse))]
 internal partial class SharedJsonContext : JsonSerializerContext;

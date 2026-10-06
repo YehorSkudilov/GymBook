@@ -8,7 +8,7 @@ namespace GymBook.ViewModels;
 
 /// <summary>
 /// Writing a feature request or bug report, or a comment on one, in Markdown: bold, italics, headings, lists, checklists,
-/// quotes, code and links from the toolbar (see FeedbackEditPage), attachments, and a preview as it will look. Opened as
+/// quotes, code and links from the toolbar (see FeedbackEditPage), shown as they're typed, and attachments. Opened as
 /// ?kind= (a new ticket), ?number= (changing the user's own), or ?number=&amp;comment= ("new", or the id of the user's
 /// own comment to change).
 /// </summary>
@@ -33,13 +33,6 @@ public partial class FeedbackEditViewModel(ApiClient api, DialogService dialogs)
     [ObservableProperty] string busyText = "";
     [ObservableProperty] bool isLoading;
     [ObservableProperty] string? error;
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsWriting), nameof(PreviewText))]
-    bool isPreview;
-    [ObservableProperty] HtmlWebViewSource? preview;
-
-    public bool IsWriting => !IsPreview;
-    public string PreviewText => IsPreview ? "Write" : "Preview";
     public bool HasError => Error != null;
     partial void OnErrorChanged(string? value) => OnPropertyChanged(nameof(HasError));
 
@@ -116,20 +109,15 @@ public partial class FeedbackEditViewModel(ApiClient api, DialogService dialogs)
         }
     }
 
-    [RelayCommand]
-    async Task TogglePreview()
+    /// <summary>The address for the Link button; null if none was given (or it isn't one).</summary>
+    public async Task<string?> AskLinkAsync()
     {
-        if (IsPreview)
-        {
-            IsPreview = false;
-            return;
-        }
-        IsPreview = true;
-        Preview = new HtmlWebViewSource { Html = FeedbackHtml.Preview("<p class=\"meta\">Loading…</p>") };
-        if (await Online.Try(dialogs, "Couldn't show the preview", () => api.PreviewFeedbackAsync(Body)) is { } result)
-            Preview = new HtmlWebViewSource { Html = FeedbackHtml.Preview(result.Html) };
-        else
-            IsPreview = false;
+        var url = (await dialogs.Prompt("Link", "The web address to link to", "https://", Keyboard.Url, "Add link"))?.Trim();
+        if (string.IsNullOrEmpty(url) || url == "https://")
+            return null;
+        if (!url.Contains("://") && !url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+            url = "https://" + url;
+        return Uri.TryCreate(url, UriKind.Absolute, out _) ? url : null;
     }
 
     /// <summary>A picture, video or file from the device, put in the text where the cursor is.</summary>

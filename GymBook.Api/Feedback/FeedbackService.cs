@@ -272,7 +272,7 @@ public partial class FeedbackService(
             ? ToGitHub(t) + $"\n\n{Marker}\n<sub>@{username} in Gym Book</sub>"
             : throw new FeedbackException(400, "Write something first.");
 
-    // ---- Attachments and previews ----
+    // ---- Attachments ----
 
     static readonly Dictionary<string, string> FileTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -330,10 +330,6 @@ public partial class FeedbackService(
             cache.Set(key, bytes, TimeSpan.FromHours(1));
         return (bytes, type);
     }
-
-    /// <summary>Text as it will look, before it's sent.</summary>
-    public async Task<string> PreviewAsync(string markdown, string baseUrl, CancellationToken ct) =>
-        markdown.Trim().Length == 0 ? "" : ToAppHtml(await github.RenderMarkdownAsync(ToGitHub(markdown), ct), baseUrl);
 
     /// <summary>Letters, digits, dots, dashes and underscores, the extension kept.</summary>
     static string FileName(string name)

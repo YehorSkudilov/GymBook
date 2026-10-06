@@ -117,17 +117,6 @@ public class FeedbackAttachmentResponse
     public string Markdown { get; set; } = "";
 }
 
-public class FeedbackPreviewRequest
-{
-    [MaxLength(FeedbackLimits.BodyLength)]
-    public string Body { get; set; } = "";
-}
-
-public class FeedbackPreviewResponse
-{
-    public string Html { get; set; } = "";
-}
-
 public class FeedbackVoteResponse
 {
     public int Votes { get; set; }

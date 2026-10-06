@@ -333,7 +333,7 @@ public sealed class GitHubClient
         await RestAsync(HttpMethod.Delete, $"{RepoPath}/issues/comments/{id}", null, ct, notFoundIsNull: true);
     }
 
-    // ---- Attachments and Markdown ----
+    // ---- Attachments ----
 
     /// <summary>Commits a file to <see cref="GitHubOptions.AttachmentsBranch"/> at <paramref name="path"/>.</summary>
     public async Task PutFileAsync(string path, byte[] content, CancellationToken ct)
@@ -355,15 +355,6 @@ public sealed class GitHubClient
             return null;
         await EnsureSuccessAsync(response, ct);
         return await response.Content.ReadAsByteArrayAsync(ct);
-    }
-
-    /// <summary>Markdown as GitHub shows it in this repository, HTML.</summary>
-    public async Task<string> RenderMarkdownAsync(string markdown, CancellationToken ct)
-    {
-        await ReadyAsync(ct);
-        using var response = await _http.PostAsJsonAsync("markdown", new { text = markdown, mode = "gfm", context = $"{_options.Owner}/{_options.Repo}" }, ct);
-        await EnsureSuccessAsync(response, ct);
-        return await response.Content.ReadAsStringAsync(ct);
     }
 
     // ---- Calls ----

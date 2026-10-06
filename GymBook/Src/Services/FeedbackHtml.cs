@@ -35,10 +35,6 @@ public static class FeedbackHtml
         return Page(html.ToString());
     }
 
-    /// <summary>Text as it will look once sent.</summary>
-    public static string Preview(string bodyHtml) =>
-        Page(bodyHtml.Trim().Length > 0 ? $"<div class=\"markdown\">{bodyHtml}</div>" : "<p class=\"meta\">Nothing to preview yet.</p>");
-
     static string By(string author, bool team, bool mine) =>
         mine ? "you" : team ? $"<span class=\"teamname\">{E(author)}</span>" : author.Contains(' ') ? E(author) : "@" + E(author);
 
@@ -46,14 +42,14 @@ public static class FeedbackHtml
 
     static string E(string text) => WebUtility.HtmlEncode(text);
 
-    static string Page(string content) => $$"""
+    static string Page(string content, string background = "#0B0D12") => $$"""
         <!DOCTYPE html>
         <html><head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <style>
         :root { color-scheme: dark; }
-        body { margin: 0; padding: 14px 16px 28px; background: #0B0D12; color: #F4F6FB;
+        body { margin: 0; padding: 14px 16px 28px; background: {{background}}; color: #F4F6FB;
                font: 15px/1.55 -apple-system, "Segoe UI", Roboto, "Open Sans", sans-serif; overflow-wrap: anywhere; }
         a { color: #6E9BFF; }
         h1 { font-size: 22px; line-height: 1.3; margin: 0 0 6px; }

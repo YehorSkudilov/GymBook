@@ -83,12 +83,6 @@ public class FeedbackController(FeedbackService feedback, ICurrentUser currentUs
     public Task<ActionResult<FeedbackAttachmentResponse>> Attach(FeedbackAttachmentRequest request, CancellationToken ct) =>
         RunAsync(() => feedback.AttachAsync(Me, request, BaseUrl, ct));
 
-    /// <summary>Markdown as it will look once sent.</summary>
-    [HttpPost("preview")]
-    [EnableRateLimiting(RateLimits.Sync)]
-    public Task<ActionResult<FeedbackPreviewResponse>> Preview(FeedbackPreviewRequest request, CancellationToken ct) =>
-        RunAsync(async () => new FeedbackPreviewResponse { Html = await feedback.PreviewAsync(request.Body, BaseUrl, ct) });
-
     /// <summary>
     /// An attachment. Without signing in, so the app's page can show pictures as it would any other: the random id in
     /// the address is what keeps it private.
