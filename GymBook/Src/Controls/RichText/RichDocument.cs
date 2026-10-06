@@ -8,8 +8,11 @@ public enum BlockKind { Paragraph, Heading, Bullet, Numbered, Task, Quote, Code,
 [Flags]
 public enum InlineStyle { None = 0, Bold = 1, Italic = 2, Strike = 4, Code = 8 }
 
-/// <summary>How one character looks: its styles, and the link (or picture) it's part of.</summary>
-public readonly record struct CharFormat(InlineStyle Style, string? Link = null, bool Image = false)
+/// <summary>
+/// How one character looks: its styles, and the link it's part of. A picture is one character of its own,
+/// <see cref="RichDocument.ImageChar"/>, with <see cref="Image"/> set, its address as the link and its name as <see cref="Label"/>.
+/// </summary>
+public readonly record struct CharFormat(InlineStyle Style, string? Link = null, bool Image = false, string? Label = null)
 {
     public static readonly CharFormat Plain = new(InlineStyle.None);
 }
@@ -23,9 +26,11 @@ public enum RunStyle
     Marker = 32,
     Heading1 = 64, Heading2 = 128, Heading3 = 256,
     Quote = 512, CodeBlock = 1024, Checked = 2048,
+    /// <summary>A picture, drawn in place of its character (<see cref="StyleRun.Url"/> is where it's from).</summary>
+    Image = 4096,
 }
 
-public readonly record struct StyleRun(int Start, int Length, RunStyle Style);
+public readonly record struct StyleRun(int Start, int Length, RunStyle Style, string? Url = null);
 
 public sealed class RichLine
 {
@@ -176,6 +181,12 @@ public sealed class RichDocument
             for (var c = 0; c < line.Text.Length; c++)
             {
                 var f = line.Formats[c];
+                if (f.Image && line.Text[c] == ImageChar)
+                {
+                    // Each picture a run of its own: the platform draws it in place of its character.
+                    runs.Add(new StyleRun(textStart + c, 1, RunStyle.Image, f.Link));
+                    continue;
+                }
                 var style = block | (RunStyle)(int)f.Style;
                 if (f.Link != null)
                     style |= RunStyle.Link;
@@ -189,7 +200,7 @@ public sealed class RichDocument
         {
             if (style == RunStyle.None)
                 return;
-            if (runs.Count > 0 && runs[^1] is var last && last.Style == style && last.Start + last.Length == start)
+            if (runs.Count > 0 && runs[^1] is var last && last.Style == style && last.Url == null && last.Start + last.Length == start)
                 runs[^1] = last with { Length = last.Length + length };
             else
                 runs.Add(new StyleRun(start, length, style));
@@ -398,6 +409,9 @@ public sealed class RichDocument
         return ToShown(line, offset + label.Length);
     }
 
+    /// <summary>A picture in the shown text: the object character, drawn over as the picture by each platform.</summary>
+    public const char ImageChar = '￼';
+
     /// <summary>A picture or file on a line of its own, after the cursor's line if that has text.</summary>
     public int InsertAttachment(string label, string url, bool image, int at)
     {
@@ -411,7 +425,11 @@ public sealed class RichDocument
             Lines.Insert(++line, new RichLine());
         }
         Lines[line].Kind = BlockKind.Paragraph;
-        Lines[line].Append(label, new CharFormat(InlineStyle.None, url, image));
+        // A picture shows as itself; another file by its name, as a link.
+        if (image)
+            Lines[line].Append(ImageChar.ToString(), new CharFormat(InlineStyle.None, url, true, label));
+        else
+            Lines[line].Append(label, new CharFormat(InlineStyle.None, url));
         // And a line to carry on writing on.
         Lines.Insert(line + 1, new RichLine());
         return ToShown(line + 1, 0);

@@ -145,8 +145,12 @@ public static class RichMarkdown
             case AutolinkInline auto:
                 line.Append(auto.Url, format with { Link = auto.IsEmail ? "mailto:" + auto.Url : auto.Url });
                 break;
+            case LinkInline { IsImage: true } picture:
+                // A picture is one character, drawn as the picture; its name is kept for writing it back.
+                line.Append(RichDocument.ImageChar.ToString(), format with { Link = picture.Url ?? "", Image = true, Label = PlainText(picture) });
+                break;
             case LinkInline link:
-                var linked = format with { Link = link.Url ?? "", Image = link.IsImage };
+                var linked = format with { Link = link.Url ?? "", Image = false };
                 var start = line.Text.Length;
                 foreach (var child in link)
                     line = ReadInline(doc, line, child, linked);
@@ -167,6 +171,28 @@ public static class RichMarkdown
                 break;
         }
         return line;
+    }
+
+    /// <summary>The text inside an inline (a picture's name), without its formatting.</summary>
+    static string PlainText(ContainerInline container)
+    {
+        var text = new StringBuilder();
+        foreach (var inline in container)
+        {
+            switch (inline)
+            {
+                case LiteralInline literal:
+                    text.Append(literal.Content.ToString());
+                    break;
+                case CodeInline code:
+                    text.Append(code.Content);
+                    break;
+                case ContainerInline inner:
+                    text.Append(PlainText(inner));
+                    break;
+            }
+        }
+        return text.ToString();
     }
 
     // ---- Writing ----
@@ -225,6 +251,14 @@ public static class RichMarkdown
         var i = 0;
         while (i < text.Length)
         {
+            // A picture: ![name](address).
+            if (line.Formats[i] is { Image: true, Link: { } src } picture && text[i] == RichDocument.ImageChar)
+            {
+                var name = Escape(picture.Label ?? "image");
+                md.Append($"![{name}]({src.Replace(" ", "%20").Replace(")", "%29")})");
+                i++;
+                continue;
+            }
             // Links first: one link may hold text of several looks.
             var link = line.Formats[i].Link;
             var image = line.Formats[i].Image;

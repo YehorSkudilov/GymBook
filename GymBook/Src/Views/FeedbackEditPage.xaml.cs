@@ -56,3 +56,4 @@ public partial class FeedbackEditPage : BasePage
     [GeneratedRegex(@"^(?<image>!?)\[(?<label>[^\]]*)\]\((?<url>[^)\s]+)\)$")]
     private static partial Regex AttachmentLink();
 }
+

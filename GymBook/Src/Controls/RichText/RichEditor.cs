@@ -173,6 +173,22 @@ public class RichEditor : View
         OnPropertyChanged(nameof(IsEmpty));
     }
 
+    /// <summary>Everything painted again, as it is (a picture finished downloading).</summary>
+    internal void Repaint()
+    {
+        if (_platform is not { } platform)
+            return;
+        _busy = true;
+        try
+        {
+            platform.Paint(_doc.Styles(), 0, platform.Text.Length);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
     // ---- Formatting, from the toolbar ----
 
     (int Start, int Length) Selection => _platform == null ? (0, 0) : (_platform.SelectionStart, _platform.SelectionLength);

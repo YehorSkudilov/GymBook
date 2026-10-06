@@ -81,8 +81,36 @@ public class RichEditorHandler : ViewHandler<RichEditor, RichEditText>, IRichTex
             if (span is IRichSpan)
                 text.RemoveSpan(span);
         foreach (var run in runs)
+        {
+            if (run.Style.HasFlag(RunStyle.Image) && run.Url != null)
+            {
+                text.SetSpan(new RichImageSpan(Picture(run.Url), Context.Resources?.DisplayMetrics?.Density ?? 1), run.Start, run.Start + run.Length, SpanTypes.ExclusiveExclusive);
+                continue;
+            }
             foreach (var span in Spans(run.Style))
                 text.SetSpan(span, run.Start, run.Start + run.Length, SpanTypes.ExclusiveExclusive);
+        }
+    }
+
+    readonly Dictionary<string, Android.Graphics.Bitmap> _pictures = [];
+
+    /// <summary>A picture to draw, once it's downloaded (painted again then); shrunk to about the size it's shown at.</summary>
+    Android.Graphics.Bitmap? Picture(string url)
+    {
+        if (_pictures.TryGetValue(url, out var kept))
+            return kept;
+        if (RichImages.Get(url, () => VirtualView?.Repaint()) is not { } bytes)
+            return null;
+        var bounds = new Android.Graphics.BitmapFactory.Options { InJustDecodeBounds = true };
+        Android.Graphics.BitmapFactory.DecodeByteArray(bytes, 0, bytes.Length, bounds);
+        var target = RichImages.MaxWidth * 2 * (Context.Resources?.DisplayMetrics?.Density ?? 1);
+        var sample = 1;
+        while (bounds.OutWidth / (sample * 2) >= target)
+            sample *= 2;
+        if (Android.Graphics.BitmapFactory.DecodeByteArray(bytes, 0, bytes.Length, new Android.Graphics.BitmapFactory.Options { InSampleSize = sample }) is not { } bitmap)
+            return null;
+        _pictures[url] = bitmap;
+        return bitmap;
     }
 
     static IEnumerable<Java.Lang.Object> Spans(RunStyle style)
@@ -159,6 +187,49 @@ sealed class RichBackgroundSpan(AColor color) : BackgroundColorSpan(color), IRic
 sealed class RichColorSpan(AColor color) : ForegroundColorSpan(color), IRichSpan;
 sealed class RichUnderlineSpan : UnderlineSpan, IRichSpan;
 sealed class RichSizeSpan(float proportion) : RelativeSizeSpan(proportion), IRichSpan;
+
+/// <summary>A picture drawn in place of its character, at most <see cref="RichImages.MaxWidth"/> wide; a grey box while it downloads.</summary>
+sealed class RichImageSpan : ReplacementSpan, IRichSpan
+{
+    readonly Android.Graphics.Bitmap? _bitmap;
+    readonly int _width, _height;
+
+    public RichImageSpan(Android.Graphics.Bitmap? bitmap, float density)
+    {
+        _bitmap = bitmap;
+        var max = (float)RichImages.MaxWidth * density;
+        if (bitmap == null || bitmap.Width == 0)
+        {
+            (_width, _height) = ((int)(160 * density), (int)(100 * density));
+            return;
+        }
+        var scale = Math.Min(1f, max / bitmap.Width);
+        (_width, _height) = ((int)(bitmap.Width * scale), (int)(bitmap.Height * scale));
+    }
+
+    public override int GetSize(Android.Graphics.Paint paint, Java.Lang.ICharSequence? text, int start, int end, Android.Graphics.Paint.FontMetricsInt? fm)
+    {
+        // The line as tall as the picture.
+        if (fm != null)
+        {
+            fm.Ascent = fm.Top = -_height;
+            fm.Descent = fm.Bottom = 0;
+        }
+        return _width;
+    }
+
+    public override void Draw(Android.Graphics.Canvas canvas, Java.Lang.ICharSequence? text, int start, int end, float x, int top, int y, int bottom, Android.Graphics.Paint paint)
+    {
+        var rect = new Android.Graphics.RectF(x, y - _height, x + _width, y);
+        if (_bitmap != null)
+        {
+            canvas.DrawBitmap(_bitmap, null, rect, null);
+            return;
+        }
+        using var fill = new Android.Graphics.Paint { Color = AColor.ParseColor("#2A3040") };
+        canvas.DrawRoundRect(rect, 12, 12, fill);
+    }
+}
 
 #elif IOS || MACCATALYST
 using Foundation;
@@ -257,11 +328,40 @@ public class RichEditorHandler : ViewHandler<RichEditor, UITextView>, IRichTextP
         storage.BeginEditing();
         storage.SetAttributes(plain.Dictionary, new NSRange(0, storage.Length));
         foreach (var run in runs)
+        {
+            if (run.Style.HasFlag(RunStyle.Image) && run.Url != null)
+            {
+                // The picture's character (the object character) drawn as the picture.
+                storage.AddAttribute(UIStringAttributeKey.Attachment, Attachment(run.Url), new NSRange(run.Start, run.Length));
+                continue;
+            }
             storage.AddAttributes(Attributes(run.Style).Dictionary, new NSRange(run.Start, run.Length));
+        }
         storage.EndEditing();
         // What's typed next starts plain; RichEditor paints it as it should be.
         PlatformView.TypingAttributes2 = plain.Dictionary;
         UpdatePlaceholder();
+    }
+
+    readonly Dictionary<string, UIImage> _pictures = [];
+
+    /// <summary>A picture at most <see cref="RichImages.MaxWidth"/> wide, or a grey box until it's downloaded (painted again then).</summary>
+    NSTextAttachment Attachment(string url)
+    {
+        if (!_pictures.TryGetValue(url, out var picture) && RichImages.Get(url, () => VirtualView?.Repaint()) is { } bytes
+            && UIImage.LoadFromData(NSData.FromArray(bytes)) is { } loaded)
+            _pictures[url] = picture = loaded;
+        if (picture == null || picture.Size.Width <= 0)
+        {
+            var box = new UIGraphicsImageRenderer(new CoreGraphics.CGSize(160, 100)).CreateImage(context =>
+            {
+                CodeBackground.SetFill();
+                UIBezierPath.FromRoundedRect(new CoreGraphics.CGRect(0, 0, 160, 100), 12).Fill();
+            });
+            return new NSTextAttachment { Image = box, Bounds = new CoreGraphics.CGRect(0, 0, 160, 100) };
+        }
+        var scale = Math.Min(1, RichImages.MaxWidth / picture.Size.Width);
+        return new NSTextAttachment { Image = picture, Bounds = new CoreGraphics.CGRect(0, 0, picture.Size.Width * scale, picture.Size.Height * scale) };
     }
 
     UIStringAttributes Attributes(RunStyle style)
@@ -441,12 +541,73 @@ public class RichEditorHandler : ViewHandler<RichEditor, RichEditBox>, IRichText
             {
                 if (run.Start + run.Length <= start || run.Start >= end)
                     continue;
+                if (run.Style.HasFlag(RunStyle.Image) && run.Url != null)
+                {
+                    ShowPicture(document, run.Start, run.Url);
+                    continue;
+                }
                 document.GetRange(Math.Max(run.Start, start), Math.Min(run.Start + run.Length, end)).CharacterFormat = Format(plain, size, run.Style);
             }
         }
         finally
         {
             document.ApplyDisplayUpdates();
+        }
+    }
+
+    // Each picture, ready to embed (copied each time), and the size it's shown at, once downloaded and measured.
+    readonly Dictionary<string, (Windows.Storage.Streams.InMemoryRandomAccessStream Stream, int Width, int Height)> _pictures = [];
+    readonly HashSet<string> _measuring = [];
+
+    /// <summary>
+    /// The picture's character, made the picture: RichEditBox embeds it as an object, which reads back as the same
+    /// object character, so the text stays the same. Already one (its own text is its name, not the character): left
+    /// as it is. Not downloaded yet: it is, then everything is painted again.
+    /// </summary>
+    void ShowPicture(RichEditTextDocument document, int at, string url)
+    {
+        var range = document.GetRange(at, at + 1);
+        range.GetText(TextGetOptions.UseObjectText, out var shown);
+        if (shown != RichDocument.ImageChar.ToString())
+            return;
+        if (!_pictures.TryGetValue(url, out var picture))
+        {
+            _ = MeasureAsync(url);
+            return;
+        }
+        using var copy = picture.Stream.CloneStream();
+        range.SetText(TextSetOptions.None, "");
+        range.InsertImage(picture.Width, picture.Height, picture.Height, VerticalCharacterAlignment.Baseline, "image", copy);
+    }
+
+    async Task MeasureAsync(string url)
+    {
+        if (!_measuring.Add(url))
+            return;
+        try
+        {
+            if (await RichImages.GetAsync(url) is not { } bytes)
+                return;
+            var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+            using (var writer = new Windows.Storage.Streams.DataWriter(stream.GetOutputStreamAt(0)))
+            {
+                writer.WriteBytes(bytes);
+                await writer.StoreAsync();
+                writer.DetachStream();
+            }
+            stream.Seek(0);
+            var decoder = await Windows.Graphics.Imaging.BitmapDecoder.CreateAsync(stream.CloneStream());
+            var scale = Math.Min(1, RichImages.MaxWidth / Math.Max(1, decoder.PixelWidth));
+            _pictures[url] = (stream, (int)(decoder.PixelWidth * scale), (int)(decoder.PixelHeight * scale));
+            VirtualView?.Repaint();
+        }
+        catch (Exception)
+        {
+            // Not a picture Windows can read: it stays a placeholder.
+        }
+        finally
+        {
+            _measuring.Remove(url);
         }
     }
 
