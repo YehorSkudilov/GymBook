@@ -371,7 +371,8 @@ public partial class NutritionViewModel(
 
         // Calories, as Samsung Health shows them: eaten large, the goal and its on-target range beside it, then a bar
         // from 0 with eaten filling it (orange past what was burned), the range hatched, a tick at the burn and a target
-        // at the goal. Under the number, the surplus or deficit; without a burn, what's left of the goal.
+        // at the goal. Under the number, the surplus or deficit; without a burn, what's left of the goal; a past day with
+        // nothing logged is just unlogged.
         var goal = p.CalorieGoal;
         var burnedKcal = day.BurnSource == BurnSource.Measured ? day.BurnedKcal : null;
         CalorieBar = new CalorieBarDrawable(day.EatenKcal, burnedKcal, goal, Green, Orange, Accent);
@@ -387,6 +388,7 @@ public partial class NutritionViewModel(
             // word says which ("101 deficit", not "−101").
             ? IsMaintenance(balance) ? ($"Maintenance{soFar}", Green)
                 : ($"{NutritionService.Kcal(Math.Abs(balance))} {(balance > 0 ? "surplus" : "deficit")}{soFar}", balance > 0 ? Orange : Accent)
+            : !day.IsToday && !day.IsLogged ? ("Nothing logged", Secondary)
             : goal is { } g
                 ? day.EatenKcal <= g ? ($"{NutritionService.Kcal(g - day.EatenKcal)} left", Secondary) : ($"{NutritionService.Kcal(day.EatenKcal - g)} over", Red)
                 : ("", Secondary);
