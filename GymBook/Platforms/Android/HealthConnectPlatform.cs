@@ -357,10 +357,10 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
         }
 
         /// <summary>
-        /// Minutes asleep each day between the two local times, by the day each sleep ended on, from every sleep
-        /// session recorded (by the apps picked): overlapping ones from different apps count once.
+        /// Each day's sleep between the two local times (minutes asleep, and when the night's ended), by the day each sleep
+        /// ended on, from every sleep session recorded (by the apps picked): overlapping ones from different apps count once.
         /// </summary>
-        async Task<Dictionary<DateTime, int>> ReadSleepAsync(DateTime from, DateTime to)
+        async Task<Dictionary<DateTime, SleepDay>> ReadSleepAsync(DateTime from, DateTime to)
         {
             var sleeps = new List<(DateTime Start, DateTime End)>();
             long? page = null;

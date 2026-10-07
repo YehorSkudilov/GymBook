@@ -186,14 +186,15 @@ sealed class SamsungHealthData
     }
 
     /// <summary>
-    /// Minutes asleep each day between the two local times, by the day the sleep ended on (the night woken up from, plus
-    /// any naps): each sleep's time asleep (its DURATION, without the time awake in it), else its length.
+    /// Each day's sleep between the two local times, by the day the sleep ended on (the night woken up from, plus any
+    /// naps): minutes asleep (each sleep's DURATION, without the time awake in it, else its length), and when the longest
+    /// ended.
     /// </summary>
-    public async Task<Dictionary<DateTime, int>> ReadSleepAsync(DateTime from, DateTime to)
+    public async Task<Dictionary<DateTime, Services.Health.SleepDay>> ReadSleepAsync(DateTime from, DateTime to)
     {
         const string type = "DataType$SleepType";
         var duration = Field(type, "DURATION");
-        var days = new Dictionary<DateTime, int>();
+        var days = new Dictionary<DateTime, (int Minutes, int Longest, DateTime WokeAt)>();
         // From the day before: a night that began then ends on the first day.
         foreach (var point in await ReadAsync(Sleep, type, from.AddDays(-1), to))
         {
@@ -202,10 +203,12 @@ sealed class SamsungHealthData
             var minutes = Value(point, duration)?.JavaCast<Java.Time.Duration>()?.ToMinutes() is long asleep && asleep > 0
                 ? (int)asleep
                 : StartTime(point) is { } start ? (int)(end - start).TotalMinutes : 0;
-            if (minutes > 0)
-                days[end.Date] = Math.Min(1440, days.GetValueOrDefault(end.Date) + minutes);
+            if (minutes <= 0)
+                continue;
+            var day = days.GetValueOrDefault(end.Date);
+            days[end.Date] = (Math.Min(1440, day.Minutes + minutes), Math.Max(day.Longest, minutes), minutes > day.Longest ? end : day.WokeAt);
         }
-        return days;
+        return days.ToDictionary(d => d.Key, d => new Services.Health.SleepDay(d.Value.Minutes, d.Value.WokeAt));
     }
 
     /// <summary>The height on Samsung Health's profile, in cm.</summary>

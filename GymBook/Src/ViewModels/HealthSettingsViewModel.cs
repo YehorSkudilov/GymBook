@@ -117,6 +117,21 @@ public partial class HealthSettingsViewModel(DataStore store, HealthSyncService 
         await Busy(() => health.SyncAsync(force: true));
     }
 
+    /// <summary>
+    /// The health row tapped (not its Sync now): connected, a popup with the rest (where it reads from, sending back, what it
+    /// can read, disconnecting); not yet, connecting.
+    /// </summary>
+    [RelayCommand]
+    async Task Open()
+    {
+        if (!health.IsConnected)
+        {
+            await Action();
+            return;
+        }
+        await Shell.Current.Navigation.PushModalAsync(new HealthSettingsPage(this), false);
+    }
+
     /// <summary>Samsung Health itself or Health Connect when Samsung Health is on the phone, else Health Connect; null when cancelled.</summary>
     async Task<HealthSource?> ChooseSourceAsync()
     {

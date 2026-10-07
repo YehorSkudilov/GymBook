@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:SheetPage
+    x:Class="GymBook.Views.HealthSettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:HealthSettingsViewModel"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
+
+    <!-- The health app connection in full, from its row in Profile › Data: what it reads and how it's going (with Sync now),
+         where it reads from, sending Gym Book's data back, what it may read, and disconnecting (which closes this). -->
+    <views:SheetPage.Resources>
+        <Style x:Key="Row" TargetType="Grid">
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="ColumnDefinitions" Value="*,Auto,Auto" />
+            <Setter Property="ColumnSpacing" Value="8" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+        </Style>
+        <Style x:Key="RowValue" TargetType="Label">
+            <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="Chevron" TargetType="Image">
+            <Setter Property="Source" Value="{StaticResource IconChevronRight}" />
+            <Setter Property="WidthRequest" Value="16" />
+            <Setter Property="HeightRequest" Value="16" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+        <Style x:Key="Divider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Margin" Value="16,0" />
+            <Setter Property="Color" Value="{StaticResource Surface2}" />
+        </Style>
+    </views:SheetPage.Resources>
+
+    <Grid>
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnBackdropTapped" />
+        </Grid.GestureRecognizers>
+        <Border VerticalOptions="End" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0" Margin="0,40,0,0">
+            <!-- Swallows taps, so only the dimmed area above closes the sheet. -->
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer />
+            </Border.GestureRecognizers>
+            <ScrollView>
+                <VerticalStackLayout Spacing="12" Padding="10,22,10,18">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="10,0">
+                        <Label Text="Health data" Style="{StaticResource H2}" FontSize="20" VerticalOptions="Center" />
+                        <ImageButton Grid.Column="1" Source="{StaticResource IconClose}" WidthRequest="36" HeightRequest="36" Padding="8"
+                                     CornerRadius="18" BackgroundColor="{StaticResource Surface2}" VerticalOptions="Start" Clicked="OnDoneClicked" />
+                    </Grid>
+
+                    <!-- What it reads and how it's going, with Sync now, as on its row in the Profile tab -->
+                    <Border Style="{StaticResource Card}" Padding="0">
+                        <Grid Style="{StaticResource Row}" ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout VerticalOptions="Center">
+                                <Label Text="{Binding Title}" />
+                                <Label Text="{Binding Status}" Style="{StaticResource Caption}" FontSize="12" />
+                                <ProgressBar Progress="{Binding HistoryProgress}" ProgressColor="{StaticResource Accent}" HeightRequest="4"
+                                             Margin="0,6,0,0" IsVisible="{Binding ShowHistoryProgress}" />
+                            </VerticalStackLayout>
+                            <Button Grid.Column="1" Text="{Binding ActionText}" Style="{StaticResource GhostButton}" TextColor="{StaticResource Accent}"
+                                    FontSize="14" Padding="10,6" VerticalOptions="Center" Command="{Binding ActionCommand}" />
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" Padding="0">
+                        <VerticalStackLayout>
+                            <Grid Style="{StaticResource Row}">
+                                <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding ChooseAppsCommand}" /></Grid.GestureRecognizers>
+                                <Label Text="Read from" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding AppsText}" Style="{StaticResource RowValue}" MaximumWidthRequest="190" LineBreakMode="TailTruncation" />
+                                <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <!-- The other way: Gym Book's workouts, food and weights to the health app (HealthWriteBack) -->
+                            <BoxView Style="{StaticResource Divider}" IsVisible="{Binding ShowSendBack}" />
+                            <Grid Style="{StaticResource Row}" Padding="16,6" IsVisible="{Binding ShowSendBack}">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="{Binding SendBackTitle}" />
+                                    <Label Text="{Binding SendBackStatus}" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="2" IsToggled="{Binding SendBack}" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+                            <Grid Style="{StaticResource Row}">
+                                <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenPermissionsCommand}" /></Grid.GestureRecognizers>
+                                <Label Text="What Gym Book can read" VerticalOptions="Center" />
+                                <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+                            <Grid Style="{StaticResource Row}">
+                                <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding DisconnectCommand}" /></Grid.GestureRecognizers>
+                                <Label Text="Disconnect" TextColor="{StaticResource Danger}" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Border>
+    </Grid>
+</views:SheetPage>

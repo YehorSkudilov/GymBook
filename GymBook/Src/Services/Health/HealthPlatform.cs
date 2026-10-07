@@ -16,7 +16,11 @@ public record HealthDayReading(
     double? FoodProteinG,
     double? FoodCarbsG,
     double? FoodFatG,
-    int? SleepMinutes = null);
+    int? SleepMinutes = null,
+    DateTime? WokeAt = null);
+
+/// <summary>A day's sleep: minutes asleep (the night woken up from, plus naps), and when the night's sleep (the longest) ended.</summary>
+public record SleepDay(int Minutes, DateTime? WokeAt);
 
 /// <summary>A day's body measurements, the last of each kind that day.</summary>
 public record BodyReading(

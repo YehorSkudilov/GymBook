@@ -48,7 +48,7 @@
     </ContentView.Resources>
 
     <VerticalStackLayout Spacing="14">
-        <!-- The title, the streak and Goals, and at its far right the badges (bedtime, online) -->
+        <!-- The title, the streak, the badges (bedtime, online), and at its far right Goals -->
         <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
             <Label Text="Nutrition" Style="{StaticResource Title}" VerticalOptions="Center" LineBreakMode="TailTruncation" />
             <!-- The logging streak: a small flame and the days in a row, faded until something's logged today; tap for more -->
@@ -60,8 +60,8 @@
                     <Label Text="{Binding StreakCount}" FontFamily="OpenSansSemibold" FontSize="13" VerticalOptions="Center" />
                 </HorizontalStackLayout>
             </Border>
-            <Button Grid.Column="2" Text="Goals" Style="{StaticResource SmallButton}" Command="{Binding OpenGoalsCommand}" VerticalOptions="Center" />
-            <views:StatusBadges Grid.Column="3" />
+            <views:StatusBadges Grid.Column="2" />
+            <Button Grid.Column="3" Text="Goals" Style="{StaticResource SmallButton}" Command="{Binding OpenGoalsCommand}" VerticalOptions="Center" />
         </Grid>
 
         <!-- Day | Trends | Ranks: one day at a time, a range of days with its totals and charts, or the nutrition boards -->

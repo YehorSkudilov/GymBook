@@ -43,7 +43,8 @@ public class NoBedtimeNotifier : IBedtimeNotifier
     }
 }
 
-public enum WakeSource { Alarm, Setting }
+/// <summary>What a night's wake-up comes from: the phone's alarm, when the user usually wakes (from recorded sleep), or the time set.</summary>
+public enum WakeSource { Alarm, Learned, Setting }
 
 /// <summary>
 /// The night ahead: when to be in bed for the sleep goal before <see cref="WakeAt"/> (the phone's alarm, or the wake-up
@@ -56,8 +57,8 @@ public record BedtimePlan(DateTime Bedtime, DateTime WakeAt, WakeSource Source, 
 }
 
 /// <summary>
-/// Bedtime: worked back from when the user wakes (the next alarm on Android when it rings within a day, else the wake-up
-/// time set) by the sleep they aim for, shown on the Workout tab with the day's progress towards it, and reminded of with
+/// Bedtime: worked back from when the user wakes (the next alarm on Android when it rings within a day, else when they
+/// usually wake on that kind of day by their recorded sleep, else the wake-up time set) by the sleep they aim for, shown on the Workout tab with the day's progress towards it, and reminded of with
 /// notifications a while before and at it. The settings are this device's own (the alarm is this phone's), kept in its
 /// preferences.
 /// </summary>
@@ -111,6 +112,77 @@ public class BedtimeService(IAlarmClock alarm, IBedtimeNotifier notifier, Recove
         set => Set("alarm", value);
     }
 
+    /// <summary>
+    /// Without an alarm, bedtime counts back from when the user usually wakes on that kind of day (see
+    /// <see cref="LearnedWake"/>) once there's enough sleep recorded; until then, and with this off, from <see cref="WakeTime"/>.
+    /// </summary>
+    public bool LearnWake
+    {
+        get => Preferences.Default.Get(Prefix + "learn", true);
+        set => Set("learn", value);
+    }
+
+    // ---- Learning when the user wakes ----
+
+    /// <summary>How far back the usual wake-up time looks, and how many nights of that kind of day it needs.</summary>
+    const int LearnDays = 21, LearnNights = 3;
+
+    /// <summary>
+    /// When each night's sleep ended, from the health apps as they're read (HealthSyncService): kept on this device, the
+    /// last couple of months, as minutes after midnight by the day woken up on.
+    /// </summary>
+    public void RecordWakeTimes(IEnumerable<(DateTime Day, DateTime WokeAt)> nights)
+    {
+        var known = WakeTimes();
+        var changed = false;
+        foreach (var (day, wokeAt) in nights)
+        {
+            var minute = (int)wokeAt.TimeOfDay.TotalMinutes;
+            if (known.GetValueOrDefault(day.Date) != minute)
+                (known[day.Date], changed) = (minute, true);
+        }
+        if (!changed)
+            return;
+        var cutoff = DateTime.Today.AddDays(-60);
+        Preferences.Default.Set(Prefix + "woke", string.Join(";", known.Where(k => k.Key >= cutoff).OrderBy(k => k.Key)
+            .Select(k => $"{k.Key:yyyy-MM-dd}={k.Value}")));
+        Reschedule();
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
+    Dictionary<DateTime, int> WakeTimes()
+    {
+        var known = new Dictionary<DateTime, int>();
+        foreach (var part in Preferences.Default.Get(Prefix + "woke", "").Split(';', StringSplitOptions.RemoveEmptyEntries))
+            if (part.Split('=') is [var d, var m]
+                && DateTime.TryParseExact(d, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
+                && int.TryParse(m, CultureInfo.InvariantCulture, out var minute))
+                known[day] = minute;
+        return known;
+    }
+
+    static bool IsWeekend(DateTime day) => day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+
+    /// <summary>
+    /// When the user usually wakes on a day like <paramref name="day"/> (weekdays and weekends apart): the middle of the
+    /// last three weeks' wake-ups on those days, to the nearest 5 minutes, leaving out naps and night shifts (waking
+    /// outside 3:00 to 13:00). Null with fewer than three nights of that kind to go by.
+    /// </summary>
+    public TimeSpan? LearnedWake(DateTime day)
+    {
+        var weekend = IsWeekend(day);
+        var minutes = WakeTimes().Where(w => w.Key > DateTime.Today.AddDays(-LearnDays) && IsWeekend(w.Key) == weekend && w.Value is >= 3 * 60 and <= 13 * 60)
+            .Select(w => w.Value).Order().ToList();
+        if (minutes.Count < LearnNights)
+            return null;
+        var middle = minutes.Count % 2 == 1 ? minutes[minutes.Count / 2] : (minutes[minutes.Count / 2 - 1] + minutes[minutes.Count / 2]) / 2;
+        return TimeSpan.FromMinutes(Math.Round(middle / 5.0) * 5);
+    }
+
+    /// <summary>When the user wakes on <paramref name="day"/> without an alarm: the usual time learned, else the one set.</summary>
+    (TimeSpan Time, WakeSource Source) WakeOn(DateTime day) =>
+        LearnWake && LearnedWake(day) is { } learned ? (learned, WakeSource.Learned) : (WakeTime, WakeSource.Setting);
+
     /// <summary>How long before bedtime the first reminder comes; 0 for only the one at bedtime.</summary>
     public int ReminderLeadMinutes
     {
@@ -134,10 +206,20 @@ public class BedtimeService(IAlarmClock alarm, IBedtimeNotifier notifier, Recove
     {
         if (UseAlarm && alarm.NextAlarm() is { } next && next > now && next - now <= TimeSpan.FromHours(24))
             return For(next, WakeSource.Alarm);
-        var wake = now.Date + WakeTime;
-        if (wake <= now)
-            wake = wake.AddDays(1);
-        return For(wake, WakeSource.Setting);
+        // The next wake-up after now: today's if it's still ahead, else tomorrow's (each by its own kind of day).
+        var (time, source) = WakeOn(now.Date);
+        if (now.Date + time > now)
+            return For(now.Date + time, source);
+        var tomorrow = now.Date.AddDays(1);
+        (time, source) = WakeOn(tomorrow);
+        return For(tomorrow + time, source);
+    }
+
+    /// <summary>The night before <paramref name="day"/>'s wake-up, without an alarm to go by.</summary>
+    BedtimePlan ForDay(DateTime day)
+    {
+        var (time, source) = WakeOn(day);
+        return For(day.Date + time, source);
     }
 
     BedtimePlan For(DateTime wake, WakeSource source) => new(wake.AddMinutes(-SleepGoalMinutes), wake, source, wake.AddDays(-1));
@@ -155,8 +237,13 @@ public class BedtimeService(IAlarmClock alarm, IBedtimeNotifier notifier, Recove
     public static Color ColorFor(BedtimePlan plan, DateTime now) =>
         now >= plan.Bedtime ? Color.FromArgb("#FF4D5E") : plan.Bedtime - now <= TimeSpan.FromHours(1) ? Color.FromArgb("#FFB020") : Color.FromArgb("#7C5CFF");
 
-    /// <summary>"your 6:30 alarm" or "waking at 7:00".</summary>
-    static string Before(BedtimePlan plan) => plan.Source == WakeSource.Alarm ? $"your {Time(plan.WakeAt)} alarm" : $"waking at {Time(plan.WakeAt)}";
+    /// <summary>"your 6:30 alarm", "waking around 6:45, as you usually do" or "waking at 7:00".</summary>
+    public static string Before(BedtimePlan plan) => plan.Source switch
+    {
+        WakeSource.Alarm => $"your {Time(plan.WakeAt)} alarm",
+        WakeSource.Learned => $"waking around {Time(plan.WakeAt)}, as you usually do",
+        _ => $"waking at {Time(plan.WakeAt)}",
+    };
 
     public static string Time(DateTime t) => t.ToString("t", CultureInfo.CurrentCulture);
 
@@ -192,7 +279,7 @@ public class BedtimeService(IAlarmClock alarm, IBedtimeNotifier notifier, Recove
         var goal = Span(TimeSpan.FromMinutes(SleepGoalMinutes));
         for (var night = 0; night < 7; night++)
         {
-            var plan = night == 0 ? tonight : For(tonight.WakeAt.Date.AddDays(night) + WakeTime, WakeSource.Setting);
+            var plan = night == 0 ? tonight : ForDay(tonight.WakeAt.Date.AddDays(night));
             var lead = ReminderLeadMinutes;
             if (lead > 0 && plan.Bedtime.AddMinutes(-lead) > now)
                 list.Add(new(100 + night * 2, BedtimeReminderKind.WindDown, plan.Bedtime.AddMinutes(-lead),

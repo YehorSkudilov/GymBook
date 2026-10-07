@@ -9,7 +9,7 @@ namespace GymBook.Services.Health;
 /// the rest, so other devices see it too. A weight logged in Gym Book itself is never overwritten. The profile's body weight
 /// is left alone: the AI features send it, and health data never goes to them (see the API's privacy policy).
 /// </summary>
-public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> platforms, HealthWriteBack writeBack)
+public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> platforms, HealthWriteBack writeBack, BedtimeService bedtime)
 {
     /// <summary>How far back each regular read goes (and what's sent back, see <see cref="HealthWriteBack"/>).</summary>
     public const int Days = 30;
@@ -271,6 +271,8 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
     {
         var data = store.Data;
         var changed = false;
+        // When each night's sleep ended, for bedtime to learn the usual wake-up time from (kept on this device).
+        bedtime.RecordWakeTimes(result.Days.Where(d => d.WokeAt != null).Select(d => (d.Date.Date, d.WokeAt!.Value)));
 
         foreach (var reading in result.Days)
         {

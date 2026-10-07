@@ -391,7 +391,8 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
         OtherPlans = items.Where(i => !i.IsActive).ToList();
         HasOtherPlans = OtherPlans.Count > 0;
         var unlinked = store.History.Count(s => store.GetPlan(s.PlanId) == null);
-        UnlinkedText = unlinked > 0 ? $"Unlinked workouts ({unlinked})" : "Unlinked workouts";
+        // Short, for the small button beside the title.
+        UnlinkedText = unlinked > 0 ? $"Unlinked ({unlinked})" : "Unlinked";
     }
 
     void OnSuggestionsChanged(object? sender, EventArgs e) => MainThread.BeginInvokeOnMainThread(ShowPlans);

@@ -9,12 +9,12 @@
     x:DataType="vm:PlansViewModel">
 
         <VerticalStackLayout Spacing="16">
-            <!-- The title, then the workouts linked to no plan, and at its far right the badges (bedtime, online). -->
+            <!-- The title, the badges (bedtime, online), and at its far right the workouts linked to no plan, as a small button. -->
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
-                <Label Text="Plans" Style="{StaticResource Title}" VerticalOptions="Center" />
-                <Button Grid.Column="1" Text="{Binding UnlinkedText}" Style="{StaticResource GhostButton}" TextColor="{StaticResource Accent}"
-                        FontSize="14" Padding="10,6" VerticalOptions="Center" Command="{Binding OpenUnlinkedCommand}" />
-                <views:StatusBadges Grid.Column="2" />
+                <Label Text="Plans" Style="{StaticResource Title}" VerticalOptions="Center" LineBreakMode="TailTruncation" />
+                <views:StatusBadges Grid.Column="1" />
+                <Button Grid.Column="2" Text="{Binding UnlinkedText}" Style="{StaticResource SmallButton}" VerticalOptions="Center"
+                        Command="{Binding OpenUnlinkedCommand}" />
             </Grid>
 
             <!-- Plans others shared with the user, to look at and accept or decline. -->

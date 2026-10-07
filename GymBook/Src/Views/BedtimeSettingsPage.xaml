@@ -105,6 +105,15 @@
                                 <Switch Grid.Column="1" IsToggled="{Binding UseAlarm}" VerticalOptions="Center" />
                             </Grid>
                             <BoxView Style="{StaticResource Divider}" />
+                            <!-- When the user usually wakes, from the health app's recorded sleep (weekdays and weekends apart) -->
+                            <Grid Style="{StaticResource Row}">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Learn from my sleep" />
+                                    <Label Text="{Binding LearnText}" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="1" IsToggled="{Binding LearnWake}" VerticalOptions="Center" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
                             <Grid Style="{StaticResource Row}">
                                 <VerticalStackLayout VerticalOptions="Center">
                                     <Label Text="Wake-up time" />

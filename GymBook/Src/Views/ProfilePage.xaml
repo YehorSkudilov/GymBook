@@ -220,48 +220,26 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Data: first health data, from Samsung Health itself or other apps through Health Connect (connecting, which to
-                 read from, sending back; what's read shows on the Nutrition tab), then exporting, bringing workouts back, deleting -->
+            <!-- Data: first health data, from Samsung Health itself or other apps through Health Connect (one row; the rest in
+                 its popup; what's read shows on the Nutrition tab), then exporting, bringing workouts back, deleting -->
             <Label Text="DATA" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0">
                 <VerticalStackLayout>
+                    <!-- The health app, one row: what it reads and how it's going, with Sync now (or Connect). Tapped elsewhere,
+                         once connected, a popup with the rest (where it reads from, sending back, what it can read, disconnecting:
+                         HealthSettingsPage); not yet connected, it connects. -->
                     <Grid Style="{StaticResource Row}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding Health.ActionCommand}" /></Grid.GestureRecognizers>
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding Health.OpenCommand}" /></Grid.GestureRecognizers>
                         <VerticalStackLayout VerticalOptions="Center">
                             <Label Text="{Binding Health.Title}" />
                             <Label Text="{Binding Health.Status}" Style="{StaticResource Caption}" FontSize="12" />
                             <ProgressBar Progress="{Binding Health.HistoryProgress}" ProgressColor="{StaticResource Accent}" HeightRequest="4"
                                          Margin="0,6,0,0" IsVisible="{Binding Health.ShowHistoryProgress}" />
                         </VerticalStackLayout>
-                        <Label Grid.Column="1" Text="{Binding Health.ActionText}" TextColor="{StaticResource Accent}" FontSize="14" VerticalOptions="Center"
-                               IsVisible="{Binding Health.IsAvailable}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" IsVisible="{Binding Health.IsConnected}" />
-                    <Grid Style="{StaticResource Row}" IsVisible="{Binding Health.IsConnected}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding Health.ChooseAppsCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Read from" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="{Binding Health.AppsText}" Style="{StaticResource RowValue}" MaximumWidthRequest="190" LineBreakMode="TailTruncation" />
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                    <!-- The other way: Gym Book's workouts, food and weights to the health app (HealthWriteBack) -->
-                    <BoxView Style="{StaticResource Divider}" IsVisible="{Binding Health.ShowSendBack}" />
-                    <Grid Style="{StaticResource Row}" Padding="16,6" IsVisible="{Binding Health.ShowSendBack}">
-                        <VerticalStackLayout VerticalOptions="Center">
-                            <Label Text="{Binding Health.SendBackTitle}" />
-                            <Label Text="{Binding Health.SendBackStatus}" Style="{StaticResource Caption}" FontSize="12" />
-                        </VerticalStackLayout>
-                        <Switch Grid.Column="2" IsToggled="{Binding Health.SendBack}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" IsVisible="{Binding Health.IsConnected}" />
-                    <Grid Style="{StaticResource Row}" IsVisible="{Binding Health.IsConnected}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding Health.OpenPermissionsCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="What Gym Book can read" VerticalOptions="Center" />
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
-                    <BoxView Style="{StaticResource Divider}" IsVisible="{Binding Health.IsConnected}" />
-                    <Grid Style="{StaticResource Row}" IsVisible="{Binding Health.IsConnected}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding Health.DisconnectCommand}" /></Grid.GestureRecognizers>
-                        <Label Text="Disconnect" TextColor="{StaticResource Danger}" VerticalOptions="Center" />
+                        <Button Grid.Column="1" Text="{Binding Health.ActionText}" Style="{StaticResource GhostButton}" TextColor="{StaticResource Accent}"
+                                FontSize="14" Padding="10,6" VerticalOptions="Center" Command="{Binding Health.ActionCommand}"
+                                IsVisible="{Binding Health.IsAvailable}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" IsVisible="{Binding Health.IsConnected}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}">

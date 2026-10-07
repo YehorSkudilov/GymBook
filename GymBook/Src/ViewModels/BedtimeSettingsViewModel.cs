@@ -24,6 +24,7 @@ public partial class BedtimeSettingsViewModel : ObservableObject
         leadIndex = Math.Max(0, Array.IndexOf(Leads, bedtime.ReminderLeadMinutes));
         goalIndex = Math.Max(0, Array.IndexOf(Goals, Goals.MinBy(g => Math.Abs(g - bedtime.SleepGoalMinutes))));
         useAlarm = bedtime.UseAlarm;
+        learnWake = bedtime.LearnWake;
         wakeTime = bedtime.WakeTime;
         _loading = false;
         ShowPreview();
@@ -43,7 +44,10 @@ public partial class BedtimeSettingsViewModel : ObservableObject
     [ObservableProperty] int leadIndex;
     [ObservableProperty] int goalIndex;
     [ObservableProperty] bool useAlarm;
+    [ObservableProperty] bool learnWake;
     [ObservableProperty] TimeSpan wakeTime;
+    /// <summary>What's been learned so far: "Usually up around 6:45 on weekdays, 8:30 at weekends", or that it's still learning.</summary>
+    [ObservableProperty] string learnText = "";
     // Bedtime in full, above the settings, following them as they change.
     [ObservableProperty] string bedtimeTime = "";
     [ObservableProperty] string headline = "";
@@ -52,7 +56,7 @@ public partial class BedtimeSettingsViewModel : ObservableObject
     [ObservableProperty] Color color = Color.FromArgb("#7C5CFF");
     [ObservableProperty] string reminderText = "";
 
-    public string WakeCaption => CanUseAlarm ? "When there's no alarm in the next day" : "Bedtime counts back from it";
+    public string WakeCaption => "Used until enough sleep is recorded, or with learning off";
 
     async partial void OnRemindersOnChanged(bool value)
     {
@@ -93,6 +97,14 @@ public partial class BedtimeSettingsViewModel : ObservableObject
         ShowPreview();
     }
 
+    partial void OnLearnWakeChanged(bool value)
+    {
+        if (_loading)
+            return;
+        _bedtime.LearnWake = value;
+        ShowPreview();
+    }
+
     partial void OnWakeTimeChanged(TimeSpan value)
     {
         if (_loading)
@@ -100,6 +112,9 @@ public partial class BedtimeSettingsViewModel : ObservableObject
         _bedtime.WakeTime = value;
         ShowPreview();
     }
+
+    static DateTime NextDay(Func<DateTime, bool> kind) =>
+        Enumerable.Range(0, 7).Select(i => DateTime.Today.AddDays(i)).First(kind);
 
     /// <summary>
     /// Tonight's bedtime in full: "Bed in 2 h 15 min", "8 h of sleep before your 6:30 alarm", the day's progress to it (in
@@ -113,6 +128,17 @@ public partial class BedtimeSettingsViewModel : ObservableObject
         (Headline, Detail) = _bedtime.Describe(plan, now);
         Progress = plan.Progress(now);
         Color = BedtimeService.ColorFor(plan, now);
+        // The next weekday and weekend day's learned wake-ups, whichever kinds have enough nights recorded.
+        var weekday = _bedtime.LearnedWake(NextDay(d => d.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday)));
+        var weekend = _bedtime.LearnedWake(NextDay(d => d.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday));
+        static string At(TimeSpan t) => BedtimeService.Time(DateTime.Today + t);
+        LearnText = (weekday, weekend) switch
+        {
+            ({ } a, { } b) => $"Usually up around {At(a)} on weekdays, {At(b)} at weekends",
+            ({ } a, null) => $"Usually up around {At(a)} on weekdays; still learning weekends",
+            (null, { } b) => $"Usually up around {At(b)} at weekends; still learning weekdays",
+            _ => "Still learning: needs a few nights of sleep recorded by your health app",
+        };
         ReminderText = !_bedtime.RemindersOn ? "Reminders are off"
             : _bedtime.ReminderLeadMinutes > 0
                 ? $"Reminders at {BedtimeService.Time(plan.Bedtime.AddMinutes(-_bedtime.ReminderLeadMinutes))} and {BedtimeService.Time(plan.Bedtime)}"
