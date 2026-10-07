@@ -89,7 +89,6 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     [ObservableProperty] string dayRecoverySleep = "";
     [ObservableProperty] string daySleepValue = "";
     [ObservableProperty] string daySleepCaption = "";
-    [ObservableProperty] IDrawable? daySleepChart;
     [ObservableProperty] List<StatItem> dayActivity = [];
     [ObservableProperty] string dayActivityCaption = "";
     [ObservableProperty] List<StatItem> dayBody = [];
@@ -188,7 +187,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         DayRecoverySleep = recovery.SleepNote(at);
     }
 
-    /// <summary>The night woken up from on the day, what it did to recovery, and the week of nights up to it.</summary>
+    /// <summary>The night woken up from on the day, and what it did to recovery.</summary>
     void ShowDaySleep()
     {
         var minutes = recovery.SleepOn(_date);
@@ -196,9 +195,6 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         DaySleepCaption = minutes is { } mins
             ? $"Night to {_date.ToString("ddd d MMM", CultureInfo.CurrentCulture)} · {RecoveryService.SleepEffect(mins)}"
             : "No sleep recorded for this night. Connect Health Connect or Samsung Health in the Profile tab to bring it in.";
-        DaySleepChart = new BarChartDrawable(
-            [.. Enumerable.Range(0, 7).Select(i => _date.AddDays(i - 6)).Select(d => new ChartPoint(d.ToString("ddd", CultureInfo.CurrentCulture), (recovery.SleepOn(d) ?? 0) / 60.0))],
-            Violet, v => $"{v:0.#} h");
     }
 
     [RelayCommand]

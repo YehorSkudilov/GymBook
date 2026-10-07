@@ -204,13 +204,12 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- The night woken up from on the day, and the week of nights up to it -->
+                <!-- The night woken up from on the day -->
                 <Border Style="{StaticResource Card}">
                     <VerticalStackLayout Spacing="8">
                         <Label Text="Sleep" Style="{StaticResource H3}" />
                         <Label Text="{Binding DaySleepValue}" Style="{StaticResource StatValue}" />
                         <Label Text="{Binding DaySleepCaption}" Style="{StaticResource Caption}" FontSize="12" />
-                        <GraphicsView Drawable="{Binding DaySleepChart}" HeightRequest="130" />
                     </VerticalStackLayout>
                 </Border>
 

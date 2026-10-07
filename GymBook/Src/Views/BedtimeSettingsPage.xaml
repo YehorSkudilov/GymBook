@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<views:SheetPage
+    x:Class="GymBook.Views.BedtimeSettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:BedtimeSettingsViewModel"
+    Shell.NavBarIsVisible="False"
+    Backdrop="#B3000000">
+
+    <!-- Bedtime's settings, from the Workout tab's bedtime card. Each applies at once. -->
+    <views:SheetPage.Resources>
+        <Style x:Key="Row" TargetType="Grid">
+            <Setter Property="Padding" Value="16,6" />
+            <Setter Property="ColumnDefinitions" Value="*,Auto" />
+            <Setter Property="ColumnSpacing" Value="8" />
+            <Setter Property="MinimumHeightRequest" Value="52" />
+        </Style>
+        <Style x:Key="Divider" TargetType="BoxView">
+            <Setter Property="HeightRequest" Value="1" />
+            <Setter Property="Margin" Value="16,0" />
+            <Setter Property="Color" Value="{StaticResource Surface2}" />
+        </Style>
+    </views:SheetPage.Resources>
+
+    <Grid>
+        <Grid.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnBackdropTapped" />
+        </Grid.GestureRecognizers>
+        <Border VerticalOptions="End" BackgroundColor="{StaticResource Bg}" StrokeShape="RoundRectangle 28,28,0,0" StrokeThickness="0" Padding="0" Margin="0,40,0,0">
+            <!-- Swallows taps, so only the dimmed area above closes the sheet. -->
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer />
+            </Border.GestureRecognizers>
+            <ScrollView>
+                <VerticalStackLayout Spacing="12" Padding="10,22,10,18">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="10,0">
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Bedtime" Style="{StaticResource H2}" FontSize="20" />
+                            <Label Text="{Binding Preview}" Style="{StaticResource Caption}" FontSize="14" />
+                        </VerticalStackLayout>
+                        <ImageButton Grid.Column="1" Source="{StaticResource IconClose}" WidthRequest="36" HeightRequest="36" Padding="8"
+                                     CornerRadius="18" BackgroundColor="{StaticResource Surface2}" VerticalOptions="Start" Clicked="OnDoneClicked" />
+                    </Grid>
+
+                    <!-- Reminders -->
+                    <Border Style="{StaticResource Card}" Padding="0">
+                        <VerticalStackLayout>
+                            <Grid Style="{StaticResource Row}">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Bedtime reminders" />
+                                    <Label Text="A notification before bed and at bedtime" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="1" IsToggled="{Binding RemindersOn}" VerticalOptions="Center" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" IsVisible="{Binding RemindersOn}" />
+                            <Grid Style="{StaticResource Row}" IsVisible="{Binding RemindersOn}">
+                                <Label Text="First reminder" VerticalOptions="Center" />
+                                <Picker Grid.Column="1" ItemsSource="{Binding LeadNames}" SelectedIndex="{Binding LeadIndex}"
+                                        TextColor="{StaticResource TextPrimary}" FontSize="14" MinimumWidthRequest="140" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Sleep and waking -->
+                    <Border Style="{StaticResource Card}" Padding="0">
+                        <VerticalStackLayout>
+                            <Grid Style="{StaticResource Row}">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Sleep goal" />
+                                    <Label Text="7 to 9 hours suits most people who train" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Picker Grid.Column="1" ItemsSource="{Binding GoalNames}" SelectedIndex="{Binding GoalIndex}"
+                                        TextColor="{StaticResource TextPrimary}" FontSize="14" MinimumWidthRequest="100" VerticalOptions="Center" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" IsVisible="{Binding CanUseAlarm}" />
+                            <Grid Style="{StaticResource Row}" IsVisible="{Binding CanUseAlarm}">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Use my next alarm" />
+                                    <Label Text="Bedtime counts back from the alarm set in your clock app, when it rings within a day"
+                                           Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="1" IsToggled="{Binding UseAlarm}" VerticalOptions="Center" />
+                            </Grid>
+                            <BoxView Style="{StaticResource Divider}" />
+                            <Grid Style="{StaticResource Row}">
+                                <VerticalStackLayout VerticalOptions="Center">
+                                    <Label Text="Wake-up time" />
+                                    <Label Text="{Binding WakeCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <TimePicker Grid.Column="1" Time="{Binding WakeTime}" TextColor="{StaticResource TextPrimary}" FontSize="14"
+                                            VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Border>
+    </Grid>
+</views:SheetPage>

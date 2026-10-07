@@ -15,8 +15,37 @@ public partial class HomeViewModel(
     DialogService dialogs,
     WorkoutEstimator estimator,
     ProgressionEngine progression,
-    GymBook.Services.Sync.AccountService account) : BaseViewModel
+    GymBook.Services.Sync.AccountService account,
+    BedtimeService bedtime) : BaseViewModel
 {
+    // Bedtime: when to be in bed for the sleep goal, the day's progress towards it, and what it's worked back from.
+    [ObservableProperty] string bedtimeTime = "";
+    [ObservableProperty] string bedtimeHeadline = "";
+    [ObservableProperty] string bedtimeDetail = "";
+    [ObservableProperty] string bedtimeReminderText = "";
+    [ObservableProperty] double bedtimeProgress;
+    [ObservableProperty] Color bedtimeColor = Color.FromArgb("#7C5CFF");
+    IDispatcherTimer? _bedtimeTimer;
+    bool _bedtimeHooked;
+
+    void ShowBedtime()
+    {
+        var now = DateTime.Now;
+        var plan = bedtime.Plan(now);
+        BedtimeTime = BedtimeService.Time(plan.Bedtime);
+        (BedtimeHeadline, BedtimeDetail) = bedtime.Describe(plan, now);
+        BedtimeProgress = plan.Progress(now);
+        // Violet through the day, amber in the last hour, red once it's past.
+        BedtimeColor = now >= plan.Bedtime ? Color.FromArgb("#FF4D5E") : plan.Bedtime - now <= TimeSpan.FromHours(1) ? Amber : Color.FromArgb("#7C5CFF");
+        BedtimeReminderText = !bedtime.RemindersOn ? "Reminders off · tap to set up"
+            : bedtime.ReminderLeadMinutes > 0 ? $"Reminders {BedtimeService.Span(TimeSpan.FromMinutes(bedtime.ReminderLeadMinutes))} before and at bedtime"
+            : "Reminder at bedtime";
+    }
+
+    /// <summary>Bedtime's settings: the reminders, the sleep goal, the wake-up time and whether the alarm counts.</summary>
+    [RelayCommand]
+    Task OpenBedtime() =>
+        Shell.Current.Navigation.PushModalAsync(new Views.BedtimeSettingsPage(new BedtimeSettingsViewModel(bedtime, dialogs)), false);
 
     [ObservableProperty] string greeting = "";
     [ObservableProperty] string dateText = "";
@@ -80,6 +109,7 @@ public partial class HomeViewModel(
     {
         IsShowing = false;
         Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
+        _bedtimeTimer?.Stop();
     }
 
     void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(ShowConnection);
@@ -130,6 +160,22 @@ public partial class HomeViewModel(
         Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
         Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
         ShowConnection();
+        // Bedtime goes by the clock (and the phone's alarm, which may have been set since): shown now and each minute while
+        // the tab's on screen, and the reminders scheduled afresh.
+        if (!_bedtimeHooked)
+        {
+            _bedtimeHooked = true;
+            bedtime.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(ShowBedtime);
+        }
+        ShowBedtime();
+        bedtime.Reschedule();
+        if (_bedtimeTimer == null && Application.Current?.Dispatcher.CreateTimer() is { } timer)
+        {
+            _bedtimeTimer = timer;
+            timer.Interval = TimeSpan.FromMinutes(1);
+            timer.Tick += (_, _) => ShowBedtime();
+        }
+        _bedtimeTimer?.Start();
         // Worked out again only when the data changed, a few minutes went by (the greeting and recovery go by the clock) or
         // a workout is going (its time ticks): doing it every time took a tenth of a second and laid the tab out anew
         // just as it slid in.

@@ -64,6 +64,22 @@ public static class MauiProgram
 #else
         builder.Services.AddSingleton<IWorkoutNotifier, NoWorkoutNotifier>();
 #endif
+        // Bedtime on the Workout tab, and its reminders: worked back from the phone's next alarm where the system tells apps
+        // (Android), else from the wake-up time set.
+        builder.Services.AddSingleton<BedtimeService>();
+#if ANDROID
+        builder.Services.AddSingleton<IAlarmClock, AndroidAlarmClock>();
+        builder.Services.AddSingleton<IBedtimeNotifier, BedtimeNotifier>();
+#elif IOS || MACCATALYST
+        builder.Services.AddSingleton<IAlarmClock, NoAlarmClock>();
+        builder.Services.AddSingleton<IBedtimeNotifier, AppleBedtimeNotifier>();
+#elif WINDOWS
+        builder.Services.AddSingleton<IAlarmClock, NoAlarmClock>();
+        builder.Services.AddSingleton<IBedtimeNotifier, GymBook.WinUI.WindowsBedtimeNotifier>();
+#else
+        builder.Services.AddSingleton<IAlarmClock, NoAlarmClock>();
+        builder.Services.AddSingleton<IBedtimeNotifier, NoBedtimeNotifier>();
+#endif
 #if ANDROID
         // Health Connect (Android's, for any app) and Samsung Health read directly; Profile › Health data picks one.
         builder.Services.AddSingleton<GymBook.Services.Health.IHealthPlatform, HealthConnectPlatform>();
@@ -174,6 +190,8 @@ public static class MauiProgram
 #endif
 
         var app = builder.Build();
+        // The week's bedtime reminders, from the alarm and settings as they are now (they also follow the Workout tab).
+        app.Services.GetRequiredService<BedtimeService>().Reschedule();
 #if ANDROID
         // Keeps the Wear OS app's copy of the workout current (see Platforms/Android/WatchSync.cs).
         app.Services.GetRequiredService<WatchSync>().Start();
