@@ -85,7 +85,7 @@
                         <FlexLayout BindableLayout.ItemsSource="{Binding DayTotals}" Wrap="Wrap" JustifyContent="Start">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="vm:StatItem">
-                                    <VerticalStackLayout FlexLayout.Basis="25%" Padding="0,2">
+                                    <VerticalStackLayout FlexLayout.Basis="33.3%" Padding="0,4">
                                         <Label Text="{Binding Value}" Style="{StaticResource Figure}" />
                                         <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
                                     </VerticalStackLayout>
@@ -141,7 +141,118 @@
                             </VerticalStackLayout>
                         </VerticalStackLayout>
                     </Border>
+
+                    <!-- Each lift's best set against the last time (the day's strength) -->
+                    <Border Style="{StaticResource Card}" IsVisible="{Binding HasDayLifts}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="Lifts" Style="{StaticResource H3}" />
+                            <Label Text="Best set and estimated one-rep max, against the last time before." Style="{StaticResource Caption}" FontSize="12" Margin="0,0,0,6" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding DayLifts}" Spacing="4">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:LineItem">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10" Padding="0,6">
+                                            <Grid.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding OpenCommand}" />
+                                            </Grid.GestureRecognizers>
+                                            <VerticalStackLayout>
+                                                <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="14" />
+                                                <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                            </VerticalStackLayout>
+                                            <Label Grid.Column="1" Text="{Binding Value}" FontFamily="OpenSansSemibold" TextColor="{StaticResource Success}" VerticalOptions="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- The day's work by movement -->
+                    <Border Style="{StaticResource Card}" IsVisible="{Binding HasDaySplit}">
+                        <VerticalStackLayout Spacing="10">
+                            <Label Text="Training split" Style="{StaticResource H3}" />
+                            <Grid ColumnDefinitions="140,*" ColumnSpacing="16">
+                                <GraphicsView Drawable="{Binding DaySplitChart}" HeightRequest="140" />
+                                <VerticalStackLayout Grid.Column="1" BindableLayout.ItemsSource="{Binding DaySplit}" Spacing="10" VerticalOptions="Center">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SplitItem">
+                                            <VerticalStackLayout Spacing="4">
+                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                                                    <Ellipse Fill="{Binding Color}" WidthRequest="10" HeightRequest="10" VerticalOptions="Center" />
+                                                    <Label Grid.Column="1" Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" />
+                                                    <Label Grid.Column="2" Text="{Binding Percent}" Style="{StaticResource Caption}" FontSize="12" VerticalOptions="Center" />
+                                                </Grid>
+                                                <ProgressBar Progress="{Binding Share}" ProgressColor="{Binding Color}" HeightRequest="4" />
+                                            </VerticalStackLayout>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
                 </VerticalStackLayout>
+
+                <!-- Recovery going into the day (right now, for today), with the night before -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="{Binding DayRecoveryTitle}" Style="{StaticResource H3}" VerticalOptions="Center" />
+                            <Label Grid.Column="1" Text="{Binding DayRecoveryValue}" TextColor="{Binding DayRecoveryColor}" Style="{StaticResource Figure}" VerticalOptions="Center" />
+                        </Grid>
+                        <GraphicsView Drawable="{Binding DayRecoveryMap}" HeightRequest="220" />
+                        <views:RecoveryOverviewView Overview="{Binding DayRecoveryOverview}" />
+                        <views:SleepNoteView Text="{Binding DayRecoverySleep}" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- The night woken up from on the day, and the week of nights up to it -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Sleep" Style="{StaticResource H3}" />
+                        <Label Text="{Binding DaySleepValue}" Style="{StaticResource StatValue}" />
+                        <Label Text="{Binding DaySleepCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                        <GraphicsView Drawable="{Binding DaySleepChart}" HeightRequest="130" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- The day's activity, from health data -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="10">
+                        <VerticalStackLayout>
+                            <Label Text="Activity" Style="{StaticResource H3}" />
+                            <Label Text="{Binding DayActivityCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <FlexLayout BindableLayout.ItemsSource="{Binding DayActivity}" Wrap="Wrap" JustifyContent="Start">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:StatItem">
+                                    <VerticalStackLayout FlexLayout.Basis="50%" Padding="0,4">
+                                        <Label Text="{Binding Value}" Style="{StaticResource Figure}" />
+                                        <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- The body as last measured by the day -->
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="10">
+                        <VerticalStackLayout>
+                            <Label Text="Body" Style="{StaticResource H3}" />
+                            <Label Text="{Binding DayBodyCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <FlexLayout BindableLayout.ItemsSource="{Binding DayBody}" Wrap="Wrap" JustifyContent="Start">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="vm:StatItem">
+                                    <VerticalStackLayout FlexLayout.Basis="33.3%" Padding="0,4">
+                                        <Label Text="{Binding Value}" Style="{StaticResource Figure}" FontSize="15" />
+                                        <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
+                                    </VerticalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="14" IsVisible="{Binding IsStatsTab}">
@@ -422,6 +533,54 @@
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Recovery going into each day of the range -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Trend" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Recovery" Style="{StaticResource H3}" />
+                            <Label Text="{Binding RecoveryCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <FlexLayout BindableLayout.ItemsSource="{Binding RecoveryStats}" Wrap="Wrap" JustifyContent="Start">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:StatItem">
+                                <VerticalStackLayout FlexLayout.Basis="33.3%" Padding="0,4">
+                                    <Label Text="{Binding Value}" Style="{StaticResource Figure}" />
+                                    <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                    <GraphicsView Drawable="{Binding RecoveryChart}" HeightRequest="160" controls:ChartReveal.When="{Binding IsShowing}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Sleep each night of the range, from health data -->
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                        <controls:StatIconView Icon="Clock" IsRunning="{Binding IsShowing}" Style="{StaticResource HeaderIcon}" />
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Sleep" Style="{StaticResource H3}" />
+                            <Label Text="{Binding SleepCaption}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <FlexLayout BindableLayout.ItemsSource="{Binding SleepStats}" Wrap="Wrap" JustifyContent="Start" IsVisible="{Binding HasSleep}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:StatItem">
+                                <VerticalStackLayout FlexLayout.Basis="50%" Padding="0,4">
+                                    <Label Text="{Binding Value}" Style="{StaticResource Figure}" />
+                                    <Label Text="{Binding Label}" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                    <GraphicsView Drawable="{Binding SleepChart}" HeightRequest="160" IsVisible="{Binding HasSleep}" controls:ChartReveal.When="{Binding IsShowing}" />
                 </VerticalStackLayout>
             </Border>
 

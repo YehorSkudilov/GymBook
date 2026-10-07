@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- The night slept and what it does to recovery (or that none was recorded), with a moon: under every recovery map. -->
+<ContentView
+    x:Class="GymBook.Views.SleepNoteView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    x:Name="Root"
+    x:DataType="views:SleepNoteView">
+    <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="12,8">
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8">
+            <Image WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
+                <Image.Source>
+                    <FontImageSource FontFamily="OutlinedIcons" Glyph="bedtime" Color="#7C5CFF" Size="100" />
+                </Image.Source>
+            </Image>
+            <Label Grid.Column="1" Text="{Binding Text, Source={x:Reference Root}}" Style="{StaticResource Caption}" FontSize="12"
+                   VerticalOptions="Center" />
+        </Grid>
+    </Border>
+</ContentView>

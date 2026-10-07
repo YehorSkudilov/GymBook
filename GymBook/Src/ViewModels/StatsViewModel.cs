@@ -8,8 +8,8 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>The Progress tab: the stats from this device's workouts, and (its Ranks tab) the strength ranks.</summary>
-public partial class StatsViewModel(DataStore store, StatsService stats, Units units, DialogService dialogs, NutritionService nutrition, RanksViewModel ranks)
-    : BaseViewModel
+public partial class StatsViewModel(DataStore store, StatsService stats, Units units, DialogService dialogs, NutritionService nutrition, RanksViewModel ranks,
+    RecoveryService recovery) : BaseViewModel
 {
     /// <summary>The Ranks tab's own view model (see RanksView).</summary>
     public RanksViewModel Ranks => ranks;
@@ -74,6 +74,27 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasDayRecords))] List<LineItem> dayRecords = [];
     public bool HasDayRecords => DayRecords.Count > 0;
 
+    // The day's own take on Trends' cards: its lifts against the time before, its split, recovery going into it, the
+    // night's sleep, its activity and the body as last measured by then.
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasDayLifts))] List<LineItem> dayLifts = [];
+    public bool HasDayLifts => DayLifts.Count > 0;
+    [ObservableProperty] IDrawable? daySplitChart;
+    [ObservableProperty] List<SplitItem> daySplit = [];
+    [ObservableProperty] bool hasDaySplit;
+    [ObservableProperty] string dayRecoveryTitle = "";
+    [ObservableProperty] string dayRecoveryValue = "";
+    [ObservableProperty] Color dayRecoveryColor = Green;
+    [ObservableProperty] IDrawable dayRecoveryMap = MuscleMapDrawable.Empty;
+    [ObservableProperty] RecoveryOverview dayRecoveryOverview = RecoveryOverview.Empty;
+    [ObservableProperty] string dayRecoverySleep = "";
+    [ObservableProperty] string daySleepValue = "";
+    [ObservableProperty] string daySleepCaption = "";
+    [ObservableProperty] IDrawable? daySleepChart;
+    [ObservableProperty] List<StatItem> dayActivity = [];
+    [ObservableProperty] string dayActivityCaption = "";
+    [ObservableProperty] List<StatItem> dayBody = [];
+    [ObservableProperty] string dayBodyCaption = "";
+
     void ShowDay()
     {
         DayTitle = _date == DateTime.Today ? "Today" : _date == DateTime.Today.AddDays(-1) ? "Yesterday" : _date.ToString("dddd", CultureInfo.CurrentCulture);
@@ -83,12 +104,17 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         var sessions = store.History.Where(s => s.StartedAt.Date == _date).OrderBy(s => s.StartedAt).ToList();
         HasDayWorkouts = sessions.Count > 0;
         DayEmptyText = _date == DateTime.Today ? "No workout yet today." : "No workout this day: a rest day.";
+        // The week so far against the target, as Trends has the week streak.
+        var week = StatsService.WeekStart(_date);
+        var thisWeek = stats.SessionsIn(week, _date).Count;
         DayTotals =
         [
             new("Workouts", sessions.Count.ToString(CultureInfo.CurrentCulture)),
             new("Time", Units.Duration(TimeSpan.FromTicks(sessions.Sum(s => s.Duration.Ticks)))),
             new("Volume", units.FormatVolume(sessions.Sum(stats.SessionVolume))),
             new("Sets", sessions.Sum(s => s.WorkingSets.Count()).ToString(CultureInfo.CurrentCulture)),
+            new("Records", sessions.Sum(s => stats.RecordsIn(s).Count).ToString(CultureInfo.CurrentCulture)),
+            new("This week", $"{thisWeek} of {stats.WeeklyTarget}"),
         ];
         DaySessions = [.. sessions.Select(s => SessionItem.Create(s, store, stats, units))];
 
@@ -110,6 +136,69 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             Value = units.FormatWithUnit(r.E1RmKg),
             OpenCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Exercise}?id={r.Exercise.Id}")),
         })];
+
+        ShowDayLifts(sessions);
+        (DaySplitChart, DaySplit, HasDaySplit) = SplitFor(sessions);
+        ShowDayRecovery();
+        ShowDaySleep();
+        var day = nutrition.Day(_date);
+        DayActivity = ActivityItems(day);
+        DayActivityCaption = day.Health?.Source is { } source
+            ? $"{(day.IsToday ? "Today so far" : _date.ToString("d MMM", CultureInfo.CurrentCulture))} · {source}"
+            : "No health data for this day · connect your health data in the Profile tab";
+        (DayBody, DayBodyCaption) = BodyAsOf(_date);
+    }
+
+    /// <summary>
+    /// Each loaded lift of the day: its best set and estimated 1RM, against the last time before it was trained (the
+    /// day's take on the strength cards).
+    /// </summary>
+    void ShowDayLifts(List<WorkoutSession> sessions)
+    {
+        DayLifts = [.. sessions.SelectMany(s => s.Exercises).GroupBy(e => e.ExerciseId)
+            .Select(g => (Exercise: store.GetExercise(g.Key), Sets: g.SelectMany(e => e.Sets).Where(s => s.IsCompleted && !s.IsWarmup && s.WeightKg > 0).ToList()))
+            .Where(x => x.Exercise is { IsBodyweight: false } && x.Sets.Count > 0)
+            .Select(x =>
+            {
+                var top = x.Sets.MaxBy(s => ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir))!;
+                var e1 = ProgressionEngine.E1Rm(top.WeightKg, top.Reps, top.Rir);
+                var before = stats.E1RmHistory(x.Exercise!.Id, null, _date.AddDays(-1)).LastOrDefault();
+                return new LineItem
+                {
+                    Title = x.Exercise.Name,
+                    Detail = $"{units.Format(top.WeightKg)} {units.Label} × {top.Reps} · 1RM {units.FormatWithUnit(e1)}"
+                        + (before != null ? $" · was {units.FormatWithUnit(before.Value)} on {before.Label}" : " · first time"),
+                    Value = before is { Value: > 0 } b ? $"{(e1 / b.Value - 1) * 100:+0;−0;0}%" : "New",
+                    OpenCommand = new AsyncRelayCommand(() => GoTo($"{Routes.Exercise}?id={x.Exercise.Id}")),
+                };
+            })];
+    }
+
+    /// <summary>Recovery going into the day (right now, for today): the map, the major muscles' average, and the night before.</summary>
+    void ShowDayRecovery()
+    {
+        var at = _date == DateTime.Today ? DateTime.Now : _date;
+        var details = recovery.Details(at);
+        DayRecoveryMap = MuscleMapDrawable.ForRecovery(details.ToDictionary(d => d.Muscle, d => d.Recovery), recovery.PartRecovery(at));
+        var overall = details.Where(d => RecoveryService.MajorMuscles.Contains(d.Muscle)).Average(d => d.Recovery);
+        DayRecoveryTitle = _date == DateTime.Today ? "Recovery right now" : "Recovery going into the day";
+        DayRecoveryValue = $"{overall:P0}";
+        DayRecoveryColor = RecoveryService.ColorFor(overall);
+        DayRecoveryOverview = RecoveryOverview.For(details);
+        DayRecoverySleep = recovery.SleepNote(at);
+    }
+
+    /// <summary>The night woken up from on the day, what it did to recovery, and the week of nights up to it.</summary>
+    void ShowDaySleep()
+    {
+        var minutes = recovery.SleepOn(_date);
+        DaySleepValue = minutes is { } m ? RecoveryService.Hours(m) : "N/A";
+        DaySleepCaption = minutes is { } mins
+            ? $"Night to {_date.ToString("ddd d MMM", CultureInfo.CurrentCulture)} · {RecoveryService.SleepEffect(mins)}"
+            : "No sleep recorded for this night. Connect Health Connect or Samsung Health in the Profile tab to bring it in.";
+        DaySleepChart = new BarChartDrawable(
+            [.. Enumerable.Range(0, 7).Select(i => _date.AddDays(i - 6)).Select(d => new ChartPoint(d.ToString("ddd", CultureInfo.CurrentCulture), (recovery.SleepOn(d) ?? 0) / 60.0))],
+            Violet, v => $"{v:0.#} h");
     }
 
     [RelayCommand]
@@ -264,10 +353,17 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     /// <summary>Today's calories burned and steps from the health apps (all four always; N/A for what they haven't recorded).</summary>
     void ShowActivity(DayNutrition day)
     {
+        ActivityCaption = day.Health?.Source is { } source ? $"Today so far · {source}" : "Today · connect your health data in the Profile tab";
+        Activity = ActivityItems(day);
+        HasActivity = true;
+    }
+
+    /// <summary>A day's calories burned and steps from the health apps: on Trends today's, on Day the day's.</summary>
+    static List<StatItem> ActivityItems(DayNutrition day)
+    {
         var h = day.Health;
-        ActivityCaption = h?.Source is { } source ? $"Today so far · {source}" : "Today · connect your health data in the Profile tab";
         static string Kcal(double? v) => v is { } k ? $"{NutritionService.Kcal(k)} kcal" : "N/A";
-        Activity =
+        return
         [
             new("Total burned", Kcal(day.BurnSource == BurnSource.Measured ? day.BurnedKcal : null)),
             new("Active", Kcal(h?.ActiveBurnedKcal)),
@@ -275,14 +371,18 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             new("Resting", Kcal(h?.BasalBurnedKcal ?? (h is { TotalBurnedKcal: { } total, ActiveBurnedKcal: { } active } ? total - active : null))),
             new("Steps", h?.Steps is { } steps ? steps.ToString("#,0", CultureInfo.CurrentCulture) : "N/A"),
         ];
-        HasActivity = true;
     }
 
-    void ShowBody()
+    /// <summary>Measurements from the health apps only (not weights logged by hand, nothing estimated).</summary>
+    List<BodyWeightEntry> MeasuredBody() => [.. store.Data.BodyWeights.Where(b => b.Source != null).OrderBy(b => b.Date)];
+
+    /// <summary>
+    /// The latest of each body measurement by <paramref name="upTo"/>, N/A for what the health apps haven't measured; fat
+    /// mass and BMI worked out from measured values only. With a caption saying when and where from.
+    /// </summary>
+    (List<StatItem>, string) BodyAsOf(DateTime upTo)
     {
-        // Only measurements read from the health apps (not weights logged by hand, nothing estimated); N/A for what
-        // they haven't measured. Fat mass and BMI are worked out from measured values only.
-        var entries = store.Data.BodyWeights.Where(b => b.Source != null).OrderBy(b => b.Date).ToList();
+        var entries = MeasuredBody().Where(b => b.Date.Date <= upTo.Date).ToList();
         var latest = entries.LastOrDefault();
         double? Latest(Func<BodyWeightEntry, double?> pick) => entries.Select(pick).LastOrDefault(v => v != null);
         var weight = latest?.WeightKg;
@@ -290,7 +390,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         var height = store.Profile.HeightCm;
         string Mass(double? kg) => kg is { } v ? units.FormatWithUnit(v) : "N/A";
 
-        Body =
+        List<StatItem> items =
         [
             new("Weight", Mass(weight)),
             new("Body fat", fat is { } f ? $"{f:0.#}%" : "N/A"),
@@ -302,12 +402,18 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             new("Height", height is { } cm ? Height(cm) : "N/A"),
             new("BMI", weight is { } w && height is { } h ? $"{w / Math.Pow(h / 100, 2):0.0}" : "N/A"),
         ];
-
-        BodyCaption = latest == null
-            ? "No measurements from your health apps yet. Connect your health data in the Profile tab to bring in your scale's and watch's."
+        var caption = latest == null
+            ? upTo.Date >= DateTime.Today
+                ? "No measurements from your health apps yet. Connect your health data in the Profile tab to bring in your scale's and watch's."
+                : "No measurements from your health apps by this day."
             : $"Last measured {latest.Date:d MMM} · {latest.Source}";
+        return (items, caption);
+    }
 
-        var fats = entries.Where(b => b.BodyFatPercent != null && b.Date >= RangeStart && b.Date <= _rangeEnd).ToList();
+    void ShowBody()
+    {
+        (Body, BodyCaption) = BodyAsOf(DateTime.Today);
+        var fats = MeasuredBody().Where(b => b.BodyFatPercent != null && b.Date >= RangeStart && b.Date <= _rangeEnd).ToList();
         HasBodyFatChart = fats.Count >= 2;
         BodyFatChart = new LineChartDrawable(
             [.. fats.Select(b => new ChartPoint(b.Date.ToString("d MMM", CultureInfo.CurrentCulture), b.BodyFatPercent!.Value))],
@@ -426,6 +532,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         HasRecords = Records.Count > 0;
         ShowStrength();
         ShowHabits(sessions);
+        ShowRecoveryAndSleep(sessions);
         ShowActivity(nutrition.Day(DateTime.Today));
         ShowBody();
     }
@@ -456,12 +563,76 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         DurationText = HasDuration ? $"About {sessions.Average(s => s.Duration.TotalMinutes):0} minutes a workout {RangePhrase}" : "";
 
         SplitCaption = $"Working sets by movement, {RangePhrase}";
+        (SplitChart, Split, HasSplit) = SplitFor(sessions);
+    }
+
+    /// <summary>The working sets of <paramref name="sessions"/> by movement (push, pull, legs, core): a donut and its legend.</summary>
+    (IDrawable Chart, List<SplitItem> Items, bool Any) SplitFor(IEnumerable<WorkoutSession> sessions)
+    {
         var sets = stats.SetsPerMuscle(sessions);
         var slices = SplitGroups.Select(g => new DonutSlice(g.Name, g.Muscles.Sum(m => sets.GetValueOrDefault(m)), g.Color)).ToList();
         var total = slices.Sum(s => s.Value);
-        HasSplit = total > 0;
-        SplitChart = new DonutDrawable(slices.OrderByDescending(s => s.Value).ToList(), $"{total:0}", "sets");
-        Split = [.. slices.Select(s => new SplitItem(s.Label, s.Color, total > 0 ? s.Value / total : 0, $"{s.Value:0} sets"))];
+        return (new DonutDrawable(slices.OrderByDescending(s => s.Value).ToList(), $"{total:0}", "sets"),
+            [.. slices.Select(s => new SplitItem(s.Label, s.Color, total > 0 ? s.Value / total : 0, $"{s.Value:0} sets"))],
+            total > 0);
+    }
+
+    [ObservableProperty] IDrawable? recoveryChart;
+    [ObservableProperty] string recoveryCaption = "";
+    [ObservableProperty] List<StatItem> recoveryStats = [];
+    [ObservableProperty] IDrawable? sleepChart;
+    [ObservableProperty] string sleepCaption = "";
+    [ObservableProperty] List<StatItem> sleepStats = [];
+    [ObservableProperty] bool hasSleep;
+
+    /// <summary>
+    /// Recovery and sleep over the range: the major muscles' recovery going into each day, and hours slept each night,
+    /// a point (or bar) a day, week or month like the other charts. Today counts; days after it don't.
+    /// </summary>
+    void ShowRecoveryAndSleep(List<WorkoutSession> sessions)
+    {
+        var today = DateTime.Today;
+        var days = Enumerable.Range(0, _rangeDays).Select(i => RangeStart.AddDays(i)).Where(d => d <= today).ToList();
+        var periods = StatsService.Periods(RangeStart, _rangeEnd);
+        var per = StatsService.PeriodFor(RangeStart, _rangeEnd).ToString().ToLowerInvariant();
+
+        var mornings = days.Select(d => (Day: d, Recovery: recovery.Overall(d))).ToList();
+        RecoveryChart = new LineChartDrawable(
+            [.. periods.Select(p => (p.Label, Values: mornings.Where(m => m.Day >= p.From && m.Day < p.To).Select(m => m.Recovery).ToList()))
+                .Where(x => x.Values.Count > 0).Select(x => new ChartPoint(x.Label, x.Values.Average() * 100))],
+            Green, v => $"{v:0}%");
+        var trained = sessions.Select(s => s.StartedAt.Date).ToHashSet();
+        var onTraining = mornings.Where(m => trained.Contains(m.Day)).Select(m => m.Recovery).ToList();
+        RecoveryStats = mornings.Count == 0 ? [] :
+        [
+            new("Average", $"{mornings.Average(m => m.Recovery):P0}"),
+            new("Training days", onTraining.Count > 0 ? $"{onTraining.Average():P0}" : "–"),
+            new("Started fatigued", Days(mornings.Count(m => m.Recovery < RecoveryService.ReadyThreshold))),
+        ];
+        RecoveryCaption = $"Your major muscles' recovery going into each day, averaged per {per}. Sleep speeds it up or slows it down.";
+
+        var nights = days.Select(d => (Day: d, Minutes: recovery.SleepOn(d))).Where(n => n.Minutes != null).Select(n => (n.Day, Minutes: n.Minutes!.Value)).ToList();
+        HasSleep = nights.Count > 0;
+        SleepChart = new BarChartDrawable(
+            [.. periods.Select(p =>
+            {
+                var inPeriod = nights.Where(n => n.Day >= p.From && n.Day < p.To).ToList();
+                return new ChartPoint(p.Label, inPeriod.Count == 0 ? 0 : inPeriod.Average(n => n.Minutes) / 60.0);
+            })],
+            Violet, v => $"{v:0.#} h");
+        var average = nights.Count > 0 ? nights.Average(n => n.Minutes) : 0;
+        SleepStats = nights.Count == 0 ? [] :
+        [
+            new("Average a night", RecoveryService.Hours(average)),
+            new("Nights recorded", $"{nights.Count} of {days.Count}"),
+            new("Under 7 hours", Days(nights.Count(n => n.Minutes < 7 * 60))),
+            new("Longest", RecoveryService.Hours(nights.Max(n => n.Minutes))),
+        ];
+        SleepCaption = nights.Count == 0
+            ? $"No sleep recorded {RangePhrase}. Connect Health Connect or Samsung Health in the Profile tab to bring it in."
+            : $"Hours asleep a night, averaged per {per}. At your average, {RecoveryService.SleepEffect(average)}.";
+
+        static string Days(int n) => n == 1 ? "1 day" : $"{n} days";
     }
 
     void ShowStrength()

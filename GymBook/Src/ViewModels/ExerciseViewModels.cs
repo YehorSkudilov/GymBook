@@ -344,10 +344,12 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         FormTips = [.. details?.Tips ?? []];
         HasFormTips = FormTips.Count > 0;
 
+        // Each workout it was in, the time it was done there over one it was skipped in.
         var sessions = store.History
-            .Select(s => (s, e: s.Exercises.FirstOrDefault(x => x.ExerciseId == ex.Id)))
+            .Select(s => (s, e: s.Exercises.Where(x => x.ExerciseId == ex.Id).OrderByDescending(x => x.Sets.Count).FirstOrDefault()))
             .Where(x => x.e != null)
             .ToList();
+        var performed = sessions.Count(x => x.e!.Sets.Count > 0);
         HasHistory = sessions.Count > 0;
         // The tab once, when it opens; coming back from the video app keeps whichever was picked.
         if (!_tabChosen)
@@ -355,7 +357,7 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
             IsHistoryTab = _tab switch { "history" => true, "instructions" => false, _ => HasHistory };
             _tabChosen = true;
         }
-        TimesPerformed = sessions.Count.ToString();
+        TimesPerformed = performed.ToString();
 
         var goal = store.ActivePlan?.Goal ?? store.Profile.Goal;
         var target = TrainingGoals.Prescription(goal, store.Profile.Experience, ex, store.Profile);
@@ -363,7 +365,7 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         GoalTarget = $"{target.Sets} sets · min {target.RepMin}, max {target.RepMax} reps · {target.TargetRir} in reserve · rest {Units.Rest(target.RestSeconds)}";
         GoalTips = TrainingGoals.Tips(goal, ex, target.RepMin, target.RepMax, target.RestSeconds);
         // Before the first time: a starting weight estimated from the user's strength, age and build.
-        var (startKg, basis) = sessions.Count == 0 ? progression.StartingWeight(ex, target.RepMin, target.TargetRir) : (0, "");
+        var (startKg, basis) = performed == 0 ? progression.StartingWeight(ex, target.RepMin, target.TargetRir) : (0, "");
         StartingWeight = startKg > 0 ? $"Try {units.FormatWithUnit(startKg)} for your first sets, {basis}." : "";
         HasStartingWeight = startKg > 0;
 
@@ -385,9 +387,11 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         return Task.CompletedTask;
     }
 
-    /// <summary>The working sets, "60×8   60×8", with how many were skipped, as the warm-ups.</summary>
+    /// <summary>The working sets, "60×8   60×8", with how many were skipped, as the warm-ups; or that it was skipped.</summary>
     string SetsText(SessionExercise e)
     {
+        if (e.Sets.Count == 0)
+            return e.SkippedSets == 1 ? "Skipped (1 set)" : $"Skipped ({e.SkippedSets} sets)";
         var text = string.Join("   ", e.Sets.Where(s => !s.IsWarmup).Select(s => $"{units.Format(s.WeightKg)}×{s.Reps}"));
         return e.SkippedSets == 0 ? text : $"{text}   · {e.SkippedSets} skipped";
     }

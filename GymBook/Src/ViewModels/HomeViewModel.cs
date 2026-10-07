@@ -100,7 +100,7 @@ public partial class HomeViewModel(
     [ObservableProperty] List<ExerciseThumb> nextThumbs = [];
     [ObservableProperty] string nextMore = "";
     [ObservableProperty] IDrawable muscleMap = MuscleMapDrawable.Empty;
-    [ObservableProperty] string recoverySummary = "";
+    [ObservableProperty] RecoveryOverview recoveryOverview = RecoveryOverview.Empty;
     [ObservableProperty] List<DayItem> weekDays = [];
     [ObservableProperty] string weekWorkouts = "";
     [ObservableProperty] string weekVolume = "";
@@ -478,6 +478,8 @@ public partial class HomeViewModel(
     [ObservableProperty] bool isRecoveryPreview;
     [ObservableProperty] List<MuscleRecoveryItem> majorMuscles = [];
     [ObservableProperty] List<MuscleRecoveryItem> supportingMuscles = [];
+    /// <summary>Last night's sleep and what it does to recovery.</summary>
+    [ObservableProperty] string sleepText = "";
 
     partial void OnRecoveryHoursChanged(double value)
     {
@@ -497,12 +499,11 @@ public partial class HomeViewModel(
         var details = recovery.Details(at);
         var rec = details.ToDictionary(d => d.Muscle, d => d.Recovery);
         MuscleMap = MuscleMapDrawable.ForRecovery(rec, recovery.PartRecovery(at));
-        (MajorMuscles, SupportingMuscles) = RecoveryViewModel.Lists(details, at);
+        (MajorMuscles, SupportingMuscles) = RecoveryItems.Lists(details, at);
+        SleepText = recovery.SleepNote(at);
         RecoveryWhen = RecoveryService.PreviewLabel(RecoveryHours);
         IsRecoveryPreview = RecoveryHours != 0;
-        var tired = rec.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
-        var fresh = RecoveryHours == 0 ? "All muscle groups are recovered and ready to train." : "All muscle groups are recovered at this point.";
-        RecoverySummary = tired.Count == 0 ? fresh : $"{(RecoveryHours == 0 ? "Still recovering" : "Recovering")}: {string.Join(", ", tired)}";
+        RecoveryOverview = RecoveryOverview.For(details);
     }
 
     [RelayCommand]

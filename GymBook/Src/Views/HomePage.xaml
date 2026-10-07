@@ -263,20 +263,6 @@
                         <Label Text="Front" Style="{StaticResource Caption}" HorizontalOptions="Center" />
                         <Label Grid.Column="1" Text="Back" Style="{StaticResource Caption}" HorizontalOptions="Center" />
                     </Grid>
-                    <HorizontalStackLayout Spacing="14" HorizontalOptions="Center">
-                        <HorizontalStackLayout Spacing="5">
-                            <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="#FF4D5E" VerticalOptions="Center" />
-                            <Label Text="Fatigued" Style="{StaticResource Caption}" FontSize="12" />
-                        </HorizontalStackLayout>
-                        <HorizontalStackLayout Spacing="5">
-                            <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="#FFB020" VerticalOptions="Center" />
-                            <Label Text="Recovering" Style="{StaticResource Caption}" FontSize="12" />
-                        </HorizontalStackLayout>
-                        <HorizontalStackLayout Spacing="5">
-                            <BoxView WidthRequest="10" HeightRequest="10" CornerRadius="5" Color="#2ED47A" VerticalOptions="Center" />
-                            <Label Text="Fresh" Style="{StaticResource Caption}" FontSize="12" />
-                        </HorizontalStackLayout>
-                    </HorizontalStackLayout>
                     <!-- Preview: drag ahead to see when muscles will be fresh. From now on only: the past is in the calendar. -->
                     <VerticalStackLayout Spacing="2">
                         <Grid ColumnDefinitions="*,Auto">
@@ -291,7 +277,10 @@
                             <Label Grid.Column="1" Text="In 4 days" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End" />
                         </Grid>
                     </VerticalStackLayout>
-                    <Label Text="{Binding RecoverySummary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                    <!-- How many muscle groups are still recovering: the same graphic under every recovery map -->
+                    <views:RecoveryOverviewView Overview="{Binding RecoveryOverview}" />
+                    <!-- Last night's sleep: short nights slow recovery, long ones speed it up -->
+                    <views:SleepNoteView Text="{Binding SleepText}" />
                 </VerticalStackLayout>
             </Border>
             <!-- Every muscle at the moment shown, most tired first -->

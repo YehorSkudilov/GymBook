@@ -116,18 +116,21 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         Settle(session);
 
         store.Data.ActiveSession = null;
-        if (session.Exercises.Count > 0)
+        // Kept when anything was done; exercises not got to stay in it as skipped.
+        var done = session.Exercises.Any(e => e.Sets.Count > 0);
+        if (done)
         {
             store.Data.Sessions.Add(session);
             AdvancePlan(session);
         }
         store.Save();
-        return session.Exercises.Count > 0 ? session : null;
+        return done ? session : null;
     }
 
     /// <summary>
     /// A workout as it's kept once finished: sets not done count as skipped (for the finished workout and the exercise's
-    /// history) and are left out, as are exercises with nothing left. Undone by <see cref="Unsettle"/>.
+    /// history) and are left out. An exercise none of whose sets were done stays, skipped (all its sets counted as such),
+    /// so the finished workout shows it wasn't got to; only one that never had any sets goes. Undone by <see cref="Unsettle"/>.
     /// </summary>
     public static void Settle(WorkoutSession session)
     {
@@ -137,7 +140,7 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             e.SkippedSets += e.Sets.Count(s => !s.IsWarmup && !s.IsCompleted);
             e.Sets.RemoveAll(s => !s.IsCompleted);
         }
-        session.Exercises.RemoveAll(e => e.Sets.Count == 0);
+        session.Exercises.RemoveAll(e => e.Sets.Count == 0 && e.SkippedSets + e.SkippedWarmups == 0);
     }
 
     /// <summary>

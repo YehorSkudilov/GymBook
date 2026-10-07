@@ -104,7 +104,6 @@ public static class MauiProgram
         AddPage<ManageAccountPage, ManageAccountViewModel>(builder.Services);
         AddPage<VerifyEmailPage, VerifyEmailViewModel>(builder.Services);
         AddPage<SyncDetailsPage, SyncDetailsViewModel>(builder.Services);
-        AddPage<RecoveryPage, RecoveryViewModel>(builder.Services);
         AddPage<WorkoutDonePage, WorkoutDoneViewModel>(builder.Services);
         AddPage<PlanWorkoutsPage, PlanWorkoutsViewModel>(builder.Services);
         // The public profile (top of Profile) and ranks (Progress > Ranks) are views inside the tabs, not pages.

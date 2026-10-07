@@ -50,6 +50,12 @@
                         </Grid>
                     </VerticalStackLayout>
 
+                    <!-- Every muscle group at that moment, as under the other recovery maps -->
+                    <views:RecoveryOverviewView Overview="{Binding Overview}" />
+
+                    <!-- Last night's sleep: short nights slow recovery, long ones speed it up -->
+                    <views:SleepNoteView Text="{Binding SleepText}" />
+
                     <!-- Each tired muscle -->
                     <Border Style="{StaticResource Card}" Padding="16,14">
                         <VerticalStackLayout BindableLayout.ItemsSource="{Binding Muscles}" Spacing="14">

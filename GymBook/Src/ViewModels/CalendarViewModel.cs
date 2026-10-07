@@ -33,7 +33,11 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
     // Muscle recovery on the selected day: going into it, or after everything done on it (a toggle under the map).
     [ObservableProperty] IDrawable recoveryMap = MuscleMapDrawable.Empty;
     [ObservableProperty] string recoveryTitle = "";
-    [ObservableProperty] string recoverySummary = "";
+    [ObservableProperty] RecoveryOverview recoveryOverview = RecoveryOverview.Empty;
+    /// <summary>The night slept before the moment shown and what it did to recovery.</summary>
+    [ObservableProperty] string sleepText = "";
+    /// <summary>The day has workouts, so its ··· (discard them) shows.</summary>
+    [ObservableProperty] bool hasDayOptions;
     [ObservableProperty] List<MuscleRecoveryItem> majorMuscles = [];
     [ObservableProperty] List<MuscleRecoveryItem> supportingMuscles = [];
 
@@ -125,6 +129,7 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
         {
             SelectedSessions = [];
         }
+        HasDayOptions = HasSelection && _byDay[_selected!.Value].Any();
         SelectedIsEmpty = HasSelection && SelectedSessions.Count == 0;
     }
 
@@ -165,37 +170,26 @@ public partial class CalendarViewModel(DataStore store, StatsService stats, Unit
         var details = recovery.Details(at);
         var rec = details.ToDictionary(d => d.Muscle, d => d.Recovery);
         RecoveryMap = MuscleMapDrawable.ForRecovery(rec, recovery.PartRecovery(at));
-        (MajorMuscles, SupportingMuscles) = RecoveryViewModel.Lists(details, at);
+        (MajorMuscles, SupportingMuscles) = RecoveryItems.Lists(details, at);
         RecoveryTitle = !IsAfterDay ? "Muscle recovery going into the day"
             : LastWorkoutEnd is { } end ? $"Muscle recovery after the last workout ({end:HH:mm})"
             : _recoveryDay == DateTime.Today ? "Muscle recovery right now" : "Muscle recovery at the end of the day";
-        var tired = rec.Where(r => r.Value < 0.6).OrderBy(r => r.Value).Select(r => r.Key.Display()).ToList();
-        RecoverySummary = tired.Count == 0
-            ? $"Every muscle group {(at < DateTime.Now ? "was" : "is")} fresh."
-            : $"Recovering: {string.Join(", ", tired)}";
+        RecoveryOverview = RecoveryOverview.For(details);
+        SleepText = recovery.SleepNote(at);
     }
 
-    /// <summary>The details page, on this day's timeline: its first stop for Before, the end of its last workout for After.</summary>
-    [RelayCommand]
-    Task OpenRecovery() => GoTo($"{Routes.Recovery}?day={_recoveryDay:yyyy-MM-dd}&stop={(IsAfterDay ? "after" : "0")}");
-
-    /// <summary>The ··· beside the selected day's date: its recovery details, or discard all its workouts.</summary>
+    /// <summary>The ··· beside the selected day's date, on a day with workouts: discard them all.</summary>
     [RelayCommand]
     async Task DayOptions()
     {
         if (_selected is not { } day)
             return;
         var sessions = _byDay[day].ToList();
-        var discard = sessions.Count switch
-        {
-            0 => null,
-            1 => "Discard workout",
-            _ => $"Discard all {sessions.Count} workouts",
-        };
-        var choice = await dialogs.ActionSheet(day.ToString("dddd, d MMMM"), discard, "Recovery details");
-        if (choice == "Recovery details")
-            await OpenRecovery();
-        else if (choice != null && choice == discard)
+        if (sessions.Count == 0)
+            return;
+        var discard = sessions.Count == 1 ? "Discard workout" : $"Discard all {sessions.Count} workouts";
+        var choice = await dialogs.ActionSheet(day.ToString("dddd, d MMMM"), discard);
+        if (choice != null && choice == discard)
         {
             var title = sessions.Count == 1 ? "Discard workout?" : $"Discard {sessions.Count} workouts?";
             var what = sessions.Count == 1 ? $"{sessions[0].Name} is" : "They're";

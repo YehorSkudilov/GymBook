@@ -113,12 +113,12 @@
 
             <!-- Selected day -->
             <VerticalStackLayout IsVisible="{Binding HasSelection}" Spacing="10">
-                <!-- The date, with the day's ··· at the far end: discard all its workouts, or the recovery details -->
+                <!-- The date, with the day's ··· at the far end on a day with workouts: discard them all -->
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
                     <Label Text="{Binding SelectedTitle}" Style="{StaticResource H3}" VerticalOptions="Center" />
                     <ImageButton Grid.Column="1" Source="{StaticResource IconMore}" WidthRequest="36" HeightRequest="30" Padding="6,3"
                                  BackgroundColor="{StaticResource Surface2}" CornerRadius="15" VerticalOptions="Center"
-                                 Command="{Binding DayOptionsCommand}" />
+                                 Command="{Binding DayOptionsCommand}" IsVisible="{Binding HasDayOptions}" />
                 </Grid>
                 <!-- Finished workouts, like the plan days on the Workout tab; tap one for what was done and its stats. -->
                 <Border Style="{StaticResource Card}" Padding="16,6" IsVisible="{Binding SelectedIsEmpty, Converter={StaticResource Not}}">
@@ -163,12 +163,18 @@
                 </Border>
                 <Label IsVisible="{Binding SelectedIsEmpty}" Text="No workout on this day." Style="{StaticResource Caption}" />
 
-                <!-- How recovered each muscle was going into the day -->
+                <!-- How recovered each muscle was going into the day, or after it, with the night before -->
                 <Border Style="{StaticResource Card}">
                     <VerticalStackLayout Spacing="10">
                         <Label Text="{Binding RecoveryTitle}" Style="{StaticResource H3}" />
-                        <GraphicsView Drawable="{Binding RecoveryMap}" HeightRequest="220" />
-                        <Label Text="{Binding RecoverySummary}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                        <GraphicsView Drawable="{Binding RecoveryMap}" HeightRequest="300" />
+                        <Grid ColumnDefinitions="*,*" Padding="30,0">
+                            <Label Text="Front" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                            <Label Grid.Column="1" Text="Back" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                        </Grid>
+                        <views:RecoveryOverviewView Overview="{Binding RecoveryOverview}" />
+                        <!-- The night before: short nights slow recovery, long ones speed it up -->
+                        <views:SleepNoteView Text="{Binding SleepText}" />
                         <!-- Before this day | After this day: two halves of one toggle -->
                         <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 12" StrokeThickness="0" Padding="3">
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="2">
@@ -191,7 +197,7 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- Every muscle at that moment, most tired first, as on the recovery details page -->
+                <!-- Every muscle at that moment, most tired first, with when it'll be fresh and which workout tired it -->
                 <views:RecoveryMusclesView Major="{Binding MajorMuscles}" Supporting="{Binding SupportingMuscles}" />
             </VerticalStackLayout>
 

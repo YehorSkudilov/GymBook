@@ -20,7 +20,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(Routes.RecoveryWarning, typeof(RecoveryWarningPage));
         Routing.RegisterRoute(Routes.Exercise, typeof(ExerciseDetailPage));
         Routing.RegisterRoute(Routes.SyncDetails, typeof(SyncDetailsPage));
-        Routing.RegisterRoute(Routes.Recovery, typeof(RecoveryPage));
         Routing.RegisterRoute(Routes.WorkoutDone, typeof(WorkoutDonePage));
         Routing.RegisterRoute(Routes.Food, typeof(FoodEntryPage));
         Routing.RegisterRoute(Routes.NutritionGoals, typeof(NutritionGoalsPage));
@@ -50,7 +49,6 @@ public static class Routes
     public const string RecoveryWarning = "recoverywarning";
     public const string Exercise = "exercise";
     public const string SyncDetails = "syncdetails";
-    public const string Recovery = "recovery";
     public const string WorkoutDone = "workoutdone";
     public const string Food = "food";
     public const string NutritionGoals = "nutritiongoals";

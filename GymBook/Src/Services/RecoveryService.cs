@@ -80,21 +80,48 @@ public class RecoveryService(DataStore store)
     }
 
     /// <summary>
-    /// The latest night slept by <paramref name="at"/> and what it does to recovery, for showing: "Last night: 6 h 10 min
-    /// of sleep · recovery about 13% slower". Null without sleep recorded in the last two days.
+    /// The latest night slept by <paramref name="at"/> and what it does to recovery, for showing under every recovery map:
+    /// "Last night: 6 h 10 min of sleep · recovery about 13% slower". Without sleep recorded in the two days up to it,
+    /// says so (recovery then assumes a typical night).
     /// </summary>
-    public string? SleepNote(DateTime at)
+    public string SleepNote(DateTime at)
     {
         var nights = SleepByDay();
-        if (nights.Where(n => n.Key <= at.Date && n.Key >= at.Date.AddDays(-1)).OrderByDescending(n => n.Key).Select(n => (DateTime?)n.Key).FirstOrDefault() is not { } night)
-            return null;
+        // Not past today: a moment previewed ahead has only last night to go by.
+        var upTo = at.Date > DateTime.Today ? DateTime.Today : at.Date;
+        if (nights.Where(n => n.Key <= upTo && n.Key >= upTo.AddDays(-1)).OrderByDescending(n => n.Key).Select(n => (DateTime?)n.Key).FirstOrDefault() is not { } night)
+            return $"No sleep recorded {(upTo == DateTime.Today ? "last night" : $"the night to {upTo:ddd d MMM}")} · recovery assumes a typical night";
         var minutes = nights[night];
-        var when = night == DateTime.Today ? "Last night" : night == DateTime.Today.AddDays(-1) ? "The night before" : $"Night to {night:ddd d MMM}";
+        var when = night == DateTime.Today ? "Last night" : $"Night to {night:ddd d MMM}";
+        return $"{when}: {Hours(minutes)} of sleep · {SleepEffect(minutes)}";
+    }
+
+    /// <summary>"6 h 10 min".</summary>
+    public static string Hours(double minutes) => $"{(int)minutes / 60} h {(int)minutes % 60:00} min";
+
+    /// <summary>What a night of <paramref name="minutes"/> does to recovery: "recovery about 13% slower".</summary>
+    public static string SleepEffect(double minutes)
+    {
         var factor = FactorFor(minutes / 60.0);
-        var effect = factor > 1.02 ? $"recovery about {(factor - 1) * 100:0}% slower"
+        return factor > 1.02 ? $"recovery about {(factor - 1) * 100:0}% slower"
             : factor < 0.98 ? $"recovery about {(1 - factor) * 100:0}% faster"
             : "recovery at its usual pace";
-        return $"{when}: {minutes / 60} h {minutes % 60:00} min of sleep · {effect}";
+    }
+
+    /// <summary>Minutes slept the night woken up from on <paramref name="day"/> (naps included); null without it recorded.</summary>
+    public int? SleepOn(DateTime day) => SleepByDay().TryGetValue(day.Date, out var minutes) ? minutes : null;
+
+    /// <summary>The big movers; the rest (arms, core, traps, calves, neck) support them.</summary>
+    public static readonly MuscleGroup[] MajorMuscles = [MuscleGroup.Chest, MuscleGroup.Back, MuscleGroup.Shoulders, MuscleGroup.Quads, MuscleGroup.Hamstrings, MuscleGroup.Glutes];
+
+    /// <summary>
+    /// How recovered the body is overall at <paramref name="at"/>, 0 to 1: the major muscles' recovery averaged. For the
+    /// charts: worked out afresh each time, leaving the one moment <see cref="Details"/> keeps alone.
+    /// </summary>
+    public double Overall(DateTime at)
+    {
+        CheckCache();
+        return ComputeDetails(at).Where(d => MajorMuscles.Contains(d.Muscle)).Average(d => d.Recovery);
     }
 
     public Dictionary<MuscleGroup, double> Compute(DateTime at) => Details(at).ToDictionary(r => r.Muscle, r => r.Recovery);

@@ -39,6 +39,10 @@ public partial class RecoveryWarningViewModel(DataStore store, RecoveryService r
     [ObservableProperty] double maxHours = 24;
     [ObservableProperty] string when = "Now";
     [ObservableProperty] bool isPreview;
+    /// <summary>Last night's sleep and what it does to recovery.</summary>
+    [ObservableProperty] string sleepText = "";
+    /// <summary>Every muscle group at the moment the slider shows, as under the other recovery maps.</summary>
+    [ObservableProperty] RecoveryOverview overview = RecoveryOverview.Empty;
     List<MuscleRecovery> _tired = [];
     List<Exercise> _exercises = [];
 
@@ -120,6 +124,8 @@ public partial class RecoveryWarningViewModel(DataStore store, RecoveryService r
         Map = MuscleMapDrawable.ForRecovery(rec, recovery.PartRecovery(at));
         When = RecoveryService.PreviewLabel(Hours);
         IsPreview = Hours != 0;
+        SleepText = recovery.SleepNote(at);
+        Overview = RecoveryOverview.For(recovery.Details(at));
 
         var lowest = _tired.Min(t => rec[t.Muscle]);
         BatteryGlyph = BatteryFor(lowest);

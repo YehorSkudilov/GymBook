@@ -43,7 +43,10 @@ public class SessionItem
     /// </summary>
     public static SessionItem Create(WorkoutSession s, DataStore store, StatsService stats, Units units, ICommand? open = null, bool paused = false)
     {
-        var photos = s.Exercises.Select(e => ExerciseLibrary.Thumbnail(e.ExerciseId)).OfType<string>().ToList();
+        // The exercises done: a finished workout keeps the ones not got to, skipped, and those show only inside it. A
+        // paused one shows them all.
+        var exercises = paused || s.EndedAt == null ? s.Exercises : [.. s.Exercises.Where(e => e.Sets.Count > 0)];
+        var photos = exercises.Select(e => ExerciseLibrary.Thumbnail(e.ExerciseId)).OfType<string>().ToList();
         var plan = store.GetPlan(s.PlanId);
         return new()
         {
@@ -54,10 +57,10 @@ public class SessionItem
             DateText = s.StartedAt.ToString("ddd, d MMM · HH:mm"),
             Time = s.StartedAt.ToString("HH:mm"),
             Meta = $"{Units.Duration(s.Duration)} · {units.FormatVolume(stats.SessionVolume(s))} · {s.WorkingSets.Count()} sets",
-            Muscles = string.Join(", ", s.Exercises.Select(e => store.GetExercise(e.ExerciseId)?.PrimaryMuscle).OfType<MuscleGroup>().Distinct().Take(4).Select(m => m.Display())),
+            Muscles = string.Join(", ", exercises.Select(e => store.GetExercise(e.ExerciseId)?.PrimaryMuscle).OfType<MuscleGroup>().Distinct().Take(4).Select(m => m.Display())),
             OpenCommand = open ?? new AsyncRelayCommand(() => Shell.Current.GoToAsync($"{Routes.PlanDay}?session={s.Id}")),
             Thumbnails = photos.Take(3).ToList(),
-            More = s.Exercises.Count > 3 ? $"+{s.Exercises.Count - 3}" : "",
+            More = exercises.Count > 3 ? $"+{exercises.Count - 3}" : "",
         };
     }
 }

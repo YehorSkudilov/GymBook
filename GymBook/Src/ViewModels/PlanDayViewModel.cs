@@ -86,7 +86,9 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     [ObservableProperty] IDrawable? durationTrend;
     [ObservableProperty] bool hasTrends;
     [ObservableProperty] IDrawable fatigueMap = MuscleMapDrawable.Empty;
-    [ObservableProperty] string fatigueSummary = "";
+    [ObservableProperty] RecoveryOverview fatigueOverview = RecoveryOverview.Empty;
+    /// <summary>The night before the workout and what it did to recovering from it.</summary>
+    [ObservableProperty] string fatigueSleep = "";
     /// <summary>The muscles it worked, most fatigued first, with when each is fresh again.</summary>
     [ObservableProperty] List<MuscleRecoveryItem> fatigueMuscles = [];
 
@@ -298,7 +300,8 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         Meta = $"{logged.Count} exercises · {logged.Sum(e => e.Sets.Count)} sets";
         When = session.StartedAt.ToString("dddd d MMM, h:mm tt");
         HasWhen = true;
-        Exercises = logged.Select(Logged).ToList();
+        // Every exercise, in order: the ones not got to as skipped.
+        Exercises = session.Exercises.Select(e => e.Sets.Count > 0 ? Logged(e) : Skipped(e)).ToList();
         ActionText = "";
         HasAction = false;
         ShowFinished(session);
@@ -344,7 +347,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var at = session.EndedAt ?? session.StartedAt;
         var details = recovery.Details(at);
         FatigueMap = MuscleMapDrawable.ForRecovery(details.ToDictionary(d => d.Muscle, d => d.Recovery), recovery.PartRecovery(at));
-        var worked = session.Exercises.Select(e => store.GetExercise(e.ExerciseId)).OfType<Exercise>()
+        var worked = session.Exercises.Where(e => e.Sets.Count > 0).Select(e => store.GetExercise(e.ExerciseId)).OfType<Exercise>()
             .SelectMany(ex => ex.SecondaryMuscles.Prepend(ex.PrimaryMuscle)).ToHashSet();
         FatigueMuscles = [.. details.Where(d => worked.Contains(d.Muscle) && d.Recovery < 1).OrderBy(d => d.Recovery).Select(d => new MuscleRecoveryItem
         {
@@ -355,8 +358,8 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             Color = RecoveryService.ColorFor(d.Recovery),
             Detail = d.ReadyAt is { } ready ? $"Fresh {Relative(ready - at)} after it · {d.Sets:0.#} sets" : $"{d.Sets:0.#} sets",
         })];
-        var tired = details.Where(d => d.Recovery < 0.6).OrderBy(d => d.Recovery).Select(d => d.Muscle.Display()).ToList();
-        FatigueSummary = tired.Count == 0 ? "No muscle group was worked hard." : $"Fatigued: {string.Join(", ", tired)}";
+        FatigueOverview = RecoveryOverview.For(details);
+        FatigueSleep = recovery.SleepNote(at);
     }
 
     static readonly Color Up = Color.FromArgb("#2ED47A"), Down = Color.FromArgb("#FF4D5E"), Neutral = Color.FromArgb("#9AA3B5");
@@ -385,8 +388,8 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var now = Working(session.Exercises.Where(e => e.ExerciseId == ex.Id)).ToList();
         if (now.Count == 0)
             return null;
-        // Sessions with this exercise, newest first, up to and including this one.
-        var history = store.History.Where(s => s.StartedAt <= session.StartedAt && s.Exercises.Any(e => e.ExerciseId == ex.Id)).ToList();
+        // Sessions this exercise was done in (not just skipped), newest first, up to and including this one.
+        var history = store.History.Where(s => s.StartedAt <= session.StartedAt && Working(s.Exercises.Where(e => e.ExerciseId == ex.Id)).Any()).ToList();
         var before = history.FirstOrDefault(s => s.Id != session.Id);
         var then = before == null ? [] : Working(before.Exercises.Where(e => e.ExerciseId == ex.Id)).ToList();
 
@@ -451,6 +454,25 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             Detail = $"{ex?.Equipment.Display() ?? ""} · {sets.Count}×{reps} reps",
             Note = se.Note ?? "",
             IsDone = true,
+            FirstHeader = units.Label.ToUpperInvariant(),
+            SecondHeader = "REPS",
+            ThirdHeader = "E1RM",
+            Rows = SessionRows(se, ex),
+        };
+    }
+
+    /// <summary>An exercise of a finished workout none of whose sets were done: marked skipped, each set a skipped row.</summary>
+    PlanDaySheetExercise Skipped(SessionExercise se)
+    {
+        var ex = store.GetExercise(se.ExerciseId);
+        return new PlanDaySheetExercise
+        {
+            OpenCommand = OpenInfo(ex),
+            Thumb = Thumb(ex),
+            Name = ex?.Name ?? "Unknown exercise",
+            Detail = $"Skipped · {se.SkippedSets} {(se.SkippedSets == 1 ? "set" : "sets")}",
+            Note = se.Note ?? "",
+            IsDone = false,
             FirstHeader = units.Label.ToUpperInvariant(),
             SecondHeader = "REPS",
             ThirdHeader = "E1RM",

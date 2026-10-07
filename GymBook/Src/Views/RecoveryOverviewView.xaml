@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- How many muscle groups are still recovering, the same under every recovery map: the headline, a segment per muscle
+     group coloured by its state (most tired first) with the count in each, and the ones not ready to train. -->
+<ContentView
+    x:Class="GymBook.Views.RecoveryOverviewView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:GymBook.Views"
+    x:Name="Root"
+    x:DataType="views:RecoveryOverviewView">
+    <VerticalStackLayout Spacing="8">
+        <Label Text="{Binding Overview.Headline, Source={x:Reference Root}}" FontFamily="OpenSansSemibold" FontSize="14" />
+        <GraphicsView Drawable="{Binding Overview.Strip, Source={x:Reference Root}}" HeightRequest="38" />
+        <Label Text="{Binding Overview.Detail, Source={x:Reference Root}}" IsVisible="{Binding Overview.HasDetail, Source={x:Reference Root}}"
+               Style="{StaticResource Caption}" FontSize="12" />
+    </VerticalStackLayout>
+</ContentView>

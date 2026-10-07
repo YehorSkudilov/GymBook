@@ -368,9 +368,15 @@ public sealed class LocalStore
             if (completed.Count == 0)
                 continue;
             other.EndedAt = completed.Max(s => s.CompletedAt) ?? other.StartedAt;
+            // Settled as a finished workout is (WorkoutService.Settle): sets not done counted as skipped, and exercises
+            // not got to kept as skipped.
             foreach (var e in other.Exercises)
+            {
+                e.SkippedWarmups += e.Sets.Count(s => s.IsWarmup && !s.IsCompleted);
+                e.SkippedSets += e.Sets.Count(s => !s.IsWarmup && !s.IsCompleted);
                 e.Sets.RemoveAll(s => !s.IsCompleted);
-            other.Exercises.RemoveAll(e => e.Sets.Count == 0);
+            }
+            other.Exercises.RemoveAll(e => e.Sets.Count == 0 && e.SkippedSets + e.SkippedWarmups == 0);
             data.Sessions.Add(other);
         }
     }
