@@ -316,6 +316,17 @@
                         </VerticalStackLayout>
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
+                    <!-- Bedtime's settings, as from the Workout tab's bedtime card -->
+                    <Grid Style="{StaticResource Row}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenBedtimeCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Bedtime" />
+                            <Label Text="Reminders, sleep goal and wake-up time" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="{Binding BedtimeText}" Style="{StaticResource RowValue}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
                 </VerticalStackLayout>
             </Border>
             <Label Text="Defaults for your plans: each plan uses these unless you give it its own, in its ··· menu under Plan settings."

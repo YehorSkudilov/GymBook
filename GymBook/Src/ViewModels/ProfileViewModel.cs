@@ -20,8 +20,17 @@ public partial class ProfileViewModel(
     HealthSyncService healthSync,
     DataExport export,
     PublicProfileViewModel publicProfile,
-    GymBook.Services.Billing.SubscriptionService subscriptions) : BaseViewModel
+    GymBook.Services.Billing.SubscriptionService subscriptions,
+    BedtimeService bedtime) : BaseViewModel
 {
+    /// <summary>Tonight's bedtime and whether its reminders are on, on the Bedtime row.</summary>
+    [ObservableProperty] string bedtimeText = "";
+
+    /// <summary>Bedtime's settings, the same sheet as the Workout tab's bedtime card opens.</summary>
+    [RelayCommand]
+    Task OpenBedtime() =>
+        Shell.Current.Navigation.PushModalAsync(new Views.BedtimeSettingsPage(new BedtimeSettingsViewModel(bedtime, dialogs)), false);
+
     /// <summary>The public profile, first on the tab: the username the app calls the user by, picture, bio and friend code.</summary>
     public PublicProfileViewModel Public => publicProfile;
 
@@ -68,6 +77,7 @@ public partial class ProfileViewModel(
         account.Changed += OnAccountChanged;
         healthSync.HistoryChanged += OnSyncChanged;
         subscriptions.Changed += OnSyncChanged;
+        bedtime.Changed += OnSyncChanged;
         Refresh();
         _ = publicProfile.OnAppearingAsync();
         return Task.CompletedTask;
@@ -81,6 +91,7 @@ public partial class ProfileViewModel(
         account.Changed -= OnAccountChanged;
         healthSync.HistoryChanged -= OnSyncChanged;
         subscriptions.Changed -= OnSyncChanged;
+        bedtime.Changed -= OnSyncChanged;
     }
 
     // Signed in or out: another account, another username.
@@ -104,6 +115,7 @@ public partial class ProfileViewModel(
 
         _loading = true;
         UnitText = P.Unit == WeightUnit.Kg ? "Kilograms" : "Pounds";
+        BedtimeText = $"{BedtimeService.Time(bedtime.Plan(DateTime.Now).Bedtime)}{(bedtime.RemindersOn ? " · reminders on" : "")}";
         BodyWeightText = units.FormatWithUnit(P.BodyWeightKg);
         AgeText = P.BirthYear is { } year ? $"{DateTime.Now.Year - year}" : "Not set";
         BodyFatText = P.BodyFatPercent is { } bf ? $"{bf:0.#}%" : "Not set";
