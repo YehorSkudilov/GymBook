@@ -69,5 +69,5 @@ public class NoStoreBilling : IStoreBilling
 
     public event EventHandler<StorePurchase>? PurchaseArrived { add { } remove { } }
 
-    public Uri ManageUrl => new("https://gymbook.app/support");
+    public Uri ManageUrl => SiteLinks.Support;
 }

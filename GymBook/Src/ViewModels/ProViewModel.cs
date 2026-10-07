@@ -204,10 +204,10 @@ public partial class ProViewModel(SubscriptionService subscriptions, DialogServi
         : subscriptions.ManageUrl);
 
     [RelayCommand]
-    Task OpenTerms() => Launcher.Default.OpenAsync(new Uri("https://gymbook.app/terms"));
+    Task OpenTerms() => Launcher.Default.OpenAsync(SiteLinks.Terms);
 
     [RelayCommand]
-    Task OpenPrivacy() => Launcher.Default.OpenAsync(new Uri("https://gymbook.app/privacy"));
+    Task OpenPrivacy() => Launcher.Default.OpenAsync(SiteLinks.Privacy);
 
     [RelayCommand]
     Task Close() => CloseAsync();

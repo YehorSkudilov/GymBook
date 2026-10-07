@@ -962,8 +962,8 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         }
         foreach (var set in model.Sets)
             Sets.Add(new SetRowViewModel(this, set));
-        // Warm-ups start folded away once they're done, and open while there are some left to do.
-        showWarmups = model.Sets.Any(s => s.IsWarmup && !s.IsCompleted);
+        // Warm-ups start folded away once they're done or skipped, and open while there are some left to do.
+        showWarmups = model.Sets.Any(s => s.IsWarmup && !s.IsCompleted && !s.IsSkipped);
         note = model.Note ?? "";
         Renumber();
     }
@@ -1191,8 +1191,8 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             // typed), and the user changes them.
             if (!row.Model.IsWarmup)
                 LiveAdvice = _parent.Engine.AfterSet(Exercise, row.Model, Model.RepMin, Model.RepMax, Model.TargetRir)?.Advice ?? "";
-            // Warm-ups done: fold them away and move on to the working sets.
-            if (row.Model.IsWarmup && Model.Sets.Where(s => s.IsWarmup).All(s => s.IsCompleted))
+            // Warm-ups done (or the rest skipped): fold them away and move on to the working sets.
+            if (row.Model.IsWarmup && !HasOpenWarmups)
                 ShowWarmups = false;
         }
         OnWarmupsChanged();
@@ -1281,6 +1281,8 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         var skip = HasOpenWarmups;
         foreach (var s in undone)
             s.IsSkipped = skip;
+        // Folded away like warm-ups all ticked off; brought back, they open again to be done.
+        ShowWarmups = !skip;
         OnSkipsChanged();
     }
 
