@@ -26,7 +26,43 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     /// <summary>A review was stored or dismissed: badges should refresh.</summary>
     public event EventHandler? SuggestionsChanged;
 
-    public bool IsAvailable => account.IsSignedIn;
+    const string EnabledKey = "ai.enabled";
+
+    /// <summary>AI turned on or off (Profile › App settings): what offers it shows or hides itself.</summary>
+    public event EventHandler? EnabledChanged;
+
+    /// <summary>
+    /// The user's switch for every AI feature (Profile › App settings), on unless turned off: off, nothing is sent to the
+    /// AI (plans, import, the coach, the weekly check, CSV matching) and what offers it hides. Kept on this device.
+    /// </summary>
+    public bool IsEnabled
+    {
+        get => Preferences.Default.Get(EnabledKey, true);
+        set
+        {
+            if (value == IsEnabled)
+                return;
+            Preferences.Default.Set(EnabledKey, value);
+            EnabledChanged?.Invoke(this, EventArgs.Empty);
+            // The weekly check's suggestions show or hide with it.
+            SuggestionsChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public bool IsAvailable => IsEnabled && account.IsSignedIn;
+
+    /// <summary>Why <paramref name="what"/> can't be used (AI turned off, or not signed in), to say; null when it can.</summary>
+    public string? Unavailable(string what) =>
+        !IsEnabled ? "AI is turned off. Turn it back on in Profile › App settings."
+        : !account.IsSignedIn ? $"{what} needs an account. Sign in from the Profile tab."
+        : null;
+
+    /// <summary>The last line of defence: nothing goes to the AI while it's turned off.</summary>
+    void EnsureEnabled()
+    {
+        if (!IsEnabled)
+            throw new InvalidOperationException("AI is turned off.");
+    }
 
     /// <summary>The last known quota, from <see cref="RefreshQuotaAsync"/> or the last generated plan; null when unknown.</summary>
     public PlanQuotaResponse? Quota { get; private set; }
@@ -78,6 +114,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     /// <summary>A few questions the AI wants answered before it builds the plan.</summary>
     public async Task<List<PlanQuestion>> QuestionsAsync(UserProfile answers, CancellationToken ct = default)
     {
+        EnsureEnabled();
         var response = await api.GetPlanQuestionsAsync(Fill(new PlanAnswers(), answers), ct);
         return response.Questions;
     }
@@ -85,6 +122,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     /// <summary>A plan for <paramref name="answers"/> and the follow-up answers, with the user's own rest times applied. Throws on any failure.</summary>
     public async Task<WorkoutPlan> GenerateAsync(UserProfile answers, List<PlanAnswer> extraAnswers, CancellationToken ct = default)
     {
+        EnsureEnabled();
         var request = Fill(new GeneratePlanRequest(), answers);
         request.Exercises = Candidates(answers);
         request.ExtraAnswers = extraAnswers;
@@ -119,6 +157,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     /// <summary>A plan read by the AI from pasted text, a link or a file, rebuilt from the app's exercises.</summary>
     public async Task<WorkoutPlan> ImportAsync(string? text, string? link, ImportFile? file, CancellationToken ct = default)
     {
+        EnsureEnabled();
         var answers = store.Profile;
         var request = Fill(new ImportPlanRequest(), answers);
         request.Text = string.IsNullOrWhiteSpace(text) ? null : text.Trim();
@@ -166,6 +205,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     /// </summary>
     public async Task<Dictionary<string, Exercise?>> MatchExercisesAsync(IReadOnlyList<ImportedName> names, CancellationToken ct = default)
     {
+        EnsureEnabled();
         // Every exercise, stretches and custom ones included: an export can have anything.
         var exercises = store.AllExercises.Where(e => !e.IsDeleted).ToList();
         var request = new MatchExercisesRequest
@@ -191,6 +231,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     /// </summary>
     public async Task<(string Reply, bool Changed)> ChatAsync(WorkoutPlan plan, UserProfile answers, List<PlanChatMessage> messages, CancellationToken ct = default)
     {
+        EnsureEnabled();
         var request = Fill(new PlanChatRequest(), answers);
         request.Plan = ToResponse(plan);
         request.Messages = messages;
@@ -255,6 +296,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
     /// <summary>The AI's suggestions for <paramref name="plan"/>, from a summary of the workouts logged on it.</summary>
     public async Task<PlanReviewResponse> ReviewAsync(WorkoutPlan plan, CancellationToken ct = default)
     {
+        EnsureEnabled();
         var answers = AnswersFor(plan);
         var request = Fill(new PlanReviewRequest(), answers);
         request.Plan = ToResponse(plan);

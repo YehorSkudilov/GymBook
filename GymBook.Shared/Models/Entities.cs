@@ -327,6 +327,28 @@ public class SavedFood
 }
 
 /// <summary>
+/// The nutrition goals from a day on, until the next set in <see cref="UserProfile.GoalHistory"/>: each null is no goal.
+/// Changing goals on a day records a set from that day, so the days before keep the goals they had.
+/// </summary>
+public class NutritionGoalSet
+{
+    public const int Max = 1000;
+
+    /// <summary>The first day these apply to (a date, no time). The first set's is the earliest day there is: from always.</summary>
+    public DateTime From { get; set; }
+    [Range(500, 10000)]
+    public int? CalorieGoal { get; set; }
+    [Range(0, 1000)]
+    public int? ProteinGoalG { get; set; }
+    [Range(0, 1500)]
+    public int? CarbsGoalG { get; set; }
+    [Range(0, 600)]
+    public int? FatGoalG { get; set; }
+    [Range(-2000, 2000)]
+    public int? EnergyBalanceGoal { get; set; }
+}
+
+/// <summary>
 /// A supplement taken (creatine): how much, on which day and when. Logged with one tap on the Nutrition tab.
 /// </summary>
 public class SupplementDose : ISyncEntity
@@ -420,6 +442,13 @@ public class UserProfile
     /// <summary>Calories eaten minus burned the user aims for each day: negative for a deficit, positive for a surplus.</summary>
     [Range(-2000, 2000)]
     public int? EnergyBalanceGoal { get; set; }
+    /// <summary>
+    /// The nutrition goals over time, oldest first: each set applies from its day until the next. The goals above are
+    /// the latest (what applies from today on); empty until goals are first changed with this kept, when every day used
+    /// the goals above.
+    /// </summary>
+    [MaxItems(NutritionGoalSet.Max)]
+    public List<NutritionGoalSet> GoalHistory { get; set; } = [];
     /// <summary>Where calories burned, steps and body measurements are read from.</summary>
     public HealthSource HealthSource { get; set; }
     /// <summary>

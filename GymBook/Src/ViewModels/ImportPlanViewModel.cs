@@ -48,16 +48,21 @@ public partial class ImportPlanViewModel : BaseViewModel
         this.store = store;
         this.ai = ai;
         this.subscriptions = subscriptions;
+        // The AI tabs only while AI is turned on (Profile › App settings); otherwise it opens on a shared plan.
         Tabs =
         [
-            new("Paste", ImportMode.Paste, SelectMode),
-            new("Link", ImportMode.Link, SelectMode),
-            new("File", ImportMode.File, SelectMode),
+            .. ai.IsEnabled ? new ImportTab[]
+            {
+                new("Paste", ImportMode.Paste, SelectMode),
+                new("Link", ImportMode.Link, SelectMode),
+                new("File", ImportMode.File, SelectMode),
+            } : [],
             new("Shared plan", ImportMode.Shared, SelectMode),
             new("Plans CSV", ImportMode.Plans, SelectMode),
             new("Workouts CSV", ImportMode.Workouts, SelectMode),
         ];
         Tabs[0].IsSelected = true;
+        mode = Tabs[0].Mode;
         PlansImport = new ImportCsvViewModel(CsvImportKind.Plans, importer, picker, dialogs);
         WorkoutsImport = new ImportCsvViewModel(CsvImportKind.Workouts, importer, picker, dialogs);
         PlansImport.Imported += () => _ = GoBack();
@@ -218,10 +223,10 @@ public partial class ImportPlanViewModel : BaseViewModel
     async Task Import()
     {
         Error = "";
-        // The AI tabs need the account (the CSV tabs don't).
-        if (!ai.IsAvailable)
+        // The AI tabs need the account, and AI turned on (the CSV tabs don't).
+        if (ai.Unavailable("Importing with AI") is { } why)
         {
-            Error = "Importing with AI needs an account. Sign in from the Profile tab.";
+            Error = why;
             return;
         }
         if (!await ProViewModel.RequireAsync(subscriptions, $"Importing with AI needs {GymBook.Contracts.SubscriptionProducts.Name}. Start with a free trial. (Importing a CSV from another app doesn't.)"))

@@ -21,8 +21,20 @@ public partial class ProfileViewModel(
     DataExport export,
     PublicProfileViewModel publicProfile,
     GymBook.Services.Billing.SubscriptionService subscriptions,
-    BedtimeService bedtime) : BaseViewModel
+    BedtimeService bedtime,
+    AiPlanService ai) : BaseViewModel
 {
+    /// <summary>Every AI feature on or off (App settings); off also hides the invitation to Pro, which is for the AI.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowProPromo))]
+    bool aiEnabled = true;
+
+    partial void OnAiEnabledChanged(bool value)
+    {
+        if (!_loading)
+            ai.IsEnabled = value;
+    }
+
     /// <summary>Tonight's bedtime and whether its reminders are on, on the Bedtime row.</summary>
     [ObservableProperty] string bedtimeText = "";
 
@@ -59,8 +71,8 @@ public partial class ProfileViewModel(
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowProPromo))]
     bool isPro;
-    /// <summary>Signed in without Pro: the invitation to subscribe, first in the Account section.</summary>
-    public bool ShowProPromo => IsSignedIn && !IsPro;
+    /// <summary>Signed in without Pro, with AI on: the invitation to subscribe, first in the Account section.</summary>
+    public bool ShowProPromo => IsSignedIn && !IsPro && AiEnabled;
     [ObservableProperty] string proText = "";
     [ObservableProperty] string passwordRowText = "";
     [ObservableProperty] bool hasSyncDetails;
@@ -113,6 +125,7 @@ public partial class ProfileViewModel(
         SyncDetailsSummary = failed ? "Sync failed" + (pending > 0 ? $" · {pending} not synced" : "") : $"{pending} not synced yet";
 
         _loading = true;
+        AiEnabled = ai.IsEnabled;
         UnitText = P.Unit == WeightUnit.Kg ? "Kilograms" : "Pounds";
         BedtimeText = $"{BedtimeService.Time(bedtime.Plan(DateTime.Now).Bedtime)}{(bedtime.RemindersOn ? " · reminders on" : "")}";
         BodyWeightText = units.FormatWithUnit(P.BodyWeightKg);

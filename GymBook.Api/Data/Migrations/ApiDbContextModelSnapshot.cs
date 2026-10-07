@@ -101,70 +101,6 @@ namespace GymBook.Api.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("GymBook.Api.Data.PlanGeneration", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Kind")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "Kind", "CreatedAt");
-
-                    b.ToTable("plan_generations", (string)null);
-                });
-
-            modelBuilder.Entity("GymBook.Api.Data.RefreshToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("FamilyId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset?>("RevokedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FamilyId");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique();
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("refresh_tokens", (string)null);
-                });
-
             modelBuilder.Entity("GymBook.Api.Data.Avatar", b =>
                 {
                     b.Property<string>("UserId")
@@ -264,6 +200,31 @@ namespace GymBook.Api.Data.Migrations
                     b.HasIndex("FriendId");
 
                     b.ToTable("friendships", (string)null);
+                });
+
+            modelBuilder.Entity("GymBook.Api.Data.PlanGeneration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Kind", "CreatedAt");
+
+                    b.ToTable("plan_generations", (string)null);
                 });
 
             modelBuilder.Entity("GymBook.Api.Data.PlanShare", b =>
@@ -404,6 +365,45 @@ namespace GymBook.Api.Data.Migrations
                     b.HasIndex("Lift", "Score");
 
                     b.ToTable("ranked_lifts", (string)null);
+                });
+
+            modelBuilder.Entity("GymBook.Api.Data.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FamilyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FamilyId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("refresh_tokens", (string)null);
                 });
 
             modelBuilder.Entity("GymBook.Api.Data.ServerSetting", b =>
@@ -935,6 +935,27 @@ namespace GymBook.Api.Data.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.ComplexCollection(typeof(List<Dictionary<string, object>>), "GoalHistory", "GymBook.Models.UserProfile.GoalHistory#NutritionGoalSet", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<int?>("CalorieGoal");
+
+                            b1.Property<int?>("CarbsGoalG");
+
+                            b1.Property<int?>("EnergyBalanceGoal");
+
+                            b1.Property<int?>("FatGoalG");
+
+                            b1.Property<DateTime>("From");
+
+                            b1.Property<int?>("ProteinGoalG");
+
+                            b1
+                                .ToJson("GoalHistory")
+                                .HasColumnType("jsonb");
+                        });
+
                     b.ComplexCollection(typeof(List<Dictionary<string, object>>), "MyFoods", "GymBook.Models.UserProfile.MyFoods#SavedFood", b1 =>
                         {
                             b1.IsRequired();
@@ -1282,24 +1303,6 @@ namespace GymBook.Api.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("GymBook.Api.Data.PlanGeneration", b =>
-                {
-                    b.HasOne("GymBook.Api.Data.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("GymBook.Api.Data.RefreshToken", b =>
-                {
-                    b.HasOne("GymBook.Api.Data.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("GymBook.Api.Data.Avatar", b =>
                 {
                     b.HasOne("GymBook.Api.Data.AppUser", null)
@@ -1351,6 +1354,15 @@ namespace GymBook.Api.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("GymBook.Api.Data.PlanGeneration", b =>
+                {
+                    b.HasOne("GymBook.Api.Data.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("GymBook.Api.Data.PlanShare", b =>
                 {
                     b.HasOne("GymBook.Api.Data.AppUser", null)
@@ -1391,6 +1403,15 @@ namespace GymBook.Api.Data.Migrations
                 });
 
             modelBuilder.Entity("GymBook.Api.Data.RankedLift", b =>
+                {
+                    b.HasOne("GymBook.Api.Data.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("GymBook.Api.Data.RefreshToken", b =>
                 {
                     b.HasOne("GymBook.Api.Data.AppUser", null)
                         .WithMany()

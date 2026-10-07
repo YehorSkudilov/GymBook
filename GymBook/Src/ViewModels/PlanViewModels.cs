@@ -985,9 +985,9 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
     {
         if (store.GetPlan(_id) is not { } plan)
             return;
-        if (!ai.IsAvailable)
+        if (ai.Unavailable("AI suggestions") is { } why)
         {
-            await dialogs.Alert("Sign in to use AI", "AI suggestions need an account. Sign in from the Profile tab.");
+            await dialogs.Alert(ai.IsEnabled ? "Sign in to use AI" : "AI is off", why);
             return;
         }
         // Suggestions are made for, and applied to, the saved plan.
@@ -1014,9 +1014,9 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
     {
         if (store.GetPlan(_id) is not { } saved)
             return;
-        if (!ai.IsAvailable)
+        if (ai.Unavailable("Changing a plan with AI") is { } why)
         {
-            await dialogs.Alert("Sign in to use AI", "Changing a plan with AI needs an account. Sign in from the Profile tab.");
+            await dialogs.Alert(ai.IsEnabled ? "Sign in to use AI" : "AI is off", why);
             return;
         }
         if (!await SettleChangesAsync("Save your changes first?"))
@@ -1052,7 +1052,8 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         var options = new List<string>();
         if (HasChanges)
             options.AddRange(["Save changes", "Discard changes"]);
-        options.AddRange(["Plan settings", "AI", "Regenerate plan", "Rename plan", "Duplicate plan"]);
+        // AI only while it's turned on (Profile › App settings).
+        options.AddRange(ai.IsEnabled ? ["Plan settings", "AI", "Regenerate plan", "Rename plan", "Duplicate plan"] : ["Plan settings", "Regenerate plan", "Rename plan", "Duplicate plan"]);
         var sharing = saved.ShareId == null ? "Share plan" : "Sharing";
         options.Add(sharing);
         var done = store.History.Count(s => s.PlanId == saved.Id);

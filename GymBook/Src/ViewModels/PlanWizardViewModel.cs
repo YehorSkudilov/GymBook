@@ -515,7 +515,9 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         {
             program = SignaturePrograms.Find(_programId) ?? SignaturePrograms.Rank(answers)[0].Program;
             plan = SignaturePrograms.Build(program, answers);
-            PlanNote = !ai.IsAvailable ? "Sign in to have AI build a plan around your answers instead."
+            // With AI turned off, no word of it.
+            PlanNote = !ai.IsEnabled ? ""
+                : !ai.IsAvailable ? "Sign in to have AI build a plan around your answers instead."
                 : AiUsable ? ""
                 : ai.Quota is { } q ? $"{AiPlanService.Describe(q)}." : "";
         }

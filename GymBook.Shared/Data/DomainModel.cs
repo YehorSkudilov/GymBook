@@ -56,6 +56,7 @@ public static class DomainModel
         {
             b.ToTable("profiles");
             b.ComplexCollection(p => p.MyFoods, f => f.ToJson());
+            b.ComplexCollection(p => p.GoalHistory, g => g.ToJson());
         });
     }
 }

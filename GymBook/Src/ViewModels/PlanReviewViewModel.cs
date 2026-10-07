@@ -49,9 +49,9 @@ public partial class PlanReviewViewModel(DataStore store, AiPlanService ai, GymB
             return;
         _loaded = true;
         Title = plan.Name;
-        if (!ai.IsAvailable)
+        if (ai.Unavailable("AI suggestions") is { } why)
         {
-            Error = "AI suggestions need an account. Sign in from the Profile tab.";
+            Error = why;
             return;
         }
         if (ai.SessionsOf(plan).Count == 0)

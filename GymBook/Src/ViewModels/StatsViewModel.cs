@@ -696,9 +696,6 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     }
 
     [RelayCommand]
-    Task OpenHistory() => GoTo(Routes.History);
-
-    [RelayCommand]
     async Task LogWeight()
     {
         var value = await dialogs.Prompt("Log body weight", $"Today's weight in {units.Label}", units.Format(store.Profile.BodyWeightKg), Keyboard.Numeric);

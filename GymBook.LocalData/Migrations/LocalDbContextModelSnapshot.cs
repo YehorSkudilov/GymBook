@@ -380,6 +380,27 @@ namespace GymBook.LocalData.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("TEXT");
 
+                    b.ComplexCollection(typeof(List<Dictionary<string, object>>), "GoalHistory", "GymBook.Models.UserProfile.GoalHistory#NutritionGoalSet", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<int?>("CalorieGoal");
+
+                            b1.Property<int?>("CarbsGoalG");
+
+                            b1.Property<int?>("EnergyBalanceGoal");
+
+                            b1.Property<int?>("FatGoalG");
+
+                            b1.Property<DateTime>("From");
+
+                            b1.Property<int?>("ProteinGoalG");
+
+                            b1
+                                .ToJson("GoalHistory")
+                                .HasColumnType("TEXT");
+                        });
+
                     b.ComplexCollection(typeof(List<Dictionary<string, object>>), "MyFoods", "GymBook.Models.UserProfile.MyFoods#SavedFood", b1 =>
                         {
                             b1.IsRequired();

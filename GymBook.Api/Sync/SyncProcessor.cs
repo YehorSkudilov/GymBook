@@ -141,6 +141,10 @@ public class SyncProcessor(ApiDbContext db, TimeProvider clock, GymBook.Api.Soci
             {
                 entry.CurrentValues.SetValues(profile);
                 current.MyFoods = profile.MyFoods;
+                // Goals over time: never cleared by the app, so an empty one is from an app too old to know of it, and
+                // leaves what's kept alone.
+                if (profile.GoalHistory.Count > 0)
+                    current.GoalHistory = profile.GoalHistory;
             }
             entry.Property(ApiDbContext.VersionColumn).CurrentValue = version;
             if (current == null)

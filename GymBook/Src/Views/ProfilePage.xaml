@@ -295,6 +295,16 @@
                         <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                     </Grid>
                     <BoxView Style="{StaticResource Divider}" />
+                    <!-- Every AI feature at once: off, nothing goes to the AI and what offers it hides -->
+                    <Grid Style="{StaticResource Row}" Padding="16,6">
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="AI features" />
+                            <Label Text="AI plans, importing with AI, the AI coach and weekly plan suggestions. Off: nothing is sent to the AI."
+                                   Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="2" IsToggled="{Binding AiEnabled}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" />
                     <!-- Bedtime's settings, as from the Workout tab's bedtime card -->
                     <Grid Style="{StaticResource Row}">
                         <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenBedtimeCommand}" /></Grid.GestureRecognizers>
