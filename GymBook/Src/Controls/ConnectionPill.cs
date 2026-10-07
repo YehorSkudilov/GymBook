@@ -3,7 +3,8 @@ using Microsoft.Maui.Controls.Shapes;
 namespace GymBook.Controls;
 
 /// <summary>
-/// "Online" or "Offline" with a coloured dot, the same pill as on Home, keeping itself up to date while it's on screen.
+/// "Online" or "Offline" with a coloured dot, keeping itself up to date while it's on screen. In each tab's badges
+/// (StatusBadges), and only there, so no page shows it twice.
 /// </summary>
 public class ConnectionPill : ContentView
 {

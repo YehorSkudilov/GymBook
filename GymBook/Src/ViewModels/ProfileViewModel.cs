@@ -327,7 +327,6 @@ public partial class ProfileViewModel(
     /// <summary>The exercise library: browse, search and filter every exercise, and make custom ones.</summary>
     [RelayCommand]
     Task OpenExercises() => GoTo(Routes.ExerciseLibrary);
-
     /// <summary>Feature requests (everyone's, to vote for) and the user's bug reports, each a tab of the Feedback page.</summary>
     [RelayCommand]
     Task OpenFeedback() => GoTo(Routes.Feedback);

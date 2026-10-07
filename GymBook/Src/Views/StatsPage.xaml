@@ -27,9 +27,11 @@
     </ContentView.Resources>
 
         <VerticalStackLayout Spacing="14">
-            <Grid ColumnDefinitions="*,Auto">
-                <Label Text="Progress" Style="{StaticResource Title}" />
+            <!-- The title, History (every workout, listed), and at its far right the badges (bedtime, online) -->
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <Label Text="Progress" Style="{StaticResource Title}" VerticalOptions="Center" />
                 <Button Grid.Column="1" Text="History" Style="{StaticResource SmallButton}" Command="{Binding OpenHistoryCommand}" VerticalOptions="Center" />
+                <views:StatusBadges Grid.Column="2" />
             </Grid>
 
             <!-- Day | Trends | Ranks: a full-width switch, like Nutrition's Day | Trends -->

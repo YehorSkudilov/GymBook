@@ -696,6 +696,9 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     }
 
     [RelayCommand]
+    Task OpenHistory() => GoTo(Routes.History);
+
+    [RelayCommand]
     async Task LogWeight()
     {
         var value = await dialogs.Prompt("Log body weight", $"Today's weight in {units.Label}", units.Format(store.Profile.BodyWeightKg), Keyboard.Numeric);
@@ -713,8 +716,6 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         await OnAppearingAsync();
     }
 
-    [RelayCommand]
-    Task OpenHistory() => GoTo(Routes.History);
 }
 
 /// <summary>Progress's tabs: one day's training, the trends over time, and the strength ranks.</summary>

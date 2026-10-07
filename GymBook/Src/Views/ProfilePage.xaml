@@ -54,10 +54,10 @@
     </ContentView.Resources>
 
         <VerticalStackLayout Spacing="14">
-            <!-- The title, with the connection at the end like on Home -->
-            <Grid ColumnDefinitions="*,Auto">
-                <Label Text="Profile" Style="{StaticResource Title}" />
-                <controls:ConnectionPill Grid.Column="1" />
+            <!-- The title, with the badges (bedtime, online) at its far right -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Label Text="Profile" Style="{StaticResource Title}" VerticalOptions="Center" />
+                <views:StatusBadges Grid.Column="1" />
             </Grid>
 
             <!-- First: the public profile, with the username the app calls you by (it needs the account) -->

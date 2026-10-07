@@ -24,16 +24,12 @@ public partial class MainPage : ContentPage
     bool _visible;
     IDispatcherTimer? _activeTimer;
 
-    readonly ViewModels.TopBarViewModel _topBar;
-
     public MainPage(WorkoutService workouts, DataStore store, HomePage home, PlansPage plans,
-        NutritionPage nutrition, StatsPage stats, ProfilePage profile, ViewModels.TopBarViewModel topBar)
+        NutritionPage nutrition, StatsPage stats, ProfilePage profile)
     {
         InitializeComponent();
         _workouts = workouts;
         _store = store;
-        _topBar = topBar;
-        TopBar.BindingContext = topBar;
 
         var resources = Application.Current!.Resources;
         var color = (Color)resources["TextPrimary"];
@@ -115,7 +111,6 @@ public partial class MainPage : ContentPage
         _loadAfterSlide = null;
         _current?.Page.Load();
         UpdateActiveBar();
-        _topBar.Start();
         _store.Changed += OnDataChanged;
         PreloadTabs();
     }

@@ -5,31 +5,27 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>
-/// The slim bar over every tab (see <see cref="Views.TopBarView"/>): tonight's bedtime (tap for it in full, and its
-/// settings) and whether the app's online. Kept up to date for as long as the app runs: the connection as it changes,
-/// bedtime each minute and when its settings change.
+/// The badges at the far right of each tab's title (see <see cref="Views.StatusBadges"/>): tonight's bedtime (tap for it
+/// in full, and its settings), kept up to date each minute and when its settings change. One for the whole app, shared by
+/// every tab's badges. The connection pill beside it keeps itself up to date.
 /// </summary>
-public partial class TopBarViewModel : ObservableObject
+public partial class StatusBadgesViewModel : ObservableObject
 {
     readonly BedtimeService _bedtime;
     readonly DialogService _dialogs;
     IDispatcherTimer? _timer;
 
-    public TopBarViewModel(BedtimeService bedtime, DialogService dialogs)
+    public StatusBadgesViewModel(BedtimeService bedtime, DialogService dialogs)
     {
         (_bedtime, _dialogs) = (bedtime, dialogs);
-        Connectivity.Current.ConnectivityChanged += (_, _) => MainThread.BeginInvokeOnMainThread(ShowConnection);
         bedtime.Changed += (_, _) => MainThread.BeginInvokeOnMainThread(ShowBedtime);
-        ShowConnection();
         ShowBedtime();
     }
 
-    [ObservableProperty] string connectionText = "";
-    [ObservableProperty] Color connectionColor = Colors.Transparent;
     [ObservableProperty] string bedtimeTime = "";
     [ObservableProperty] Color bedtimeColor = Color.FromArgb("#7C5CFF");
 
-    /// <summary>Bedtime each minute from now on (its colour turns as it nears), once the tabs are up.</summary>
+    /// <summary>Bedtime now and each minute from then on (its colour turns as it nears), once a tab's badges show.</summary>
     public void Start()
     {
         ShowBedtime();
@@ -39,13 +35,6 @@ public partial class TopBarViewModel : ObservableObject
         timer.Interval = TimeSpan.FromMinutes(1);
         timer.Tick += (_, _) => ShowBedtime();
         timer.Start();
-    }
-
-    void ShowConnection()
-    {
-        var online = Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
-        ConnectionText = online ? "Online" : "Offline";
-        ConnectionColor = online ? Color.FromArgb("#2ED47A") : Color.FromArgb("#FFB020");
     }
 
     void ShowBedtime()
