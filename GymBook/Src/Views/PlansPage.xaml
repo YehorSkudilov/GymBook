@@ -9,12 +9,10 @@
     x:DataType="vm:PlansViewModel">
 
         <VerticalStackLayout Spacing="16">
-            <!-- The title, the badges (bedtime, online), and at its far right the workouts linked to no plan, as a small button. -->
-            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <!-- The title, with the badges (bedtime, online) at its far right. Workouts linked to no plan are at the bottom. -->
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                 <Label Text="Plans" Style="{StaticResource Title}" VerticalOptions="Center" LineBreakMode="TailTruncation" />
                 <views:StatusBadges Grid.Column="1" />
-                <Button Grid.Column="2" Text="{Binding UnlinkedText}" Style="{StaticResource SmallButton}" VerticalOptions="Center"
-                        Command="{Binding OpenUnlinkedCommand}" />
             </Grid>
 
             <!-- Plans others shared with the user, to look at and accept or decline. -->
@@ -115,5 +113,8 @@
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
             </VerticalStackLayout>
+
+            <!-- Workouts linked to no plan, to look through or link to one -->
+            <Button Text="{Binding UnlinkedText}" Style="{StaticResource SecondaryButton}" Command="{Binding OpenUnlinkedCommand}" />
         </VerticalStackLayout>
 </views:TabView>

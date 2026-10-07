@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GymBook.Api.Data.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20261007021233_NutritionGoalHistory")]
+    [Migration("20261013090000_NutritionGoalHistory")]
     partial class NutritionGoalHistory
     {
         /// <inheritdoc />

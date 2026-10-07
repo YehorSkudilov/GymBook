@@ -33,6 +33,8 @@
             </Border>
 
             <Label Text="DAILY GOALS" Style="{StaticResource Overline}" Margin="0,8,0,0" />
+            <!-- From which day these apply: the day shown on the Nutrition tab on, until they're changed again -->
+            <Label Text="{Binding AppliesText}" Style="{StaticResource Caption}" FontSize="12" />
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
                 <Label Text="CALORIES (KCAL)" Style="{StaticResource Overline}" />
                 <Label Grid.Column="1" Text="PROTEIN (G)" Style="{StaticResource Overline}" />

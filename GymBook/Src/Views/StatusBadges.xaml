@@ -11,18 +11,18 @@
     VerticalOptions="Center">
     <HorizontalStackLayout Spacing="6">
         <controls:HeartRatePill />
-        <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource Surface2}" Padding="8,3" VerticalOptions="Center">
+        <!-- Sized like the Nutrition tab's streak pill, as every badge is: a 16 px icon, 13 pt text, 8,4 padding -->
+        <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource Surface2}" Padding="8,4" VerticalOptions="Center">
             <Border.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding OpenBedtimeCommand}" />
             </Border.GestureRecognizers>
-            <HorizontalStackLayout Spacing="4">
-                <Image WidthRequest="13" HeightRequest="13" VerticalOptions="Center">
+            <HorizontalStackLayout Spacing="3">
+                <Image WidthRequest="16" HeightRequest="16" VerticalOptions="Center">
                     <Image.Source>
                         <FontImageSource FontFamily="OutlinedIcons" Glyph="bedtime" Color="{Binding BedtimeColor}" Size="100" />
                     </Image.Source>
                 </Image>
-                <Label Text="{Binding BedtimeTime}" TextColor="{StaticResource TextSecondary}" FontSize="11"
-                       FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                <Label Text="{Binding BedtimeTime}" FontSize="13" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
             </HorizontalStackLayout>
         </Border>
         <controls:ConnectionPill />

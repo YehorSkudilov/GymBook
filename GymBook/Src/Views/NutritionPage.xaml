@@ -48,8 +48,8 @@
     </ContentView.Resources>
 
     <VerticalStackLayout Spacing="14">
-        <!-- The title, the streak, the badges (bedtime, online), and at its far right Goals -->
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="8">
+        <!-- The title, the streak, and at its far right the badges (bedtime, online). Goals are in the day's own section. -->
+        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
             <Label Text="Nutrition" Style="{StaticResource Title}" VerticalOptions="Center" LineBreakMode="TailTruncation" />
             <!-- The logging streak: a small flame and the days in a row, faded until something's logged today; tap for more -->
             <Border Grid.Column="1" Style="{StaticResource Pill}" BackgroundColor="{StaticResource Surface2}" Padding="8,4" VerticalOptions="Center"
@@ -61,7 +61,6 @@
                 </HorizontalStackLayout>
             </Border>
             <views:StatusBadges Grid.Column="2" />
-            <Button Grid.Column="3" Text="Goals" Style="{StaticResource SmallButton}" Command="{Binding OpenGoalsCommand}" VerticalOptions="Center" />
         </Grid>
 
         <!-- Day | Trends | Ranks: one day at a time, a range of days with its totals and charts, or the nutrition boards -->
@@ -145,17 +144,22 @@
             </Border>
     
 
-            <!-- No goals yet: where to set them -->
-            <Border Style="{StaticResource Card}" IsVisible="{Binding HasNoGoals}" BackgroundColor="{StaticResource AccentSoft}">
+            <!-- The day's goals: what they are and since when, with Set goals or Change (from this day on; the days
+                 before keep theirs) -->
+            <Border Style="{StaticResource Card}" Padding="16,12">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding OpenGoalsCommand}" />
                 </Border.GestureRecognizers>
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                    <VerticalStackLayout Spacing="2">
-                        <Label Text="Set your goals" Style="{StaticResource H3}" />
-                        <Label Text="{Binding NoGoalsHint}" Style="{StaticResource Caption}" FontSize="12" />
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <GraphicsView Drawable="{Binding GoalIcon}" WidthRequest="24" HeightRequest="24" VerticalOptions="Center" />
+                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                        <Label Text="Goals" FontFamily="OpenSansSemibold" FontSize="15" />
+                        <Label Text="{Binding GoalsSummary}" Style="{StaticResource Caption}" FontSize="12" />
+                        <Label Text="{Binding GoalsSince}" Style="{StaticResource Caption}" FontSize="11" TextColor="{StaticResource TextTertiary}"
+                               IsVisible="{Binding HasGoalsSince}" />
                     </VerticalStackLayout>
-                    <Image Grid.Column="1" Source="{StaticResource IconChevronRight}" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
+                    <Button Grid.Column="2" Text="{Binding GoalsButtonText}" Style="{StaticResource SmallButton}" VerticalOptions="Center"
+                            Command="{Binding OpenGoalsCommand}" />
                 </Grid>
             </Border>
     

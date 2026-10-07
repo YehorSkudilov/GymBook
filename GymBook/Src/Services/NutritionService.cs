@@ -65,6 +65,15 @@ public enum StreakMark { None, Logged, OnTarget }
 public record NutritionStreaks(int Logging, int BestLogging, int OnTarget, int BestOnTarget, bool HasTarget, bool TodayLogged,
     bool TodayOnTarget, IReadOnlyList<(DateTime Date, StreakMark Mark)> LastWeek, int OnTargetLast30);
 
+/// <summary>A day's nutrition goals (each null without one), and the day they've applied from (null: always).</summary>
+public record DayGoals(int? Calories, int? ProteinG, int? CarbsG, int? FatG, int? Balance, DateTime? Since = null)
+{
+    public bool HasAny => Calories != null || ProteinG != null || CarbsG != null || FatG != null || Balance != null;
+
+    /// <summary>All three macros have goals: the split aimed for is theirs.</summary>
+    public bool HasMacros => CarbsG is > 0 && FatG is > 0 && ProteinG is > 0;
+}
+
 /// <summary>A direction for <see cref="NutritionService.Suggest"/>.</summary>
 public enum NutritionAim { LoseFat, Maintain, GainMuscle }
 
@@ -86,17 +95,67 @@ public class NutritionService(DataStore store)
     public const double ProteinReached = 0.9;
 
     /// <summary>
+    /// The goals that applied on <paramref name="day"/>: the last set recorded from that day or before
+    /// (<see cref="UserProfile.GoalHistory"/>), or the profile's goals when none has been recorded yet.
+    /// </summary>
+    public DayGoals GoalsFor(DateTime day)
+    {
+        var p = Profile;
+        if (p.GoalHistory.Where(g => g.From.Date <= day.Date).MaxBy(g => g.From) is { } set)
+            return new(set.CalorieGoal, set.ProteinGoalG, set.CarbsGoalG, set.FatGoalG, set.EnergyBalanceGoal,
+                set.From == DateTime.MinValue ? null : set.From.Date);
+        return new(p.CalorieGoal, p.ProteinGoalG, p.CarbsGoalG, p.FatGoalG, p.EnergyBalanceGoal);
+    }
+
+    /// <summary>The next day after <paramref name="day"/> the goals were changed from; null when they weren't after it.</summary>
+    public DateTime? NextGoalChange(DateTime day) =>
+        Profile.GoalHistory.Where(g => g.From.Date > day.Date).Select(g => (DateTime?)g.From.Date).Min();
+
+    /// <summary>
+    /// Sets the goals from <paramref name="from"/> on, until the next day they were changed from (a later set stays): the
+    /// days before keep theirs. The first time, what applied until now is kept as the goals from always. The profile's
+    /// goals follow the latest set, what applies from today on.
+    /// </summary>
+    public void SetGoals(DateTime from, DayGoals goals)
+    {
+        var p = Profile;
+        var history = p.GoalHistory;
+        if (history.Count == 0)
+            history.Add(new NutritionGoalSet
+            {
+                From = DateTime.MinValue,
+                CalorieGoal = p.CalorieGoal, ProteinGoalG = p.ProteinGoalG, CarbsGoalG = p.CarbsGoalG, FatGoalG = p.FatGoalG,
+                EnergyBalanceGoal = p.EnergyBalanceGoal,
+            });
+        history.RemoveAll(g => g.From != DateTime.MinValue && g.From.Date == from.Date);
+        history.Add(new NutritionGoalSet
+        {
+            From = from.Date,
+            CalorieGoal = goals.Calories, ProteinGoalG = goals.ProteinG, CarbsGoalG = goals.CarbsG, FatGoalG = goals.FatG,
+            EnergyBalanceGoal = goals.Balance,
+        });
+        history.Sort((a, b) => a.From.CompareTo(b.From));
+        if (history.Count > NutritionGoalSet.Max)
+            history.RemoveRange(1, history.Count - NutritionGoalSet.Max);
+
+        var latest = history[^1];
+        (p.CalorieGoal, p.ProteinGoalG, p.CarbsGoalG, p.FatGoalG, p.EnergyBalanceGoal) =
+            (latest.CalorieGoal, latest.ProteinGoalG, latest.CarbsGoalG, latest.FatGoalG, latest.EnergyBalanceGoal);
+        store.Save();
+    }
+
+    /// <summary>
     /// The nutrition streaks (see <see cref="NutritionStreaks"/>) over everything logged. A day is logged when it has any
-    /// food, here or from the health app, and on target when there's a calorie goal and it's met as above.
+    /// food, here or from the health app, and on target when it had a calorie goal and met it as above (each day by the
+    /// goals it had then).
     /// </summary>
     public NutritionStreaks Streaks()
     {
-        var p = Profile;
         var today = DateTime.Today;
         var foods = store.Data.FoodEntries.GroupBy(f => f.Date.Date).ToDictionary(g => g.Key, g => g.ToList());
         // Days read as one total from the health app, before foods were read one by one (as Day counts them).
         var totals = store.Data.HealthDays.Where(h => h.FoodKcal > 0 || h.FoodProteinG > 0).GroupBy(h => h.Date.Date).ToDictionary(g => g.Key, g => g.First());
-        var hasTarget = p.CalorieGoal is > 0;
+        var hasTarget = GoalsFor(today).Calories is > 0;
 
         StreakMark Mark(DateTime d)
         {
@@ -107,8 +166,9 @@ public class NutritionService(DataStore store)
             // Any food counts as logged, from here or the health apps, even one that came with its macros and no calories.
             if (kcal <= 0 && protein + list.Sum(f => f.CarbsG + f.FatG) <= 0)
                 return StreakMark.None;
-            var onTarget = p.CalorieGoal is { } goal && goal > 0 && Math.Abs(kcal - goal) <= goal * TargetRange
-                && (p.ProteinGoalG is not > 0 || protein >= p.ProteinGoalG.Value * ProteinReached);
+            var goals = GoalsFor(d);
+            var onTarget = goals.Calories is { } goal && goal > 0 && Math.Abs(kcal - goal) <= goal * TargetRange
+                && (goals.ProteinG is not > 0 || protein >= goals.ProteinG.Value * ProteinReached);
             return onTarget ? StreakMark.OnTarget : StreakMark.Logged;
         }
 

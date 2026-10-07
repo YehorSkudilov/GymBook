@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -121,8 +121,11 @@ public partial class NutritionViewModel(
     // Always three: the card binds to each by position.
     [ObservableProperty] List<StatItem> creatineStats = [new("Days taken", "–"), new("Current streak", "–"), new("Longest in range", "–")];
     [ObservableProperty] string creatineTrendCaption = "";
-    [ObservableProperty] string noGoalsHint = "";
-    [ObservableProperty] bool hasNoGoals;
+    // The day's goals at a glance, in their own small section: what they are, since when, and Set or Change.
+    [ObservableProperty] string goalsSummary = "";
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasGoalsSince))] string goalsSince = "";
+    public bool HasGoalsSince => GoalsSince.Length > 0;
+    [ObservableProperty] string goalsButtonText = "Set goals";
     // Always three (carbs, fat, protein): the tiles bind to each by position.
     [ObservableProperty] List<MacroItem> macros = [Macro("Carb", 0, null, Carbs), Macro("Fat", 0, null, Fat), Macro("Protein", 0, null, Protein)];
     [ObservableProperty] IDrawable? macroSplit;
@@ -202,7 +205,8 @@ public partial class NutritionViewModel(
             // The boards come from the server each time the tab shows, after the user's own streak has gone up, so they're
             // on them with today's numbers.
             ShowStreaks();
-            ranks.ShowMine(_streaks!, store.Profile.CalorieGoal, store.Profile.ProteinGoalG);
+            var today = nutrition.GoalsFor(DateTime.Today);
+            ranks.ShowMine(_streaks!, today.Calories, today.ProteinG);
             _ = ShowRanksAsync();
             return;
         }
@@ -312,7 +316,8 @@ public partial class NutritionViewModel(
     /// </summary>
     void ShowTrends()
     {
-        var p = store.Profile;
+        // The goals as they were on the range's last day.
+        var goals = nutrition.GoalsFor(_rangeEnd);
         TrendTitle = _customRange ? RangeName : $"Last {RangeName}";
         var days = nutrition.LastDays(_rangeDays, _rangeEnd);
         // Finished days only: a range up to today leaves today out, it isn't over.
@@ -337,7 +342,7 @@ public partial class NutritionViewModel(
             : days.GroupBy(d => d.Date).ToList();
         string Label(DateTime d) => d.ToString(_rangeDays <= 7 ? "ddd" : "d/M", CultureInfo.CurrentCulture);
         TrendBalanceChart = new BalanceChartDrawable(
-            [.. groups.Select(g => new ChartPoint(Label(g.Key), g.Sum(d => d.Balance ?? 0)))], weekly ? null : p.EnergyBalanceGoal, Orange, Accent);
+            [.. groups.Select(g => new ChartPoint(Label(g.Key), g.Sum(d => d.Balance ?? 0)))], weekly ? null : goals.Balance, Orange, Accent);
         TrendEatenChart = new BarChartDrawable(
             [.. groups.Select(g => new ChartPoint(Label(g.Key), g.Where(d => d.HasFood).Select(d => d.EatenKcal).DefaultIfEmpty(0).Average()))],
             Accent, v => v >= 1000 ? $"{v / 1000:0.#}k" : $"{v:0}");
@@ -347,8 +352,8 @@ public partial class NutritionViewModel(
 
         // The macro split over time: a bar a day (or week) in carbs, fat and protein by their share of its calories, with
         // the split aimed for (the goals, or the usual 55 / 25 / 20) dashed across; the legend gives the range's shares.
-        var hasGoals = p.CarbsGoalG is > 0 && p.FatGoalG is > 0 && p.ProteinGoalG is > 0;
-        var target = hasGoals ? new double[] { p.CarbsGoalG!.Value * 4, p.FatGoalG!.Value * 9, p.ProteinGoalG!.Value * 4 } : new double[] { 55, 25, 20 };
+        var hasGoals = goals.HasMacros;
+        var target = hasGoals ? new double[] { goals.CarbsG!.Value * 4, goals.FatG!.Value * 9, goals.ProteinG!.Value * 4 } : new double[] { 55, 25, 20 };
         TrendMacroChart = new MacroStackChartDrawable(
             [.. groups.Select(g => new MacroBar(Label(g.Key), g.Sum(d => d.CarbsG) * 4, g.Sum(d => d.FatG) * 9, g.Sum(d => d.ProteinG) * 4))],
             target, [Carbs, Fat, Protein]);
@@ -364,7 +369,8 @@ public partial class NutritionViewModel(
 
     void ShowDay(DayNutrition day)
     {
-        var p = store.Profile;
+        // The goals this day had (changing them later doesn't change an earlier day's).
+        var goals = nutrition.GoalsFor(day.Date);
         DateTitle = day.IsToday ? "Today" : day.Date == DateTime.Today.AddDays(-1) ? "Yesterday" : day.Date.ToString("dddd", CultureInfo.CurrentCulture);
         DateSubtitle = day.Date.ToString("d MMMM", CultureInfo.CurrentCulture);
         CanGoNext = _date < DateTime.Today;
@@ -373,7 +379,7 @@ public partial class NutritionViewModel(
         // from 0 with eaten filling it (orange past what was burned), the range hatched, a tick at the burn and a target
         // at the goal. Under the number, the surplus or deficit; without a burn, what's left of the goal; a past day with
         // nothing logged is just unlogged.
-        var goal = p.CalorieGoal;
+        var goal = goals.Calories;
         var burnedKcal = day.BurnSource == BurnSource.Measured ? day.BurnedKcal : null;
         CalorieBar = new CalorieBarDrawable(day.EatenKcal, burnedKcal, goal, Green, Orange, Accent);
         EatenText = NutritionService.Kcal(day.EatenKcal);
@@ -402,7 +408,7 @@ public partial class NutritionViewModel(
         // only when the day went the target's way (a deficit day against a deficit target, a surplus one against a
         // surplus target). A maintenance target is met within the band, and shows no bar.
         HasBalanceTarget = HasBalanceTargetBar = false;
-        if (p.EnergyBalanceGoal is { } target && day.Balance is { } b)
+        if (goals.Balance is { } target && day.Balance is { } b)
         {
             if (target == 0)
             {
@@ -421,22 +427,21 @@ public partial class NutritionViewModel(
             }
         }
 
-        HasNoGoals = p.CalorieGoal is null && p.ProteinGoalG is null;
-        NoGoalsHint = "Set calorie and protein goals to see how each day measures up.";
+        ShowGoals(goals, day.Date);
 
         // Carbs, fat and protein as Samsung Health shows them: grams each, then their share of the calories against the
         // split aimed for: the goals when all three are set, else a usual one (55% carbs, 25% fat, 20% protein).
         Macros =
         [
-            Macro("Carb", day.CarbsG, p.CarbsGoalG, Carbs),
-            Macro("Fat", day.FatG, p.FatGoalG, Fat),
-            Macro("Protein", day.ProteinG, p.ProteinGoalG, Protein),
+            Macro("Carb", day.CarbsG, goals.CarbsG, Carbs),
+            Macro("Fat", day.FatG, goals.FatG, Fat),
+            Macro("Protein", day.ProteinG, goals.ProteinG, Protein),
         ];
-        var hasGoals = p.CarbsGoalG is > 0 && p.FatGoalG is > 0 && p.ProteinGoalG is > 0;
+        var hasGoals = goals.HasMacros;
         MacroTargetLabel = hasGoals ? "Your goals" : "Recommended";
         MacroSplit = new MacroSplitDrawable(
             [day.CarbsG * 4, day.FatG * 9, day.ProteinG * 4],
-            hasGoals ? new double[] { p.CarbsGoalG!.Value * 4, p.FatGoalG!.Value * 9, p.ProteinGoalG!.Value * 4 } : new double[] { 55, 25, 20 },
+            hasGoals ? new double[] { goals.CarbsG!.Value * 4, goals.FatG!.Value * 9, goals.ProteinG!.Value * 4 } : new double[] { 55, 25, 20 },
             [Carbs, Fat, Protein]);
 
         Meals = [.. EnumDisplay.Meals.Select(meal =>
@@ -745,8 +750,33 @@ public partial class NutritionViewModel(
         Refresh();
     }
 
+    /// <summary>
+    /// The goals section: "2,500 kcal · P 180 g · C 300 g · F 70 g · 500 deficit", when they've applied from (and until, if
+    /// they were changed again after this day), and Set goals or Change.
+    /// </summary>
+    void ShowGoals(DayGoals goals, DateTime day)
+    {
+        GoalsButtonText = goals.HasAny ? "Change" : "Set goals";
+        GoalsSummary = !goals.HasAny ? "No goals for this day yet. Set them to see how each day measures up."
+            : string.Join(" · ", new[]
+            {
+                goals.Calories is { } c ? $"{NutritionService.Kcal(c)} kcal" : null,
+                goals.ProteinG is { } pr ? $"P {pr} g" : null,
+                goals.CarbsG is { } ca ? $"C {ca} g" : null,
+                goals.FatG is { } f ? $"F {f} g" : null,
+                goals.Balance switch { null => null, 0 => "maintain", < 0 and var b => $"{-b} deficit", var b => $"{b} surplus" },
+            }.OfType<string>());
+        static string Day(DateTime d) => d.ToString("ddd d MMM", CultureInfo.CurrentCulture);
+        // "From Mon 5 Oct", with "until Thu 8 Oct" when they were changed again after this day.
+        var lastDay = nutrition.NextGoalChange(day)?.AddDays(-1);
+        GoalsSince = !goals.HasAny ? ""
+            : goals.Since is { } since ? $"From {Day(since)}{(lastDay is { } l ? $" until {Day(l)}" : "")}"
+            : lastDay is { } last ? $"Until {Day(last)}" : "";
+    }
+
+    /// <summary>The goals, set or changed from the day shown on (the days before keep theirs).</summary>
     [RelayCommand]
-    Task OpenGoals() => GoTo(Routes.NutritionGoals);
+    Task OpenGoals() => GoTo($"{Routes.NutritionGoals}?date={_date:yyyy-MM-dd}");
 }
 
 public class MacroItem

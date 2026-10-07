@@ -15,7 +15,7 @@ namespace GymBook.Api.Data.Migrations
                 table: "profiles",
                 type: "jsonb",
                 nullable: false,
-                defaultValue: "{}");
+                defaultValue: "[]");
         }
 
         /// <inheritdoc />

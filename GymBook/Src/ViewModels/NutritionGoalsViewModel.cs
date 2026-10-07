@@ -7,13 +7,26 @@ using GymBook.Services;
 namespace GymBook.ViewModels;
 
 /// <summary>
-/// Daily nutrition goals (calories, protein, carbs, fat and the surplus or deficit to aim for). Suggests them from the
-/// daily burn measured by the health apps. (Connecting those, and whether their food counts, is in the Profile tab.)
+/// Daily nutrition goals (calories, protein, carbs, fat and the surplus or deficit to aim for), set from a day on (the
+/// day shown on the Nutrition tab, today by default) until they're changed again: the days before keep theirs. Suggests
+/// them from the daily burn measured by the health apps. (Connecting those, and whether their food counts, is in the
+/// Profile tab.)
 /// </summary>
-public partial class NutritionGoalsViewModel(DataStore store, NutritionService nutrition, Units units, DialogService dialogs) : BaseViewModel
+public partial class NutritionGoalsViewModel(DataStore store, NutritionService nutrition, Units units, DialogService dialogs) : BaseViewModel, IQueryAttributable
 {
     bool _loaded;
     BalanceKind _balanceKind;
+    DateTime _from = DateTime.Today;
+
+    /// <summary>"From today on, until you change them", or from another day, or until the next change after it.</summary>
+    [ObservableProperty] string appliesText = "";
+
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (query.TryGetValue("date", out var d)
+            && DateTime.TryParseExact(d?.ToString(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
+            _from = day.Date > DateTime.Today ? DateTime.Today : day.Date;
+    }
 
     enum BalanceKind { None, Deficit, Maintain, Surplus }
 
@@ -37,12 +50,18 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
             return Task.CompletedTask;
         _loaded = true;
 
-        CalorieGoal = P.CalorieGoal?.ToString(CultureInfo.CurrentCulture) ?? "";
-        ProteinGoal = P.ProteinGoalG?.ToString(CultureInfo.CurrentCulture) ?? "";
-        CarbsGoal = P.CarbsGoalG?.ToString(CultureInfo.CurrentCulture) ?? "";
-        FatGoal = P.FatGoalG?.ToString(CultureInfo.CurrentCulture) ?? "";
-        _balanceKind = P.EnergyBalanceGoal switch { null => BalanceKind.None, < 0 => BalanceKind.Deficit, > 0 => BalanceKind.Surplus, _ => BalanceKind.Maintain };
-        BalanceAmount = P.EnergyBalanceGoal is { } b and not 0 ? Math.Abs(b).ToString(CultureInfo.CurrentCulture) : "";
+        // The goals the day had, to change from it on.
+        var goals = nutrition.GoalsFor(_from);
+        CalorieGoal = goals.Calories?.ToString(CultureInfo.CurrentCulture) ?? "";
+        ProteinGoal = goals.ProteinG?.ToString(CultureInfo.CurrentCulture) ?? "";
+        CarbsGoal = goals.CarbsG?.ToString(CultureInfo.CurrentCulture) ?? "";
+        FatGoal = goals.FatG?.ToString(CultureInfo.CurrentCulture) ?? "";
+        _balanceKind = goals.Balance switch { null => BalanceKind.None, < 0 => BalanceKind.Deficit, > 0 => BalanceKind.Surplus, _ => BalanceKind.Maintain };
+        BalanceAmount = goals.Balance is { } b and not 0 ? Math.Abs(b).ToString(CultureInfo.CurrentCulture) : "";
+        var from = _from == DateTime.Today ? "today" : _from.ToString("ddd d MMM", CultureInfo.CurrentCulture);
+        AppliesText = nutrition.NextGoalChange(_from) is { } next
+            ? $"These apply from {from} until {next.AddDays(-1).ToString("ddd d MMM", CultureInfo.CurrentCulture)}, when your goals change again. Days before keep theirs."
+            : $"These apply from {from} on, until you change them. Days before keep theirs.";
 
         BalanceChips.Clear();
         BalanceChips.Add(new ChipItem("None", BalanceKind.None, SelectBalance));
@@ -216,18 +235,15 @@ public partial class NutritionGoalsViewModel(DataStore store, NutritionService n
                 "Calories can be 500–10,000 a day, protein up to 1,000 g, carbs up to 1,500 g, fat up to 600 g, and the deficit or surplus up to 2,000 kcal. Leave one empty for no goal.");
             return;
         }
-        P.CalorieGoal = calories;
-        P.ProteinGoalG = protein;
-        P.CarbsGoalG = carbs;
-        P.FatGoalG = fat;
-        P.EnergyBalanceGoal = _balanceKind switch
+        int? balance = _balanceKind switch
         {
             BalanceKind.None => null,
             BalanceKind.Maintain => 0,
             BalanceKind.Deficit => -amount,
             _ => amount,
         };
-        store.Save();
+        // From the day on; the days before keep the goals they had.
+        nutrition.SetGoals(_from, new DayGoals(calories, protein, carbs, fat, balance));
         await GoBack();
     }
 }

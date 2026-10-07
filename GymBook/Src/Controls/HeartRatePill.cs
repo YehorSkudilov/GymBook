@@ -4,16 +4,19 @@ using Microsoft.Maui.Controls.Shapes;
 namespace GymBook.Controls;
 
 /// <summary>
-/// "♥ 128": the heart rate the Wear OS app is reading, live while it's on screen. Hidden when there's none (no watch,
+/// A heart and "128": the heart rate the Wear OS app is reading, live while it's on screen. Hidden when there's none (no watch,
 /// or none for a while).
 /// </summary>
 public class HeartRatePill : ContentView
 {
+    static readonly Color Red = Color.FromArgb("#FF4D5E");
+
+    // Sized like the Nutrition tab's streak pill, as every badge is: a 16 px icon, 13 pt text, 8,4 padding.
     readonly Label _text = new()
     {
-        FontSize = 11,
+        FontSize = 13,
         FontFamily = "OpenSansSemibold",
-        TextColor = Color.FromArgb("#FF4D5E"),
+        TextColor = Red,
         VerticalOptions = LayoutOptions.Center,
     };
     WatchLink? _watch;
@@ -25,8 +28,20 @@ public class HeartRatePill : ContentView
         {
             Style = (Style)Application.Current!.Resources["Pill"],
             BackgroundColor = (Color)Application.Current.Resources["Surface2"],
-            Padding = new Thickness(8, 3),
-            Content = _text,
+            Padding = new Thickness(8, 4),
+            Content = new HorizontalStackLayout
+            {
+                Spacing = 3,
+                Children =
+                {
+                    new Image
+                    {
+                        WidthRequest = 16, HeightRequest = 16, VerticalOptions = LayoutOptions.Center,
+                        Source = new FontImageSource { FontFamily = "RegularIcons", Glyph = "favorite", Color = Red, Size = 100 },
+                    },
+                    _text,
+                },
+            },
         };
         VerticalOptions = LayoutOptions.Center;
         IsVisible = false;
@@ -60,6 +75,6 @@ public class HeartRatePill : ContentView
         var bpm = _watch?.HeartRate;
         IsVisible = bpm != null;
         if (bpm != null)
-            _text.Text = $"♥ {bpm}";
+            _text.Text = $"{bpm}";
     }
 }
