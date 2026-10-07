@@ -65,6 +65,9 @@
 		<PackageReference Include="Xamarin.AndroidX.Collection.Ktx" Version="1.6.0.1" />
 	</ItemGroup>
 
+	<!-- Release builds shrink and obfuscate the Java code with R8, like the phone app. -->
+	<Import Project="..\Android.R8.targets" />
+
 	<ItemGroup>
 		<ProjectReference Include="..\GymBook.Shared\GymBook.Shared.csproj" />
 		<!-- The phone app's on-device database: workouts started on the watch are stored there first, offline. -->

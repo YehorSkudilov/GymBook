@@ -201,14 +201,21 @@ public class BedtimeService(IAlarmClock alarm, IBedtimeNotifier notifier, Recove
         Changed?.Invoke(this, EventArgs.Empty);
     }
 
-    /// <summary>The night ahead of <paramref name="now"/> (see <see cref="BedtimePlan"/>).</summary>
+    /// <summary>Whether the night ending today is behind the user: the health apps recorded them waking today, before now.</summary>
+    bool SleptToday(DateTime now) => WakeTimes().TryGetValue(now.Date, out var minute) && now.Date.AddMinutes(minute) <= now;
+
+    /// <summary>
+    /// The night ahead of <paramref name="now"/> (see <see cref="BedtimePlan"/>). Once today's sleep is recorded, the night
+    /// ahead is tonight's: an alarm still to ring today, or today's wake-up time, is one already slept through or woken early for.
+    /// </summary>
     public BedtimePlan Plan(DateTime now)
     {
-        if (UseAlarm && alarm.NextAlarm() is { } next && next > now && next - now <= TimeSpan.FromHours(24))
+        var slept = SleptToday(now);
+        if (UseAlarm && alarm.NextAlarm() is { } next && next > now && next - now <= TimeSpan.FromHours(24) && !(slept && next.Date == now.Date))
             return For(next, WakeSource.Alarm);
-        // The next wake-up after now: today's if it's still ahead, else tomorrow's (each by its own kind of day).
+        // The next wake-up after now: today's if it's still ahead and not slept yet, else tomorrow's (each by its own kind of day).
         var (time, source) = WakeOn(now.Date);
-        if (now.Date + time > now)
+        if (!slept && now.Date + time > now)
             return For(now.Date + time, source);
         var tomorrow = now.Date.AddDays(1);
         (time, source) = WakeOn(tomorrow);

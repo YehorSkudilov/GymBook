@@ -1,0 +1,32 @@
+<Project>
+
+	<!-- Release Android builds run R8 to shrink and obfuscate the app's Java code (Google Play flags apps with too little
+	     obfuscated DEX code). The SDK only shrinks: its own R8 rules start with -dontobfuscate, which no other rule can
+	     undo, so they're swapped for Android.R8.cfg, the same rules without it. Rules a project needs on top go in a
+	     <ProguardConfiguration> item. R8 writes the mapping to bin/Release/<tfm>/mapping.txt; CI uploads it to Play. -->
+	<PropertyGroup Condition="'$(Configuration)' == 'Release' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<AndroidLinkTool>r8</AndroidLinkTool>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(Configuration)' == 'Release' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<ProguardConfiguration Include="$(MSBuildThisFileDirectory)Android.R8.cfg" />
+	</ItemGroup>
+
+	<Target Name="_GymBookAllowObfuscation" AfterTargets="_CalculateProguardConfigurationFiles" Condition="'$(AndroidLinkTool)' == 'r8'">
+		<PropertyGroup>
+			<_GymBookR8MappingConfig>$(IntermediateOutputPath)proguard\proguard_mapping.cfg</_GymBookR8MappingConfig>
+		</PropertyGroup>
+		<!-- What the SDK appends to its own rules: the mapping file, and line numbers for readable stack traces. -->
+		<WriteLinesToFile
+			File="$(_GymBookR8MappingConfig)"
+			Lines="-keepattributes SourceFile,LineNumberTable;-printmapping &quot;$([System.IO.Path]::GetFullPath('$(AndroidProguardMappingFile)'))&quot;"
+			Overwrite="true"
+			WriteOnlyWhenDifferent="true"
+			Condition="'$(AndroidProguardMappingFile)' != ''" />
+		<ItemGroup>
+			<_ProguardConfiguration Remove="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg" />
+			<_ProguardConfiguration Include="$(_GymBookR8MappingConfig)" Condition="'$(AndroidProguardMappingFile)' != ''" />
+		</ItemGroup>
+	</Target>
+
+</Project>
