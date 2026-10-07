@@ -28,8 +28,7 @@ public partial class ProfileViewModel(
 
     /// <summary>Bedtime's settings, the same sheet as the Workout tab's bedtime card opens.</summary>
     [RelayCommand]
-    Task OpenBedtime() =>
-        Shell.Current.Navigation.PushModalAsync(new Views.BedtimeSettingsPage(new BedtimeSettingsViewModel(bedtime, dialogs)), false);
+    Task OpenBedtime() => BedtimeSettingsViewModel.Open(bedtime, dialogs);
 
     /// <summary>The public profile, first on the tab: the username the app calls the user by, picture, bio and friend code.</summary>
     public PublicProfileViewModel Public => publicProfile;

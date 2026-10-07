@@ -11,8 +11,9 @@ namespace GymBook.Views;
 /// </summary>
 public class TabView : PageBase
 {
-    // Sides line up with the nav bar (inset 10 in MainPage); top and bottom keep more room.
-    const double SideGutter = 10, Gutter = 20;
+    // Sides line up with the nav bar (inset 10 in MainPage); the bottom keeps more room. The top is close under the top bar
+    // (MainPage's TopBarView), which sits over every tab.
+    const double SideGutter = 10, Gutter = 20, TopGutter = 8;
 
     public static readonly BindableProperty ScrollsItselfProperty =
         BindableProperty.Create(nameof(ScrollsItself), typeof(bool), typeof(TabView), false);
@@ -70,12 +71,12 @@ public class TabView : PageBase
         {
             // Padding inside the scroll view, so content scrolls to the edges and clears the nav bar at the end.
             Padding = 0;
-            _scroll.Padding = new Thickness(SideGutter, Gutter, SideGutter, Gutter + BottomInset);
+            _scroll.Padding = new Thickness(SideGutter, TopGutter, SideGutter, Gutter + BottomInset);
         }
         else
         {
             // Self-scrolling content runs to the bottom edge; it adds BottomInset inside its own list.
-            Padding = new Thickness(SideGutter, Gutter, SideGutter, 0);
+            Padding = new Thickness(SideGutter, TopGutter, SideGutter, 0);
         }
     }
 

@@ -11,20 +11,10 @@
 
         <VerticalStackLayout Spacing="16">
 
-            <!-- Header: the date with the connection at the end, then the greeting with a little scene for the time of day -->
+            <!-- Header: the date, then the greeting with a little scene for the time of day. The heart rate, bedtime and
+                 connection are in the top bar over every tab (TopBarView). -->
             <VerticalStackLayout Spacing="2">
-                <!-- The heart rate from the watch (when there is one) beside the connection -->
-                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
-                    <Label Text="{Binding DateText}" Style="{StaticResource Caption}" VerticalOptions="Center" />
-                    <controls:HeartRatePill Grid.Column="1" />
-                    <Border Grid.Column="2" Style="{StaticResource Pill}" BackgroundColor="{StaticResource Surface2}" Padding="8,3" VerticalOptions="Center">
-                        <HorizontalStackLayout Spacing="5">
-                            <Ellipse Fill="{Binding ConnectionColor}" WidthRequest="7" HeightRequest="7" VerticalOptions="Center" />
-                            <Label Text="{Binding ConnectionText}" TextColor="{StaticResource TextSecondary}" FontSize="11"
-                                   FontFamily="OpenSansSemibold" VerticalOptions="Center" />
-                        </HorizontalStackLayout>
-                    </Border>
-                </Grid>
+                <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
                 <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
                     <!-- Wraps onto a second line rather than being cut short next to the scene. -->
                     <Label Text="{Binding Greeting}" Style="{StaticResource Title}" VerticalOptions="Center" LineBreakMode="WordWrap" MaxLines="2" />
@@ -40,31 +30,30 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Bedtime: when to be in bed for the sleep goal (from the phone's alarm or the wake-up time set), the day's
-                 progress towards it, and the reminders. Tap for its settings. -->
-            <Border Style="{StaticResource Card}">
+            <!-- Bedtime, from an hour before it until waking (before then it's the pill at the top): how long until it (from
+                 the phone's alarm or the wake-up time set) and when, a bell when its reminders are on, and the day's progress
+                 from waking up to it. Tap for the full picture and its settings. -->
+            <Border Style="{StaticResource Card}" Padding="14,10" IsVisible="{Binding IsBedtimeSoon}">
                 <Border.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding OpenBedtimeCommand}" />
                 </Border.GestureRecognizers>
-                <VerticalStackLayout Spacing="10">
-                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
-                        <Image WidthRequest="22" HeightRequest="22" VerticalOptions="Center">
+                <VerticalStackLayout Spacing="8">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+                        <Image WidthRequest="18" HeightRequest="18" VerticalOptions="Center">
                             <Image.Source>
                                 <FontImageSource FontFamily="OutlinedIcons" Glyph="bedtime" Color="{Binding BedtimeColor}" Size="100" />
                             </Image.Source>
                         </Image>
-                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                            <Label Text="{Binding BedtimeHeadline}" Style="{StaticResource H3}" />
-                            <Label Text="{Binding BedtimeDetail}" Style="{StaticResource Caption}" FontSize="12" />
-                        </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Column="2" VerticalOptions="Center">
-                            <Label Text="{Binding BedtimeTime}" Style="{StaticResource StatValue}" FontSize="20" HorizontalOptions="End" />
-                            <Label Text="Bedtime" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End" />
-                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="{Binding BedtimeHeadline}" FontFamily="OpenSansSemibold" FontSize="14"
+                               VerticalOptions="Center" LineBreakMode="TailTruncation" />
+                        <Label Grid.Column="2" Text="{Binding BedtimeTime}" FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" />
+                        <Image Grid.Column="3" WidthRequest="16" HeightRequest="16" VerticalOptions="Center">
+                            <Image.Source>
+                                <FontImageSource FontFamily="OutlinedIcons" Glyph="{Binding BedtimeBell}" Color="{StaticResource TextTertiary}" Size="100" />
+                            </Image.Source>
+                        </Image>
                     </Grid>
-                    <!-- From waking up to bedtime -->
-                    <ProgressBar Progress="{Binding BedtimeProgress}" ProgressColor="{Binding BedtimeColor}" HeightRequest="8" />
-                    <Label Text="{Binding BedtimeReminderText}" Style="{StaticResource Caption}" FontSize="12" />
+                    <ProgressBar Progress="{Binding BedtimeProgress}" ProgressColor="{Binding BedtimeColor}" HeightRequest="4" />
                 </VerticalStackLayout>
             </Border>
 

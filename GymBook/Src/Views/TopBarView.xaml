@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- The slim bar over every tab, its badges at the end: the watch's heart rate (when there is one), tonight's bedtime (tap
+     for it in full and its settings) and whether the app's online. -->
+<ContentView
+    x:Class="GymBook.Views.TopBarView"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:controls="clr-namespace:GymBook.Controls"
+    xmlns:vm="clr-namespace:GymBook.ViewModels"
+    x:DataType="vm:TopBarViewModel">
+    <HorizontalStackLayout Spacing="6" HorizontalOptions="End" Padding="10,6,10,0">
+        <controls:HeartRatePill />
+        <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource Surface2}" Padding="8,3" VerticalOptions="Center">
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding OpenBedtimeCommand}" />
+            </Border.GestureRecognizers>
+            <HorizontalStackLayout Spacing="4">
+                <Image WidthRequest="13" HeightRequest="13" VerticalOptions="Center">
+                    <Image.Source>
+                        <FontImageSource FontFamily="OutlinedIcons" Glyph="bedtime" Color="{Binding BedtimeColor}" Size="100" />
+                    </Image.Source>
+                </Image>
+                <Label Text="{Binding BedtimeTime}" TextColor="{StaticResource TextSecondary}" FontSize="11"
+                       FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Border>
+        <Border Style="{StaticResource Pill}" BackgroundColor="{StaticResource Surface2}" Padding="8,3" VerticalOptions="Center">
+            <HorizontalStackLayout Spacing="5">
+                <Ellipse Fill="{Binding ConnectionColor}" WidthRequest="7" HeightRequest="7" VerticalOptions="Center" />
+                <Label Text="{Binding ConnectionText}" TextColor="{StaticResource TextSecondary}" FontSize="11"
+                       FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Border>
+    </HorizontalStackLayout>
+</ContentView>

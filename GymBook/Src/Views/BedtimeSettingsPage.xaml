@@ -36,13 +36,34 @@
             <ScrollView>
                 <VerticalStackLayout Spacing="12" Padding="10,22,10,18">
                     <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="10,0">
-                        <VerticalStackLayout Spacing="6">
-                            <Label Text="Bedtime" Style="{StaticResource H2}" FontSize="20" />
-                            <Label Text="{Binding Preview}" Style="{StaticResource Caption}" FontSize="14" />
-                        </VerticalStackLayout>
+                        <Label Text="Bedtime" Style="{StaticResource H2}" FontSize="20" VerticalOptions="Center" />
                         <ImageButton Grid.Column="1" Source="{StaticResource IconClose}" WidthRequest="36" HeightRequest="36" Padding="8"
                                      CornerRadius="18" BackgroundColor="{StaticResource Surface2}" VerticalOptions="Start" Clicked="OnDoneClicked" />
                     </Grid>
+
+                    <!-- Tonight in full: how long until bed and when, what it's worked back from, the day's progress, the reminders -->
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="10">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                <Image WidthRequest="24" HeightRequest="24" VerticalOptions="Center">
+                                    <Image.Source>
+                                        <FontImageSource FontFamily="OutlinedIcons" Glyph="bedtime" Color="{Binding Color}" Size="100" />
+                                    </Image.Source>
+                                </Image>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
+                                    <Label Text="{Binding Headline}" Style="{StaticResource H3}" />
+                                    <Label Text="{Binding Detail}" Style="{StaticResource Caption}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="2" VerticalOptions="Center">
+                                    <Label Text="{Binding BedtimeTime}" Style="{StaticResource StatValue}" FontSize="22" HorizontalOptions="End" />
+                                    <Label Text="Bedtime" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End" />
+                                </VerticalStackLayout>
+                            </Grid>
+                            <!-- From waking up to bedtime -->
+                            <ProgressBar Progress="{Binding Progress}" ProgressColor="{Binding Color}" HeightRequest="8" />
+                            <Label Text="{Binding ReminderText}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                    </Border>
 
                     <!-- Reminders -->
                     <Border Style="{StaticResource Card}" Padding="0">

@@ -21,9 +21,11 @@ public partial class HomeViewModel(
     // Bedtime: when to be in bed for the sleep goal, the day's progress towards it, and what it's worked back from.
     [ObservableProperty] string bedtimeTime = "";
     [ObservableProperty] string bedtimeHeadline = "";
-    [ObservableProperty] string bedtimeDetail = "";
-    [ObservableProperty] string bedtimeReminderText = "";
+    /// <summary>A bell, struck through while the reminders are off.</summary>
+    [ObservableProperty] string bedtimeBell = "notifications_off";
     [ObservableProperty] double bedtimeProgress;
+    /// <summary>Within the hour before bedtime, or past it: the card shows instead of the pill at the top.</summary>
+    [ObservableProperty] bool isBedtimeSoon;
     [ObservableProperty] Color bedtimeColor = Color.FromArgb("#7C5CFF");
     IDispatcherTimer? _bedtimeTimer;
     bool _bedtimeHooked;
@@ -33,28 +35,25 @@ public partial class HomeViewModel(
         var now = DateTime.Now;
         var plan = bedtime.Plan(now);
         BedtimeTime = BedtimeService.Time(plan.Bedtime);
-        (BedtimeHeadline, BedtimeDetail) = bedtime.Describe(plan, now);
+        BedtimeHeadline = bedtime.Describe(plan, now).Headline;
         BedtimeProgress = plan.Progress(now);
+        IsBedtimeSoon = plan.Bedtime - now <= TimeSpan.FromHours(1);
         // Violet through the day, amber in the last hour, red once it's past.
-        BedtimeColor = now >= plan.Bedtime ? Color.FromArgb("#FF4D5E") : plan.Bedtime - now <= TimeSpan.FromHours(1) ? Amber : Color.FromArgb("#7C5CFF");
-        BedtimeReminderText = !bedtime.RemindersOn ? "Reminders off · tap to set up"
-            : bedtime.ReminderLeadMinutes > 0 ? $"Reminders {BedtimeService.Span(TimeSpan.FromMinutes(bedtime.ReminderLeadMinutes))} before and at bedtime"
-            : "Reminder at bedtime";
+        BedtimeColor = BedtimeService.ColorFor(plan, now);
+        BedtimeBell = bedtime.RemindersOn ? "notifications_active" : "notifications_off";
     }
 
-    /// <summary>Bedtime's settings: the reminders, the sleep goal, the wake-up time and whether the alarm counts.</summary>
+    /// <summary>
+    /// Bedtime in full (how long until it, what it's worked back from, the day's progress, the reminders) with its settings:
+    /// the reminders, the sleep goal, the wake-up time and whether the alarm counts. From the pill at the top or the card.
+    /// </summary>
     [RelayCommand]
-    Task OpenBedtime() =>
-        Shell.Current.Navigation.PushModalAsync(new Views.BedtimeSettingsPage(new BedtimeSettingsViewModel(bedtime, dialogs)), false);
+    Task OpenBedtime() => BedtimeSettingsViewModel.Open(bedtime, dialogs);
 
     [ObservableProperty] string greeting = "";
     [ObservableProperty] string dateText = "";
     /// <summary>Which little scene sits by the greeting.</summary>
     [ObservableProperty] DayPart dayPart;
-    /// <summary>The connection, at the end of the date line; kept up to date while Home is showing.</summary>
-    [ObservableProperty] bool isOnline;
-    [ObservableProperty] string connectionText = "";
-    [ObservableProperty] Color connectionColor = Colors.Transparent;
 
     // How ready the Up next workout's muscles are, 0 to 1, and what that does to the card: the ring, the words, and
     // a Start button (and background) that get brighter and livelier the fresher you are.
@@ -108,17 +107,7 @@ public partial class HomeViewModel(
     public override void OnDisappearing()
     {
         IsShowing = false;
-        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
         _bedtimeTimer?.Stop();
-    }
-
-    void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e) => MainThread.BeginInvokeOnMainThread(ShowConnection);
-
-    void ShowConnection()
-    {
-        IsOnline = Connectivity.Current.NetworkAccess == NetworkAccess.Internet;
-        ConnectionText = IsOnline ? "Online" : "Offline";
-        ConnectionColor = IsOnline ? Color.FromArgb("#2ED47A") : Color.FromArgb("#FFB020");
     }
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowNextCard))]
@@ -157,9 +146,6 @@ public partial class HomeViewModel(
     public override Task OnAppearingAsync()
     {
         IsShowing = true;
-        Connectivity.Current.ConnectivityChanged -= OnConnectivityChanged;
-        Connectivity.Current.ConnectivityChanged += OnConnectivityChanged;
-        ShowConnection();
         // Bedtime goes by the clock (and the phone's alarm, which may have been set since): shown now and each minute while
         // the tab's on screen, and the reminders scheduled afresh.
         if (!_bedtimeHooked)

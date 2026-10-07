@@ -151,6 +151,10 @@ public class BedtimeService(IAlarmClock alarm, IBedtimeNotifier notifier, Recove
             : ($"Past bedtime by {Span(now - plan.Bedtime)}", $"{Span(plan.WakeAt - now)} left before {before}");
     }
 
+    /// <summary>Violet through the day, amber in the hour before bedtime, red once it's past.</summary>
+    public static Color ColorFor(BedtimePlan plan, DateTime now) =>
+        now >= plan.Bedtime ? Color.FromArgb("#FF4D5E") : plan.Bedtime - now <= TimeSpan.FromHours(1) ? Color.FromArgb("#FFB020") : Color.FromArgb("#7C5CFF");
+
     /// <summary>"your 6:30 alarm" or "waking at 7:00".</summary>
     static string Before(BedtimePlan plan) => plan.Source == WakeSource.Alarm ? $"your {Time(plan.WakeAt)} alarm" : $"waking at {Time(plan.WakeAt)}";
 

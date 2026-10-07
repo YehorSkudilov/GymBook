@@ -94,6 +94,8 @@ public static class MauiProgram
         builder.Services.AddTransient<HealthSettingsViewModel>();
 
         builder.Services.AddTransient<MainPage>();
+        // The badges over every tab (bedtime, online), one for the app's whole run.
+        builder.Services.AddSingleton<TopBarViewModel>();
         AddPage<HomePage, HomeViewModel>(builder.Services);
         AddPage<PlansPage, PlansViewModel>(builder.Services);
         AddPage<ExercisesPage, ExercisesViewModel>(builder.Services);

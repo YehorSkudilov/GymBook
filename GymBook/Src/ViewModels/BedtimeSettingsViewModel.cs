@@ -29,6 +29,10 @@ public partial class BedtimeSettingsViewModel : ObservableObject
         ShowPreview();
     }
 
+    /// <summary>Opens the sheet: from the top bar's bedtime pill, the Workout tab's bedtime card and the Profile tab.</summary>
+    public static Task Open(BedtimeService bedtime, DialogService dialogs) =>
+        Shell.Current.Navigation.PushModalAsync(new Views.BedtimeSettingsPage(new BedtimeSettingsViewModel(bedtime, dialogs)), false);
+
     public List<string> LeadNames { get; } = [.. Leads.Select(m => m == 0 ? "Only at bedtime" : $"{BedtimeService.Span(TimeSpan.FromMinutes(m))} before")];
     public List<string> GoalNames { get; } = [.. Goals.Select(m => BedtimeService.Span(TimeSpan.FromMinutes(m)))];
 
@@ -40,7 +44,13 @@ public partial class BedtimeSettingsViewModel : ObservableObject
     [ObservableProperty] int goalIndex;
     [ObservableProperty] bool useAlarm;
     [ObservableProperty] TimeSpan wakeTime;
-    [ObservableProperty] string preview = "";
+    // Bedtime in full, above the settings, following them as they change.
+    [ObservableProperty] string bedtimeTime = "";
+    [ObservableProperty] string headline = "";
+    [ObservableProperty] string detail = "";
+    [ObservableProperty] double progress;
+    [ObservableProperty] Color color = Color.FromArgb("#7C5CFF");
+    [ObservableProperty] string reminderText = "";
 
     public string WakeCaption => CanUseAlarm ? "When there's no alarm in the next day" : "Bedtime counts back from it";
 
@@ -91,12 +101,21 @@ public partial class BedtimeSettingsViewModel : ObservableObject
         ShowPreview();
     }
 
-    /// <summary>"Tonight: in bed by 22:30 for 8 h before your 6:30 alarm."</summary>
+    /// <summary>
+    /// Tonight's bedtime in full: "Bed in 2 h 15 min", "8 h of sleep before your 6:30 alarm", the day's progress to it (in
+    /// the Workout tab's colours) and when the reminders come.
+    /// </summary>
     void ShowPreview()
     {
-        var plan = _bedtime.Plan(DateTime.Now);
-        var before = plan.Source == WakeSource.Alarm ? $"your {BedtimeService.Time(plan.WakeAt)} alarm" : $"waking at {BedtimeService.Time(plan.WakeAt)}";
-        // The next wake-up is always within a day, so its bedtime is tonight's.
-        Preview = $"Tonight: in bed by {BedtimeService.Time(plan.Bedtime)} for {BedtimeService.Span(TimeSpan.FromMinutes(_bedtime.SleepGoalMinutes))} before {before}.";
+        var now = DateTime.Now;
+        var plan = _bedtime.Plan(now);
+        BedtimeTime = BedtimeService.Time(plan.Bedtime);
+        (Headline, Detail) = _bedtime.Describe(plan, now);
+        Progress = plan.Progress(now);
+        Color = BedtimeService.ColorFor(plan, now);
+        ReminderText = !_bedtime.RemindersOn ? "Reminders are off"
+            : _bedtime.ReminderLeadMinutes > 0
+                ? $"Reminders at {BedtimeService.Time(plan.Bedtime.AddMinutes(-_bedtime.ReminderLeadMinutes))} and {BedtimeService.Time(plan.Bedtime)}"
+                : $"Reminder at {BedtimeService.Time(plan.Bedtime)}";
     }
 }
