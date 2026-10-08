@@ -76,21 +76,11 @@
                     <Image Grid.Column="2" Style="{StaticResource Chevron}" />
                 </Grid>
             </Border>
-            <!-- The profile, with the account under it: a sync problem (only when there is one), the password, signing out and
+            <!-- The profile, with the account under it: the password, signing out and
                  deleting the account. The email is in the profile, under the name. -->
             <Border Style="{StaticResource Card}" Padding="0" IsVisible="{Binding IsSignedIn}">
                 <VerticalStackLayout>
                     <views:PublicProfileView BindingContext="{Binding Public}" />
-                    <!-- Only when something hasn't synced yet or the last sync failed. -->
-                    <BoxView Style="{StaticResource Divider}" IsVisible="{Binding HasSyncDetails}" />
-                    <Grid Style="{StaticResource Row}" IsVisible="{Binding HasSyncDetails}">
-                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenSyncDetailsCommand}" /></Grid.GestureRecognizers>
-                        <VerticalStackLayout VerticalOptions="Center">
-                            <Label Text="View details" />
-                            <Label Text="{Binding SyncDetailsSummary}" Style="{StaticResource Caption}" FontSize="12" TextColor="{StaticResource Warning}" />
-                        </VerticalStackLayout>
-                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
-                    </Grid>
                     <BoxView Style="{StaticResource Divider}" />
                     <Grid Style="{StaticResource Row}">
                         <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding ChangePasswordCommand}" /></Grid.GestureRecognizers>
@@ -220,11 +210,31 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Data: first health data, from Samsung Health itself or other apps through Health Connect (one row; the rest in
-                 its popup; what's read shows on the Nutrition tab), then exporting, bringing workouts back, deleting -->
+            <!-- Data: first syncing with the account (signed in), then health data, from Samsung Health itself or other apps through
+                 Health Connect (one row; the rest in its popup; what's read shows on the Nutrition tab), then exporting, bringing workouts back, deleting -->
             <Label Text="DATA" Style="{StaticResource Overline}" Margin="4,6,0,0" />
             <Border Style="{StaticResource Card}" Padding="0">
                 <VerticalStackLayout>
+                    <!-- Sync, one row: how the last sync went and what's waiting, with Sync now. Tapped elsewhere, Sync details:
+                         every change not synced yet and why. -->
+                    <Grid Style="{StaticResource Row}" IsVisible="{Binding IsSignedIn}">
+                        <Grid.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenSyncDetailsCommand}" /></Grid.GestureRecognizers>
+                        <VerticalStackLayout VerticalOptions="Center">
+                            <Label Text="Sync" />
+                            <Label Text="{Binding SyncSummary}" Style="{StaticResource Caption}" FontSize="12">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding SyncNeedsAttention}" Value="True">
+                                        <Setter Property="TextColor" Value="{StaticResource Warning}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1" Text="Sync now" Style="{StaticResource GhostButton}" TextColor="{StaticResource Accent}"
+                                FontSize="14" Padding="10,6" VerticalOptions="Center" Command="{Binding SyncNowCommand}"
+                                IsEnabled="{Binding IsSyncing, Converter={StaticResource Not}}" />
+                        <Image Grid.Column="2" Style="{StaticResource Chevron}" />
+                    </Grid>
+                    <BoxView Style="{StaticResource Divider}" IsVisible="{Binding IsSignedIn}" />
                     <!-- The health app, one row: what it reads and how it's going, with Sync now (or Connect). Tapped elsewhere,
                          once connected, a popup with the rest (where it reads from, sending back, what it can read, disconnecting:
                          HealthSettingsPage); not yet connected, it connects. -->

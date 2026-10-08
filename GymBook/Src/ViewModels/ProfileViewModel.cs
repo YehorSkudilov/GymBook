@@ -75,8 +75,10 @@ public partial class ProfileViewModel(
     public bool ShowProPromo => IsSignedIn && !IsPro && AiEnabled;
     [ObservableProperty] string proText = "";
     [ObservableProperty] string passwordRowText = "";
-    [ObservableProperty] bool hasSyncDetails;
-    [ObservableProperty] string syncDetailsSummary = "";
+    [ObservableProperty] string syncSummary = "";
+    /// <summary>The last sync failed or something hasn't gone up yet: the summary shows in the warning colour.</summary>
+    [ObservableProperty] bool syncNeedsAttention;
+    [ObservableProperty] bool isSyncing;
 
     UserProfile P => store.Profile;
 
@@ -118,11 +120,16 @@ public partial class ProfileViewModel(
         publicProfile.RefreshAccount();
         ProText = ProStatusText(subscriptions.Status);
         PasswordRowText = account.HasPassword ? "Change password" : "Set a password";
-        // While a sync runs, pending changes are about to go up; only a failure or leftovers are worth a look.
+        // The Sync row in Data: how the last sync went and what's still waiting to go up (the list in Sync details).
+        IsSyncing = sync.State == SyncState.Syncing;
         var failed = sync.State is SyncState.Failed or SyncState.Offline or SyncState.SignInRequired;
-        var pending = sync.State != SyncState.Syncing && store.Local.HasPendingChanges ? sync.PendingItems().Count : 0;
-        HasSyncDetails = account.IsSignedIn && (failed || pending > 0);
-        SyncDetailsSummary = failed ? "Sync failed" + (pending > 0 ? $" · {pending} not synced" : "") : $"{pending} not synced yet";
+        var pending = !IsSyncing && store.Local.HasPendingChanges ? sync.PendingItems().Count : 0;
+        SyncNeedsAttention = account.IsSignedIn && (failed || pending > 0);
+        SyncSummary = !account.IsSignedIn ? "Sign in to back up your data and sync it across devices"
+            : IsSyncing ? "Syncing…"
+            : failed ? (sync.State == SyncState.Offline ? "Offline" : "Sync failed") + (pending > 0 ? $" · {pending} not synced" : "")
+            : pending > 0 ? $"{pending} not synced yet"
+            : sync.LastSyncedAt is { } at ? $"Up to date · last synced {at:t}" : "Up to date";
 
         _loading = true;
         AiEnabled = ai.IsEnabled;
@@ -322,6 +329,13 @@ public partial class ProfileViewModel(
 
     [RelayCommand]
     Task OpenSyncDetails() => GoTo(Routes.SyncDetails);
+
+    [RelayCommand]
+    async Task SyncNow()
+    {
+        await sync.SyncNowAsync();
+        Refresh();
+    }
 
     /// <summary>Gym Book Pro: its plans and free trial, or, for a member, managing it.</summary>
     [RelayCommand]
