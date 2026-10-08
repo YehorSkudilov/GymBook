@@ -342,23 +342,6 @@ jobs:
           echo "file=$posix" >> $env:GITHUB_OUTPUT
 
       # =========================
-      # FIND R8 MAPPING
-      # =========================
-
-      # R8's obfuscation map (Android.R8.targets), for Play to deobfuscate crash reports and ANRs.
-      - name: Find R8 mapping
-        id: find_mapping
-        shell: pwsh
-        run: |
-          $file = Get-ChildItem -Path GymBook/GymBook/bin/Release -Recurse -Filter mapping.txt | Select-Object -First 1
-          if ($null -eq $file) { throw "R8 mapping.txt not found" }
-
-          $posix = $file.FullName -replace "\\", "/"
-
-          Write-Host "Mapping: $posix"
-          echo "file=$posix" >> $env:GITHUB_OUTPUT
-
-      # =========================
       # UPLOAD ARTIFACTS
       # =========================
 
@@ -384,7 +367,6 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: ${{ env.PACKAGE_NAME }}
           releaseFiles: ${{ steps.find_aab.outputs.file }}
-          mappingFile: ${{ steps.find_mapping.outputs.file }}
           track: ${{ inputs.release_channel }}
           status: completed
 
@@ -510,14 +492,6 @@ jobs:
           name: wear-aab
           path: ${{ steps.find_aab.outputs.file }}
 
-      # R8's obfuscation map (Android.R8.targets), uploaded to Play with the AAB.
-      - name: Upload R8 mapping artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: wear-mapping
-          path: GymBook/GymBook.Wear/bin/Release/**/mapping.txt
-          if-no-files-found: error
-
   # ==================================================
   # UPLOAD WEAR OS
   # ==================================================
@@ -537,12 +511,6 @@ jobs:
           name: wear-aab
           path: wear
 
-      - name: Download R8 mapping
-        uses: actions/download-artifact@v4
-        with:
-          name: wear-mapping
-          path: wear-mapping
-
       - name: Find AAB
         id: find_aab
         run: |
@@ -552,7 +520,6 @@ jobs:
             exit 1
           fi
           echo "file=$FILE" >> "$GITHUB_OUTPUT"
-          echo "mapping=$(find wear-mapping -name mapping.txt | head -1)" >> "$GITHUB_OUTPUT"
 
       # Dedicated form factor tracks are named "<form factor>:<track>", e.g. wear:internal.
       - name: Upload AAB to Google Play (Wear OS track)
@@ -561,7 +528,6 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           packageName: ${{ env.PACKAGE_NAME }}
           releaseFiles: ${{ steps.find_aab.outputs.file }}
-          mappingFile: ${{ steps.find_aab.outputs.mapping }}
           track: wear:${{ inputs.release_channel }}
           status: completed
 

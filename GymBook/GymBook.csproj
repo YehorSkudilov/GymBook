@@ -131,12 +131,7 @@
 		<PackageReference Include="Xamarin.Kotlin.Parcelize.Runtime" Version="2.4.0.1" />
 		<!-- Gym Book Pro subscriptions through Google Play Billing (Platforms/Android/PlayBilling.cs). -->
 		<PackageReference Include="Xamarin.Android.Google.BillingClient" Version="9.1.0.2" />
-		<!-- R8 rules for what's called by name rather than through a binding (see Android.R8.targets). -->
-		<ProguardConfiguration Include="Platforms\Android\proguard.cfg" />
 	</ItemGroup>
-
-	<!-- Release builds shrink and obfuscate the Java code with R8. -->
-	<Import Project="..\Android.R8.targets" />
 
 	<ItemGroup>
 		<ProjectReference Include="..\GymBook.Shared\GymBook.Shared.csproj" />
