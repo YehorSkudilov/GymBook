@@ -10,10 +10,10 @@ public class ConnectionPill : ContentView
 {
     static readonly Color OnlineColor = Color.FromArgb("#2ED47A"), OfflineColor = Color.FromArgb("#FFB020");
 
-    // Sized like the Nutrition tab's streak pill, as every badge is: the dot centred where its 16 px icon would be, 13 pt
-    // text, 8,4 padding.
-    readonly Ellipse _dot = new() { WidthRequest = 9, HeightRequest = 9, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
-    readonly Label _text = new() { FontSize = 13, FontFamily = "OpenSansSemibold", VerticalOptions = LayoutOptions.Center };
+    // A notch smaller than the other badges so it reads as a status, not an action: the dot centred in a 12 px slot,
+    // 11 pt text, 6,3 padding.
+    readonly Ellipse _dot = new() { WidthRequest = 7, HeightRequest = 7, HorizontalOptions = LayoutOptions.Center, VerticalOptions = LayoutOptions.Center };
+    readonly Label _text = new() { FontSize = 11, FontFamily = "OpenSansSemibold", VerticalOptions = LayoutOptions.Center };
 
     public ConnectionPill()
     {
@@ -21,11 +21,11 @@ public class ConnectionPill : ContentView
         {
             Style = (Style)Application.Current!.Resources["Pill"],
             BackgroundColor = (Color)Application.Current.Resources["Surface2"],
-            Padding = new Thickness(8, 4),
+            Padding = new Thickness(6, 3),
             Content = new HorizontalStackLayout
             {
-                Spacing = 3,
-                Children = { new Grid { WidthRequest = 16, HeightRequest = 16, VerticalOptions = LayoutOptions.Center, Children = { _dot } }, _text },
+                Spacing = 2,
+                Children = { new Grid { WidthRequest = 12, HeightRequest = 12, VerticalOptions = LayoutOptions.Center, Children = { _dot } }, _text },
             },
         };
         VerticalOptions = LayoutOptions.Center;
