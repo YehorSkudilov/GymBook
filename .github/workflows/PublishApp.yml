@@ -350,7 +350,7 @@ jobs:
         id: find_mapping
         shell: pwsh
         run: |
-          $file = Get-ChildItem -Path GymBook/bin/Release -Recurse -Filter mapping.txt | Select-Object -First 1
+          $file = Get-ChildItem -Path GymBook/GymBook/bin/Release -Recurse -Filter mapping.txt | Select-Object -First 1
           if ($null -eq $file) { throw "R8 mapping.txt not found" }
 
           $posix = $file.FullName -replace "\\", "/"
@@ -515,7 +515,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wear-mapping
-          path: GymBook.Wear/bin/Release/**/mapping.txt
+          path: GymBook/GymBook.Wear/bin/Release/**/mapping.txt
           if-no-files-found: error
 
   # ==================================================
