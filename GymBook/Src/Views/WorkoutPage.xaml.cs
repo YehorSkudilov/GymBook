@@ -16,7 +16,8 @@ public partial class WorkoutPage : SheetPage
     {
         InitializeComponent();
         BindingContext = viewModel;
-        HorizontalMouseScroll.Attach(Strip);
+        // The wheel only: dragging with the mouse moves a photo (to reorder), not the strip.
+        HorizontalMouseScroll.Attach(Strip, drag: false);
         viewModel.ExerciseFinished += (exercise, all) => Dispatcher.Dispatch(() => _ = CelebrateAsync(exercise.Name, all));
         // Rest over: the banner stays until it's swiped away, or the rest isn't over any more (the next set started or
         // ticked, or more rest added).
@@ -227,7 +228,7 @@ public partial class WorkoutPage : SheetPage
     // Keeps the current exercise's photo in view as you swipe through the workout.
     void ScrollStripTo(int index)
     {
-        if (BindingContext is WorkoutViewModel vm && index >= 0 && index < vm.Exercises.Count)
-            Strip.ScrollTo(index, position: ScrollToPosition.Center, animate: true);
+        if (StripItems.Children.ElementAtOrDefault(index) is Element photo)
+            _ = Strip.ScrollToAsync(photo, ScrollToPosition.Center, true);
     }
 }

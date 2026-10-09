@@ -672,6 +672,47 @@ public partial class WorkoutViewModel(
         OnStructureChanged();
     }
 
+    /// <summary>
+    /// Swaps the places of <paramref name="vm"/> and another exercise of the workout, picked from a list (say, when its
+    /// machine is taken). The place on screen stays, so swapping the exercise on screen with a later one brings that one up.
+    /// </summary>
+    internal async Task SwapWith(WorkoutExerciseViewModel vm)
+    {
+        var a = Exercises.IndexOf(vm);
+        if (_session == null || a < 0 || Exercises.Count < 2)
+            return;
+        // Numbered, so the same exercise twice can be told apart.
+        var others = Exercises.Select((e, i) => (Text: $"{i + 1}. {e.Name}", Index: i)).Where(o => o.Index != a).ToList();
+        var choice = await dialogs.ActionSheet($"Swap {vm.Name} with", null, [.. others.Select(o => o.Text)]);
+        if (others.FirstOrDefault(o => o.Text == choice) is not { Text: not null } picked || Exercises.IndexOf(vm) != a)
+            return;
+        var (lo, hi) = (Math.Min(a, picked.Index), Math.Max(a, picked.Index));
+        (_session.Exercises[lo], _session.Exercises[hi]) = (_session.Exercises[hi], _session.Exercises[lo]);
+        // Two moves rather than setting both places, so the list never has an exercise twice in it.
+        Exercises.Move(hi, lo);
+        Exercises.Move(lo + 1, hi);
+        OnCurrentIndexChanged(CurrentIndex);
+        OnStructureChanged();
+    }
+
+    /// <summary>
+    /// Moves <paramref name="vm"/> to <paramref name="to"/>, where its photo was dragged in the strip. The exercise on
+    /// screen stays on screen, wherever it ends up.
+    /// </summary>
+    internal void Move(WorkoutExerciseViewModel vm, int to)
+    {
+        var from = Exercises.IndexOf(vm);
+        if (_session == null || from < 0 || to < 0 || to >= Exercises.Count || to == from)
+            return;
+        var current = CurrentExercise;
+        _session.Exercises.RemoveAt(from);
+        _session.Exercises.Insert(to, vm.Model);
+        Exercises.Move(from, to);
+        CurrentIndex = current == null ? CurrentIndex : Exercises.IndexOf(current);
+        OnCurrentIndexChanged(CurrentIndex);
+        OnStructureChanged();
+    }
+
     internal void Remove(WorkoutExerciseViewModel vm)
     {
         _session?.Exercises.Remove(vm.Model);
@@ -1104,6 +1145,10 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     /// <summary>Its photo in the strip tapped: shows it, or, already showing, opens its details (how to do it, video).</summary>
     Task Select() => IsSelected ? Help() : _parent.SelectExercise(this);
 
+    /// <summary>Its photo dragged to another place in the strip (see <see cref="Controls.ReorderItem"/>).</summary>
+    [RelayCommand]
+    void Move(int to) => _parent.Move(this, to);
+
     [RelayCommand]
     Task Help() => Shell.Current.GoToAsync($"{Routes.Exercise}?id={Exercise.Id}&tab=instructions");
 
@@ -1501,9 +1546,12 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     [RelayCommand]
     async Task Menu()
     {
-        string[] options = CanSkipExercise
-            ? [SkipExerciseText, "Replace exercise", "Exercise details", "Change rest time"]
-            : ["Replace exercise", "Exercise details", "Change rest time"];
+        string[] options =
+        [
+            .. CanSkipExercise ? [SkipExerciseText] : Array.Empty<string>(),
+            .. _parent.Exercises.Count > 1 ? ["Swap with another exercise"] : Array.Empty<string>(),
+            "Replace exercise", "Exercise details", "Change rest time",
+        ];
         var choice = await _parent.Dialogs.ActionSheet(Name, "Remove exercise", options);
         if (choice == SkipExerciseText)
         {
@@ -1515,6 +1563,9 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             case "Remove exercise":
                 if (await _parent.Dialogs.Confirm("Remove exercise?", $"Remove {Name} and its sets from this workout?", "Remove"))
                     _parent.Remove(this);
+                break;
+            case "Swap with another exercise":
+                await _parent.SwapWith(this);
                 break;
             case "Replace exercise":
                 await _parent.Replace(this);

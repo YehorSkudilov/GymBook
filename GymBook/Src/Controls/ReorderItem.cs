@@ -8,8 +8,8 @@ namespace GymBook.Controls;
 /// <see cref="MoveCommand"/> runs with its new index. The list is the item's parent layout (e.g. a stack with a
 /// BindableLayout); every item in it must be a ReorderItem.
 /// On Android and iOS it is handled natively (see ReorderItemHandler): a long-press on the item's grip
-/// (<see cref="IsHandleProperty"/>) if it has one, otherwise on the item, so a swipe still scrolls;
-/// elsewhere it's a plain drag.
+/// (<see cref="IsHandleProperty"/>) if it has one, otherwise on the item, so a swipe still scrolls; on Windows by
+/// its own handler too (a plain drag, measured against the window); elsewhere it's a plain drag.
 /// </summary>
 public class ReorderItem : ContentView
 {
@@ -66,7 +66,7 @@ public class ReorderItem : ContentView
 
     public ReorderItem()
     {
-#if !ANDROID && !IOS
+#if !ANDROID && !IOS && !WINDOWS
         var pan = new PanGestureRecognizer();
         pan.PanUpdated += (_, e) =>
         {
@@ -105,8 +105,8 @@ public class ReorderItem : ContentView
         _spacing = layout is StackBase stack ? stack.Spacing : 0;
         // Above the others while it moves over them; a little bigger, as if picked up. Not with ZIndex on Android: MAUI
         // applies it by taking the view out of the list and putting it back, which cancels the touch and ends the drag
-        // at once. The Android and iOS handlers raise it natively instead.
-#if !ANDROID && !IOS
+        // at once. The Android, iOS and Windows handlers raise it natively instead.
+#if !ANDROID && !IOS && !WINDOWS
         ZIndex = 1;
 #endif
         this.ScaleTo(LiftScale, SettleLength, Easing.CubicOut);
@@ -174,7 +174,7 @@ public class ReorderItem : ContentView
             item.CancelAnimations();
             item.TranslationX = item.TranslationY = 0;
         }
-#if !ANDROID && !IOS
+#if !ANDROID && !IOS && !WINDOWS
         ZIndex = 0;
 #endif
         Scale = 1;

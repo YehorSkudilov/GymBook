@@ -143,6 +143,11 @@ public static class MauiProgram
         builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.ReorderItem, ReorderItemHandler>());
 #endif
 
+#if WINDOWS
+        // Drag reordering measured against the window: MAUI's pan gesture there jitters as the item moves under it.
+        builder.ConfigureMauiHandlers(handlers => handlers.AddHandler<Controls.ReorderItem, ReorderItemHandler>());
+#endif
+
 #if ANDROID
         // Drag reordering (plan exercises from their grip, days with a long-press), so swipes elsewhere still scroll.
         builder.ConfigureMauiHandlers(handlers =>

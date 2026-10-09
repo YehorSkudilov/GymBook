@@ -15,23 +15,27 @@ namespace GymBook.Views;
 /// </summary>
 public static class HorizontalMouseScroll
 {
-    public static void Attach(VisualElement view)
+    /// <param name="drag">
+    /// Whether dragging with the mouse pans it too. Off for a strip whose items are dragged to reorder them, which would
+    /// pan along with the item: the wheel alone scrolls it.
+    /// </param>
+    public static void Attach(VisualElement view, bool drag = true)
     {
 #if WINDOWS
         view.HandlerChanged += (_, _) =>
         {
             if (view.Handler?.PlatformView is FrameworkElement platform)
-                Hook(platform);
+                Hook(platform, drag);
         };
         if (view.Handler?.PlatformView is FrameworkElement current)
-            Hook(current);
+            Hook(current, drag);
 #endif
     }
 
 #if WINDOWS
     const double DragThreshold = 6;
 
-    static void Hook(FrameworkElement platform)
+    static void Hook(FrameworkElement platform, bool drag)
     {
         // The inner ScrollViewer only exists once the control is loaded (a list builds it from its template).
         platform.Loaded += (_, _) => Scroller(platform);
@@ -50,6 +54,9 @@ public static class HorizontalMouseScroll
             scroll.ChangeView(scroll.HorizontalOffset - delta, null, null, false);
             e.Handled = true;
         }), true);
+
+        if (!drag)
+            return;
 
         platform.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, e) =>
         {
