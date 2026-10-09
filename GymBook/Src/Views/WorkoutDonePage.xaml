@@ -75,6 +75,21 @@
                     <Label Text="{Binding RecordsText}" TextColor="#FFB020" FontFamily="OpenSansSemibold" FontSize="14" VerticalOptions="Center" />
                 </HorizontalStackLayout>
             </Border>
+
+            <!-- XP earned (or lost), and the level bar filling up -->
+            <Border x:Name="XpCard" Style="{StaticResource Card}" Padding="14,12" Opacity="0" TranslationY="20">
+                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenLevelCommand}" /></Border.GestureRecognizers>
+                <VerticalStackLayout Spacing="6">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="{Binding XpText}" FontFamily="OpenSansSemibold" FontSize="22" TextColor="{StaticResource Accent}" />
+                        <Label Grid.Column="1" Text="{Binding LevelUpText}" IsVisible="{Binding HasLevelUp}" TextColor="#FFB020"
+                               FontFamily="OpenSansSemibold" FontSize="13" VerticalOptions="Center" />
+                    </Grid>
+                    <Label Text="{Binding XpLines}" Style="{StaticResource Caption}" FontSize="12" LineHeight="1.2" />
+                    <ProgressBar Progress="{Binding LevelProgress}" HeightRequest="6" />
+                    <Label Text="{Binding LevelText}" Style="{StaticResource Caption}" FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
         </VerticalStackLayout>
 
         <Button x:Name="ContinueButton" Grid.Row="1" Text="Continue" Style="{StaticResource PrimaryButton}" Margin="10,8,10,24"

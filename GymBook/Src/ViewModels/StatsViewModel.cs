@@ -9,8 +9,26 @@ namespace GymBook.ViewModels;
 
 /// <summary>The Progress tab: the stats from this device's workouts, and (its Ranks tab) the strength ranks.</summary>
 public partial class StatsViewModel(DataStore store, StatsService stats, Units units, DialogService dialogs, NutritionService nutrition, RanksViewModel ranks,
-    RecoveryService recovery) : BaseViewModel
+    RecoveryService recovery, LevelService levels) : BaseViewModel
 {
+    // ---- Level: the card at the top of the Ranks tab, which opens the level sheet ----
+    [ObservableProperty] string levelTitle = "";
+    [ObservableProperty] string levelLeague = "";
+    [ObservableProperty] double levelProgress;
+    [ObservableProperty] string levelProgressText = "";
+
+    void ShowLevel()
+    {
+        var status = levels.Status;
+        LevelTitle = $"Level {status.Level}";
+        LevelLeague = $"{status.League.Name} league";
+        LevelProgress = status.Progress;
+        LevelProgressText = $"{status.ToNext:N0} XP to level {status.Level + 1}";
+    }
+
+    [RelayCommand]
+    Task OpenLevel() => GoTo(Routes.Level);
+
     /// <summary>The Ranks tab's own view model (see RanksView).</summary>
     public RanksViewModel Ranks => ranks;
 
@@ -436,6 +454,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         // every frame unseen. They're worked out again when the Trends tab comes back.
         if (IsRanksTab)
         {
+            ShowLevel();
             _ = ranks.OnAppearingAsync();
             return Task.CompletedTask;
         }

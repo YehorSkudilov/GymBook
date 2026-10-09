@@ -33,6 +33,10 @@
             <Border IsVisible="{Binding HasLiveAdvice}" BackgroundColor="{StaticResource WarningSoft}" StrokeShape="RoundRectangle 10" Padding="10,8">
                 <Label Text="{Binding LiveAdvice}" FontSize="13" TextColor="{StaticResource Warning}" />
             </Border>
+            <!-- A big lift: this workout's best set against famous lifters' competition bests (the level sheet has the sources). -->
+            <Border IsVisible="{Binding HasFamous}" BackgroundColor="{StaticResource AccentSoft}" StrokeShape="RoundRectangle 10" StrokeThickness="0" Padding="10,8">
+                <Label Text="{Binding FamousText}" FontSize="13" TextColor="{StaticResource Accent}" />
+            </Border>
 
             <!-- A note on the exercise in this workout: the seat height, how it felt… The pin offers it for the plan when the
                  workout's finished (Update plan), so the next workouts of this day start with it; the line under it says so. -->

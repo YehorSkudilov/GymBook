@@ -1,5 +1,24 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-09): XP, levels, leagues and famous lifts (issue #35; built for Windows, not run)
+
+- **XP** (`GymBook.Shared/Models/Levels.cs`): worked out from finished workouts every time (cached by `LevelService` until
+  `DataStore.Version` moves), so nothing new is stored, synced or migrated. +100 a workout and +5 a working set (up to 30),
+  +75 for a week with the plan's workouts a week, +50 for an exercise's best e1RM, +20 for a rep record; −40 per planned
+  workout missed in a finished Monday–Sunday week (no more after 2 empty weeks in a row: a break), −30 and no record for
+  going up in weight but missing the exercise's minimum reps (ego lift). Deloads and lighter days never cost XP. Never below 0.
+- **Levels/leagues**: level n→n+1 costs 100 + 10(n−1) XP, flat at 1,090 from level 100; endless. Leagues every 50 levels:
+  Rookie, Iron, Steel, Titanium, Titan, Olympian, Legend, Mythic (350+). Simulated 3 workouts a week: about level 59 after a year.
+- **Famous lifts** (`GymBook.Shared/Models/FamousLifts.cs`): competition bests only, each with its source. Bench/squat/deadlift
+  are raw results from OpenPowerlifting's lifter CSVs (`/api/liftercsv/<user>`), checked 2026-10-09; OHP is the 1972 Olympic
+  press (Wikipedia result tables) and Iron Biby's 230 kg log press (BarBend). Same-name traps: `brianshaw` and `edwardhall`
+  on OpenPowerlifting are not the strongmen. Descriptions say no more than is well known (no unverified "world champion").
+- **UI**: Progress › Ranks has a Level card at the top → `LevelPage` (route `level`): level, leagues, famous lifts per big lift
+  (tap Source to open it), recent XP, how XP works. The workout-done screen shows the XP earned with the level bar filling.
+  In a workout, bench/squat/deadlift/OHP (`Ranks.LiftOf`) show "≈X 1RM today: N% of <next famous lift>" after a working set.
+- **For the owner to test:** the done screen still fits on a small phone with the XP card; numbers on the level sheet for an
+  account with long history; the live line in a workout.
+
 ## NEWEST (2026-10-02, latest): bigger food search, barcodes, My foods
 
 - **Search order** (`Src/Services/FoodSearchService.cs`): My foods → ~80 typical everyday foods → **13,124 USDA generic foods

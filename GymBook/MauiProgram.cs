@@ -29,6 +29,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<WorkoutEstimator>();
         builder.Services.AddSingleton<RecoveryService>();
         builder.Services.AddSingleton<StatsService>();
+        builder.Services.AddSingleton<LevelService>();
         builder.Services.AddSingleton<NutritionService>();
         builder.Services.AddSingleton<FoodSearchService>();
         builder.Services.AddSingleton<WorkoutService>();
@@ -131,6 +132,7 @@ public static class MauiProgram
         AddPage<PlanSharePage, PlanShareViewModel>(builder.Services);
         AddPage<SharedPlanPage, SharedPlanViewModel>(builder.Services);
         AddPage<ProPage, ProViewModel>(builder.Services);
+        AddPage<LevelPage, LevelViewModel>(builder.Services);
         AddPage<FeedbackPage, FeedbackViewModel>(builder.Services);
         AddPage<FeedbackTicketPage, FeedbackTicketViewModel>(builder.Services);
         AddPage<FeedbackEditPage, FeedbackEditViewModel>(builder.Services);

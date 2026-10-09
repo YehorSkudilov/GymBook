@@ -28,6 +28,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(Routes.PlanShare, typeof(PlanSharePage));
         Routing.RegisterRoute(Routes.SharedPlan, typeof(SharedPlanPage));
         Routing.RegisterRoute(Routes.Pro, typeof(ProPage));
+        Routing.RegisterRoute(Routes.Level, typeof(LevelPage));
         Routing.RegisterRoute(Routes.Feedback, typeof(FeedbackPage));
         Routing.RegisterRoute(Routes.FeedbackTicket, typeof(FeedbackTicketPage));
         Routing.RegisterRoute(Routes.FeedbackEdit, typeof(FeedbackEditPage));
@@ -57,6 +58,8 @@ public static class Routes
     public const string PlanShare = "planshare";
     public const string SharedPlan = "sharedplan";
     public const string Pro = "pro";
+    /// <summary>Level, league, famous lifts and XP (see LevelService).</summary>
+    public const string Level = "level";
     public const string Feedback = "feedback";
     public const string FeedbackTicket = "feedbackticket";
     public const string FeedbackEdit = "feedbackedit";

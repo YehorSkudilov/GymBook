@@ -52,10 +52,30 @@
                 </FlexLayout>
             </Border>
 
-            <!-- Ranks: shown by this view (bound to the page), filled by the inner one (bound to the ranks) -->
-            <ContentView IsVisible="{Binding IsRanksTab}">
-                <views:RanksView BindingContext="{Binding Ranks}" />
-            </ContentView>
+            <VerticalStackLayout Spacing="14" IsVisible="{Binding IsRanksTab}">
+                <!-- Level and league from XP, worked out on this device: tap for the leagues, famous lifts and XP -->
+                <Border Style="{StaticResource Card}">
+                    <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenLevelCommand}" /></Border.GestureRecognizers>
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                        <Image WidthRequest="30" HeightRequest="30" VerticalOptions="Center">
+                            <Image.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="workspace_premium" Color="{StaticResource Accent}" Size="32" /></Image.Source>
+                        </Image>
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <HorizontalStackLayout Spacing="8">
+                                <Label Text="{Binding LevelTitle}" FontFamily="OpenSansSemibold" FontSize="16" VerticalOptions="Center" />
+                                <Label Text="{Binding LevelLeague}" TextColor="{StaticResource Accent}" FontSize="13" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <ProgressBar controls:SmoothProgress.Value="{Binding LevelProgress}" HeightRequest="4" />
+                            <Label Text="{Binding LevelProgressText}" Style="{StaticResource Caption}" FontSize="12" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2" Text="›" FontSize="22" TextColor="{StaticResource TextSecondary}" VerticalOptions="Center" />
+                    </Grid>
+                </Border>
+                <!-- Ranks: shown by this view (bound to the page), filled by the inner one (bound to the ranks) -->
+                <ContentView>
+                    <views:RanksView BindingContext="{Binding Ranks}" />
+                </ContentView>
+            </VerticalStackLayout>
 
             <!-- Day: one day's training, the day picked like Nutrition's (‹ ›, or tap for a calendar with a dot on each
                  day with a workout): its totals, its workouts (tap for the finished-workout sheet), the muscles worked and

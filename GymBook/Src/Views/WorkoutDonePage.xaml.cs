@@ -55,6 +55,10 @@ public partial class WorkoutDonePage : BasePage
             await RecordsPill.ScaleTo(1.12, 260, Easing.CubicOut);
             await RecordsPill.ScaleTo(1, 160, Easing.SpringOut);
         }
+        // The XP, then the level bar fills from where it was.
+        await Rise(XpCard, 0);
+        if (BindingContext is WorkoutDoneViewModel xp)
+            new Animation(v => xp.LevelProgress = v, xp.LevelProgressFrom, xp.LevelProgressTo, Easing.CubicOut).Commit(this, "level", length: 900);
         await Rise(ContinueButton, 0);
         _ = Breathe();
     }

@@ -1007,6 +1007,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         showWarmups = model.Sets.Any(s => s.IsWarmup && !s.IsCompleted && !s.IsSkipped);
         note = model.Note ?? "";
         Renumber();
+        UpdateFamous();
     }
 
     /// <summary>The user's note on the exercise in this workout; kept with it like the sets typed in.</summary>
@@ -1099,6 +1100,30 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasLiveAdvice))]
     string liveAdvice = "";
     public bool HasLiveAdvice => LiveAdvice.Length > 0;
+
+    /// <summary>
+    /// Where this workout's best set of a big lift (bench, squat, deadlift, overhead press) stands against famous lifters'
+    /// competition bests (see <see cref="FamousLifts"/>): the next one up, and the last one passed. Empty for other exercises.
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasFamous))]
+    string famousText = "";
+    public bool HasFamous => FamousText.Length > 0;
+
+    void UpdateFamous()
+    {
+        var best = Sets.Where(s => s.IsCompleted && !s.Model.IsWarmup).Select(s => LevelService.SetE1Rm(s.Model)).DefaultIfEmpty(0).Max();
+        if (Ranks.LiftOf(Exercise.Id) is not { } lift || best <= 0)
+        {
+            FamousText = "";
+            return;
+        }
+        var (passed, next) = FamousLifts.Compare(lift, best);
+        var today = $"≈{Units.FormatWithUnit(best)} 1RM today";
+        FamousText = next is { } n
+            ? $"{today}: {best / n.Kg:P0} of {Famous.Describe(n, Units)}." + (passed is { } p ? $" Past {p.Person}'s {Units.FormatWithUnit(p.Kg)}." : "")
+            : $"{today}: past every famous lift here, {Famous.Describe(passed!, Units)} included.";
+    }
 
     /// <summary>Whether this is the exercise on screen.</summary>
     [ObservableProperty]
@@ -1240,6 +1265,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             if (row.Model.IsWarmup && !HasOpenWarmups)
                 ShowWarmups = false;
         }
+        UpdateFamous();
         OnWarmupsChanged();
         OnPropertyChanged(nameof(IsSkipped));
         OnPropertyChanged(nameof(IsFinished));
