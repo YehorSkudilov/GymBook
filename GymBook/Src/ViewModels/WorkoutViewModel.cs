@@ -1071,9 +1071,11 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     internal Units Units => _parent.Units;
 
     public string Name => Exercise.Name;
+    /// <summary>"8–12", or just "12" when the range is one number.</summary>
+    string RepRange => Model.RepMin == Model.RepMax ? $"{Model.RepMin}" : $"{Model.RepMin}–{Model.RepMax}";
     public string TargetText => TrackRir
-        ? $"{Exercise.Equipment.Display()} · {Model.RepMin}–{Model.RepMax} reps · {Model.TargetRir} RIR · rest {Units.Rest(Model.RestSeconds)}"
-        : $"{Exercise.Equipment.Display()} · {Model.RepMin}–{Model.RepMax} reps · rest {Units.Rest(Model.RestSeconds)}";
+        ? $"{Exercise.Equipment.Display()} · {RepRange} reps · {Model.TargetRir} RIR · rest {Units.Rest(Model.RestSeconds)}"
+        : $"{Exercise.Equipment.Display()} · {RepRange} reps · rest {Units.Rest(Model.RestSeconds)}";
     public string Recommendation => Model.Recommendation ?? "";
     public bool HasRecommendation => !string.IsNullOrEmpty(Model.Recommendation);
     /// <summary>The main coaching cue for this exercise and goal; the rest are on the exercise's page.</summary>
@@ -1459,11 +1461,14 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             await NothingOpen();
             return;
         }
-        var choice = await _parent.Dialogs.ActionSheet($"Reps for the {Count(open)} left", null,
-            $"Bottom of the range ({Model.RepMin})", $"Top of the range ({Model.RepMax})", "Set one rep count for all");
+        string[] options = Model.RepMin == Model.RepMax
+            ? [$"The target ({Model.RepMin})", "Set one rep count for all"]
+            : [$"Bottom of the range ({Model.RepMin})", $"Top of the range ({Model.RepMax})", "Set one rep count for all"];
+        var choice = await _parent.Dialogs.ActionSheet($"Reps for the {Count(open)} left", null, options);
         int? reps = choice switch
         {
             null => null,
+            _ when choice.StartsWith("The target") => Model.RepMin,
             _ when choice.StartsWith("Bottom") => Model.RepMin,
             _ when choice.StartsWith("Top") => Model.RepMax,
             // The same number pad as one set's reps.
@@ -1576,7 +1581,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         [
             .. CanSkipExercise ? [SkipExerciseText] : Array.Empty<string>(),
             .. _parent.Exercises.Count > 1 ? ["Swap with another exercise"] : Array.Empty<string>(),
-            "Replace exercise", "Exercise details", "Change rest time",
+            "Replace exercise", "Exercise details", "Change rep range", "Change rest time",
         ];
         var choice = await _parent.Dialogs.ActionSheet(Name, "Remove exercise", options);
         if (choice == SkipExerciseText)
@@ -1598,6 +1603,17 @@ public partial class WorkoutExerciseViewModel : ObservableObject
                 break;
             case "Exercise details":
                 await Help();
+                break;
+            case "Change rep range":
+                // Exact reps are kept as the same number twice, like in the plan.
+                if (await _parent.Dialogs.Reps($"{Name} · reps per set", Model.RepMin, Model.RepMax) is { } reps
+                    && (reps.Min, reps.Max) != (Model.RepMin, Model.RepMax))
+                {
+                    (Model.RepMin, Model.RepMax) = reps;
+                    OnPropertyChanged(nameof(TargetText));
+                    OnPropertyChanged(nameof(Tip));
+                    _parent.OnStructureChanged();
+                }
                 break;
             case "Change rest time":
                 if (await _parent.Dialogs.RestTime($"{Name} · rest between sets", Model.RestSeconds) is { } seconds)

@@ -137,7 +137,7 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
     public string Sets => Model.Sets == 1 ? "1 set" : $"{Model.Sets} sets";
     public string Reps => Model.RepMin == Model.RepMax ? $"{Model.RepMin} reps" : $"{Model.RepMin}–{Model.RepMax} reps";
     public string SetsText => Model.Sets.ToString();
-    public string RepsText => $"{Model.RepMin}–{Model.RepMax}";
+    public string RepsText => Model.RepMin == Model.RepMax ? $"{Model.RepMin}" : $"{Model.RepMin}–{Model.RepMax}";
 
     public string RirText => Model.TargetRir.ToString();
     /// <summary>Set for this exercise itself, not the plan's: it can go back.</summary>

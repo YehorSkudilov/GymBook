@@ -550,7 +550,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         {
             Name = w.Name,
             Meta = $"{w.Exercises.Count} exercises · {w.Exercises.Sum(e => e.Sets)} sets",
-            Exercises = string.Join("\n", w.Exercises.Select(e => $"{e.Sets} × {e.RepMin}–{e.RepMax}   {store.GetExercise(e.ExerciseId)?.Name}")),
+            Exercises = string.Join("\n", w.Exercises.Select(e => $"{e.Sets} × {(e.RepMin == e.RepMax ? $"{e.RepMin}" : $"{e.RepMin}–{e.RepMax}")}   {store.GetExercise(e.ExerciseId)?.Name}")),
         }).ToList();
         OnPropertyChanged(nameof(CanChat));
     }
