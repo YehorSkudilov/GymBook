@@ -11,8 +11,8 @@
     Title="{Binding Title}"
     Shell.TabBarIsVisible="False">
 
-    <!-- Logging food in steps (see FoodEntryViewModel): search, then how much (servings, grams or calories) with the
-         macros and a nutrition label; or make a food of one's own; or quick-add calories. -->
+    <!-- Logging food in steps (see FoodEntryViewModel): search (or pick from Favourites, My foods or Everyday), then how
+         much (servings, grams or calories) with the macros and a nutrition label; or make a food of one's own; or quick-add calories. -->
     <ContentPage.Resources>
         <Style x:Key="FieldLabel" TargetType="Label" BasedOn="{StaticResource Overline}" />
         <Style x:Key="Field" TargetType="Border" BasedOn="{StaticResource InputBox}">
@@ -29,72 +29,92 @@
         </Style>
     </ContentPage.Resources>
 
-    <ScrollView>
-        <VerticalStackLayout Padding="16,8,16,30" Spacing="12">
+    <Grid>
+        <!-- ============ Search ============ -->
+        <!-- Above, the search and the tabs; below, one list (only what's on screen is drawn): the results while something's
+             typed, else the tab's foods -->
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="12" Padding="16,8,16,0" IsVisible="{Binding IsSearchStep}">
             <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
 
-            <!-- ============ Search ============ -->
-            <VerticalStackLayout Spacing="12" IsVisible="{Binding IsSearchStep}">
-                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                    <skeleton:CInputField Icon="{StaticResource IconSearch}" IconSize="20" Text="{Binding SearchText}" Placeholder="Search foods, brands, dishes…" ReturnType="Search">
-                        <skeleton:CInputField.TrailingContent>
-                            <ActivityIndicator IsRunning="{Binding IsSearching}" IsVisible="{Binding IsSearching}"
-                                               WidthRequest="20" HeightRequest="20" Color="{StaticResource Accent}" />
-                        </skeleton:CInputField.TrailingContent>
-                    </skeleton:CInputField>
-                    <!-- Scan a package's barcode -->
-                    <Border Grid.Column="1" Style="{StaticResource InputBox}" WidthRequest="52" HeightRequest="52" Padding="0" IsVisible="{Binding CanScan}">
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding ScanBarcodeCommand}" />
-                        </Border.GestureRecognizers>
-                        <Image Source="{StaticResource IconBarcode}" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" VerticalOptions="Center" />
-                    </Border>
-                </Grid>
+            <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <skeleton:CInputField Icon="{StaticResource IconSearch}" IconSize="20" Text="{Binding SearchText}" Placeholder="Search foods, brands, dishes…"
+                                      ReturnType="Search" ClearButtonVisibility="WhileEditing">
+                    <skeleton:CInputField.TrailingContent>
+                        <ActivityIndicator IsRunning="{Binding IsSearching}" IsVisible="{Binding IsSearching}"
+                                           WidthRequest="20" HeightRequest="20" Color="{StaticResource Accent}" />
+                    </skeleton:CInputField.TrailingContent>
+                </skeleton:CInputField>
+                <!-- Scan a package's barcode -->
+                <Border Grid.Column="1" Style="{StaticResource InputBox}" WidthRequest="52" HeightRequest="52" Padding="0" IsVisible="{Binding CanScan}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ScanBarcodeCommand}" />
+                    </Border.GestureRecognizers>
+                    <Image Source="{StaticResource IconBarcode}" WidthRequest="24" HeightRequest="24" HorizontalOptions="Center" VerticalOptions="Center" />
+                </Border>
+            </Grid>
 
-                <!-- Make a food, or just add calories -->
-                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                    <Button Text="Create a food" Style="{StaticResource SecondaryButton}" Command="{Binding StartCreateCommand}" />
-                    <Button Grid.Column="1" Text="Quick add" Style="{StaticResource SecondaryButton}" Command="{Binding StartQuickCommand}" />
-                </Grid>
+            <!-- Make a food, or just add calories -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Button Text="Create a food" Style="{StaticResource SecondaryButton}" Command="{Binding StartCreateCommand}" />
+                <Button Grid.Column="1" Text="Quick add" Style="{StaticResource SecondaryButton}" Command="{Binding StartQuickCommand}" />
+            </Grid>
 
-                <!-- Results, filled in as it's typed -->
-                <VerticalStackLayout Spacing="8" IsVisible="{Binding HasQuery}">
-                    <Label Text="{Binding SearchMessage}" Style="{StaticResource Caption}" FontSize="12" IsVisible="{Binding HasSearchMessage}" />
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding SearchResults}" Spacing="8">
+            <!-- Favourites | My foods | Everyday, before anything's typed; then what the search says, if anything -->
+            <Grid Grid.Row="3">
+                <Border BackgroundColor="{StaticResource Surface2}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="3"
+                        IsVisible="{Binding HasQuery, Converter={StaticResource Not}}">
+                    <FlexLayout BindableLayout.ItemsSource="{Binding Tabs}" Direction="Row">
                         <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="vm:FoodMatchItem">
-                                <views:FoodRow />
+                            <DataTemplate x:DataType="vm:ChipItem">
+                                <Border FlexLayout.Grow="1" FlexLayout.Basis="0" BackgroundColor="{Binding Background}" StrokeShape="RoundRectangle 999" StrokeThickness="0" Padding="0,9">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <HorizontalStackLayout Spacing="5" HorizontalOptions="Center">
+                                        <Image WidthRequest="16" HeightRequest="16" VerticalOptions="Center" IsVisible="{Binding HasIcon}">
+                                            <Image.Source><FontImageSource FontFamily="OutlinedIcons" Glyph="{Binding Icon}" Color="{Binding TextColor}" Size="100" /></Image.Source>
+                                        </Image>
+                                        <Label Text="{Binding Title}" TextColor="{Binding TextColor}" FontSize="13" FontFamily="OpenSansSemibold" VerticalOptions="Center" />
+                                    </HorizontalStackLayout>
+                                </Border>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
-                    </VerticalStackLayout>
-                    <Label Text="Powered by FatSecret" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End"
-                           IsVisible="{Binding PoweredByFatSecret}">
-                        <Label.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding OpenFatSecretCommand}" />
-                        </Label.GestureRecognizers>
-                    </Label>
-                </VerticalStackLayout>
+                    </FlexLayout>
+                </Border>
+                <Label Text="{Binding SearchMessage}" Style="{StaticResource Caption}" FontSize="12" IsVisible="{Binding HasSearchMessage}" />
+            </Grid>
 
-                <!-- Before anything's typed: recent foods and My foods -->
-                <VerticalStackLayout Spacing="8" IsVisible="{Binding HasQuery, Converter={StaticResource Not}}">
-                    <Label Text="RECENT" Style="{StaticResource Overline}" Margin="0,4,0,0" IsVisible="{Binding HasRecent}" />
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Recent}" Spacing="8">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="vm:FoodMatchItem">
-                                <views:FoodRow />
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
+            <CollectionView Grid.Row="4" ItemsSource="{Binding Shown}">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="8" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:FoodMatchItem">
+                        <views:FoodRow />
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout x:DataType="vm:FoodEntryViewModel" Spacing="8" Margin="12,30" HorizontalOptions="Center">
+                        <Label Text="{Binding EmptyText}" Style="{StaticResource Caption}" HorizontalTextAlignment="Center" />
+                        <Button Text="Create a food" Style="{StaticResource GhostButton}" Command="{Binding StartCreateCommand}" IsVisible="{Binding EmptyOffersCreate}" />
                     </VerticalStackLayout>
-                    <Label Text="MY FOODS" Style="{StaticResource Overline}" Margin="0,8,0,0" IsVisible="{Binding HasMyFoods}" />
-                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding MyFoods}" Spacing="8">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="vm:FoodMatchItem">
-                                <views:FoodRow />
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
+                </CollectionView.EmptyView>
+                <CollectionView.Footer>
+                    <VerticalStackLayout x:DataType="vm:FoodEntryViewModel" Padding="0,8,0,30">
+                        <Label Text="Powered by FatSecret" Style="{StaticResource Caption}" FontSize="11" HorizontalOptions="End"
+                               IsVisible="{Binding ShowFatSecret}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenFatSecretCommand}" />
+                            </Label.GestureRecognizers>
+                        </Label>
                     </VerticalStackLayout>
-                </VerticalStackLayout>
-            </VerticalStackLayout>
+                </CollectionView.Footer>
+            </CollectionView>
+        </Grid>
+
+    <ScrollView IsVisible="{Binding IsSearchStep, Converter={StaticResource Not}}">
+        <VerticalStackLayout Padding="16,8,16,30" Spacing="12">
+            <Label Text="{Binding DateText}" Style="{StaticResource Caption}" />
 
             <!-- ============ Portion ============ -->
             <VerticalStackLayout Spacing="12" IsVisible="{Binding IsPortionStep}">
@@ -265,7 +285,7 @@
             </VerticalStackLayout>
 
             <!-- Cancel (back a step) and the step's Save -->
-            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0" IsVisible="{Binding IsSearchStep, Converter={StaticResource Not}}">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0">
                 <Button Text="Cancel" Style="{StaticResource SecondaryButton}" Command="{Binding CancelCommand}" />
                 <Grid Grid.Column="1">
                     <Button Text="Save" Style="{StaticResource PrimaryButton}" Command="{Binding SavePortionCommand}" IsVisible="{Binding IsPortionStep}" />
@@ -276,4 +296,5 @@
             <Button Text="Delete" Style="{StaticResource DangerButton}" Command="{Binding DeleteCommand}" IsVisible="{Binding IsEditing}" />
         </VerticalStackLayout>
     </ScrollView>
+    </Grid>
 </views:BasePage>

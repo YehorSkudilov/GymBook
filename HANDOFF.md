@@ -1,5 +1,23 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-13, later): Add food reworked: tabs and typo-tolerant search (C# type-checked, XAML not built, not run)
+
+- **Tabs** on Add food before anything's typed: **Favourites** (starred foods, then "Logged lately"), **My foods** (foods the
+  user made with Create a food), **Everyday** (the ~80 typical foods, formerly source "Typical"). × on a favourite unstars it;
+  × on My foods deletes it (confirm). Create a food and Quick add stay as buttons above the tabs. The list is now one
+  `CollectionView` (virtualized) instead of a `BindableLayout` in a `ScrollView`; the other steps are unchanged.
+- **Favourites vs My foods** share `UserProfile.MyFoods`: `SavedFood.Created` / `SavedFood.Favorite` (both `bool?`, JSON
+  column, so migrations `FoodFavorites` are empty like `SetTimes`). Foods saved before this have nulls and count as
+  favourites (they were all starred or made; there's no telling which). Starring a made food sets `Favorite`, unstarring
+  keeps it in My foods.
+- **Search** (`Src/Services/FoodIndex.cs`): words in any order, half-typed last word, plurals, typos (1 edit up to 6
+  letters, 2 above; Damerau). Each distinct word is scored once per query, then foods look scores up: 1–4 ms over 13,200
+  foods on a desktop. Everything (saved, everyday, USDA, online) is ranked together; saved +0.35, everyday +0.2. The
+  built-in index is warmed when the page opens. A misspelt query is re-sent online spelt right (`FoodIndex.Correct`) when
+  the online databases found fewer than 8. Local results after 60 ms, online after a 350 ms pause.
+- **For the owner to test:** three tabs fit on a small phone (13 pt labels with icons); the empty view / footer bindings in
+  the `CollectionView`; scrolling a long result list; typing fast with typos.
+
 ## NEWEST (2026-10-13): weekly set targets per muscle in the plan's muscle breakdown (logic compiled, UI not run)
 
 - **Sub-muscles** (`Src/Services/SubMuscles.cs`): chest is now upper / mid / lower (push-ups by angle: decline = upper,
