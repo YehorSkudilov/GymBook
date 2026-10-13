@@ -1,5 +1,18 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-13): weekly set targets per muscle in the plan's muscle breakdown (logic compiled, UI not run)
+
+- **Sub-muscles** (`Src/Services/SubMuscles.cs`): chest is now upper / mid / lower (push-ups by angle: decline = upper,
+  incline/wall = lower; dips, declines, high-to-low flies, pullovers = lower), glutes max / medius (abduction work), calves
+  gastrocnemius / soleus (seated or bent-knee calf raises) / tibialis. Not stored anywhere, so no migration; Stats and
+  recovery pick the new parts up on their own.
+- **Targets** (`Src/Services/VolumeTargets.cs`): hard sets a week per whole muscle by plan goal and experience (build
+  muscle 10–20, beginners 8–16, advanced 12–22; strength 6–12; traps/abs/calves about ⅔; no target for forearms, lower back,
+  neck). Sets count 1 for the main muscle, ½ for helpers; a plan cycle that isn't 7 days is scaled to a week.
+- **Breakdown sheet** (`MuscleBreakdownViewModel`/`Page`): one line per whole muscle with its parts under it. Whole plan:
+  every targeted muscle (untrained ones too), bar against the target's top, amber under / green on / red over, "Add about N
+  sets a week", and "no rear delts work" for an untrained part. This day: no targets, bars relative to the busiest muscle.
+
 ## NEWEST (2026-10-09): XP, levels, leagues and famous lifts (issue #35; built for Windows, not run)
 
 - **XP** (`GymBook.Shared/Models/Levels.cs`): worked out from finished workouts every time (cached by `LevelService` until
