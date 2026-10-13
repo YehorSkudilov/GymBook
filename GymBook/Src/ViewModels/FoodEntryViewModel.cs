@@ -11,14 +11,21 @@ namespace GymBook.ViewModels;
 /// <summary>Where the food page is: finding a food, setting how much, making a food of one's own, or adding calories alone.</summary>
 public enum FoodStep { Search, Portion, Create, Quick }
 
+/// <summary>
+/// The lists to pick from before anything's typed: starred foods (with what was logged lately), foods the user made, and
+/// everyday foods with typical values.
+/// </summary>
+public enum FoodTab { Favorites, Mine, Everyday }
+
 /// <summary>How a portion is measured: in servings, by weight, or by its calories.</summary>
 public enum PortionUnit { Servings, Grams, Calories }
 
 /// <summary>
 /// Logging food, in steps: <b>search</b> (filled in as it's typed from the foods on the phone, then the online
-/// databases; with recent foods and My foods before anything's typed), then <b>portion</b> (how much, in servings, grams
-/// or calories, with the macros and a nutrition label for that amount, the meal, and a star to keep it in My foods).
-/// A food can also be <b>made</b> (name, serving and its nutrition, kept in My foods) or calories <b>quick-added</b>.
+/// databases, forgiving typos; before anything's typed, tabs: Favourites with what was logged lately, My foods, Everyday),
+/// then <b>portion</b> (how much, in servings, grams or calories, with the macros and a nutrition label for that amount,
+/// the meal, and a star to keep it in Favourites). A food can also be <b>made</b> (name, serving and its nutrition, kept
+/// in My foods) or calories <b>quick-added</b>.
 /// <c>food?id=…</c> edits a logged food (as one portion of itself); <c>food?date=yyyy-MM-dd&amp;meal=Lunch</c> adds one.
 /// </summary>
 public partial class FoodEntryViewModel(DataStore store, NutritionService nutrition, FoodSearchService search, IBarcodeScanner scanner,
@@ -51,18 +58,23 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
 
     // ---------- Search ----------
 
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasQuery))] string searchText = "";
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasQuery), nameof(HasSearchMessage), nameof(ShowFatSecret))] string searchText = "";
     public bool HasQuery => SearchText.Trim().Length > 0;
-    [ObservableProperty] List<FoodMatchItem> searchResults = [];
+    List<FoodMatchItem> _results = [];
     [ObservableProperty] bool isSearching;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasSearchMessage))] string searchMessage = "";
-    public bool HasSearchMessage => SearchMessage.Length > 0;
+    public bool HasSearchMessage => SearchMessage.Length > 0 && HasQuery;
     /// <summary>FatSecret's foods are in the results: its terms ask for "Powered by FatSecret" with them.</summary>
-    [ObservableProperty] bool poweredByFatSecret;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasRecent))] List<FoodMatchItem> recent = [];
-    public bool HasRecent => Recent.Count > 0;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasMyFoods))] List<FoodMatchItem> myFoods = [];
-    public bool HasMyFoods => MyFoods.Count > 0;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(ShowFatSecret))] bool poweredByFatSecret;
+    public bool ShowFatSecret => PoweredByFatSecret && HasQuery;
+
+    FoodTab _tab;
+    public System.Collections.ObjectModel.ObservableCollection<ChipItem> Tabs { get; } = [];
+    /// <summary>What the list shows: the search's results while something's typed, else the tab's foods.</summary>
+    [ObservableProperty] List<FoodMatchItem> shown = [];
+    /// <summary>What an empty list says, and whether it offers to make a food.</summary>
+    [ObservableProperty] string emptyText = "";
+    [ObservableProperty] bool emptyOffersCreate;
 
     // ---------- Portion ----------
 
@@ -131,9 +143,10 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         foreach (var meal in EnumDisplay.Meals)
             MealChips.Add(new ChipItem(meal.Display(), meal, SelectMeal) { IsSelected = meal == _meal });
 
+        _ = FoodSearchService.WarmUpAsync();
         _search?.Cancel();
         SearchText = "";
-        SearchResults = [];
+        _results = [];
         SearchMessage = "";
         PoweredByFatSecret = false;
         IsSearching = false;
@@ -144,7 +157,13 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         }
         else
         {
-            ShowLists();
+            // Favourites when there's something in it, else the everyday foods.
+            _tab = search.Favorites().Any() || nutrition.RecentFoods(1).Any() ? FoodTab.Favorites : FoodTab.Everyday;
+            Tabs.Clear();
+            Tabs.Add(new ChipItem("Favourites", FoodTab.Favorites, SelectTab) { Icon = "star" });
+            Tabs.Add(new ChipItem("My foods", FoodTab.Mine, SelectTab) { Icon = "edit_note" });
+            Tabs.Add(new ChipItem("Everyday", FoodTab.Everyday, SelectTab) { Icon = "restaurant" });
+            ShowList();
             GoToStep(FoodStep.Search);
         }
         return Task.CompletedTask;
@@ -162,12 +181,50 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         };
     }
 
-    /// <summary>Before anything's typed: foods logged lately, and My foods.</summary>
-    void ShowLists()
+    void SelectTab(ChipItem chip)
     {
-        Recent = [.. nutrition.RecentFoods(10).Select(f => Item(new FoodMatch(f.Name, null, f.Calories, f.ProteinG, f.CarbsG, f.FatG,
-            "as logged", null, null, null, "Logged before")))];
-        MyFoods = [.. search.MyFoods().Select(Item)];
+        _tab = (FoodTab)chip.Value!;
+        ShowList();
+    }
+
+    /// <summary>Shows the search's results while something's typed, else the tab's foods.</summary>
+    void ShowList()
+    {
+        foreach (var c in Tabs)
+            c.IsSelected = (FoodTab)c.Value! == _tab;
+        if (HasQuery)
+        {
+            Shown = _results;
+            EmptyText = IsSearching ? "Searching…" : SearchMessage.Length > 0 ? "" : "Nothing found yet.";
+            EmptyOffersCreate = !IsSearching;
+            return;
+        }
+        switch (_tab)
+        {
+            case FoodTab.Favorites:
+                var favorites = search.Favorites().Select(f => Item(f, Unstar)).ToList();
+                // Then what was logged lately, to log again in a tap.
+                var recent = nutrition.RecentFoods(15).Select(f => Item(new FoodMatch(f.Name, null, f.Calories, f.ProteinG, f.CarbsG, f.FatG,
+                    "as logged", null, null, null, "Logged before"))).ToList();
+                if (recent.Count > 0)
+                    recent[0].Header = "LOGGED LATELY";
+                if (favorites.Count > 0 && recent.Count > 0)
+                    favorites[0].Header = "STARRED";
+                Shown = [.. favorites, .. recent];
+                EmptyText = "Tap the ☆ on a food to keep it here.";
+                EmptyOffersCreate = false;
+                break;
+            case FoodTab.Mine:
+                Shown = [.. search.Created().Select(f => Item(f, DeleteCreated))];
+                EmptyText = "Foods you make are kept here: home cooking, a recipe, a shake.";
+                EmptyOffersCreate = true;
+                break;
+            default:
+                Shown = [.. FoodSearchService.Everyday.Select(f => Item(f))];
+                EmptyText = "";
+                EmptyOffersCreate = false;
+                break;
+        }
     }
 
     // ---------- Search ----------
@@ -184,28 +241,32 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         var cts = _search = new CancellationTokenSource();
         if (text.Trim().Length == 0)
         {
-            SearchResults = [];
+            _results = [];
             SearchMessage = "";
             PoweredByFatSecret = false;
             IsSearching = false;
+            ShowList();
             return;
         }
         try
         {
-            await Task.Delay(120, cts.Token);
+            await Task.Delay(60, cts.Token);
             var local = await search.LocalAsync(text);
             if (cts.IsCancellationRequested)
                 return;
-            SearchResults = [.. local.Select(Item)];
+            _results = [.. local.Select(f => Item(f))];
             SearchMessage = "";
+            PoweredByFatSecret = false;
+            ShowList();
             if (text.Trim().Length < 2)
                 return;
             await Task.Delay(350, cts.Token);
             IsSearching = true;
+            ShowList();
             var found = await search.SearchAsync(text, cts.Token);
             if (cts.IsCancellationRequested)
                 return;
-            SearchResults = [.. found.Foods.Select(Item)];
+            _results = [.. found.Foods.Select(f => Item(f))];
             PoweredByFatSecret = found.PoweredByFatSecret;
             SearchMessage = found.Foods.Count == 0
                 ? found.Offline ? "Nothing found offline. Connect to search more foods, or create it." : "Nothing found. Try other words, or create it."
@@ -217,22 +278,32 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         }
         catch (Exception)
         {
-            SearchMessage = SearchResults.Count > 0 ? "Couldn't search online: check your connection." : "Couldn't search: check your connection.";
+            SearchMessage = _results.Count > 0 ? "Couldn't search online: check your connection." : "Couldn't search: check your connection.";
         }
         if (_search == cts)
+        {
             IsSearching = false;
+            ShowList();
+        }
     }
 
-    FoodMatchItem Item(FoodMatch f) => new(f, new RelayCommand(() => OpenPortion(f)),
-        f.Source == FoodSearchService.MyFoodSource ? new AsyncRelayCommand(() => Forget(f)) : null);
+    /// <summary>A food in the list, tapped to set how much; <paramref name="remove"/> is the × (none in the search).</summary>
+    FoodMatchItem Item(FoodMatch f, Func<FoodMatch, Task>? remove = null) =>
+        new(f, new RelayCommand(() => OpenPortion(f)), remove != null ? new AsyncRelayCommand(() => remove(f)) : null);
 
-    async Task Forget(FoodMatch food)
+    Task Unstar(FoodMatch food)
     {
-        if (!await dialogs.Confirm("Remove from My foods?", food.Title, "Remove"))
+        search.RemoveFavorite(food.Name, food.Brand);
+        ShowList();
+        return Task.CompletedTask;
+    }
+
+    async Task DeleteCreated(FoodMatch food)
+    {
+        if (!await dialogs.Confirm("Delete this food?", $"{food.Title} is taken out of My foods (foods already logged stay).", "Delete"))
             return;
-        search.Forget(food.Name, food.Brand);
-        SearchResults = [.. SearchResults.Where(i => i.Food != food)];
-        MyFoods = [.. MyFoods.Where(i => i.Food != food)];
+        search.Delete(food.Name, food.Brand);
+        ShowList();
     }
 
     /// <summary>FatSecret's terms: the credit links to it.</summary>
@@ -300,7 +371,7 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
             await GoBack();
             return;
         }
-        ShowLists();
+        ShowList();
         GoToStep(FoodStep.Search);
     }
 
@@ -336,7 +407,7 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
             : food.PerText == "as logged" ? "1 serving = what was logged"
             : _perServing != null ? $"1 serving = {food.PerText}" : "Per 100 g";
         CanFavorite = food.Source != "Logged" && food.Source != "Logged before";
-        IsFavorite = food.Source == FoodSearchService.MyFoodSource || search.IsSaved(food.Name, food.Brand);
+        IsFavorite = search.IsFavorite(food.Name, food.Brand);
         GoToStep(FoodStep.Portion);
         ShowPortion();
 
@@ -422,7 +493,7 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
         AmountText = Number(Math.Round(amount / step) * step);
     }
 
-    /// <summary>The star: keeps the food in My foods (one serving of it, or 100 g), or takes it out.</summary>
+    /// <summary>The star: keeps the food in Favourites (one serving of it, or 100 g), or takes it out.</summary>
     [RelayCommand]
     void ToggleFavorite()
     {
@@ -430,7 +501,7 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
             return;
         if (IsFavorite)
         {
-            search.Forget(_food.Name, _food.Brand);
+            search.RemoveFavorite(_food.Name, _food.Brand);
             IsFavorite = false;
             return;
         }
@@ -441,7 +512,7 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
             per = (gram.Kcal * 100, gram.P * 100, gram.C * 100, gram.F * 100);
         else
             return;
-        search.Save(_food.Name, _food.Brand, per.Kcal, per.P, per.C, per.F,
+        search.AddFavorite(_food.Name, _food.Brand, per.Kcal, per.P, per.C, per.F,
             _perServing != null ? _food.ServingText ?? (_food.ByWeight ? null : _food.PerText) : "100 g",
             _perServing != null ? _food.ServingG : 100);
         IsFavorite = true;
@@ -483,7 +554,7 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
             await dialogs.Alert("Nothing in it", "Enter a serving's calories, or its protein, carbs and fat.");
             return;
         }
-        var food = search.Save(NewName, NewBrand, kcal, protein, carbs, fat, NewServingText, Parse(NewServingG));
+        var food = search.SaveCreated(NewName, NewBrand, kcal, protein, carbs, fat, NewServingText, Parse(NewServingG));
         OpenPortion(food);
     }
 
@@ -571,6 +642,9 @@ public partial class FoodEntryViewModel(DataStore store, NutritionService nutrit
 public class FoodMatchItem(FoodMatch food, ICommand select, ICommand? remove)
 {
     public FoodMatch Food => food;
+    /// <summary>A heading above it, starting a part of the list ("LOGGED LATELY"); null for none.</summary>
+    public string? Header { get; set; }
+    public bool HasHeader => Header != null;
     public string Title => food.Title;
     public string Source => food.Source;
     /// <summary>Its calories for the usual amount: a serving when known, else 100 g.</summary>
@@ -582,7 +656,7 @@ public class FoodMatchItem(FoodMatch food, ICommand select, ICommand? remove)
     public string Macros => $"P {Usual.P:0.#} · C {Usual.C:0.#} · F {Usual.F:0.#}";
     public IDrawable MacroBar => new MacroMiniBarDrawable(Usual.C * 4, Usual.F * 9, Usual.P * 4);
     public ICommand SelectCommand => select;
-    /// <summary>Takes a food out of My foods; null for the rest.</summary>
+    /// <summary>Unstars a favourite, or deletes a food the user made; null for the rest.</summary>
     public ICommand? RemoveCommand => remove;
     public bool CanRemove => remove != null;
 

@@ -6,8 +6,11 @@
     xmlns:vm="clr-namespace:GymBook.ViewModels"
     x:DataType="vm:FoodMatchItem">
 
-    <!-- A food in the search or the lists: its name and where it's from, its calories for the usual amount, and a
-         preview of its macros. Tap to set how much; a food in My foods can be taken out with the ×. -->
+    <!-- A food in the search or the lists (under a heading when it starts a part of the list): its name and where it's
+         from, its calories for the usual amount, and a preview of its macros. Tap to set how much; the × unstars a
+         favourite or deletes a food the user made. -->
+    <VerticalStackLayout Spacing="8">
+    <Label Text="{Binding Header}" Style="{StaticResource Overline}" Margin="0,6,0,0" IsVisible="{Binding HasHeader}" />
     <Border Style="{StaticResource InnerCard}">
         <Border.GestureRecognizers>
             <TapGestureRecognizer Command="{Binding SelectCommand}" />
@@ -34,4 +37,5 @@
             </Grid>
         </Grid>
     </Border>
+    </VerticalStackLayout>
 </ContentView>

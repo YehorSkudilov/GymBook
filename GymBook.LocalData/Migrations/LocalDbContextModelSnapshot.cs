@@ -411,7 +411,11 @@ namespace GymBook.LocalData.Migrations
 
                             b1.Property<double>("CarbsG");
 
+                            b1.Property<bool?>("Created");
+
                             b1.Property<double>("FatG");
+
+                            b1.Property<bool?>("Favorite");
 
                             b1.Property<string>("Name")
                                 .IsRequired();
