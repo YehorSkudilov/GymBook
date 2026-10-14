@@ -89,10 +89,14 @@
                             </Border>
                         </Grid>
 
-                        <!-- Main muscles -->
-                        <Label Text="Main muscles" Style="{StaticResource H3}" />
+                        <!-- Each whole muscle, with its target on the whole plan, and its parts under it -->
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding MusclesTitle}" Style="{StaticResource H3}" />
+                            <Label Text="{Binding MusclesCaption}" Style="{StaticResource Caption}" FontSize="12"
+                                   TextColor="{StaticResource TextTertiary}" />
+                        </VerticalStackLayout>
                         <Border Style="{StaticResource Card}" Padding="16,12">
-                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Primary}" Spacing="14">
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Muscles}" Spacing="18">
                                 <BindableLayout.ItemTemplate>
                                     <DataTemplate x:DataType="vm:MuscleRow">
                                         <VerticalStackLayout Spacing="5">
@@ -101,38 +105,31 @@
                                                 <Label Grid.Column="1" Text="{Binding Name}" FontFamily="OpenSansSemibold" FontSize="14" />
                                                 <Label Grid.Column="2" Text="{Binding Sets}" Style="{StaticResource Caption}" FontFamily="OpenSansSemibold" />
                                             </Grid>
-                                            <ProgressBar Progress="{Binding Fraction}" ProgressColor="{Binding Color}" HeightRequest="4" />
-                                            <Label Text="{Binding Exercises}" Style="{StaticResource Caption}" FontSize="11"
-                                                   TextColor="{StaticResource TextTertiary}" LineBreakMode="TailTruncation" />
+                                            <ProgressBar Progress="{Binding Fraction}" ProgressColor="{Binding BarColor}" HeightRequest="4" />
+                                            <Label Text="{Binding Advice}" IsVisible="{Binding HasAdvice}" Style="{StaticResource Caption}"
+                                                   FontSize="12" TextColor="{Binding AdviceColor}" />
+                                            <Label Text="{Binding Exercises}" IsVisible="{Binding HasExercises}" Style="{StaticResource Caption}"
+                                                   FontSize="11" TextColor="{StaticResource TextTertiary}" LineBreakMode="TailTruncation" />
+                                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Parts}" IsVisible="{Binding HasParts}"
+                                                                 Spacing="6" Padding="16,4,0,0">
+                                                <BindableLayout.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:MusclePartRow">
+                                                        <VerticalStackLayout Spacing="1" Opacity="{Binding Opacity}">
+                                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                                <Label Text="{Binding Name}" FontSize="13" TextColor="{StaticResource TextSecondary}" />
+                                                                <Label Grid.Column="1" Text="{Binding Sets}" Style="{StaticResource Caption}" FontSize="12" />
+                                                            </Grid>
+                                                            <Label Text="{Binding Exercises}" IsVisible="{Binding HasExercises}" Style="{StaticResource Caption}"
+                                                                   FontSize="11" TextColor="{StaticResource TextTertiary}" LineBreakMode="TailTruncation" />
+                                                        </VerticalStackLayout>
+                                                    </DataTemplate>
+                                                </BindableLayout.ItemTemplate>
+                                            </VerticalStackLayout>
                                         </VerticalStackLayout>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
                             </VerticalStackLayout>
                         </Border>
-
-                        <!-- Auxiliary muscles -->
-                        <VerticalStackLayout Spacing="10" IsVisible="{Binding HasAuxiliary}">
-                            <Label Text="Auxiliary muscles" Style="{StaticResource H3}" />
-                            <Border Style="{StaticResource Card}" Padding="16,12">
-                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Auxiliary}" Spacing="14">
-                                    <BindableLayout.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:MuscleRow">
-                                            <VerticalStackLayout Spacing="5">
-                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-                                                    <BoxView WidthRequest="8" HeightRequest="8" CornerRadius="4" Color="{Binding Color}"
-                                                             Opacity="0.6" VerticalOptions="Center" />
-                                                    <Label Grid.Column="1" Text="{Binding Name}" FontSize="14" />
-                                                    <Label Grid.Column="2" Text="{Binding Sets}" Style="{StaticResource Caption}" />
-                                                </Grid>
-                                                <ProgressBar Progress="{Binding Fraction}" ProgressColor="{Binding Color}" Opacity="0.6" HeightRequest="4" />
-                                                <Label Text="{Binding Exercises}" Style="{StaticResource Caption}" FontSize="11"
-                                                       TextColor="{StaticResource TextTertiary}" LineBreakMode="TailTruncation" />
-                                            </VerticalStackLayout>
-                                        </DataTemplate>
-                                    </BindableLayout.ItemTemplate>
-                                </VerticalStackLayout>
-                            </Border>
-                        </VerticalStackLayout>
                     </VerticalStackLayout>
                 </ScrollView>
             </Grid>

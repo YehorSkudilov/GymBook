@@ -300,7 +300,10 @@ public class FoodEntry : ISyncEntity
     public bool IsDeleted { get; set; }
 }
 
-/// <summary>A food saved to "My foods" (or made by the user): its name, what one serving has and what a serving is. Kept in <see cref="UserProfile.MyFoods"/>.</summary>
+/// <summary>
+/// A food the user starred (Favourites) or made (My foods): its name, what one serving has and what a serving is. Kept in
+/// <see cref="UserProfile.MyFoods"/>.
+/// </summary>
 public class SavedFood
 {
     public const int Max = 500;
@@ -324,6 +327,10 @@ public class SavedFood
     /// <summary>A serving's weight in grams, when known: then it can be logged by weight too.</summary>
     [Range(0, 5000)]
     public double? ServingG { get; set; }
+    /// <summary>Made by the user (shown in My foods); null on foods saved before this was kept, which count as starred.</summary>
+    public bool? Created { get; set; }
+    /// <summary>Starred (shown in Favourites); null on foods saved before this was kept: starred unless made by the user.</summary>
+    public bool? Favorite { get; set; }
 }
 
 /// <summary>
@@ -402,6 +409,15 @@ public class HealthDay : ISyncEntity
     /// </summary>
     [Range(0, 1440)]
     public int? SleepMinutes { get; set; }
+    /// <summary>Of <see cref="SleepMinutes"/>, the minutes in deep sleep, when the watch recorded sleep stages.</summary>
+    [Range(0, 1440)]
+    public int? SleepDeepMinutes { get; set; }
+    /// <summary>Of <see cref="SleepMinutes"/>, the minutes in REM sleep, when the watch recorded sleep stages.</summary>
+    [Range(0, 1440)]
+    public int? SleepRemMinutes { get; set; }
+    /// <summary>Samsung Health's sleep score (0–100) for the night, when it gave one.</summary>
+    [Range(0, 100)]
+    public int? SleepScore { get; set; }
     [MaxLength(SyncLimits.NameLength)]
     public string? Source { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }

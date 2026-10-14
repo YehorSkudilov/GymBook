@@ -1129,7 +1129,11 @@ public partial class WorkoutExerciseViewModel : ObservableObject
 
     /// <summary>Whether this is the exercise on screen.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StripStroke), nameof(StripOpacity))]
     bool isSelected;
+    /// <summary>Its photo in the strip: outlined in the accent while it's the one on screen, the rest dimmed.</summary>
+    public double StripStroke => IsSelected ? 3 : 0;
+    public double StripOpacity => IsSelected ? 1 : 0.5;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WarmupText))]

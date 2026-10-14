@@ -8,44 +8,21 @@ using GymBook.Services.Sync;
 namespace GymBook.Services;
 
 /// <summary>
-/// A food found by <see cref="FoodSearchService"/>: its amounts per <see cref="PerText"/> (per 100 g when
-/// <see cref="PerGrams"/> is 100; per serving when its weight isn't known), a usual serving, and where it's from.
-/// </summary>
-public record FoodMatch(string Name, string? Brand, double Kcal, double Protein, double Carbs, double Fat,
-    string PerText, double? PerGrams, double? ServingG, string? ServingText, string Source)
-{
-    public string Title => Brand is { Length: > 0 } b && !Name.Contains(b, StringComparison.OrdinalIgnoreCase) ? $"{Name} · {b}" : Name;
-
-    /// <summary>Amounts by weight; false when only a serving's are known (picked by servings instead).</summary>
-    public bool ByWeight => PerGrams is > 0;
-
-    /// <summary>The amounts in <paramref name="amount"/> grams (by weight) or servings.</summary>
-    public (double Kcal, double Protein, double Carbs, double Fat) For(double amount)
-    {
-        var factor = ByWeight ? amount / PerGrams!.Value : amount;
-        return (Kcal * factor, Protein * factor, Carbs * factor, Fat * factor);
-    }
-
-    public static FoodMatch From(FoodInfo f) =>
-        new(f.Name, f.Brand, f.Kcal, f.ProteinG, f.CarbsG, f.FatG, f.PerText, f.PerGrams, f.ServingG, f.ServingText, f.Source);
-}
-
-/// <summary>What a search found, and whose credit to show with it.</summary>
-public record FoodSearchResult(List<FoodMatch> Foods, bool PoweredByFatSecret, bool Offline);
-
-/// <summary>
-/// Foods with their nutrition filled in, to log by name or barcode. In order: the user's own saved foods, everyday foods
-/// (a short list of typical values, then USDA FoodData Central's ~13,000 generic foods and dishes, built in so they're
+/// Foods with their nutrition filled in, to log by name or barcode: the user's favourites and the foods they made, everyday
+/// foods (a short list of typical values, then USDA FoodData Central's ~13,000 generic foods and dishes, built in so they're
 /// found offline), then online: USDA's branded foods and FatSecret (searched by the Gym Book server, which holds their
-/// keys) and Open Food Facts, the free, open database of packaged foods.
+/// keys) and Open Food Facts, the free, open database of packaged foods. Everything is ranked together by
+/// <see cref="FoodIndex"/>, which forgives typos; a misspelt query is also sent online spelt right.
 /// </summary>
 public class FoodSearchService(DataStore store, ApiClient api)
 {
-    const int LocalMax = 15, OnlineMax = 25;
+    const int LocalMax = 40, OnlineMax = 25, ShownMax = 70;
+    // Ahead of a database food that matches as well: one's own first, then the everyday ones.
+    const double SavedBoost = 0.35, EverydayBoost = 0.2;
 
     static readonly HttpClient Http = CreateClient();
-    static List<FoodMatch>? _usda;
-    static readonly SemaphoreSlim UsdaGate = new(1, 1);
+    static FoodIndex? _builtIn;
+    static readonly SemaphoreSlim BuiltInGate = new(1, 1);
 
     static HttpClient CreateClient()
     {
@@ -55,34 +32,81 @@ public class FoodSearchService(DataStore store, ApiClient api)
         return client;
     }
 
+    /// <summary>Loads the built-in foods ahead of the first search, so it's instant.</summary>
+    public static Task WarmUpAsync() => BuiltInAsync();
+
+    /// <summary>Only what's on the phone (saved foods, everyday foods, USDA's generic ones): instant, for filling in as it's typed.</summary>
+    public async Task<List<FoodMatch>> LocalAsync(string query)
+    {
+        var builtIn = await BuiltInAsync();
+        var saved = SavedFoods().ToList();
+        return await Task.Run(() => Merge(Local(query, builtIn, saved)));
+    }
+
+    /// <summary>Everything: what's on the phone, then the online databases, ranked together.</summary>
     public async Task<FoodSearchResult> SearchAsync(string query, CancellationToken ct)
     {
         query = query.Trim();
-        var words = Words(query);
-        var results = new List<FoodMatch>();
-        if (words.Length == 0)
-            return new(results, false, false);
-
-        results.AddRange(Ranked(MyFoods(), words).Take(LocalMax));
-        results.AddRange(Ranked(CommonFoods, words).Take(8));
-        results.AddRange(Ranked(await UsdaAsync(), words).Take(LocalMax));
+        var builtIn = await BuiltInAsync();
+        var saved = SavedFoods().ToList();
+        var found = await Task.Run(() => Local(query, builtIn, saved), ct);
         if (query.Length < 2)
-            return new(results, false, false);
+            return new(Merge(found), false, false);
 
-        // Online, side by side; whichever fails (offline, server down) just adds nothing.
+        // Online, side by side; whichever fails (offline, server down) just adds nothing. These databases only match words
+        // exactly, so when little is found for a misspelt query, it's asked again spelt right.
+        var (fromServer, fromOff) = await OnlineAsync(query, ct);
+        var corrected = builtIn.Correct(query);
+        if (corrected != string.Join(' ', FoodIndex.Words(query)) && (fromServer?.Foods.Count ?? 0) + (fromOff?.Count ?? 0) < 8)
+        {
+            var (server2, off2) = await OnlineAsync(corrected, ct);
+            if (server2 != null)
+                fromServer = fromServer == null ? server2
+                    : new() { Foods = [.. server2.Foods, .. fromServer.Foods], PoweredByFatSecret = server2.PoweredByFatSecret || fromServer.PoweredByFatSecret };
+            if (off2 != null)
+                fromOff = [.. off2.Concat(fromOff ?? [])];
+        }
+        ct.ThrowIfCancellationRequested();
+        // Numbers that can't be real (a typo in the database) are left out.
+        var online = (fromServer?.Foods.Take(OnlineMax).Select(FoodMatch.From) ?? []).Concat(fromOff?.Take(OnlineMax) ?? [])
+            .Where(FoodCleanup.Plausible).ToList();
+        if (online.Count > 0)
+        {
+            // Scored against what was typed or what was meant (a brand isn't a typo), whichever fits better; a food the
+            // database found but whose name doesn't say it still shows, lower.
+            var index = new FoodIndex(online);
+            var best = new Dictionary<FoodMatch, double>();
+            foreach (var food in online)
+                best.TryAdd(food, 0.1);
+            foreach (var (food, score) in index.Search(query, online.Count, lenient: true).Concat(index.Search(corrected, online.Count, lenient: true)))
+                best[food] = Math.Max(best[food], score);
+            found.AddRange(best.Select(b => (b.Key, b.Value)));
+        }
+        var foods = Merge(found);
+        var poweredByFatSecret = fromServer?.PoweredByFatSecret == true && foods.Any(f => f.Source == "FatSecret");
+        return new(foods, poweredByFatSecret, fromServer == null && fromOff == null);
+    }
+
+    async Task<(FoodSearchResponse? Server, List<FoodMatch>? Off)> OnlineAsync(string query, CancellationToken ct)
+    {
         var server = Try(() => api.SearchFoodsAsync(query, ct));
         var openFoodFacts = Try(() => OpenFoodFactsAsync(query, ct));
-        var fromServer = await server;
-        var fromOff = await openFoodFacts;
-        ct.ThrowIfCancellationRequested();
-        if (fromServer != null)
-            results.AddRange(fromServer.Foods.Take(OnlineMax).Select(FoodMatch.From));
-        if (fromOff != null)
-            results.AddRange(fromOff.Take(OnlineMax));
-        // The same food from two places (or listed twice) only once.
-        results = [.. results.DistinctBy(f => (f.Title.ToLowerInvariant(), Math.Round(f.Kcal), f.PerText))];
-        return new(results, fromServer?.PoweredByFatSecret == true, fromServer == null && fromOff == null);
+        return (await server, await openFoodFacts);
     }
+
+    static List<(FoodMatch Food, double Score)> Local(string query, FoodIndex builtIn, List<FoodMatch> saved)
+    {
+        var found = new FoodIndex(saved).Search(query, LocalMax, SavedBoost);
+        found.AddRange(builtIn.Search(query, LocalMax));
+        return found;
+    }
+
+    /// <summary>Best first, the same food from several places (or listed several times) only once (<see cref="FoodCleanup.Dedupe"/>).</summary>
+    static List<FoodMatch> Merge(List<(FoodMatch Food, double Score)> found) =>
+        [.. FoodCleanup.Dedupe(found).OrderByDescending(f => f.Score).ThenBy(f => f.Food.Title.Length)
+            .Select(f => f.Food)
+            .DistinctBy(f => (f.Title.ToLowerInvariant(), Math.Round(f.Kcal), f.PerText))
+            .Take(ShownMax)];
 
     /// <summary>The packaged food with this barcode: Open Food Facts first, then the server's databases. Null when unknown.</summary>
     public async Task<FoodMatch?> BarcodeAsync(string code, CancellationToken ct)
@@ -106,24 +130,91 @@ public class FoodSearchService(DataStore store, ApiClient api)
         }
     }
 
-    // ---------- My foods ----------
+    // ---------- Favourites and My foods ----------
 
-    /// <summary>My foods, as found in the search: a serving's amounts, by weight too when the serving's weight is known.</summary>
-    public IEnumerable<FoodMatch> MyFoods() => store.Profile.MyFoods.Select(Match);
-
+    /// <summary>Foods the user made (<see cref="SavedFood.Created"/>).</summary>
     public const string MyFoodSource = "My food";
+    /// <summary>Foods starred from anywhere else.</summary>
+    public const string FavoriteSource = "Favourite";
+    public const string EverydaySource = "Everyday";
+
+    /// <summary>Starred foods, latest first: from any database, or made by the user.</summary>
+    public IEnumerable<FoodMatch> Favorites() => store.Profile.MyFoods.Where(IsFavorite).Select(Match);
+
+    /// <summary>Foods the user made, latest first.</summary>
+    public IEnumerable<FoodMatch> Created() => store.Profile.MyFoods.Where(f => f.Created == true).Select(Match);
+
+    /// <summary>The everyday foods (typical values), for browsing.</summary>
+    public static IReadOnlyList<FoodMatch> Everyday => CommonFoods;
+
+    /// <summary>Favourites and foods made by the user, as found in the search: a serving's amounts, by weight too when the serving's weight is known.</summary>
+    IEnumerable<FoodMatch> SavedFoods() => store.Profile.MyFoods.Where(f => f.Created == true || IsFavorite(f)).Select(Match);
+
+    // Saved before favourites and made foods were told apart: those were all starred or made, so they count as favourites.
+    static bool IsFavorite(SavedFood f) => f.Favorite ?? f.Created != true;
 
     static FoodMatch Match(SavedFood f) =>
-        new(f.Name, f.Brand, f.Calories, f.ProteinG, f.CarbsG, f.FatG, f.ServingText ?? "1 serving", null, f.ServingG, f.ServingText, MyFoodSource);
+        new(f.Name, f.Brand, f.Calories, f.ProteinG, f.CarbsG, f.FatG, f.ServingText ?? "1 serving", null, f.ServingG, f.ServingText,
+            f.Created == true ? MyFoodSource : FavoriteSource);
 
     /// <summary>
-    /// Saves a food to My foods (replacing one with the same name and brand) with what one serving has, what a serving is
-    /// and its weight when known. Returns it as the search finds it.
+    /// Makes a food of the user's own (replacing one with the same name and brand) with what one serving has, what a
+    /// serving is and its weight when known. Returns it as the search finds it.
     /// </summary>
-    public FoodMatch Save(string name, string? brand, double kcal, double protein, double carbs, double fat, string? servingText = null, double? servingG = null)
+    public FoodMatch SaveCreated(string name, string? brand, double kcal, double protein, double carbs, double fat, string? servingText = null, double? servingG = null)
+    {
+        var food = Saved(name, brand, kcal, protein, carbs, fat, servingText, servingG);
+        var old = store.Profile.MyFoods.FirstOrDefault(f => IsSame(f, food.Name, food.Brand));
+        food.Created = true;
+        food.Favorite = old != null && IsFavorite(old);
+        Keep(food);
+        return Match(food);
+    }
+
+    /// <summary>Stars a food (one serving of it, or 100 g): it's kept in Favourites.</summary>
+    public void AddFavorite(string name, string? brand, double kcal, double protein, double carbs, double fat, string? servingText = null, double? servingG = null)
+    {
+        var old = store.Profile.MyFoods.FirstOrDefault(f => IsSame(f, name, brand));
+        if (old?.Created == true)
+        {
+            // One the user made keeps its own amounts.
+            old.Favorite = true;
+            store.Save();
+            return;
+        }
+        var food = Saved(name, brand, kcal, protein, carbs, fat, servingText, servingG);
+        food.Favorite = true;
+        Keep(food);
+    }
+
+    /// <summary>Unstars a food: gone from Favourites (one the user made stays in My foods).</summary>
+    public void RemoveFavorite(string name, string? brand)
+    {
+        var foods = store.Profile.MyFoods;
+        foreach (var f in foods.Where(f => IsSame(f, name, brand)).ToList())
+        {
+            if (f.Created == true)
+                f.Favorite = false;
+            else
+                foods.Remove(f);
+        }
+        store.Save();
+    }
+
+    /// <summary>Whether a food by this name (and brand) is starred.</summary>
+    public bool IsFavorite(string name, string? brand) => store.Profile.MyFoods.Any(f => IsSame(f, name, brand) && IsFavorite(f));
+
+    /// <summary>Deletes a food the user made (from Favourites too).</summary>
+    public void Delete(string name, string? brand)
+    {
+        if (store.Profile.MyFoods.RemoveAll(f => IsSame(f, name, brand)) > 0)
+            store.Save();
+    }
+
+    static SavedFood Saved(string name, string? brand, double kcal, double protein, double carbs, double fat, string? servingText, double? servingG)
     {
         static string? Clip(string? text) => text?.Trim() is { Length: > 0 } t ? t.Length > SyncLimits.NameLength ? t[..SyncLimits.NameLength] : t : null;
-        var food = new SavedFood
+        return new SavedFood
         {
             Name = Clip(name) ?? "My food",
             Brand = Clip(brand),
@@ -134,60 +225,38 @@ public class FoodSearchService(DataStore store, ApiClient api)
             ServingText = Clip(servingText),
             ServingG = servingG is > 0 and <= 5000 ? Math.Round(servingG.Value, 1) : null,
         };
+    }
+
+    /// <summary>Puts a saved food first (in place of one with the same name and brand), within the limit.</summary>
+    void Keep(SavedFood food)
+    {
         var foods = store.Profile.MyFoods;
         foods.RemoveAll(f => IsSame(f, food.Name, food.Brand));
         foods.Insert(0, food);
         if (foods.Count > SavedFood.Max)
             foods.RemoveRange(SavedFood.Max, foods.Count - SavedFood.Max);
         store.Save();
-        return Match(food);
     }
-
-    /// <summary>Whether a food by this name (and brand) is in My foods.</summary>
-    public bool IsSaved(string name, string? brand) => store.Profile.MyFoods.Any(f => IsSame(f, name, brand));
 
     static bool IsSame(SavedFood f, string name, string? brand) =>
         string.Equals(f.Name, name.Trim(), StringComparison.OrdinalIgnoreCase)
         && string.Equals(f.Brand ?? "", brand?.Trim() ?? "", StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>Only what's on the phone (My foods, everyday foods, USDA's generic ones): instant, for filling in as it's typed.</summary>
-    public async Task<List<FoodMatch>> LocalAsync(string query)
-    {
-        var words = Words(query.Trim());
-        if (words.Length == 0)
-            return [];
-        return [.. Ranked(MyFoods(), words).Take(LocalMax).Concat(Ranked(CommonFoods, words).Take(8)).Concat(Ranked(await UsdaAsync(), words).Take(LocalMax))];
-    }
-
-    /// <summary>Takes a food out of My foods.</summary>
-    public void Forget(string name, string? brand)
-    {
-        if (store.Profile.MyFoods.RemoveAll(f => IsSame(f, name, brand)) > 0)
-            store.Save();
-    }
-
-    // ---------- Matching ----------
-
-    static string[] Words(string query) => query.ToLowerInvariant().Split([' ', ',', '-'], StringSplitOptions.RemoveEmptyEntries);
-
-    /// <summary>Foods with every word in their name: names starting with the first word first, then the shortest.</summary>
-    static IEnumerable<FoodMatch> Ranked(IEnumerable<FoodMatch> foods, string[] words) => foods
-        .Where(f => words.All(w => f.Title.Contains(w, StringComparison.OrdinalIgnoreCase)))
-        .OrderBy(f => f.Title.StartsWith(words[0], StringComparison.OrdinalIgnoreCase) ? 0 : 1)
-        .ThenBy(f => f.Title.Length);
-
     // ---------- USDA generic foods (built in) ----------
 
-    /// <summary>Loaded the first time it's searched (Resources/Raw/foods/usda_foods.tsv.gz, made by tools/build_usda_foods.py).</summary>
-    static async Task<List<FoodMatch>> UsdaAsync()
+    /// <summary>
+    /// The everyday foods and USDA's, indexed the first time they're needed (Resources/Raw/foods/usda_foods.tsv.gz, made by
+    /// tools/build_usda_foods.py).
+    /// </summary>
+    static async Task<FoodIndex> BuiltInAsync()
     {
-        if (_usda != null)
-            return _usda;
-        await UsdaGate.WaitAsync();
+        if (_builtIn != null)
+            return _builtIn;
+        await BuiltInGate.WaitAsync();
         try
         {
-            if (_usda != null)
-                return _usda;
+            if (_builtIn != null)
+                return _builtIn;
             var foods = new List<FoodMatch>(14000);
             try
             {
@@ -202,20 +271,22 @@ public class FoodSearchService(DataStore store, ApiClient api)
                         if (p.Length < 7 || !Num(p[1], out var kcal) || !Num(p[2], out var protein) || !Num(p[3], out var carbs) || !Num(p[4], out var fat))
                             continue;
                         double? serving = Num(p[5], out var g) && g > 0 ? g : null;
-                        foods.Add(new FoodMatch(p[0], null, kcal, protein, carbs, fat, "100 g", 100, serving,
-                            p[6].Length > 0 ? p[6] : null, "USDA"));
+                        var (name, brand) = FoodCleanup.SplitBrand(p[0]);
+                        foods.Add(new FoodMatch(name, brand, kcal, protein, carbs, fat, "100 g", 100, serving,
+                            FoodCleanup.CleanServing(p[6]), "USDA"));
                     }
                 });
             }
             catch (Exception)
             {
-                // Missing from the package: the other sources still search.
+                // Missing from the package: the other foods still search.
             }
-            return _usda = foods;
+            // The everyday foods get a head start on USDA's longer names.
+            return _builtIn = await Task.Run(() => new FoodIndex([.. CommonFoods, .. foods], f => f.Source == EverydaySource ? EverydayBoost : 0));
         }
         finally
         {
-            UsdaGate.Release();
+            BuiltInGate.Release();
         }
 
         static bool Num(string text, out double value) => double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
@@ -266,9 +337,10 @@ public class FoodSearchService(DataStore store, ApiClient api)
         var brand = p.TryGetProperty("brands", out var brands) && brands.ValueKind == JsonValueKind.Array
             ? brands.EnumerateArray().Select(b => b.ValueKind == JsonValueKind.String ? b.GetString() : null).FirstOrDefault(b => !string.IsNullOrWhiteSpace(b))
             : Text(p, "brands")?.Split(',')[0];
-        var serving = Number(p, "serving_quantity");
+        // The serving's weight, or what its description says ("1 burger (219 g)").
+        var serving = Number(p, "serving_quantity") ?? FoodCleanup.GramsIn(Text(p, "serving_size"));
         return new FoodMatch(name, brand?.Trim(), k, protein.Value, carbs.Value, fat.Value, "100 g", 100,
-            serving is > 0 and < 2000 ? serving : null, Text(p, "serving_size"), "Open Food Facts");
+            serving is > 0 and < 2000 ? serving : null, FoodCleanup.CleanServing(Text(p, "serving_size")), "Open Food Facts");
     }
 
     static string? Text(JsonElement e, string name) =>
@@ -281,7 +353,7 @@ public class FoodSearchService(DataStore store, ApiClient api)
         : null;
 
     static FoodMatch F(string name, double kcal, double protein, double carbs, double fat, double? servingG = null, string? serving = null) =>
-        new(name, null, kcal, protein, carbs, fat, "100 g", 100, servingG, serving, "Typical");
+        new(name, null, kcal, protein, carbs, fat, "100 g", 100, servingG, serving, EverydaySource);
 
     /// <summary>Everyday foods with typical values per 100 g (from USDA FoodData Central), and a usual serving.</summary>
     static readonly FoodMatch[] CommonFoods =

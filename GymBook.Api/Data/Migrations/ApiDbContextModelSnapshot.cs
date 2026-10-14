@@ -748,7 +748,16 @@ namespace GymBook.Api.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("SleepDeepMinutes")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("SleepMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SleepRemMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SleepScore")
                         .HasColumnType("integer");
 
                     b.Property<string>("Source")
@@ -966,7 +975,11 @@ namespace GymBook.Api.Data.Migrations
 
                             b1.Property<double>("CarbsG");
 
+                            b1.Property<bool?>("Created");
+
                             b1.Property<double>("FatG");
+
+                            b1.Property<bool?>("Favorite");
 
                             b1.Property<string>("Name")
                                 .IsRequired();

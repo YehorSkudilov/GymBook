@@ -152,30 +152,8 @@ public class NutritionService(DataStore store)
     public NutritionStreaks Streaks()
     {
         var today = DateTime.Today;
-        var foods = store.Data.FoodEntries.GroupBy(f => f.Date.Date).ToDictionary(g => g.Key, g => g.ToList());
-        // Days read as one total from the health app, before foods were read one by one (as Day counts them).
-        var totals = store.Data.HealthDays.Where(h => h.FoodKcal > 0 || h.FoodProteinG > 0).GroupBy(h => h.Date.Date).ToDictionary(g => g.Key, g => g.First());
+        var marks = StreakMarks();
         var hasTarget = GoalsFor(today).Calories is > 0;
-
-        StreakMark Mark(DateTime d)
-        {
-            var list = foods.GetValueOrDefault(d) ?? [];
-            var asTotal = totals.TryGetValue(d, out var h) && !list.Any(f => f.Source != null);
-            var kcal = list.Sum(f => f.Calories) + (asTotal ? h!.FoodKcal ?? 0 : 0);
-            var protein = list.Sum(f => f.ProteinG) + (asTotal ? h!.FoodProteinG ?? 0 : 0);
-            // Any food counts as logged, from here or the health apps, even one that came with its macros and no calories.
-            if (kcal <= 0 && protein + list.Sum(f => f.CarbsG + f.FatG) <= 0)
-                return StreakMark.None;
-            var goals = GoalsFor(d);
-            var onTarget = goals.Calories is { } goal && goal > 0 && Math.Abs(kcal - goal) <= goal * TargetRange
-                && (goals.ProteinG is not > 0 || protein >= goals.ProteinG.Value * ProteinReached);
-            return onTarget ? StreakMark.OnTarget : StreakMark.Logged;
-        }
-
-        var first = foods.Keys.Concat(totals.Keys).Where(d => d <= today).DefaultIfEmpty(today).Min();
-        var marks = new Dictionary<DateTime, StreakMark>();
-        for (var d = first; d <= today; d = d.AddDays(1))
-            marks[d] = Mark(d);
 
         int Current(Func<StreakMark, bool> counts)
         {
@@ -204,6 +182,67 @@ public class NutritionService(DataStore store)
             Logged(marks[today]), OnTarget(marks[today]),
             [.. Enumerable.Range(0, 7).Select(i => today.AddDays(i - 6)).Select(d => (d, marks.GetValueOrDefault(d)))],
             Enumerable.Range(0, 30).Count(i => OnTarget(marks.GetValueOrDefault(today.AddDays(-i)))));
+    }
+
+    /// <summary>
+    /// The logging streak as it stood on <paramref name="day"/>: days in a row with food logged, ending that day. For
+    /// today, as in <see cref="Streaks"/>: it runs to yesterday until something's logged.
+    /// </summary>
+    public int LoggingStreakOn(DateTime day)
+    {
+        var marks = StreakMarks();
+        var d = day.Date;
+        if (d >= DateTime.Today && marks.GetValueOrDefault(DateTime.Today) == StreakMark.None)
+            d = DateTime.Today.AddDays(-1);
+        var n = 0;
+        for (; marks.TryGetValue(d, out var m) && m != StreakMark.None; d = d.AddDays(-1))
+            n++;
+        return n;
+    }
+
+    /// <summary>The longest run of days with food logged within <paramref name="from"/>–<paramref name="to"/>, and the day it ended (null with none).</summary>
+    public (int Days, DateTime? End) LongestLoggingIn(DateTime from, DateTime to)
+    {
+        var marks = StreakMarks();
+        var (best, run) = (0, 0);
+        DateTime? end = null;
+        for (var d = from.Date; d <= to.Date; d = d.AddDays(1))
+        {
+            run = marks.GetValueOrDefault(d) != StreakMark.None ? run + 1 : 0;
+            if (run > best)
+                (best, end) = (run, d);
+        }
+        return (best, end);
+    }
+
+    /// <summary>Each day from the first with food to today: nothing logged, logged, or logged and on target (see <see cref="Streaks"/>).</summary>
+    Dictionary<DateTime, StreakMark> StreakMarks()
+    {
+        var today = DateTime.Today;
+        var foods = store.Data.FoodEntries.GroupBy(f => f.Date.Date).ToDictionary(g => g.Key, g => g.ToList());
+        // Days read as one total from the health app, before foods were read one by one (as Day counts them).
+        var totals = store.Data.HealthDays.Where(h => h.FoodKcal > 0 || h.FoodProteinG > 0).GroupBy(h => h.Date.Date).ToDictionary(g => g.Key, g => g.First());
+
+        StreakMark Mark(DateTime d)
+        {
+            var list = foods.GetValueOrDefault(d) ?? [];
+            var asTotal = totals.TryGetValue(d, out var h) && !list.Any(f => f.Source != null);
+            var kcal = list.Sum(f => f.Calories) + (asTotal ? h!.FoodKcal ?? 0 : 0);
+            var protein = list.Sum(f => f.ProteinG) + (asTotal ? h!.FoodProteinG ?? 0 : 0);
+            // Any food counts as logged, from here or the health apps, even one that came with its macros and no calories.
+            if (kcal <= 0 && protein + list.Sum(f => f.CarbsG + f.FatG) <= 0)
+                return StreakMark.None;
+            var goals = GoalsFor(d);
+            var onTarget = goals.Calories is { } goal && goal > 0 && Math.Abs(kcal - goal) <= goal * TargetRange
+                && (goals.ProteinG is not > 0 || protein >= goals.ProteinG.Value * ProteinReached);
+            return onTarget ? StreakMark.OnTarget : StreakMark.Logged;
+        }
+
+        var first = foods.Keys.Concat(totals.Keys).Where(d => d <= today).DefaultIfEmpty(today).Min();
+        var marks = new Dictionary<DateTime, StreakMark>();
+        for (var d = first; d <= today; d = d.AddDays(1))
+            marks[d] = Mark(d);
+        return marks;
     }
 
     UserProfile Profile => store.Profile;

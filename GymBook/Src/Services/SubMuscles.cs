@@ -2,18 +2,20 @@ using GymBook.Models;
 
 namespace GymBook.Services;
 
-/// <summary>A finer part of a <see cref="MuscleGroup"/> for the muscle breakdown: the delts' three heads, upper and lower chest, and so on.</summary>
+/// <summary>A finer part of a <see cref="MuscleGroup"/> for the muscle breakdown: the delts' three heads, upper, mid and lower chest, and so on.</summary>
 public enum SubMuscle
 {
     FrontDelts, SideDelts, RearDelts,
-    UpperChest, MidLowerChest,
+    UpperChest, MidChest, LowerChest,
     Lats, UpperBack,
     Abs, Obliques,
     Biceps, Brachialis,
     ForearmFlexors, ForearmExtensors,
     TricepsLongHead, TricepsLateralHeads,
+    GluteMax, GluteMedius,
+    Gastrocnemius, Soleus, Tibialis,
     // The groups that aren't split.
-    Traps, LowerBack, Glutes, Quads, Hamstrings, Calves, Neck,
+    Traps, LowerBack, Quads, Hamstrings, Neck,
 }
 
 /// <summary>
@@ -42,8 +44,14 @@ public static class SubMuscles
                   || Has("row", "pull", "chin", "fly")
                     ? SubMuscle.RearDelts
                 : SubMuscle.FrontDelts,
-            MuscleGroup.Chest => Has("incline", "low-to-high", "reverse-grip", "landmine", "guillotine", "pike", "overhead")
-                ? SubMuscle.UpperChest : SubMuscle.MidLowerChest,
+            // Push-ups first: feet up (decline) is the upper chest's angle, hands up (incline, wall) the lower chest's.
+            MuscleGroup.Chest => Has("push-up", "push up")
+                    ? Has("decline", "pike") ? SubMuscle.UpperChest : Has("incline", "wall") ? SubMuscle.LowerChest : SubMuscle.MidChest
+                : Has("incline", "low-to-high", "reverse-grip", "landmine", "guillotine", "overhead", "front raise")
+                    ? SubMuscle.UpperChest
+                : Has("decline", "dip", "high-to-low", "muscle-up", "pullover")
+                    ? SubMuscle.LowerChest
+                : SubMuscle.MidChest,
             MuscleGroup.Back => Has("pull-up", "pull up", "chin-up", "pulldown", "pullover", "lat ", "lats", "muscle-up", "front lever",
                     "straight-arm", "skin the cat", "rope climb", "hang", "push-through", "pulling straps")
                 ? SubMuscle.Lats : SubMuscle.UpperBack,
@@ -58,10 +66,18 @@ public static class SubMuscles
                 ? SubMuscle.TricepsLongHead : SubMuscle.TricepsLateralHeads,
             MuscleGroup.Traps => SubMuscle.Traps,
             MuscleGroup.LowerBack => SubMuscle.LowerBack,
-            MuscleGroup.Glutes => SubMuscle.Glutes,
+            // Moving the leg out to the side is the glute medius; hip extension (thrusts, bridges, hinges, squats) the glute max.
+            MuscleGroup.Glutes => Has("abduction", "lateral walk", "monster walk", "clam", "fire hydrant", "side kick", "side-lying",
+                    "open and close the gate", "hip airplane")
+                ? SubMuscle.GluteMedius : SubMuscle.GluteMax,
             MuscleGroup.Quads => SubMuscle.Quads,
             MuscleGroup.Hamstrings => SubMuscle.Hamstrings,
-            MuscleGroup.Calves => SubMuscle.Calves,
+            // Bent knees take the gastrocnemius out of a calf raise, leaving the soleus; the tibialis is the shin's front.
+            MuscleGroup.Calves => Has("tibialis", "shin")
+                    ? SubMuscle.Tibialis
+                : Has("soleus", "bent-knee") || Has("seated") && Has("calf")
+                    ? SubMuscle.Soleus
+                : SubMuscle.Gastrocnemius,
             _ => SubMuscle.Neck,
         };
     }
@@ -69,7 +85,7 @@ public static class SubMuscles
     public static MuscleGroup Group(this SubMuscle m) => m switch
     {
         SubMuscle.FrontDelts or SubMuscle.SideDelts or SubMuscle.RearDelts => MuscleGroup.Shoulders,
-        SubMuscle.UpperChest or SubMuscle.MidLowerChest => MuscleGroup.Chest,
+        SubMuscle.UpperChest or SubMuscle.MidChest or SubMuscle.LowerChest => MuscleGroup.Chest,
         SubMuscle.Lats or SubMuscle.UpperBack => MuscleGroup.Back,
         SubMuscle.Abs or SubMuscle.Obliques => MuscleGroup.Abs,
         SubMuscle.Biceps or SubMuscle.Brachialis => MuscleGroup.Biceps,
@@ -77,10 +93,10 @@ public static class SubMuscles
         SubMuscle.TricepsLongHead or SubMuscle.TricepsLateralHeads => MuscleGroup.Triceps,
         SubMuscle.Traps => MuscleGroup.Traps,
         SubMuscle.LowerBack => MuscleGroup.LowerBack,
-        SubMuscle.Glutes => MuscleGroup.Glutes,
+        SubMuscle.GluteMax or SubMuscle.GluteMedius => MuscleGroup.Glutes,
         SubMuscle.Quads => MuscleGroup.Quads,
         SubMuscle.Hamstrings => MuscleGroup.Hamstrings,
-        SubMuscle.Calves => MuscleGroup.Calves,
+        SubMuscle.Gastrocnemius or SubMuscle.Soleus or SubMuscle.Tibialis => MuscleGroup.Calves,
         _ => MuscleGroup.Neck,
     };
 
@@ -90,7 +106,8 @@ public static class SubMuscles
         SubMuscle.SideDelts => "Side delts",
         SubMuscle.RearDelts => "Rear delts",
         SubMuscle.UpperChest => "Upper chest",
-        SubMuscle.MidLowerChest => "Mid & lower chest",
+        SubMuscle.MidChest => "Mid chest",
+        SubMuscle.LowerChest => "Lower chest",
         SubMuscle.UpperBack => "Upper back",
         SubMuscle.Brachialis => "Brachialis",
         SubMuscle.ForearmFlexors => "Forearm flexors",
@@ -98,6 +115,9 @@ public static class SubMuscles
         SubMuscle.TricepsLongHead => "Triceps long head",
         SubMuscle.TricepsLateralHeads => "Triceps lateral & medial heads",
         SubMuscle.LowerBack => "Lower back",
+        SubMuscle.GluteMax => "Glute max",
+        SubMuscle.GluteMedius => "Glute medius",
+        SubMuscle.Tibialis => "Tibialis (shins)",
         _ => m.ToString(),
     };
 }

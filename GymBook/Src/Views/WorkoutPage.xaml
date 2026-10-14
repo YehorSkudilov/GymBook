@@ -54,7 +54,9 @@
                             <DataTemplate x:DataType="vm:WorkoutExerciseViewModel">
                                 <!-- Tap to show it; hold and drag along the strip to move it. -->
                                 <controls:ReorderItem Orientation="Horizontal" MoveCommand="{Binding MoveCommand}">
-                                    <Border WidthRequest="76" HeightRequest="58" VerticalOptions="Center" StrokeShape="RoundRectangle 14" StrokeThickness="0"
+                                    <!-- The one on screen: outlined in the accent, the others dimmed -->
+                                    <Border WidthRequest="76" HeightRequest="58" VerticalOptions="Center" StrokeShape="RoundRectangle 14"
+                                            Stroke="{StaticResource Accent}" StrokeThickness="{Binding StripStroke}" Opacity="{Binding StripOpacity}"
                                             BackgroundColor="{Binding Thumb.TileBackground}">
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding SelectCommand}" />

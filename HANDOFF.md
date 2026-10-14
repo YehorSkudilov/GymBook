@@ -1,5 +1,79 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-14, sleep): recovery uses how well you slept, not just how long (Android files type-checked against Mono.Android 36's ref; not run)
+
+- `HealthDay` gains `SleepDeepMinutes`, `SleepRemMinutes`, `SleepScore` (migrations `SleepQuality` for both databases, real
+  columns). Privacy policy (API + website) updated.
+- **Samsung Health** (`SamsungHealthData.ReadSleepAsync`): `SleepType.SLEEP_SCORE` (longest sleep's) and `SESSIONS` →
+  `SleepSession.getStages()` → DEEP / REM minutes (names from javap on the bundled .aar). Asleep minutes stay DURATION.
+- **Health Connect**: `SleepSessionRecord.Stages`; time in awake stages (awake, in bed, out of bed) is no longer counted as
+  asleep, deep/REM summed. Overlapping sessions use the stages of the one that recorded the most (`HealthSleep.ByWakeDay`).
+- **Recovery** (`RecoveryService.FactorFor(SleepNight)`): hours factor as before (0.85–1.35) × quality, 0.8–1.45 in all.
+  Quality: Samsung score vs 75 (10 points ≈ 4%, ±8% max); without a score, deep+REM share vs 40% (10 points ≈ 5%, ±6%).
+  The score already weighs stages, so not both. Several nights are averaged factor by factor.
+- Shown: recovery note "Last night: 7 h 05 min of sleep (score 82) · …", the Day sleep card, Trends' sleep card (average score
+  or Deep + REM share in place of Longest).
+- **For the owner to test:** Samsung Health's developer mode/partner access returns SESSIONS and SLEEP_SCORE; a night with a
+  Galaxy Watch shows the score; Health Connect from another watch shows deep/REM.
+
+## NEWEST (2026-10-14, latest): week streak pill on Progress (type-checked, not run)
+
+- Progress gets the flame pill by its title, like Nutrition's, with the workout week streak (weeks in a row hitting the
+  weekly target, as on Home): **Day** = as it stood on the day shown (`StatsService.WeekStreakOn`; that week's later
+  workouts not counted; faded until that week hits the target), **Trends** = longest in the range, **Ranks** = best ever
+  (`LongestWeekStreak`). Labels "wk", "wk longest", "wk best". Tap explains it, with the rule and the streak now.
+
+## NEWEST (2026-10-14, later): the streak pill follows the tab (type-checked, not run)
+
+- Nutrition's flame pill: **Day** = the logging streak as it stood on the day shown (`NutritionService.LoggingStreakOn`;
+  today runs to yesterday until something's logged, a past day with nothing logged is 0 and faded); **Trends** = the
+  longest run inside the selected range, labelled "longest" (`LongestLoggingIn`); **Ranks** = the best ever, labelled
+  "best". Tapping it explains that number, then the current streak as before. `Streaks()` now shares `StreakMarks()`.
+
+## NEWEST (2026-10-14): food search shows each food once, per serving (`Src/Services/FoodCleanup.cs`; type-checked, not run)
+
+- Owner's report: "big mac" gave five Big Macs, none right (one Open Food Facts entry had a serving typed in as 100 g).
+- USDA's "McDONALD'S, BIG MAC" names are split into item + brand on load ("Big Mac · McDonald's"), so they rank like any
+  other name; serving texts lose the tacked-on weight ("1 item 7.6 oz" → "1 item").
+- **Dedupe**: foods whose names match apart from the brand, with no differing brands (unbranded joins the one brand with
+  that name), are one food: own foods > Everyday > FatSecret > USDA > Open Food Facts, then with a brand and a serving,
+  then closest to the group's median kcal/100 g. It borrows a serving from the others when it has none.
+- Online foods with impossible numbers are dropped (over 920 kcal or 105 g macros per 100 g; macros worth more calories
+  than the food). Open Food Facts servings are weighed from "1 burger (219 g)"; FatSecret's "Per 1 sandwich (219g)" becomes
+  the serving, so it can be logged in servings.
+- Barcode button glyph `barcode_scanner` rendered as junk on the owner's phone: now `qr_code_scanner`.
+
+## NEWEST (2026-10-13, later): Add food reworked: tabs and typo-tolerant search (C# type-checked, XAML not built, not run)
+
+- **Tabs** on Add food before anything's typed: **Favourites** (starred foods, then "Logged lately"), **My foods** (foods the
+  user made with Create a food), **Everyday** (the ~80 typical foods, formerly source "Typical"). × on a favourite unstars it;
+  × on My foods deletes it (confirm). Create a food and Quick add stay as buttons above the tabs. The list is now one
+  `CollectionView` (virtualized) instead of a `BindableLayout` in a `ScrollView`; the other steps are unchanged.
+- **Favourites vs My foods** share `UserProfile.MyFoods`: `SavedFood.Created` / `SavedFood.Favorite` (both `bool?`, JSON
+  column, so migrations `FoodFavorites` are empty like `SetTimes`). Foods saved before this have nulls and count as
+  favourites (they were all starred or made; there's no telling which). Starring a made food sets `Favorite`, unstarring
+  keeps it in My foods.
+- **Search** (`Src/Services/FoodIndex.cs`): words in any order, half-typed last word, plurals, typos (1 edit up to 6
+  letters, 2 above; Damerau). Each distinct word is scored once per query, then foods look scores up: 1–4 ms over 13,200
+  foods on a desktop. Everything (saved, everyday, USDA, online) is ranked together; saved +0.35, everyday +0.2. The
+  built-in index is warmed when the page opens. A misspelt query is re-sent online spelt right (`FoodIndex.Correct`) when
+  the online databases found fewer than 8. Local results after 60 ms, online after a 350 ms pause.
+- **For the owner to test:** three tabs fit on a small phone (13 pt labels with icons); the empty view / footer bindings in
+  the `CollectionView`; scrolling a long result list; typing fast with typos.
+
+## NEWEST (2026-10-13): weekly set targets per muscle in the plan's muscle breakdown (logic compiled, UI not run)
+
+- **Sub-muscles** (`Src/Services/SubMuscles.cs`): chest is now upper / mid / lower (push-ups by angle: decline = upper,
+  incline/wall = lower; dips, declines, high-to-low flies, pullovers = lower), glutes max / medius (abduction work), calves
+  gastrocnemius / soleus (seated or bent-knee calf raises) / tibialis. Not stored anywhere, so no migration; Stats and
+  recovery pick the new parts up on their own.
+- **Targets** (`Src/Services/VolumeTargets.cs`): hard sets a week per whole muscle by plan goal and experience (build
+  muscle 10–20, beginners 8–16, advanced 12–22; strength 6–12; traps/abs/calves about ⅔; no target for forearms, lower back,
+  neck). Sets count 1 for the main muscle, ½ for helpers; a plan cycle that isn't 7 days is scaled to a week.
+- **Breakdown sheet** (`MuscleBreakdownViewModel`/`Page`): one line per whole muscle with its parts under it. Whole plan:
+  every targeted muscle (untrained ones too), bar against the target's top, amber under / green on / red over, "Add about N
+  sets a week", and "no rear delts work" for an untrained part. This day: no targets, bars relative to the busiest muscle.
+
 ## NEWEST (2026-10-09): XP, levels, leagues and famous lifts (issue #35; built for Windows, not run)
 
 - **XP** (`GymBook.Shared/Models/Levels.cs`): worked out from finished workouts every time (cached by `LevelService` until

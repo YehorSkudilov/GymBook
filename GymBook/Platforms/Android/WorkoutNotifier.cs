@@ -15,7 +15,7 @@ namespace GymBook;
 ///
 /// While resting it keeps itself up to date, not only when the workout page does (the page's timer stops when it's left,
 /// or the app is): the bar goes down each second, and when the rest runs out it turns into "Rest over" with the timer
-/// counting up from then, instead of the system's countdown going below zero over a bar that stopped.
+/// going on below zero (−0:15), the time over, as the workout page shows it, in red and without a bar.
 /// </summary>
 public class WorkoutNotifier : IWorkoutNotifier
 {
@@ -167,11 +167,18 @@ public class WorkoutNotifier : IWorkoutNotifier
                     .SetProgress(Math.Max(1, status.RestSeconds), Math.Clamp(restLeft, 0, Math.Max(1, status.RestSeconds)), false);
                 break;
             case WorkoutPhase.Resting or WorkoutPhase.RestOver:
-                // Counting up how far over the rest is (from 0:00 when it ran out, never below it); the bar is the workout's.
-                builder.SetContentText($"Rest over · next: {status.Next}")
-                    .SetWhen(new DateTimeOffset(status.RestDueAt ?? status.Since).ToUnixTimeMilliseconds())
-                    .SetChronometerCountDown(false);
-                SetsBar(builder, status);
+                // How far over the rest is, as negative time in red, and no bar: the standard notification can't colour its
+                // timer, so this state has its own content (Resources/layout/notification_rest_over.xml) inside the
+                // system's header, with a countdown carrying on below zero ("−0:15") from when the rest ran out. The
+                // notification's colour tints the icon and app name red too.
+                var text = $"Rest over · next: {status.Next}";
+                builder.SetContentText(text)
+                    .SetShowWhen(false)
+                    .SetUsesChronometer(false)
+                    .SetColor(OverTime)
+                    .SetStyle(new NotificationCompat.DecoratedCustomViewStyle());
+                var views = RestOverViews(context, status.Name, text, status.RestDueAt ?? status.Since);
+                builder.SetCustomContentView(views).SetCustomBigContentView(views);
                 break;
             case WorkoutPhase.Done:
                 builder.SetContentText("Every set done · tap to finish")
@@ -191,6 +198,24 @@ public class WorkoutNotifier : IWorkoutNotifier
         // After an alert, the next update is drawn again (quietly, on the workout channel).
         _shown = alert ? null : key;
     }
+
+    /// <summary>
+    /// The content once a rest has run out: the workout, what's next, and the time since <paramref name="due"/> as a
+    /// countdown gone below zero, in red. The chronometer runs on the elapsed-realtime clock, so its base is moved there.
+    /// </summary>
+    static Android.Widget.RemoteViews RestOverViews(Context context, string title, string text, DateTime due)
+    {
+        var views = new Android.Widget.RemoteViews(context.PackageName, Resource.Layout.notification_rest_over);
+        views.SetTextViewText(Resource.Id.rest_over_title, title);
+        views.SetTextViewText(Resource.Id.rest_over_text, text);
+        var baseTime = SystemClock.ElapsedRealtime() + (long)(due - DateTime.Now).TotalMilliseconds;
+        views.SetChronometer(Resource.Id.rest_over_timer, baseTime, null, true);
+        views.SetChronometerCountDown(Resource.Id.rest_over_timer, true);
+        return views;
+    }
+
+    /// <summary>Over a rest's time: the notification in red.</summary>
+    static readonly int OverTime = Android.Graphics.Color.Argb(255, 0xFF, 0x4D, 0x4D);
 
     /// <summary>The workout's working sets done, as the bar (none before there are sets).</summary>
     static void SetsBar(NotificationCompat.Builder builder, WorkoutStatus status)

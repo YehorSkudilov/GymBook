@@ -74,6 +74,65 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         _ = OnAppearingAsync();
     }
 
+    // ---- The week streak by the title, like Nutrition's: on Day as it stood on the day shown (faded until that week
+    // hits the target), on Trends the longest in the range, on Ranks the best ever. Tapping it says more. ----
+
+    [ObservableProperty] bool hasStreak;
+    [ObservableProperty] string streakCount = "";
+    [ObservableProperty] string streakNote = "";
+    [ObservableProperty] double streakOpacity = 1;
+    (int Weeks, DateTime? End) _shownStreak;
+
+    void ShowStreakPill()
+    {
+        var best = stats.LongestWeekStreak();
+        HasStreak = best.Weeks > 0;
+        if (IsRanksTab)
+        {
+            _shownStreak = best;
+            StreakNote = "wk best";
+            StreakOpacity = 1;
+        }
+        else if (IsStatsTab)
+        {
+            _shownStreak = stats.LongestWeekStreak(RangeStart, _rangeEnd);
+            StreakNote = "wk longest";
+            StreakOpacity = _shownStreak.Weeks > 0 ? 1 : 0.5;
+        }
+        else
+        {
+            var weeks = stats.WeekStreakOn(_date);
+            _shownStreak = (weeks, null);
+            StreakNote = "wk";
+            // Faded while the day's week hasn't hit the target (yet).
+            StreakOpacity = stats.SessionsIn(StatsService.WeekStart(_date), _date).Count >= stats.WeeklyTarget ? 1 : 0.5;
+        }
+        StreakCount = _shownStreak.Weeks.ToString(CultureInfo.CurrentCulture);
+    }
+
+    /// <summary>The flame: what its number is, and the streak now.</summary>
+    [RelayCommand]
+    Task ShowStreak()
+    {
+        static string Weeks(int n) => n == 1 ? "1 week" : $"{n} weeks";
+        static string Date(DateTime d) => d.ToString("d MMM", CultureInfo.CurrentCulture);
+        var target = stats.WeeklyTarget;
+        var rule = $"A week counts when it has {target} workout{(target == 1 ? "" : "s")} (your weekly target); this week joins once it gets there.";
+        var now = $"Now: {Weeks(stats.WeekStreak())} in a row, best {Weeks(stats.LongestWeekStreak().Weeks)}.";
+        var (n, end) = _shownStreak;
+        if (IsRanksTab)
+            return dialogs.Alert($"Best week streak: {Weeks(n)}",
+                (end is { } e ? $"Your longest run of weeks on target, up to the week of {Date(e)}." : "No week has hit the target yet.") + $"\n\n{now}\n\n{rule}");
+        if (IsStatsTab)
+            return dialogs.Alert(n == 0 ? "No week streak in this range" : $"Longest week streak: {Weeks(n)}",
+                (end is { } e ? $"{Date(RangeStart)} – {Date(_rangeEnd)}: {Weeks(n)} in a row on target, up to the week of {Date(e)}." : $"{Date(RangeStart)} – {Date(_rangeEnd)}: no week hit the target.")
+                + $"\n\n{now}\n\n{rule}");
+        if (_date < DateTime.Today)
+            return dialogs.Alert(n == 0 ? $"No week streak on {Date(_date)}" : $"{Weeks(n)} streak on {Date(_date)}",
+                $"Weeks in a row on target, as it stood that day.\n\n{now}\n\n{rule}");
+        return dialogs.Alert(n == 0 ? "No week streak yet" : $"{Weeks(n)} streak", $"{now}\n\n{rule}");
+    }
+
     // ---- Day: one day's training, picked like Nutrition's day ----
 
     DateTime _date = DateTime.Today;
@@ -114,6 +173,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
 
     void ShowDay()
     {
+        ShowStreakPill();
         DayTitle = _date == DateTime.Today ? "Today" : _date == DateTime.Today.AddDays(-1) ? "Yesterday" : _date.ToString("dddd", CultureInfo.CurrentCulture);
         DaySubtitle = _date.ToString("d MMMM", CultureInfo.CurrentCulture);
         CanGoNextDay = _date < DateTime.Today;
@@ -208,10 +268,13 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     /// <summary>The night woken up from on the day, and what it did to recovery.</summary>
     void ShowDaySleep()
     {
-        var minutes = recovery.SleepOn(_date);
-        DaySleepValue = minutes is { } m ? RecoveryService.Hours(m) : "N/A";
-        DaySleepCaption = minutes is { } mins
-            ? $"Night to {_date.ToString("ddd d MMM", CultureInfo.CurrentCulture)} · {RecoveryService.SleepEffect(mins)}"
+        // The hours, then how well it was slept (Samsung Health's score, or the deep and REM sleep) and what it all does to recovery.
+        var night = recovery.NightOn(_date);
+        DaySleepValue = night is { } n ? RecoveryService.Hours(n.Minutes) : "N/A";
+        DaySleepCaption = night is { } sleep
+            ? $"Night to {_date.ToString("ddd d MMM", CultureInfo.CurrentCulture)}"
+                + (RecoveryService.Quality(sleep) is { Length: > 0 } quality ? $" · {quality}" : "")
+                + $" · {RecoveryService.SleepEffect(sleep)}"
             : "No sleep recorded for this night. Connect Health Connect or Samsung Health in the Profile tab to bring it in.";
     }
 
@@ -454,6 +517,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         // every frame unseen. They're worked out again when the Trends tab comes back.
         if (IsRanksTab)
         {
+            ShowStreakPill();
             ShowLevel();
             _ = ranks.OnAppearingAsync();
             return Task.CompletedTask;
@@ -489,6 +553,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     {
         _trendsVersion = store.Version;
         _trendsDay = DateTime.Today;
+        ShowStreakPill();
         var first = RangeStart;
         var last = _rangeEnd;
         var weeks = Math.Max(1, _rangeDays / 7.0);
@@ -626,7 +691,8 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         ];
         RecoveryCaption = $"Your major muscles' recovery going into each day, averaged per {per}. Sleep speeds it up or slows it down.";
 
-        var nights = days.Select(d => (Day: d, Minutes: recovery.SleepOn(d))).Where(n => n.Minutes != null).Select(n => (n.Day, Minutes: n.Minutes!.Value)).ToList();
+        var nights = days.Select(d => (Day: d, Night: recovery.NightOn(d))).Where(n => n.Night != null)
+            .Select(n => (n.Day, Minutes: n.Night!.Minutes, Night: n.Night!)).ToList();
         HasSleep = nights.Count > 0;
         SleepChart = new BarChartDrawable(
             [.. periods.Select(p =>
@@ -636,16 +702,22 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             })],
             Violet, v => $"{v:0.#} h");
         var average = nights.Count > 0 ? nights.Average(n => n.Minutes) : 0;
+        // How well it was slept, as known: Samsung Health's score, else deep and REM sleep's share of the night.
+        var scored = nights.Where(n => n.Night.Score != null).ToList();
+        var staged = nights.Where(n => n.Night.HasStages).ToList();
+        StatItem quality = scored.Count > 0 ? new("Average score", $"{scored.Average(n => n.Night.Score!.Value):0}")
+            : staged.Count > 0 ? new("Deep + REM", $"{staged.Average(n => (n.Night.DeepMinutes!.Value + n.Night.RemMinutes!.Value) / (double)n.Minutes):P0}")
+            : new("Longest", nights.Count > 0 ? RecoveryService.Hours(nights.Max(n => n.Minutes)) : "");
         SleepStats = nights.Count == 0 ? [] :
         [
             new("Average a night", RecoveryService.Hours(average)),
             new("Nights recorded", $"{nights.Count} of {days.Count}"),
             new("Under 7 hours", Days(nights.Count(n => n.Minutes < 7 * 60))),
-            new("Longest", RecoveryService.Hours(nights.Max(n => n.Minutes))),
+            quality,
         ];
         SleepCaption = nights.Count == 0
             ? $"No sleep recorded {RangePhrase}. Connect Health Connect or Samsung Health in the Profile tab to bring it in."
-            : $"Hours asleep a night, averaged per {per}. At your average, {RecoveryService.SleepEffect(average)}.";
+            : $"Hours asleep a night, averaged per {per}. With how well you slept, {RecoveryService.SleepEffect([.. nights.Select(n => n.Night)])} on average.";
 
         static string Days(int n) => n == 1 ? "1 day" : $"{n} days";
     }
