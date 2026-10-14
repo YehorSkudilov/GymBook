@@ -15,7 +15,7 @@ namespace GymBook;
 ///
 /// While resting it keeps itself up to date, not only when the workout page does (the page's timer stops when it's left,
 /// or the app is): the bar goes down each second, and when the rest runs out it turns into "Rest over" with the timer
-/// counting up from then, instead of the system's countdown going below zero over a bar that stopped.
+/// going on below zero (−0:15), the time over, as the workout page shows it, and the workout's bar.
 /// </summary>
 public class WorkoutNotifier : IWorkoutNotifier
 {
@@ -167,10 +167,11 @@ public class WorkoutNotifier : IWorkoutNotifier
                     .SetProgress(Math.Max(1, status.RestSeconds), Math.Clamp(restLeft, 0, Math.Max(1, status.RestSeconds)), false);
                 break;
             case WorkoutPhase.Resting or WorkoutPhase.RestOver:
-                // Counting up how far over the rest is (from 0:00 when it ran out, never below it); the bar is the workout's.
+                // How far over the rest is, as negative time: the system's countdown carries on below zero ("−0:15") from
+                // when it ran out. The bar is the workout's.
                 builder.SetContentText($"Rest over · next: {status.Next}")
                     .SetWhen(new DateTimeOffset(status.RestDueAt ?? status.Since).ToUnixTimeMilliseconds())
-                    .SetChronometerCountDown(false);
+                    .SetChronometerCountDown(true);
                 SetsBar(builder, status);
                 break;
             case WorkoutPhase.Done:
