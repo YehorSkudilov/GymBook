@@ -136,12 +136,16 @@ public partial class NutritionViewModel(
     [ObservableProperty] string importedFoodText = "";
     [ObservableProperty] string importedFoodCalories = "";
 
-    // The streak: a small flame by the title with the days in a row food was logged, faded until something's logged today.
-    // Tapping it says more (see ShowStreak).
+    // The streak: a small flame by the title with the days in a row food was logged, for what's showing: on Day the
+    // streak as it stood on the day shown (faded until something's logged that day), on Trends the longest in the range,
+    // on Ranks the best ever. Tapping it says more (see ShowStreak).
     [ObservableProperty] bool hasStreaks;
     [ObservableProperty] string streakCount = "";
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasStreakNote))] string streakNote = "";
+    public bool HasStreakNote => StreakNote.Length > 0;
     [ObservableProperty] double streakOpacity = 1;
     NutritionStreaks? _streaks;
+    (int Days, DateTime? End) _rangeStreak;
 
     // Creatine on the day
     [ObservableProperty] bool creatineTaken;
@@ -565,8 +569,27 @@ public partial class NutritionViewModel(
         var s = nutrition.Streaks();
         _streaks = s;
         HasStreaks = s.BestLogging > 0;
-        StreakCount = s.Logging.ToString(CultureInfo.CurrentCulture);
-        StreakOpacity = s.TodayLogged ? 1 : 0.5;
+        int count;
+        if (IsRanks)
+        {
+            count = s.BestLogging;
+            StreakNote = "best";
+            StreakOpacity = 1;
+        }
+        else if (IsTrends)
+        {
+            _rangeStreak = nutrition.LongestLoggingIn(_rangeEnd.AddDays(1 - _rangeDays), _rangeEnd);
+            count = _rangeStreak.Days;
+            StreakNote = "longest";
+            StreakOpacity = count > 0 ? 1 : 0.5;
+        }
+        else
+        {
+            count = _date >= DateTime.Today ? s.Logging : nutrition.LoggingStreakOn(_date);
+            StreakNote = "";
+            StreakOpacity = _date >= DateTime.Today ? (s.TodayLogged ? 1 : 0.5) : count > 0 ? 1 : 0.5;
+        }
+        StreakCount = count.ToString(CultureInfo.CurrentCulture);
         // In turn, so waiting on the latest also waits on one still on its way.
         _sending = SendAfterAsync(_sending, s);
     }
@@ -630,10 +653,28 @@ public partial class NutritionViewModel(
     {
         if (_streaks is not { } s)
             return Task.CompletedTask;
-        var title = s.Logging == 0 ? "No streak yet" : $"{s.Logging}-day streak";
         var onTarget = s.HasTarget
             ? $"On target (calories in range, protein near its goal): {Days(s.OnTarget)}, best {Days(s.BestOnTarget)}"
             : "Set a calorie goal to count days on target too.";
+        var now = $"Now: {Days(s.Logging)} in a row with food logged, best {Days(s.BestLogging)}\n{onTarget}";
+        static string Date(DateTime d) => d.ToString("d MMM", CultureInfo.CurrentCulture);
+        if (IsRanks)
+            return dialogs.Alert($"Best streak: {Days(s.BestLogging)}", $"Your longest run of days with food logged, ever.\n\n{now}");
+        if (IsTrends)
+        {
+            var (days, end) = _rangeStreak;
+            var range = $"{Date(_rangeEnd.AddDays(1 - _rangeDays))} – {Date(_rangeEnd)}";
+            return dialogs.Alert(days == 0 ? "No streak in this range" : $"Longest streak: {Days(days)}",
+                (end is { } e ? $"{range}: {Days(days)} in a row with food logged, {(days == 1 ? "on" : "up to")} {Date(e)}." : $"{range}: no food logged.")
+                + $"\n\n{now}");
+        }
+        if (_date < DateTime.Today)
+        {
+            var on = nutrition.LoggingStreakOn(_date);
+            return dialogs.Alert(on == 0 ? $"No streak on {Date(_date)}" : $"{on}-day streak on {Date(_date)}",
+                (on == 0 ? "Nothing was logged that day." : $"{Days(on)} in a row with food logged, up to {Date(_date)}.") + $"\n\n{now}");
+        }
+        var title = s.Logging == 0 ? "No streak yet" : $"{s.Logging}-day streak";
         return dialogs.Alert(title, $"{Nudge(s)}\n\nFood logged: {Days(s.Logging)} in a row, best {Days(s.BestLogging)}\n{onTarget}");
 
         static string Nudge(NutritionStreaks s)

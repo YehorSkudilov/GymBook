@@ -1,5 +1,12 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-14, later): the streak pill follows the tab (type-checked, not run)
+
+- Nutrition's flame pill: **Day** = the logging streak as it stood on the day shown (`NutritionService.LoggingStreakOn`;
+  today runs to yesterday until something's logged, a past day with nothing logged is 0 and faded); **Trends** = the
+  longest run inside the selected range, labelled "longest" (`LongestLoggingIn`); **Ranks** = the best ever, labelled
+  "best". Tapping it explains that number, then the current streak as before. `Streaks()` now shares `StreakMarks()`.
+
 ## NEWEST (2026-10-14): food search shows each food once, per serving (`Src/Services/FoodCleanup.cs`; type-checked, not run)
 
 - Owner's report: "big mac" gave five Big Macs, none right (one Open Food Facts entry had a serving typed in as 100 g).
