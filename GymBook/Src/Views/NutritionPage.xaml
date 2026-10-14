@@ -51,13 +51,16 @@
         <!-- The title, the streak, and at its far right the badges (bedtime, online). Goals are in the day's own section. -->
         <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
             <Label Text="Nutrition" Style="{StaticResource Title}" VerticalOptions="Center" LineBreakMode="TailTruncation" />
-            <!-- The logging streak: a small flame and the days in a row, faded until something's logged today; tap for more -->
+            <!-- The logging streak for what's showing (Day: on the day shown, faded until something's logged that day; Trends:
+                 the longest in the range; Ranks: the best ever): a small flame, the days and what they are; tap for more -->
             <Border Grid.Column="1" Style="{StaticResource Pill}" BackgroundColor="{StaticResource Surface2}" Padding="8,4" VerticalOptions="Center"
                     IsVisible="{Binding HasStreaks}" Opacity="{Binding StreakOpacity}" SemanticProperties.Description="Food logging streak">
                 <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding ShowStreakCommand}" /></Border.GestureRecognizers>
                 <HorizontalStackLayout Spacing="3">
                     <Image Source="{StaticResource IconFlame}" WidthRequest="16" HeightRequest="16" VerticalOptions="Center" />
                     <Label Text="{Binding StreakCount}" FontFamily="OpenSansSemibold" FontSize="13" VerticalOptions="Center" />
+                    <Label Text="{Binding StreakNote}" Style="{StaticResource Caption}" FontSize="11" VerticalOptions="Center" Margin="2,0,0,0"
+                           IsVisible="{Binding HasStreakNote}" />
                 </HorizontalStackLayout>
             </Border>
             <views:StatusBadges Grid.Column="2" />

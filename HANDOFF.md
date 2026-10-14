@@ -1,5 +1,25 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-14, later): the streak pill follows the tab (type-checked, not run)
+
+- Nutrition's flame pill: **Day** = the logging streak as it stood on the day shown (`NutritionService.LoggingStreakOn`;
+  today runs to yesterday until something's logged, a past day with nothing logged is 0 and faded); **Trends** = the
+  longest run inside the selected range, labelled "longest" (`LongestLoggingIn`); **Ranks** = the best ever, labelled
+  "best". Tapping it explains that number, then the current streak as before. `Streaks()` now shares `StreakMarks()`.
+
+## NEWEST (2026-10-14): food search shows each food once, per serving (`Src/Services/FoodCleanup.cs`; type-checked, not run)
+
+- Owner's report: "big mac" gave five Big Macs, none right (one Open Food Facts entry had a serving typed in as 100 g).
+- USDA's "McDONALD'S, BIG MAC" names are split into item + brand on load ("Big Mac · McDonald's"), so they rank like any
+  other name; serving texts lose the tacked-on weight ("1 item 7.6 oz" → "1 item").
+- **Dedupe**: foods whose names match apart from the brand, with no differing brands (unbranded joins the one brand with
+  that name), are one food: own foods > Everyday > FatSecret > USDA > Open Food Facts, then with a brand and a serving,
+  then closest to the group's median kcal/100 g. It borrows a serving from the others when it has none.
+- Online foods with impossible numbers are dropped (over 920 kcal or 105 g macros per 100 g; macros worth more calories
+  than the food). Open Food Facts servings are weighed from "1 burger (219 g)"; FatSecret's "Per 1 sandwich (219g)" becomes
+  the serving, so it can be logged in servings.
+- Barcode button glyph `barcode_scanner` rendered as junk on the owner's phone: now `qr_code_scanner`.
+
 ## NEWEST (2026-10-13, later): Add food reworked: tabs and typo-tolerant search (C# type-checked, XAML not built, not run)
 
 - **Tabs** on Add food before anything's typed: **Favourites** (starred foods, then "Logged lately"), **My foods** (foods the
