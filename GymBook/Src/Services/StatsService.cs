@@ -241,15 +241,21 @@ public class StatsService(DataStore store, RecoveryService recovery)
     /// hits the target; until then the streak runs up to last week, so an unfinished week doesn't break it.
     /// Past weeks are judged against today's target, since the target at the time isn't recorded.
     /// </summary>
-    public int WeekStreak()
+    public int WeekStreak() => WeekStreakOn(DateTime.Today);
+
+    /// <summary>
+    /// The week streak as it stood on <paramref name="day"/>: its week counts once it had hit the target by then (its
+    /// workouts after that day aren't counted), else the streak runs up to the week before.
+    /// </summary>
+    public int WeekStreakOn(DateTime day)
     {
         var target = WeeklyTarget;
-        var perWeek = store.History.GroupBy(s => WeekStart(s.StartedAt)).ToDictionary(g => g.Key, g => g.Count());
+        var thisWeek = WeekStart(day);
+        var perWeek = store.History.Where(s => s.StartedAt.Date <= day.Date)
+            .GroupBy(s => WeekStart(s.StartedAt)).ToDictionary(g => g.Key, g => g.Count());
         bool Hit(DateTime week) => perWeek.GetValueOrDefault(week) >= target;
 
-        var week = WeekStart(DateTime.Today);
-        if (!Hit(week))
-            week = week.AddDays(-7);
+        var week = Hit(thisWeek) ? thisWeek : thisWeek.AddDays(-7);
         var streak = 0;
         while (Hit(week))
         {
@@ -257,6 +263,30 @@ public class StatsService(DataStore store, RecoveryService recovery)
             week = week.AddDays(-7);
         }
         return streak;
+    }
+
+    /// <summary>
+    /// The most weeks in a row that hit <see cref="WeeklyTarget"/> among the weeks <paramref name="from"/>–<paramref name="to"/>
+    /// touch (all of history without them), and the Monday of the last of them (null with none). An unfinished week
+    /// counts once it's hit.
+    /// </summary>
+    public (int Weeks, DateTime? End) LongestWeekStreak(DateTime? from = null, DateTime? to = null)
+    {
+        var target = WeeklyTarget;
+        var perWeek = store.History.GroupBy(s => WeekStart(s.StartedAt)).ToDictionary(g => g.Key, g => g.Count());
+        if (perWeek.Count == 0)
+            return (0, null);
+        var first = WeekStart(from ?? perWeek.Keys.Min());
+        var last = WeekStart(to ?? DateTime.Today);
+        var (best, run) = (0, 0);
+        DateTime? end = null;
+        for (var week = first; week <= last; week = week.AddDays(7))
+        {
+            run = perWeek.GetValueOrDefault(week) >= target ? run + 1 : 0;
+            if (run > best)
+                (best, end) = (run, week);
+        }
+        return (best, end);
     }
 }
 

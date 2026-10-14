@@ -74,6 +74,65 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         _ = OnAppearingAsync();
     }
 
+    // ---- The week streak by the title, like Nutrition's: on Day as it stood on the day shown (faded until that week
+    // hits the target), on Trends the longest in the range, on Ranks the best ever. Tapping it says more. ----
+
+    [ObservableProperty] bool hasStreak;
+    [ObservableProperty] string streakCount = "";
+    [ObservableProperty] string streakNote = "";
+    [ObservableProperty] double streakOpacity = 1;
+    (int Weeks, DateTime? End) _shownStreak;
+
+    void ShowStreakPill()
+    {
+        var best = stats.LongestWeekStreak();
+        HasStreak = best.Weeks > 0;
+        if (IsRanksTab)
+        {
+            _shownStreak = best;
+            StreakNote = "wk best";
+            StreakOpacity = 1;
+        }
+        else if (IsStatsTab)
+        {
+            _shownStreak = stats.LongestWeekStreak(RangeStart, _rangeEnd);
+            StreakNote = "wk longest";
+            StreakOpacity = _shownStreak.Weeks > 0 ? 1 : 0.5;
+        }
+        else
+        {
+            var weeks = stats.WeekStreakOn(_date);
+            _shownStreak = (weeks, null);
+            StreakNote = "wk";
+            // Faded while the day's week hasn't hit the target (yet).
+            StreakOpacity = stats.SessionsIn(StatsService.WeekStart(_date), _date).Count >= stats.WeeklyTarget ? 1 : 0.5;
+        }
+        StreakCount = _shownStreak.Weeks.ToString(CultureInfo.CurrentCulture);
+    }
+
+    /// <summary>The flame: what its number is, and the streak now.</summary>
+    [RelayCommand]
+    Task ShowStreak()
+    {
+        static string Weeks(int n) => n == 1 ? "1 week" : $"{n} weeks";
+        static string Date(DateTime d) => d.ToString("d MMM", CultureInfo.CurrentCulture);
+        var target = stats.WeeklyTarget;
+        var rule = $"A week counts when it has {target} workout{(target == 1 ? "" : "s")} (your weekly target); this week joins once it gets there.";
+        var now = $"Now: {Weeks(stats.WeekStreak())} in a row, best {Weeks(stats.LongestWeekStreak().Weeks)}.";
+        var (n, end) = _shownStreak;
+        if (IsRanksTab)
+            return dialogs.Alert($"Best week streak: {Weeks(n)}",
+                (end is { } e ? $"Your longest run of weeks on target, up to the week of {Date(e)}." : "No week has hit the target yet.") + $"\n\n{now}\n\n{rule}");
+        if (IsStatsTab)
+            return dialogs.Alert(n == 0 ? "No week streak in this range" : $"Longest week streak: {Weeks(n)}",
+                (end is { } e ? $"{Date(RangeStart)} – {Date(_rangeEnd)}: {Weeks(n)} in a row on target, up to the week of {Date(e)}." : $"{Date(RangeStart)} – {Date(_rangeEnd)}: no week hit the target.")
+                + $"\n\n{now}\n\n{rule}");
+        if (_date < DateTime.Today)
+            return dialogs.Alert(n == 0 ? $"No week streak on {Date(_date)}" : $"{Weeks(n)} streak on {Date(_date)}",
+                $"Weeks in a row on target, as it stood that day.\n\n{now}\n\n{rule}");
+        return dialogs.Alert(n == 0 ? "No week streak yet" : $"{Weeks(n)} streak", $"{now}\n\n{rule}");
+    }
+
     // ---- Day: one day's training, picked like Nutrition's day ----
 
     DateTime _date = DateTime.Today;
@@ -114,6 +173,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
 
     void ShowDay()
     {
+        ShowStreakPill();
         DayTitle = _date == DateTime.Today ? "Today" : _date == DateTime.Today.AddDays(-1) ? "Yesterday" : _date.ToString("dddd", CultureInfo.CurrentCulture);
         DaySubtitle = _date.ToString("d MMMM", CultureInfo.CurrentCulture);
         CanGoNextDay = _date < DateTime.Today;
@@ -454,6 +514,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         // every frame unseen. They're worked out again when the Trends tab comes back.
         if (IsRanksTab)
         {
+            ShowStreakPill();
             ShowLevel();
             _ = ranks.OnAppearingAsync();
             return Task.CompletedTask;
@@ -489,6 +550,7 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     {
         _trendsVersion = store.Version;
         _trendsDay = DateTime.Today;
+        ShowStreakPill();
         var first = RangeStart;
         var last = _rangeEnd;
         var weeks = Math.Max(1, _rangeDays / 7.0);
