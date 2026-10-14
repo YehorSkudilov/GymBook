@@ -2,14 +2,23 @@ using GymBook.Models;
 
 namespace GymBook.Services;
 
+/// <summary>
+/// A night's sleep for recovery: minutes asleep, the deep and REM sleep among them (null without sleep stages), and
+/// Samsung Health's sleep score (null elsewhere).
+/// </summary>
+public record SleepNight(int Minutes, int? DeepMinutes = null, int? RemMinutes = null, int? Score = null)
+{
+    public bool HasStages => DeepMinutes != null && RemMinutes != null && Minutes > 0;
+}
+
 /// <summary>One muscle's recovery at a moment: how fresh it is, when it will be fully recovered, and the workout that tired it most.</summary>
 public record MuscleRecovery(MuscleGroup Muscle, double Recovery, DateTime? ReadyAt, WorkoutSession? LimitingSession, double Sets);
 
 /// <summary>
 /// Estimates how recovered each muscle is (0 = just trained hard, 1 = fully fresh) from recent sets.
 /// More sets means a longer recovery window (see <see cref="HoursToRecover"/>), and sleep stretches or shortens it: short
-/// nights after a workout slow recovery down, long ones speed it up a little (<see cref="SleepFactor"/>, from the sleep
-/// Samsung Health or Health Connect recorded). Works for any moment: in the past it only counts workouts finished by
+/// nights after a workout slow recovery down, long ones speed it up a little, and how well it was slept moves it a little
+/// more (<see cref="SleepFactor"/>, from the sleep Samsung Health or Health Connect recorded). Works for any moment: in the past it only counts workouts finished by
 /// then, in the future it lets today's fatigue wear off.
 /// </summary>
 public class RecoveryService(DataStore store)
@@ -21,30 +30,54 @@ public class RecoveryService(DataStore store)
     /// <summary>Around this much sleep a night, recovery runs at its usual speed.</summary>
     public const double TypicalSleepHours = 7.5;
 
+    /// <summary>Samsung Health's sleep score of a usual night: no quicker or slower than the hours say.</summary>
+    const int TypicalScore = 75;
+    /// <summary>
+    /// Deep and REM sleep's usual share of the time asleep, together: deep is about 13–23% of an adult's night and REM
+    /// about 20–25%, so around 40%.
+    /// </summary>
+    const double TypicalRestorative = 0.40;
+
     /// <summary>
     /// How much longer (above 1) or shorter (below) recovery from a workout that ended at <paramref name="ended"/> takes,
-    /// looked at from <paramref name="at"/>: by the nights slept since (or, before the first, the night before it), about
-    /// a tenth longer for each hour under <see cref="TypicalSleepHours"/> and shorter for each hour over, between 0.85
-    /// and 1.35. 1 without sleep recorded.
+    /// looked at from <paramref name="at"/>: by the nights slept since (or, before the first, the night before it),
+    /// averaged (see <see cref="FactorFor(SleepNight)"/>). 1 without sleep recorded.
     /// </summary>
     public double SleepFactor(DateTime ended, DateTime at) => SleepFactor(SleepByDay(), ended, at);
 
-    static double SleepFactor(Dictionary<DateTime, int> nights, DateTime ended, DateTime at)
+    static double SleepFactor(Dictionary<DateTime, SleepNight> nights, DateTime ended, DateTime at)
     {
         var after = nights.Where(n => n.Key > ended.Date && n.Key <= at.Date).Select(n => n.Value).ToList();
         if (after.Count == 0 && nights.TryGetValue(ended.Date, out var before))
             after.Add(before);
-        return after.Count == 0 ? 1 : FactorFor(after.Average() / 60);
+        return after.Count == 0 ? 1 : after.Average(FactorFor);
     }
 
-    static double FactorFor(double hours) => Math.Clamp(1 + (TypicalSleepHours - hours) * 0.1, 0.85, 1.35);
+    /// <summary>
+    /// A night's effect on recovery: by its hours, about a tenth longer for each hour under
+    /// <see cref="TypicalSleepHours"/> and shorter for each hour over (0.85–1.35); then by how well it was slept, up to 8%
+    /// either way: Samsung Health's sleep score against a usual 75 (10 points ≈ 4%), or without a score, deep and REM
+    /// sleep's share of the night against the usual 40% (10 points ≈ 5%, up to 6%). The score already weighs the stages,
+    /// so they aren't counted twice. Between 0.8 and 1.45 in all.
+    /// </summary>
+    public static double FactorFor(SleepNight night) => Math.Clamp(HoursFactor(night.Minutes / 60.0) * QualityFactor(night), 0.8, 1.45);
 
-    /// <summary>Minutes slept each day (the night woken up from on it), from the health apps.</summary>
-    Dictionary<DateTime, int> SleepByDay()
+    static double HoursFactor(double hours) => Math.Clamp(1 + (TypicalSleepHours - hours) * 0.1, 0.85, 1.35);
+
+    static double QualityFactor(SleepNight night) =>
+        night.Score is { } score ? Math.Clamp(1 - (score - TypicalScore) / 250.0, 0.92, 1.08)
+        : night.HasStages ? Math.Clamp(1 - (Restorative(night) - TypicalRestorative) * 0.5, 0.94, 1.06)
+        : 1;
+
+    static double Restorative(SleepNight night) => (night.DeepMinutes!.Value + night.RemMinutes!.Value) / (double)night.Minutes;
+
+    /// <summary>Each day's sleep (the night woken up from on it), from the health apps.</summary>
+    Dictionary<DateTime, SleepNight> SleepByDay()
     {
         CheckCache();
         return _sleep ??= store.Data.HealthDays.Where(h => h.SleepMinutes is > 0).GroupBy(h => h.Date.Date)
-            .ToDictionary(g => g.Key, g => g.First().SleepMinutes!.Value);
+            .Select(g => g.First())
+            .ToDictionary(h => h.Date.Date, h => new SleepNight(h.SleepMinutes!.Value, h.SleepDeepMinutes, h.SleepRemMinutes, h.SleepScore));
     }
 
     static readonly MuscleGroup[] AllMuscles = Enum.GetValues<MuscleGroup>();
@@ -58,7 +91,7 @@ public class RecoveryService(DataStore store)
     int _cacheSessionCount;
     List<HealthDay>? _cacheHealthDays;
     int _cacheHealthDayCount;
-    Dictionary<DateTime, int>? _sleep;
+    Dictionary<DateTime, SleepNight>? _sleep;
     DateTime _detailsAt, _partsAt;
     List<MuscleRecovery>? _details;
     Dictionary<SubMuscle, double>? _parts;
@@ -91,25 +124,40 @@ public class RecoveryService(DataStore store)
         var upTo = at.Date > DateTime.Today ? DateTime.Today : at.Date;
         if (nights.Where(n => n.Key <= upTo && n.Key >= upTo.AddDays(-1)).OrderByDescending(n => n.Key).Select(n => (DateTime?)n.Key).FirstOrDefault() is not { } night)
             return $"No sleep recorded {(upTo == DateTime.Today ? "last night" : $"the night to {upTo:ddd d MMM}")} · recovery assumes a typical night";
-        var minutes = nights[night];
+        var sleep = nights[night];
         var when = night == DateTime.Today ? "Last night" : $"Night to {night:ddd d MMM}";
-        return $"{when}: {Hours(minutes)} of sleep · {SleepEffect(minutes)}";
+        var quality = Quality(sleep);
+        return $"{when}: {Hours(sleep.Minutes)} of sleep{(quality.Length > 0 ? $" ({quality})" : "")} · {SleepEffect(sleep)}";
     }
+
+    /// <summary>How well a night was slept, as known: "score 82", or "deep 1 h 05 min · REM 1 h 40 min"; empty without either.</summary>
+    public static string Quality(SleepNight night) =>
+        night.Score is { } score ? $"score {score}"
+        : night.HasStages ? $"deep {Hours(night.DeepMinutes!.Value)} · REM {Hours(night.RemMinutes!.Value)}"
+        : "";
 
     /// <summary>"6 h 10 min".</summary>
     public static string Hours(double minutes) => $"{(int)minutes / 60} h {(int)minutes % 60:00} min";
 
-    /// <summary>What a night of <paramref name="minutes"/> does to recovery: "recovery about 13% slower".</summary>
-    public static string SleepEffect(double minutes)
-    {
-        var factor = FactorFor(minutes / 60.0);
-        return factor > 1.02 ? $"recovery about {(factor - 1) * 100:0}% slower"
+    /// <summary>What a night of <paramref name="minutes"/> (just its hours) does to recovery: "recovery about 13% slower".</summary>
+    public static string SleepEffect(double minutes) => Effect(HoursFactor(minutes / 60.0));
+
+    /// <summary>What a night does to recovery, its quality included: "recovery about 13% slower".</summary>
+    public static string SleepEffect(SleepNight night) => Effect(FactorFor(night));
+
+    /// <summary>What these nights do to recovery on average, their quality included.</summary>
+    public static string SleepEffect(IReadOnlyCollection<SleepNight> nights) => Effect(nights.Count == 0 ? 1 : nights.Average(FactorFor));
+
+    static string Effect(double factor) =>
+        factor > 1.02 ? $"recovery about {(factor - 1) * 100:0}% slower"
             : factor < 0.98 ? $"recovery about {(1 - factor) * 100:0}% faster"
             : "recovery at its usual pace";
-    }
 
     /// <summary>Minutes slept the night woken up from on <paramref name="day"/> (naps included); null without it recorded.</summary>
-    public int? SleepOn(DateTime day) => SleepByDay().TryGetValue(day.Date, out var minutes) ? minutes : null;
+    public int? SleepOn(DateTime day) => NightOn(day)?.Minutes;
+
+    /// <summary>The night woken up from on <paramref name="day"/>, with its quality as known; null without it recorded.</summary>
+    public SleepNight? NightOn(DateTime day) => SleepByDay().GetValueOrDefault(day.Date);
 
     /// <summary>The big movers; the rest (arms, core, traps, calves, neck) support them.</summary>
     public static readonly MuscleGroup[] MajorMuscles = [MuscleGroup.Chest, MuscleGroup.Back, MuscleGroup.Shoulders, MuscleGroup.Quads, MuscleGroup.Hamstrings, MuscleGroup.Glutes];

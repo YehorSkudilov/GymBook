@@ -268,10 +268,13 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
     /// <summary>The night woken up from on the day, and what it did to recovery.</summary>
     void ShowDaySleep()
     {
-        var minutes = recovery.SleepOn(_date);
-        DaySleepValue = minutes is { } m ? RecoveryService.Hours(m) : "N/A";
-        DaySleepCaption = minutes is { } mins
-            ? $"Night to {_date.ToString("ddd d MMM", CultureInfo.CurrentCulture)} · {RecoveryService.SleepEffect(mins)}"
+        // The hours, then how well it was slept (Samsung Health's score, or the deep and REM sleep) and what it all does to recovery.
+        var night = recovery.NightOn(_date);
+        DaySleepValue = night is { } n ? RecoveryService.Hours(n.Minutes) : "N/A";
+        DaySleepCaption = night is { } sleep
+            ? $"Night to {_date.ToString("ddd d MMM", CultureInfo.CurrentCulture)}"
+                + (RecoveryService.Quality(sleep) is { Length: > 0 } quality ? $" · {quality}" : "")
+                + $" · {RecoveryService.SleepEffect(sleep)}"
             : "No sleep recorded for this night. Connect Health Connect or Samsung Health in the Profile tab to bring it in.";
     }
 
@@ -688,7 +691,8 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
         ];
         RecoveryCaption = $"Your major muscles' recovery going into each day, averaged per {per}. Sleep speeds it up or slows it down.";
 
-        var nights = days.Select(d => (Day: d, Minutes: recovery.SleepOn(d))).Where(n => n.Minutes != null).Select(n => (n.Day, Minutes: n.Minutes!.Value)).ToList();
+        var nights = days.Select(d => (Day: d, Night: recovery.NightOn(d))).Where(n => n.Night != null)
+            .Select(n => (n.Day, Minutes: n.Night!.Minutes, Night: n.Night!)).ToList();
         HasSleep = nights.Count > 0;
         SleepChart = new BarChartDrawable(
             [.. periods.Select(p =>
@@ -698,16 +702,22 @@ public partial class StatsViewModel(DataStore store, StatsService stats, Units u
             })],
             Violet, v => $"{v:0.#} h");
         var average = nights.Count > 0 ? nights.Average(n => n.Minutes) : 0;
+        // How well it was slept, as known: Samsung Health's score, else deep and REM sleep's share of the night.
+        var scored = nights.Where(n => n.Night.Score != null).ToList();
+        var staged = nights.Where(n => n.Night.HasStages).ToList();
+        StatItem quality = scored.Count > 0 ? new("Average score", $"{scored.Average(n => n.Night.Score!.Value):0}")
+            : staged.Count > 0 ? new("Deep + REM", $"{staged.Average(n => (n.Night.DeepMinutes!.Value + n.Night.RemMinutes!.Value) / (double)n.Minutes):P0}")
+            : new("Longest", nights.Count > 0 ? RecoveryService.Hours(nights.Max(n => n.Minutes)) : "");
         SleepStats = nights.Count == 0 ? [] :
         [
             new("Average a night", RecoveryService.Hours(average)),
             new("Nights recorded", $"{nights.Count} of {days.Count}"),
             new("Under 7 hours", Days(nights.Count(n => n.Minutes < 7 * 60))),
-            new("Longest", RecoveryService.Hours(nights.Max(n => n.Minutes))),
+            quality,
         ];
         SleepCaption = nights.Count == 0
             ? $"No sleep recorded {RangePhrase}. Connect Health Connect or Samsung Health in the Profile tab to bring it in."
-            : $"Hours asleep a night, averaged per {per}. At your average, {RecoveryService.SleepEffect(average)}.";
+            : $"Hours asleep a night, averaged per {per}. With how well you slept, {RecoveryService.SleepEffect([.. nights.Select(n => n.Night)])} on average.";
 
         static string Days(int n) => n == 1 ? "1 day" : $"{n} days";
     }

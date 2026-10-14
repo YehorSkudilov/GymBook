@@ -7,7 +7,7 @@ namespace GymBook.Api.Privacy;
 /// </summary>
 public static class PrivacyPolicy
 {
-    public const string LastUpdated = "6 October 2026";
+    public const string LastUpdated = "14 October 2026";
     public const string ContactEmail = "yskudilov@gmail.com";
 
     public static IResult Page() =>
@@ -60,7 +60,7 @@ public static class PrivacyPolicy
         (from every app, or only the apps you pick). Only with your permission, given in Samsung Health or Health Connect and
         changeable there at any time, GymBook reads: calories burned (total, active and resting), steps, food logged in other apps
         (each food's name, meal, time, calories, protein, carbohydrates and fat), weight, body fat, lean body mass, bone mass, body
-        water mass, basal metabolic rate, height and sleep (when each sleep started and ended, and how long you were asleep). When you
+        water mass, basal metabolic rate, height and sleep (when each sleep started and ended, how long you were asleep, its time in deep and REM sleep, and Samsung Health's sleep score). When you
         first connect, GymBook reads all of this that's available, including data recorded before you connected (in Health Connect,
         older than 30 days only if you allow access to past data); after that it keeps the last 30 days up to date.</p>
         <p>Only if you turn on sending (it's off by default), GymBook also writes to Samsung Health or Health Connect what you log in

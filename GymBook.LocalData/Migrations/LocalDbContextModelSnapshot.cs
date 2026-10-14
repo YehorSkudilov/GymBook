@@ -205,7 +205,16 @@ namespace GymBook.LocalData.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("SleepDeepMinutes")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("SleepMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SleepRemMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SleepScore")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Source")

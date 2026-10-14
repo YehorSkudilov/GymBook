@@ -359,10 +359,11 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
         /// <summary>
         /// Each day's sleep between the two local times (minutes asleep, and when the night's ended), by the day each sleep
         /// ended on, from every sleep session recorded (by the apps picked): overlapping ones from different apps count once.
+        /// With the sleep stages a watch recorded: time awake left out, and the deep and REM sleep.
         /// </summary>
         async Task<Dictionary<DateTime, SleepDay>> ReadSleepAsync(DateTime from, DateTime to)
         {
-            var sleeps = new List<(DateTime Start, DateTime End)>();
+            var sleeps = new List<SleepRecord>();
             long? page = null;
             for (var i = 0; i < 20; i++)
             {
@@ -382,7 +383,8 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
                 var response = result.JavaCast<ReadRecordsResponse>()!;
                 foreach (var record in response.Records)
                     if (record is Java.Lang.Object o && o.JavaCast<SleepSessionRecord>() is { } r)
-                        sleeps.Add((LocalTime(r.StartTime), LocalTime(r.EndTime)));
+                        sleeps.Add(new SleepRecord(LocalTime(r.StartTime), LocalTime(r.EndTime),
+                            [.. r.Stages.Select(st => (LocalTime(st.StartTime), LocalTime(st.EndTime), Kind(st.Type)))]));
                 if (response.NextPageToken == -1)
                     break;
                 page = response.NextPageToken;
@@ -390,6 +392,15 @@ public class HealthConnectPlatform : IHealthPlatform, IHealthWriter
             return HealthSleep.ByWakeDay(sleeps, from, to);
 
             static DateTime LocalTime(Java.Time.Instant t) => DateTimeOffset.FromUnixTimeMilliseconds(t.ToEpochMilli()).LocalDateTime;
+
+            static SleepStageKind Kind(SleepStageType type) => type switch
+            {
+                SleepStageType.Awake or SleepStageType.AwakeInBed or SleepStageType.AwakeOutOfBed => SleepStageKind.Awake,
+                SleepStageType.SleepingLight => SleepStageKind.Light,
+                SleepStageType.SleepingDeep => SleepStageKind.Deep,
+                SleepStageType.SleepingRem => SleepStageKind.Rem,
+                _ => SleepStageKind.Asleep,
+            };
         }
 
         /// <summary>Each food logged between the two local times, with the meal it was logged under.</summary>
