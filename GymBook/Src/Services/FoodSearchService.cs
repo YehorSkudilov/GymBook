@@ -67,7 +67,9 @@ public class FoodSearchService(DataStore store, ApiClient api)
                 fromOff = [.. off2.Concat(fromOff ?? [])];
         }
         ct.ThrowIfCancellationRequested();
-        var online = (fromServer?.Foods.Take(OnlineMax).Select(FoodMatch.From) ?? []).Concat(fromOff?.Take(OnlineMax) ?? []).ToList();
+        // Numbers that can't be real (a typo in the database) are left out.
+        var online = (fromServer?.Foods.Take(OnlineMax).Select(FoodMatch.From) ?? []).Concat(fromOff?.Take(OnlineMax) ?? [])
+            .Where(FoodCleanup.Plausible).ToList();
         if (online.Count > 0)
         {
             // Scored against what was typed or what was meant (a brand isn't a typo), whichever fits better; a food the
@@ -99,9 +101,9 @@ public class FoodSearchService(DataStore store, ApiClient api)
         return found;
     }
 
-    /// <summary>Best first, the same food from two places (or listed twice) only once.</summary>
-    static List<FoodMatch> Merge(IEnumerable<(FoodMatch Food, double Score)> found) =>
-        [.. found.OrderByDescending(f => f.Score).ThenBy(f => f.Food.Title.Length)
+    /// <summary>Best first, the same food from several places (or listed several times) only once (<see cref="FoodCleanup.Dedupe"/>).</summary>
+    static List<FoodMatch> Merge(List<(FoodMatch Food, double Score)> found) =>
+        [.. FoodCleanup.Dedupe(found).OrderByDescending(f => f.Score).ThenBy(f => f.Food.Title.Length)
             .Select(f => f.Food)
             .DistinctBy(f => (f.Title.ToLowerInvariant(), Math.Round(f.Kcal), f.PerText))
             .Take(ShownMax)];
@@ -269,8 +271,9 @@ public class FoodSearchService(DataStore store, ApiClient api)
                         if (p.Length < 7 || !Num(p[1], out var kcal) || !Num(p[2], out var protein) || !Num(p[3], out var carbs) || !Num(p[4], out var fat))
                             continue;
                         double? serving = Num(p[5], out var g) && g > 0 ? g : null;
-                        foods.Add(new FoodMatch(p[0], null, kcal, protein, carbs, fat, "100 g", 100, serving,
-                            p[6].Length > 0 ? p[6] : null, "USDA"));
+                        var (name, brand) = FoodCleanup.SplitBrand(p[0]);
+                        foods.Add(new FoodMatch(name, brand, kcal, protein, carbs, fat, "100 g", 100, serving,
+                            FoodCleanup.CleanServing(p[6]), "USDA"));
                     }
                 });
             }
@@ -334,9 +337,10 @@ public class FoodSearchService(DataStore store, ApiClient api)
         var brand = p.TryGetProperty("brands", out var brands) && brands.ValueKind == JsonValueKind.Array
             ? brands.EnumerateArray().Select(b => b.ValueKind == JsonValueKind.String ? b.GetString() : null).FirstOrDefault(b => !string.IsNullOrWhiteSpace(b))
             : Text(p, "brands")?.Split(',')[0];
-        var serving = Number(p, "serving_quantity");
+        // The serving's weight, or what its description says ("1 burger (219 g)").
+        var serving = Number(p, "serving_quantity") ?? FoodCleanup.GramsIn(Text(p, "serving_size"));
         return new FoodMatch(name, brand?.Trim(), k, protein.Value, carbs.Value, fat.Value, "100 g", 100,
-            serving is > 0 and < 2000 ? serving : null, Text(p, "serving_size"), "Open Food Facts");
+            serving is > 0 and < 2000 ? serving : null, FoodCleanup.CleanServing(Text(p, "serving_size")), "Open Food Facts");
     }
 
     static string? Text(JsonElement e, string name) =>

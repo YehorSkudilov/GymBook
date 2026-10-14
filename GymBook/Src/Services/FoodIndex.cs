@@ -23,8 +23,11 @@ public record FoodMatch(string Name, string? Brand, double Kcal, double Protein,
         return (Kcal * factor, Protein * factor, Carbs * factor, Fat * factor);
     }
 
+    /// <summary>A database's food; amounts given for a weighed serving ("1 sandwich (219g)") make that its serving.</summary>
     public static FoodMatch From(FoodInfo f) =>
-        new(f.Name, f.Brand, f.Kcal, f.ProteinG, f.CarbsG, f.FatG, f.PerText, f.PerGrams, f.ServingG, f.ServingText, f.Source);
+        f.ServingG == null && f.PerGrams is > 0 and not 100 && FoodCleanup.CleanServing(f.PerText) is { } serving
+            ? new(f.Name, f.Brand, f.Kcal, f.ProteinG, f.CarbsG, f.FatG, f.PerText, f.PerGrams, f.PerGrams, serving, f.Source)
+            : new(f.Name, f.Brand, f.Kcal, f.ProteinG, f.CarbsG, f.FatG, f.PerText, f.PerGrams, f.ServingG, FoodCleanup.CleanServing(f.ServingText), f.Source);
 }
 
 /// <summary>What a search found, and whose credit to show with it.</summary>
