@@ -97,17 +97,17 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.110" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.13" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 		<!-- Reads Markdown into the formatted text box feedback is written in (Controls/RichText) -->
-		<PackageReference Include="Markdig" Version="0.40.0" />
+		<PackageReference Include="Markdig" Version="1.4.0" />
 		<!-- Live sync with the API's SyncHub (Src/Services/Sync/LiveSync.cs). -->
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.13" />
 	</ItemGroup>
 
 	<!-- Google sign-in on Android (Platforms/Android/GoogleSignInService.cs). -->
 	<ItemGroup Condition="'$(TargetPlatformIdentifier)' == 'android'">
-		<PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.6.0.1" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="122.0.0" />
 		<!-- The Wear OS app's link to the phone (Platforms/Android/WatchSync.cs). -->
 		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="120.0.1.2" />
 		<!-- Play services brings newer AndroidX libraries than MAUI asks for, but not their -ktx/companion packages, so
@@ -127,7 +127,7 @@
 		     runtime, which doesn't (without it, reading crashed: NoClassDefFoundError kotlinx/parcelize/Parceler). -->
 		<AndroidLibrary Remove="Platforms\Android\Libs\samsung-health-data-api-1.1.0.aar" />
 		<AndroidLibrary Include="Platforms\Android\Libs\samsung-health-data-api-1.1.0.aar" Bind="false" />
-		<PackageReference Include="GoogleGson" Version="2.13.1.1" />
+		<PackageReference Include="GoogleGson" Version="2.14.0.1" />
 		<PackageReference Include="Xamarin.Kotlin.Parcelize.Runtime" Version="2.4.0.1" />
 		<!-- Gym Book Pro subscriptions through Google Play Billing (Platforms/Android/PlayBilling.cs). -->
 		<PackageReference Include="Xamarin.Android.Google.BillingClient" Version="9.1.0.2" />

@@ -38,9 +38,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.110" />
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 		<!-- Live sync with the API's SyncHub (the phone app's LiveSync.cs, linked below). -->
-		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.12" />
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.13" />
 		<!-- The link to the phone app (Src/PhoneLink.cs). -->
 		<PackageReference Include="Xamarin.GooglePlayServices.Wearable" Version="120.0.1.2" />
 		<!-- Ambient mode: the workout stays on screen, dimmed, when the watch would otherwise go to its watch face. -->
