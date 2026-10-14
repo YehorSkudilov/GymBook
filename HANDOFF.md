@@ -1,5 +1,12 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-14, latest): week streak pill on Progress (type-checked, not run)
+
+- Progress gets the flame pill by its title, like Nutrition's, with the workout week streak (weeks in a row hitting the
+  weekly target, as on Home): **Day** = as it stood on the day shown (`StatsService.WeekStreakOn`; that week's later
+  workouts not counted; faded until that week hits the target), **Trends** = longest in the range, **Ranks** = best ever
+  (`LongestWeekStreak`). Labels "wk", "wk longest", "wk best". Tap explains it, with the rule and the streak now.
+
 ## NEWEST (2026-10-14, later): the streak pill follows the tab (type-checked, not run)
 
 - Nutrition's flame pill: **Day** = the logging streak as it stood on the day shown (`NutritionService.LoggingStreakOn`;
