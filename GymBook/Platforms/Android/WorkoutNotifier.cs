@@ -15,7 +15,7 @@ namespace GymBook;
 ///
 /// While resting it keeps itself up to date, not only when the workout page does (the page's timer stops when it's left,
 /// or the app is): the bar goes down each second, and when the rest runs out it turns into "Rest over" with the timer
-/// going on below zero (−0:15), the time over, as the workout page shows it, and the workout's bar.
+/// going on below zero (−0:15), the time over, as the workout page shows it, in red with the bar full.
 /// </summary>
 public class WorkoutNotifier : IWorkoutNotifier
 {
@@ -168,11 +168,13 @@ public class WorkoutNotifier : IWorkoutNotifier
                 break;
             case WorkoutPhase.Resting or WorkoutPhase.RestOver:
                 // How far over the rest is, as negative time: the system's countdown carries on below zero ("−0:15") from
-                // when it ran out. The bar is the workout's.
+                // when it ran out. In red, with the bar full, so being over time stands out at a glance (the notification's
+                // colour tints its icon, app name and bar).
                 builder.SetContentText($"Rest over · next: {status.Next}")
                     .SetWhen(new DateTimeOffset(status.RestDueAt ?? status.Since).ToUnixTimeMilliseconds())
-                    .SetChronometerCountDown(true);
-                SetsBar(builder, status);
+                    .SetChronometerCountDown(true)
+                    .SetColor(OverTime)
+                    .SetProgress(1, 1, false);
                 break;
             case WorkoutPhase.Done:
                 builder.SetContentText("Every set done · tap to finish")
@@ -192,6 +194,9 @@ public class WorkoutNotifier : IWorkoutNotifier
         // After an alert, the next update is drawn again (quietly, on the workout channel).
         _shown = alert ? null : key;
     }
+
+    /// <summary>Over a rest's time: the notification in red.</summary>
+    static readonly int OverTime = Android.Graphics.Color.Argb(255, 0xFF, 0x4D, 0x4D);
 
     /// <summary>The workout's working sets done, as the bar (none before there are sets).</summary>
     static void SetsBar(NotificationCompat.Builder builder, WorkoutStatus status)
