@@ -17,10 +17,23 @@ public record HealthDayReading(
     double? FoodCarbsG,
     double? FoodFatG,
     int? SleepMinutes = null,
-    DateTime? WokeAt = null);
+    DateTime? WokeAt = null,
+    int? SleepDeepMinutes = null,
+    int? SleepRemMinutes = null,
+    int? SleepScore = null);
 
-/// <summary>A day's sleep: minutes asleep (the night woken up from, plus naps), and when the night's sleep (the longest) ended.</summary>
-public record SleepDay(int Minutes, DateTime? WokeAt);
+/// <summary>
+/// A day's sleep: minutes asleep (the night woken up from, plus naps; time awake in it left out when the stages say),
+/// when the night's sleep (the longest) ended, the minutes of deep and REM sleep among them (null without sleep stages),
+/// and Samsung Health's sleep score for the night (null elsewhere).
+/// </summary>
+public record SleepDay(int Minutes, DateTime? WokeAt, int? DeepMinutes = null, int? RemMinutes = null, int? Score = null);
+
+/// <summary>A stage of a night's sleep, as the watch recorded it.</summary>
+public enum SleepStageKind { Asleep, Awake, Light, Deep, Rem }
+
+/// <summary>A sleep session (a night or a nap) with its stages, empty when none were recorded.</summary>
+public record SleepRecord(DateTime Start, DateTime End, IReadOnlyList<(DateTime Start, DateTime End, SleepStageKind Kind)> Stages);
 
 /// <summary>A day's body measurements, the last of each kind that day.</summary>
 public record BodyReading(

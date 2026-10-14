@@ -304,9 +304,13 @@ public class HealthSyncService(DataStore store, IEnumerable<IHealthPlatform> pla
                 day.Steps = steps;
                 changed = true;
             }
-            if (day.SleepMinutes != sleep)
+            // The night's quality with it: deep and REM sleep (within the time asleep) and Samsung Health's score.
+            int? Part(int? minutes) => sleep != null && minutes is >= 0 && minutes <= sleep ? minutes : null;
+            var (deep, rem) = (Part(reading.SleepDeepMinutes), Part(reading.SleepRemMinutes));
+            var score = sleep != null && reading.SleepScore is > 0 and <= 100 ? reading.SleepScore : null;
+            if (day.SleepMinutes != sleep || day.SleepDeepMinutes != deep || day.SleepRemMinutes != rem || day.SleepScore != score)
             {
-                day.SleepMinutes = sleep;
+                (day.SleepMinutes, day.SleepDeepMinutes, day.SleepRemMinutes, day.SleepScore) = (sleep, deep, rem, score);
                 changed = true;
             }
             if (day.Source != sourceName)

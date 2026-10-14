@@ -748,7 +748,16 @@ namespace GymBook.Api.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<int?>("SleepDeepMinutes")
+                        .HasColumnType("integer");
+
                     b.Property<int?>("SleepMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SleepRemMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SleepScore")
                         .HasColumnType("integer");
 
                     b.Property<string>("Source")

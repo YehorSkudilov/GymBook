@@ -187,14 +187,17 @@ sealed class SamsungHealthData
 
     /// <summary>
     /// Each day's sleep between the two local times, by the day the sleep ended on (the night woken up from, plus any
-    /// naps): minutes asleep (each sleep's DURATION, without the time awake in it, else its length), and when the longest
+    /// naps): minutes asleep (each sleep's DURATION, without the time awake in it, else its length), the minutes of deep
+    /// and REM sleep in its stages (when the watch recorded them), the longest sleep's SLEEP_SCORE, and when the longest
     /// ended.
     /// </summary>
     public async Task<Dictionary<DateTime, Services.Health.SleepDay>> ReadSleepAsync(DateTime from, DateTime to)
     {
         const string type = "DataType$SleepType";
         var duration = Field(type, "DURATION");
-        var days = new Dictionary<DateTime, (int Minutes, int Longest, DateTime WokeAt)>();
+        var sessions = Field(type, "SESSIONS");
+        var scoreField = Field(type, "SLEEP_SCORE");
+        var days = new Dictionary<DateTime, (int Minutes, int Longest, DateTime WokeAt, int? Deep, int? Rem, int? Score)>();
         // From the day before: a night that began then ends on the first day.
         foreach (var point in await ReadAsync(Sleep, type, from.AddDays(-1), to))
         {
@@ -205,10 +208,55 @@ sealed class SamsungHealthData
                 : StartTime(point) is { } start ? (int)(end - start).TotalMinutes : 0;
             if (minutes <= 0)
                 continue;
+            var (deep, rem) = Stages(point, sessions);
+            var score = Value(point, scoreField)?.JavaCast<Java.Lang.Number>()?.IntValue() is int sc && sc > 0 ? sc : (int?)null;
             var day = days.GetValueOrDefault(end.Date);
-            days[end.Date] = (Math.Min(1440, day.Minutes + minutes), Math.Max(day.Longest, minutes), minutes > day.Longest ? end : day.WokeAt);
+            var longest = minutes > day.Longest;
+            days[end.Date] = (Math.Min(1440, day.Minutes + minutes), Math.Max(day.Longest, minutes), longest ? end : day.WokeAt,
+                Add(day.Deep, deep), Add(day.Rem, rem), longest ? score ?? day.Score : day.Score ?? score);
         }
-        return days.ToDictionary(d => d.Key, d => new Services.Health.SleepDay(d.Value.Minutes, d.Value.WokeAt));
+        return days.ToDictionary(d => d.Key, d => new Services.Health.SleepDay(d.Value.Minutes, d.Value.WokeAt, d.Value.Deep, d.Value.Rem, d.Value.Score));
+
+        static int? Add(int? a, int? b) => a == null && b == null ? null : (a ?? 0) + (b ?? 0);
+    }
+
+    /// <summary>The minutes of deep and of REM sleep in a sleep's stages; nulls when it has none (no watch worn).</summary>
+    static (int? Deep, int? Rem) Stages(Java.Lang.Object point, Java.Lang.Object sessionsField)
+    {
+        try
+        {
+            if (Value(point, sessionsField)?.JavaCast<Java.Util.IList>() is not { } sessions)
+                return (null, null);
+            const string session = Sdk + "data/entries/SleepSession", stage = Sdk + "data/entries/SleepSession$SleepStage";
+            double deep = 0, rem = 0;
+            var any = false;
+            for (var i = 0; i < sessions.Size(); i++)
+            {
+                if (sessions.Get(i) is not { } s
+                    || CallOrNull(s, session, "getStages", "()Ljava/util/List;")?.JavaCast<Java.Util.IList>() is not { } stages)
+                    continue;
+                for (var j = 0; j < stages.Size(); j++)
+                {
+                    if (stages.Get(j) is not { } st
+                        || CallOrNull(st, stage, "getStage", "()L" + Request + "DataType$SleepType$StageType;")?.JavaCast<Java.Lang.Enum>()?.Name() is not { } kind
+                        || CallOrNull(st, stage, "getStartTime", "()Ljava/time/Instant;")?.JavaCast<Java.Time.Instant>() is not { } begin
+                        || CallOrNull(st, stage, "getEndTime", "()Ljava/time/Instant;")?.JavaCast<Java.Time.Instant>() is not { } finish)
+                        continue;
+                    any = true;
+                    var minutes = Math.Max(0, (finish.ToEpochMilli() - begin.ToEpochMilli()) / 60000.0);
+                    if (kind == "DEEP")
+                        deep += minutes;
+                    else if (kind == "REM")
+                        rem += minutes;
+                }
+            }
+            return any ? ((int)deep, (int)rem) : (null, null);
+        }
+        catch (Exception)
+        {
+            // An older Samsung Health without stages: the hours still count.
+            return (null, null);
+        }
     }
 
     /// <summary>The height on Samsung Health's profile, in cm.</summary>

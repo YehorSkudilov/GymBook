@@ -409,6 +409,15 @@ public class HealthDay : ISyncEntity
     /// </summary>
     [Range(0, 1440)]
     public int? SleepMinutes { get; set; }
+    /// <summary>Of <see cref="SleepMinutes"/>, the minutes in deep sleep, when the watch recorded sleep stages.</summary>
+    [Range(0, 1440)]
+    public int? SleepDeepMinutes { get; set; }
+    /// <summary>Of <see cref="SleepMinutes"/>, the minutes in REM sleep, when the watch recorded sleep stages.</summary>
+    [Range(0, 1440)]
+    public int? SleepRemMinutes { get; set; }
+    /// <summary>Samsung Health's sleep score (0–100) for the night, when it gave one.</summary>
+    [Range(0, 100)]
+    public int? SleepScore { get; set; }
     [MaxLength(SyncLimits.NameLength)]
     public string? Source { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }

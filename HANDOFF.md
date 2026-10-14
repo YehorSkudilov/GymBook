@@ -1,5 +1,21 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-14, sleep): recovery uses how well you slept, not just how long (Android files type-checked against Mono.Android 36's ref; not run)
+
+- `HealthDay` gains `SleepDeepMinutes`, `SleepRemMinutes`, `SleepScore` (migrations `SleepQuality` for both databases, real
+  columns). Privacy policy (API + website) updated.
+- **Samsung Health** (`SamsungHealthData.ReadSleepAsync`): `SleepType.SLEEP_SCORE` (longest sleep's) and `SESSIONS` →
+  `SleepSession.getStages()` → DEEP / REM minutes (names from javap on the bundled .aar). Asleep minutes stay DURATION.
+- **Health Connect**: `SleepSessionRecord.Stages`; time in awake stages (awake, in bed, out of bed) is no longer counted as
+  asleep, deep/REM summed. Overlapping sessions use the stages of the one that recorded the most (`HealthSleep.ByWakeDay`).
+- **Recovery** (`RecoveryService.FactorFor(SleepNight)`): hours factor as before (0.85–1.35) × quality, 0.8–1.45 in all.
+  Quality: Samsung score vs 75 (10 points ≈ 4%, ±8% max); without a score, deep+REM share vs 40% (10 points ≈ 5%, ±6%).
+  The score already weighs stages, so not both. Several nights are averaged factor by factor.
+- Shown: recovery note "Last night: 7 h 05 min of sleep (score 82) · …", the Day sleep card, Trends' sleep card (average score
+  or Deep + REM share in place of Longest).
+- **For the owner to test:** Samsung Health's developer mode/partner access returns SESSIONS and SLEEP_SCORE; a night with a
+  Galaxy Watch shows the score; Health Connect from another watch shows deep/REM.
+
 ## NEWEST (2026-10-14, latest): week streak pill on Progress (type-checked, not run)
 
 - Progress gets the flame pill by its title, like Nutrition's, with the workout week streak (weeks in a row hitting the
