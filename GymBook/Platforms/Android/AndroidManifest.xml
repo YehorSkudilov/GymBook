@@ -13,6 +13,9 @@
 	<uses-permission android:name="android.permission.VIBRATE" />
 	<!-- The workout in progress and its rest timer as a notification. -->
 	<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+	<!-- The rest timer's "rest over" alert on time with the app in the background: an exact alarm when the user allows
+	     Alarms & reminders (asked once, Platforms/Android/WorkoutNotifier.cs), else an inexact one. -->
+	<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 	<!-- Bedtime reminders are alarms, which a restart clears: scheduled again when the phone starts (Platforms/Android/BedtimeNotifier.cs). -->
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 	<!-- Health Connect (Android 14+), read only: calories burned, steps, food and body measurements for the Nutrition tab,
