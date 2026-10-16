@@ -46,6 +46,8 @@ public class RichEditorHandler : ViewHandler<RichEditor, RichEditText>, IRichTex
         base.ConnectHandler(platformView);
         platformView.Edited += VirtualView.OnPlatformTextChanged;
         platformView.SelectionMoved += VirtualView.OnPlatformSelectionChanged;
+        // Pictures pasted (from the menu, or a keyboard's clipboard or image): handed to the page to attach.
+        AndroidX.Core.View.ViewCompat.SetOnReceiveContentListener(platformView, ["image/*"], new ImageReceiver(this));
         VirtualView.Attach(this);
     }
 
@@ -53,6 +55,7 @@ public class RichEditorHandler : ViewHandler<RichEditor, RichEditText>, IRichTex
     {
         platformView.Edited -= VirtualView.OnPlatformTextChanged;
         platformView.SelectionMoved -= VirtualView.OnPlatformSelectionChanged;
+        AndroidX.Core.View.ViewCompat.SetOnReceiveContentListener(platformView, null, null);
         VirtualView.Detach();
         base.DisconnectHandler(platformView);
     }
@@ -141,6 +144,44 @@ public class RichEditorHandler : ViewHandler<RichEditor, RichEditText>, IRichTex
             yield return new RichSizeSpan(1.3f);
         else if (style.HasFlag(RunStyle.Heading3))
             yield return new RichSizeSpan(1.15f);
+    }
+}
+
+/// <summary>
+/// Pasted or inserted content with pictures in it: each picture read and handed to the editor (to attach), and nothing
+/// put in the text for them. Content without pictures goes in as usual (pasted text plain, see RichEditText).
+/// </summary>
+sealed class ImageReceiver(RichEditorHandler handler) : Java.Lang.Object, AndroidX.Core.View.IOnReceiveContentListener
+{
+    public AndroidX.Core.View.ContentInfoCompat? OnReceiveContent(View view, AndroidX.Core.View.ContentInfoCompat payload)
+    {
+        var clip = payload.Clip;
+        var resolver = view.Context?.ContentResolver;
+        if (resolver == null)
+            return payload;
+        var images = new List<(Android.Net.Uri Uri, string Mime)>();
+        for (var i = 0; i < clip.ItemCount; i++)
+            if (clip.GetItemAt(i)?.Uri is { } uri && resolver.GetType(uri) is { } mime && mime.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                images.Add((uri, mime));
+        if (images.Count == 0)
+            return payload;
+        foreach (var (uri, mime) in images)
+        {
+            try
+            {
+                using var stream = resolver.OpenInputStream(uri);
+                if (stream == null)
+                    continue;
+                using var copy = new MemoryStream();
+                stream.CopyTo(copy);
+                handler.VirtualView?.OnImagePasted(RichEditor.PastedName(mime), copy.ToArray());
+            }
+            catch (Exception)
+            {
+                // Gone from the clipboard, or not readable: nothing to attach.
+            }
+        }
+        return null;
     }
 }
 
@@ -258,7 +299,7 @@ public class RichEditorHandler : ViewHandler<RichEditor, UITextView>, IRichTextP
 
     protected override UITextView CreatePlatformView()
     {
-        var view = new UITextView
+        var view = new RichTextView(this)
         {
             BackgroundColor = UIColor.Clear,
             TextColor = TextColor,
@@ -398,6 +439,25 @@ public class RichEditorHandler : ViewHandler<RichEditor, UITextView>, IRichTextP
     }
 }
 
+/// <summary>A UITextView that hands a pasted picture to the editor (to attach) rather than pasting nothing.</summary>
+sealed class RichTextView(RichEditorHandler handler) : UITextView
+{
+    public override bool CanPerform(ObjCRuntime.Selector action, NSObject? withSender) =>
+        (action.Name == "paste:" && UIPasteboard.General.HasImages) || base.CanPerform(action, withSender);
+
+    public override void Paste(NSObject? sender)
+    {
+        if (UIPasteboard.General.HasImages && UIPasteboard.General.Images is { Length: > 0 } images)
+        {
+            foreach (var image in images)
+                if (image.AsPNG() is { } png)
+                    handler.VirtualView?.OnImagePasted("pasted-image.png", png.ToArray());
+            return;
+        }
+        base.Paste(sender);
+    }
+}
+
 #elif WINDOWS
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
@@ -493,17 +553,68 @@ public class RichEditorHandler : ViewHandler<RichEditor, RichEditBox>, IRichText
 
     void OnSelectionChanged(object sender, RoutedEventArgs e) => VirtualView.OnPlatformSelectionChanged();
 
-    // Pasted text comes in plain: its look is this editor's to give.
+    // Pasted text comes in plain: its look is this editor's to give. A picture (a screenshot, or image files copied in
+    // Explorer) is handed to the page to attach instead.
     async void OnPaste(object sender, TextControlPasteEventArgs e)
     {
         e.Handled = true;
         var content = Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
+        try
+        {
+            if (await PastedImagesAsync(content) > 0)
+                return;
+        }
+        catch (Exception)
+        {
+            // Not readable as a picture: pasted as text below, if it has any.
+        }
         if (!content.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text))
             return;
         var text = (await content.GetTextAsync()).Replace("\r\n", "\r").Replace('\n', '\r');
         var selection = PlatformView.Document.Selection;
         selection.SetText(TextSetOptions.None, text);
         selection.Collapse(false);
+    }
+
+    /// <summary>The pictures on the clipboard handed to the editor, as PNG for a bitmap; how many.</summary>
+    async Task<int> PastedImagesAsync(Windows.ApplicationModel.DataTransfer.DataPackageView content)
+    {
+        if (content.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+        {
+            var count = 0;
+            foreach (var item in await content.GetStorageItemsAsync())
+            {
+                if (item is not Windows.Storage.StorageFile file || !file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                var buffer = await Windows.Storage.FileIO.ReadBufferAsync(file);
+                var bytes = new byte[buffer.Length];
+                using (var reader = Windows.Storage.Streams.DataReader.FromBuffer(buffer))
+                    reader.ReadBytes(bytes);
+                VirtualView.OnImagePasted(file.Name, bytes);
+                count++;
+            }
+            if (count > 0)
+                return count;
+        }
+        if (!content.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Bitmap))
+            return 0;
+        // A bitmap (a screenshot): whatever format it's in, made a PNG.
+        using var source = await (await content.GetBitmapAsync()).OpenReadAsync();
+        var decoder = await Windows.Graphics.Imaging.BitmapDecoder.CreateAsync(source);
+        using var bitmap = await decoder.GetSoftwareBitmapAsync(Windows.Graphics.Imaging.BitmapPixelFormat.Bgra8, Windows.Graphics.Imaging.BitmapAlphaMode.Premultiplied);
+        using var output = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+        var encoder = await Windows.Graphics.Imaging.BitmapEncoder.CreateAsync(Windows.Graphics.Imaging.BitmapEncoder.PngEncoderId, output);
+        encoder.SetSoftwareBitmap(bitmap);
+        await encoder.FlushAsync();
+        var png = new byte[output.Size];
+        output.Seek(0);
+        using (var reader = new Windows.Storage.Streams.DataReader(output.GetInputStreamAt(0)))
+        {
+            await reader.LoadAsync((uint)output.Size);
+            reader.ReadBytes(png);
+        }
+        VirtualView.OnImagePasted("pasted-image.png", png);
+        return 1;
     }
 
     /// <summary>The document's text with '\n' between lines, without the paragraph mark RichEditBox always ends with.</summary>

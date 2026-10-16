@@ -7,7 +7,7 @@ namespace GymBook.Views;
 /// <summary>
 /// Writing a ticket or comment in a text box that shows formatting as it's typed (see <see cref="RichEditor"/>). The
 /// toolbar formats the selection, or what's typed next; headings, lists, checklists and quotes go on the selected lines;
-/// attachments go in where the cursor is.
+/// attachments (picked, or pictures pasted from the clipboard) go in where the cursor is.
 /// </summary>
 public partial class FeedbackEditPage : BasePage
 {
@@ -18,6 +18,8 @@ public partial class FeedbackEditPage : BasePage
         InitializeComponent();
         BindingContext = viewModel;
         viewModel.InsertRequested += InsertAttachment;
+        // A picture pasted from the clipboard goes up like an attached one, in where the cursor is.
+        BodyEditor.ImagePasted += (name, data) => _ = viewModel.AttachDataAsync(name, data);
     }
 
     protected override bool OnBackButtonPressed()
