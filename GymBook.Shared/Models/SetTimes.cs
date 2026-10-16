@@ -8,9 +8,16 @@ namespace GymBook.Models;
 /// </summary>
 public static class SetTimes
 {
-    /// <summary>Ticks <paramref name="set"/> done at <paramref name="now"/>, ending any rest still going.</summary>
+    /// <summary>
+    /// Ticks <paramref name="set"/> done at <paramref name="now"/>, ending any rest still going. A set ticked without being
+    /// started (Start set not pressed) began when the rest ran out: the rest ends when it was due, not at the tick, so the
+    /// set gets its time; ticked before the rest was due, both end now.
+    /// </summary>
     public static void Complete(WorkoutSession session, SetEntry set, DateTime now)
     {
+        foreach (var other in session.Exercises.SelectMany(e => e.Sets))
+            if (other.RestStartedAt is { } started && other.RestEndedAt == null && other.RestDueAt is { } due && due < now)
+                other.RestEndedAt = due < started ? started : due;
         EndRest(session, now);
         set.IsSkipped = false;
         set.IsCompleted = true;
