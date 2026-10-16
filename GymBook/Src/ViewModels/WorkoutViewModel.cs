@@ -111,6 +111,13 @@ public partial class WorkoutViewModel(
     /// Where to go after <paramref name="index"/> is finished: the first exercise from the top with sets still to do
     /// (an earlier one left unfinished comes before the ones after it); null when all are done.
     /// </summary>
+    /// <summary>The exercise a set was last ticked in, while it still has sets to do; null otherwise.</summary>
+    WorkoutExerciseViewModel? InProgress() =>
+        _session != null && SetTimes.LastDone(_session) is { } last
+            && Exercises.FirstOrDefault(e => e.Model.Sets.Contains(last)) is { IsDone: false } exercise
+            ? exercise
+            : null;
+
     int? NextOpen(int index)
     {
         for (var i = 0; i < Exercises.Count; i++)
@@ -254,8 +261,9 @@ public partial class WorkoutViewModel(
                 AddExerciseVm(se);
             // Started empty (a quick workout) or everything removed: the empty state, not a blank exercise.
             IsEmpty = Exercises.Count == 0;
-            // Pick up where the workout left off: the first exercise with sets still to do.
-            var open = Exercises.ToList().FindIndex(e => !e.IsDone);
+            // Pick up where the workout left off: the exercise a set was last ticked in, while it has sets to do (they
+            // needn't be done in order), else the first exercise with sets still to do.
+            var open = InProgress() is { } going ? Exercises.IndexOf(going) : Exercises.ToList().FindIndex(e => !e.IsDone);
             CurrentIndex = Math.Max(0, open);
             OnCurrentIndexChanged(CurrentIndex);
             _pace = estimator.HistoryPace(active.Id);
@@ -533,13 +541,15 @@ public partial class WorkoutViewModel(
     }
 
     /// <summary>
-    /// The next set to do: the first one not done or skipped in the exercise on screen, else in the first exercise from
-    /// the top with any left. Null when every set is done or skipped.
+    /// The next set to do: the first one not done or skipped in the exercise being done (the one a set was last ticked in,
+    /// until it's finished, whatever its place in the list), else the one on screen, else the first from the top with any
+    /// left. Null when every set is done or skipped.
     /// </summary>
     (WorkoutExerciseViewModel Exercise, SetEntry Set)? NextSet()
     {
-        // The exercise on screen first, then from the top, as moving on after an exercise goes (see NextOpen).
-        var order = Exercises.Skip(CurrentIndex).Take(1).Concat(Exercises.Where((_, i) => i != CurrentIndex));
+        // Then from the top, as moving on after an exercise goes (see NextOpen).
+        var order = new[] { InProgress(), Exercises.ElementAtOrDefault(CurrentIndex) }.OfType<WorkoutExerciseViewModel>()
+            .Concat(Exercises).Distinct();
         foreach (var exercise in order)
             if (exercise.Model.Sets.FirstOrDefault(s => !s.IsCompleted && !s.IsSkipped) is { } set)
                 return (exercise, set);
