@@ -139,37 +139,54 @@ public partial class FeedbackEditViewModel(ApiClient api, DialogService dialogs)
         if (file == null)
             return;
 
-        IsBusy = true;
-        BusyText = "Uploading…";
+        byte[] data;
         try
         {
-            byte[] data;
-            await using (var stream = await file.OpenReadAsync())
-            {
-                if (stream.CanSeek && stream.Length > FeedbackLimits.AttachmentBytes)
-                {
-                    await TooBig();
-                    return;
-                }
-                using var copy = new MemoryStream();
-                await stream.CopyToAsync(copy);
-                data = copy.ToArray();
-            }
-            if (data.Length > FeedbackLimits.AttachmentBytes)
+            await using var stream = await file.OpenReadAsync();
+            if (stream.CanSeek && stream.Length > FeedbackLimits.AttachmentBytes)
             {
                 await TooBig();
                 return;
             }
-            if (await Online.Try(dialogs, "Couldn't attach the file", () => api.AttachFeedbackFileAsync(file.FileName, data)) is { } attached)
+            using var copy = new MemoryStream();
+            await stream.CopyToAsync(copy);
+            data = copy.ToArray();
+        }
+        catch (Exception e)
+        {
+            await dialogs.Alert("Couldn't read the file", e.Message);
+            return;
+        }
+        await AttachDataAsync(file.FileName, data);
+    }
+
+    /// <summary>
+    /// A file's bytes uploaded and put in the text where the cursor is: one picked with <see cref="Attach"/>, or a picture
+    /// pasted into the text (the editor hands it over).
+    /// </summary>
+    public async Task AttachDataAsync(string fileName, byte[] data)
+    {
+        if (IsBusy || data.Length == 0)
+            return;
+        if (data.Length > FeedbackLimits.AttachmentBytes)
+        {
+            await TooBig();
+            return;
+        }
+        IsBusy = true;
+        BusyText = "Uploading…";
+        try
+        {
+            if (await Online.Try(dialogs, "Couldn't attach the file", () => api.AttachFeedbackFileAsync(fileName, data)) is { } attached)
                 InsertRequested?.Invoke(attached.Markdown);
         }
         finally
         {
             IsBusy = false;
         }
-
-        Task TooBig() => dialogs.Alert("That file is too big", $"Attach files up to {FeedbackLimits.AttachmentBytes / 1024 / 1024} MB.");
     }
+
+    Task TooBig() => dialogs.Alert("That file is too big", $"Attach files up to {FeedbackLimits.AttachmentBytes / 1024 / 1024} MB.");
 
     [RelayCommand]
     async Task Send()
