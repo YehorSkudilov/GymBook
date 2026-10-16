@@ -97,16 +97,98 @@ public class WorkoutNotifier : IWorkoutNotifier
         Post(last with { Phase = WorkoutPhase.RestOver }, alert);
     }
 
-    /// <summary>While resting, the next <see cref="RestTick"/>: on the next whole second of the rest left, or when it's due.</summary>
+    /// <summary>
+    /// While resting, the next <see cref="RestTick"/>: on the next whole second of the rest left, or when it's due. Also an
+    /// alarm for when it's due (see <see cref="ScheduleRestAlarm"/>): in the background Android pauses the app's own clock,
+    /// so the alert would only come when something woke the app.
+    /// </summary>
     void ScheduleRestTick(WorkoutStatus status)
     {
         _handler.RemoveCallbacks(_restTick);
+        ScheduleRestAlarm(status is { Phase: WorkoutPhase.Resting, RestDueAt: { } at } && at > DateTime.Now ? at : null);
         if (status is not { Phase: WorkoutPhase.Resting, RestDueAt: { } due })
             return;
         var left = (due - DateTime.Now).TotalMilliseconds;
         var part = left % 1000;
         var delay = left <= 0 ? 0 : part > 50 ? part : Math.Min(1000, left);
         _handler.PostDelayed(_restTick, (long)delay);
+    }
+
+    DateTime? _alarmAt;
+
+    /// <summary>
+    /// The alarm that wakes the app when the rest is due (<see cref="RestAlarmReceiver"/>), moved to <paramref name="due"/>,
+    /// or cancelled with none. Exact when the user allows Alarms &amp; reminders (asked once), else as close as Android
+    /// allows without it.
+    /// </summary>
+    void ScheduleRestAlarm(DateTime? due)
+    {
+        if (due == _alarmAt)
+            return;
+        _alarmAt = due;
+        var context = Android.App.Application.Context;
+        if (context.GetSystemService(Context.AlarmService) is not AlarmManager manager)
+            return;
+        var pending = PendingIntent.GetBroadcast(context, 0, new Intent(context, typeof(RestAlarmReceiver)).SetAction(RestAlarmReceiver.Action),
+            PendingIntentFlags.Immutable | PendingIntentFlags.UpdateCurrent)!;
+        if (due is not { } at)
+        {
+            manager.Cancel(pending);
+            return;
+        }
+        var when = new DateTimeOffset(at).ToUnixTimeMilliseconds();
+        try
+        {
+            if (!OperatingSystem.IsAndroidVersionAtLeast(31) || manager.CanScheduleExactAlarms())
+            {
+                manager.SetExactAndAllowWhileIdle(AlarmType.RtcWakeup, when, pending);
+                return;
+            }
+        }
+        catch (Java.Lang.SecurityException)
+        {
+            // Taken back meanwhile: the inexact one below.
+        }
+        manager.SetAndAllowWhileIdle(AlarmType.RtcWakeup, when, pending);
+        AskForExactAlarms();
+    }
+
+    const string AskedExactKey = "rest.exact_alarm_asked";
+
+    /// <summary>
+    /// Once, while the app's on screen: Android 12+ needs Alarms &amp; reminders allowed for the rest alert to come right
+    /// when the timer ends; offered with a way to its setting.
+    /// </summary>
+    static void AskForExactAlarms()
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(31) || !IsAppVisible || Preferences.Default.Get(AskedExactKey, false)
+            || IPlatformApplication.Current?.Services.GetService<DialogService>() is not { } dialogs)
+            return;
+        Preferences.Default.Set(AskedExactKey, true);
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            if (!await dialogs.Confirm("Rest alerts on time",
+                    "For the \"rest over\" alert to come the moment your timer ends with Gym Book in the background, allow it to set alarms (Alarms & reminders).",
+                    "Allow", "Not now"))
+                return;
+            var context = Android.App.Application.Context;
+            try
+            {
+                context.StartActivity(new Intent(Android.Provider.Settings.ActionRequestScheduleExactAlarm,
+                    Android.Net.Uri.Parse("package:" + context.PackageName)).AddFlags(ActivityFlags.NewTask));
+            }
+            catch (ActivityNotFoundException)
+            {
+                // No such screen on this phone: the alert stays inexact.
+            }
+        });
+    }
+
+    /// <summary>The rest alarm went off: as each second of the rest does, it says the rest is over (with the alert).</summary>
+    internal void OnRestAlarm()
+    {
+        _alarmAt = null;
+        RestTick();
     }
 
     /// <summary>Swiped away while the workout's still going: put it straight back.</summary>
@@ -226,6 +308,7 @@ public class WorkoutNotifier : IWorkoutNotifier
 
     public void Clear()
     {
+        ScheduleRestAlarm(null);
         _last = null;
         _handler.RemoveCallbacks(_restTick);
         _alertedDue = null;
@@ -289,5 +372,18 @@ public class WorkoutNotificationDismissedReceiver : BroadcastReceiver
             return;
         if (IPlatformApplication.Current?.Services.GetService<IWorkoutNotifier>() is WorkoutNotifier notifier)
             MainThread.BeginInvokeOnMainThread(notifier.Restore);
+    }
+}
+
+/// <summary>A rest is due (scheduled by <see cref="WorkoutNotifier"/>): the notification says it's over, with the alert.</summary>
+[BroadcastReceiver(Enabled = true, Exported = false)]
+public class RestAlarmReceiver : BroadcastReceiver
+{
+    internal const string Action = "com.yehorskudilov.gymbook.REST_DUE";
+
+    public override void OnReceive(Context? context, Intent? intent)
+    {
+        if (intent?.Action == Action && IPlatformApplication.Current?.Services.GetService<IWorkoutNotifier>() is WorkoutNotifier notifier)
+            MainThread.BeginInvokeOnMainThread(notifier.OnRestAlarm);
     }
 }
