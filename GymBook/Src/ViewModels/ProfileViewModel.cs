@@ -92,6 +92,9 @@ public partial class ProfileViewModel(
         subscriptions.Changed += OnSyncChanged;
         bedtime.Changed += OnSyncChanged;
         Refresh();
+        // Not heard from the API yet this time (offline at start, say): asked now; the answer refreshes the page.
+        if (subscriptions.Status == null)
+            _ = subscriptions.RefreshAsync();
         _ = publicProfile.OnAppearingAsync();
         return Task.CompletedTask;
     }

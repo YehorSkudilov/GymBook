@@ -13,6 +13,7 @@ public class SubscriptionService(ApiClient api, IStoreBilling billing, AccountSe
     // Per account, so another account signing in on the device doesn't inherit it.
     string ActiveKey => $"pro.active.{account.Email}";
     string ExpiresKey => $"pro.expires.{account.Email}";
+    string MemberKey => $"pro.member.{account.Email}";
 
     /// <summary>Raised when <see cref="Status"/> changes.</summary>
     public event EventHandler? Changed;
@@ -24,14 +25,19 @@ public class SubscriptionService(ApiClient api, IStoreBilling billing, AccountSe
     string? _statusFor;
 
     /// <summary>Has Gym Book Pro, as last heard from the API.</summary>
-    public bool IsActive => account.IsSignedIn && (Status?.Active
-        ?? (Preferences.Default.Get(ActiveKey, false) && Preferences.Default.Get(ExpiresKey, DateTime.MinValue) > DateTime.UtcNow));
+    public bool IsActive => account.IsSignedIn && (Status?.Active ?? (Preferences.Default.Get(ActiveKey, false) && NotExpired));
 
     /// <summary>
     /// Subscribed (or given Pro by an admin), as last heard from the API: not merely let in while an admin has made the AI
-    /// features free for everyone. Members get a ring round their picture.
+    /// features free for everyone. Members get a ring round their picture. Before the API has answered since the app
+    /// opened, as last heard (kept on the device), so a member isn't shown the invitation to subscribe meanwhile.
     /// </summary>
-    public bool IsMember => account.IsSignedIn && Status is { Active: true } s && (s.Store != null || s.Granted);
+    public bool IsMember => account.IsSignedIn && (Status is { } s
+        ? s.Active && (s.Store != null || s.Granted)
+        : Preferences.Default.Get(MemberKey, false) && NotExpired);
+
+    // Kept as the latest moment it lasts to (DateTime.MaxValue for Pro without an end, given by an admin).
+    bool NotExpired => Preferences.Default.Get(ExpiresKey, DateTime.MinValue) > DateTime.UtcNow;
 
     /// <summary>The store purchases go through on this device; null where it can't buy.</summary>
     public SubscriptionStore? Store => billing.Store;
@@ -63,13 +69,15 @@ public class SubscriptionService(ApiClient api, IStoreBilling billing, AccountSe
         _syncing = true;
         try
         {
+            // The API's state first: it's quick, and the app shows it. The store's purchases after, so a store that's slow
+            // or fails (Google Play not connected yet) doesn't leave the app thinking a member isn't one.
+            await RefreshAsync();
             if (billing.Store is { } store && DateTime.UtcNow - Preferences.Default.Get(SyncedKey, DateTime.MinValue) > SyncInterval)
             {
                 foreach (var purchase in await billing.OwnedQuietlyAsync(() => api.GetMicrosoftStoreTicketAsync()))
                     await SendQuietlyAsync(store, purchase);
                 Preferences.Default.Set(SyncedKey, DateTime.UtcNow);
             }
-            await RefreshAsync();
         }
         catch (Exception e) when (e is StoreBillingException or HttpRequestException or TaskCanceledException or ApiException or SessionExpiredException)
         {
@@ -172,7 +180,9 @@ public class SubscriptionService(ApiClient api, IStoreBilling billing, AccountSe
         _status = status;
         _statusFor = account.Email;
         Preferences.Default.Set(ActiveKey, status.Active);
-        Preferences.Default.Set(ExpiresKey, status.ExpiresAt?.UtcDateTime ?? DateTime.MinValue);
+        Preferences.Default.Set(MemberKey, status.Active && (status.Store != null || status.Granted));
+        // Active without an end (Pro given by an admin) lasts until told otherwise.
+        Preferences.Default.Set(ExpiresKey, status.ExpiresAt?.UtcDateTime ?? (status.Active ? DateTime.MaxValue : DateTime.MinValue));
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }
