@@ -32,6 +32,8 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
 
     // Answers
     Goal _goal;
+    // Every goal picked, in the order picked: the first is the main one (_goal, as kept for older apps).
+    List<Goal> _goals = [];
     Experience _experience;
     int _days;
     int _minutes;
@@ -127,11 +129,13 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         _ = ai.RefreshQuotaAsync();
         var p = store.Profile;
         (_goal, _experience, _days, _minutes, _equipment, _neck) = (p.Goal, p.Experience, p.DaysPerWeek, p.SessionMinutes, p.EquipmentAccess, p.TrainNeck);
+        _goals = [.. Goals.Of(p.Goal, p.Priorities)];
         _regenerating = onboarding ? null : store.GetPlan(_regenerateId);
         if (_regenerating != null)
         {
             // The plan's own goal and days; the rest was saved to the profile when a plan was last made.
             _goal = _regenerating.Goal;
+            _goals = [.. Goals.Of(_regenerating.Goal, _regenerating.Priorities)];
             _days = Math.Clamp(_regenerating.Workouts.Count > 0 ? _regenerating.Workouts.Count : _regenerating.DaysPerWeek, 2, 6);
         }
         _steps = onboarding
@@ -232,11 +236,11 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
                 Subtitle = "Used to personalise starting weights and your statistics.";
                 break;
             case Step.Goal:
-                Title = _regenerating != null ? $"Regenerate {_regenerating.Name}" : "What's your main goal?";
+                Title = _regenerating != null ? $"Regenerate {_regenerating.Name}" : "What do you want to prioritise?";
                 Subtitle = _regenerating != null
-                    ? "Change any answers, and a new plan replaces this one. Your logged workouts stay. What's your main goal?"
-                    : "This sets your rep ranges, rest times and exercise choice.";
-                AddOptions(TrainingGoals.All, g => g.Display(), g => g.Description(), _goal);
+                    ? "Change any answers, and a new plan replaces this one. Your logged workouts stay. What do you want to prioritise? Pick one or more; the first is your main goal."
+                    : "Pick one or more; the first you pick is your main goal. This sets your rep ranges, rest times and exercise choice.";
+                ShowGoalOptions();
                 break;
             case Step.Experience:
                 Title = "How experienced are you?";
@@ -322,13 +326,39 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             Options.Add(new OptionItem(title(v), subtitle(v), v, OnOptionSelected) { IsSelected = v.Equals(selected) });
     }
 
+    /// <summary>The goals, several at once: each picked one ticked, the main one (picked first) saying so.</summary>
+    void ShowGoalOptions()
+    {
+        Options.Clear();
+        foreach (var g in TrainingGoals.All)
+            Options.Add(new OptionItem(_goals.Count > 1 && _goals[0] == g ? $"{g.Display()} · main goal" : g.Display(), g.Description(), g, OnGoalSelected)
+            {
+                IsSelected = _goals.Contains(g),
+            });
+    }
+
+    /// <summary>A goal ticked or unticked; at least one stays. Unticking the main one makes the next picked the main one.</summary>
+    void OnGoalSelected(OptionItem item)
+    {
+        var goal = (Goal)item.Value;
+        if (_goals.Contains(goal))
+        {
+            if (_goals.Count == 1)
+                return;
+            _goals.Remove(goal);
+        }
+        else
+            _goals.Add(goal);
+        _goal = Goals.Storable(_goals[0]);
+        ShowGoalOptions();
+    }
+
     void OnOptionSelected(OptionItem item)
     {
         foreach (var o in Options)
             o.IsSelected = o == item;
         switch (item.Value)
         {
-            case Goal g: _goal = g; break;
             case Experience e: _experience = e; break;
             case EquipmentAccess a: _equipment = a; break;
             case int i when _steps[_index] == Step.Days: _days = i; break;
@@ -385,6 +415,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         return new UserProfile
         {
             Goal = _goal,
+            Priorities = [.. _goals],
             Experience = _experience,
             DaysPerWeek = _days,
             SessionMinutes = _minutes,
@@ -399,7 +430,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
         };
     }
 
-    string AnswersKey() => $"{_goal}|{_experience}|{_days}|{_minutes}|{_equipment}|{_neck}";
+    string AnswersKey() => $"{string.Join(",", _goals)}|{_experience}|{_days}|{_minutes}|{_equipment}|{_neck}";
 
     /// <summary>
     /// Asks the AI what else it wants to know. The questions are kept while the answers stay the same. If the AI can't
@@ -628,6 +659,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
 
         var p = store.Profile;
         p.Goal = _goal;
+        p.Priorities = [.. _goals];
         p.Experience = _experience;
         p.DaysPerWeek = _days;
         p.SessionMinutes = _minutes;
@@ -651,6 +683,7 @@ public partial class PlanWizardViewModel(DataStore store, Units units, DialogSer
             _regenerating.Name = _plan.Name;
             _regenerating.Description = _plan.Description;
             _regenerating.Goal = _plan.Goal;
+            _regenerating.Priorities = [.. _plan.Priorities];
             _regenerating.DaysPerWeek = _plan.DaysPerWeek;
             _regenerating.Workouts = _plan.Workouts;
             _regenerating.RestDays = _plan.RestDays;

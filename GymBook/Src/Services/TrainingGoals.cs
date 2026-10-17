@@ -10,7 +10,7 @@ namespace GymBook.Services;
 public static class TrainingGoals
 {
     /// <summary>Goals in the order they're offered.</summary>
-    public static IReadOnlyList<Goal> All { get; } = [Goal.BuildMuscle, Goal.Strength, Goal.Power, Goal.LoseFat, Goal.GeneralFitness];
+    public static IReadOnlyList<Goal> All { get; } = [Goal.BuildMuscle, Goal.Aesthetics, Goal.Strength, Goal.Power, Goal.LoseFat, Goal.GeneralFitness];
 
     /// <summary>Jumps, throws and Olympic lifts: trained for speed, in short sets.</summary>
     public static bool IsExplosive(Exercise ex) =>
@@ -73,9 +73,16 @@ public static class TrainingGoals
     /// <summary>Pilates and mobility drills: a few slow, precise reps, never to fatigue.</summary>
     static bool IsControl(Exercise ex) => ExerciseLibrary.Details(ex.Id)?.Category is ExerciseCategory.Pilates or ExerciseCategory.Mobility;
 
-    /// <summary>Sets, reps, effort and rest for <paramref name="ex"/> under <paramref name="goal"/>; the rest times set in <paramref name="profile"/>, if any, replace the goal's.</summary>
-    public static PlanExercise Prescription(Goal goal, Experience experience, Exercise ex, UserProfile? profile = null)
+    /// <summary>
+    /// Sets, reps, effort and rest for <paramref name="ex"/> under <paramref name="goal"/> (the main one) and the other
+    /// <paramref name="priorities"/> with it; the rest times set in <paramref name="profile"/>, if any, replace the goal's.
+    /// Strength (or power) together with muscle size or aesthetics trains like powerbuilding: the big lifts heavier, the
+    /// isolation work for growth.
+    /// </summary>
+    public static PlanExercise Prescription(Goal goal, Experience experience, Exercise ex, UserProfile? profile = null, IReadOnlyList<Goal>? priorities = null)
     {
+        goal = Goals.Storable(goal);
+        var goals = priorities is { Count: > 0 } ? priorities : [goal];
         var compound = ex.Mechanic == Mechanic.Compound;
         var explosive = IsExplosive(ex);
         var (min, max) = (goal, compound) switch
@@ -94,6 +101,9 @@ public static class TrainingGoals
             (_, true) => (8, 12),
             _ => (10, 15),
         };
+        // Heavy and big together: the main lifts heavier, the isolation work for growth.
+        if (Goals.Heavy(goals) && Goals.Hypertrophy(goals))
+            (min, max) = compound ? (goal is Goal.Strength or Goal.Power ? (4, 6) : (6, 10)) : (10, 15);
         if (explosive)
             (min, max) = (3, 5);
         else if (ex.IsBodyweight)

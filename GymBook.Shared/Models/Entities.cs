@@ -40,7 +40,11 @@ public class WorkoutPlan : ISyncEntity
     public string Name { get; set; } = "";
     [MaxLength(SyncLimits.TextLength)]
     public string Description { get; set; } = "";
+    /// <summary>The main goal, as older apps know them (see <see cref="Goals.Storable"/>).</summary>
     public Goal Goal { get; set; }
+    /// <summary>Every goal the plan was made for, in order, the main one first; empty on plans made before there could be several.</summary>
+    [MaxItems(6)]
+    public List<Goal> Priorities { get; set; } = [];
     public int DaysPerWeek { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public int NextWorkoutIndex { get; set; }
@@ -435,7 +439,11 @@ public class UserProfile
 {
     [MaxLength(SyncLimits.NameLength)]
     public string Name { get; set; } = "";
+    /// <summary>The main goal, as older apps know them (see <see cref="Goals.Storable"/>).</summary>
     public Goal Goal { get; set; } = Goal.BuildMuscle;
+    /// <summary>Every goal the user prioritises, in order, the main one first; empty when only <see cref="Goal"/> was ever set.</summary>
+    [MaxItems(6)]
+    public List<Goal> Priorities { get; set; } = [];
     public Experience Experience { get; set; } = Experience.Beginner;
     public int DaysPerWeek { get; set; } = 3;
     public int SessionMinutes { get; set; } = 60;

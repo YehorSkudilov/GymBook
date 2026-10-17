@@ -64,7 +64,8 @@ public partial class PlanSettingsViewModel : ObservableObject
         _loading = true;
         var exercises = Exercises;
 
-        GoalIndex = TrainingGoals.All.ToList().IndexOf(_plan.Goal);
+        // The main goal: the first of its priorities (which may be Aesthetics), else its goal.
+        GoalIndex = TrainingGoals.All.ToList().IndexOf(GymBook.Models.Goals.Of(_plan.Goal, _plan.Priorities)[0]);
 
         OwnRest = _plan.OwnRest;
         string Rest(Mechanic m) => Units.Rest(_plan.OwnRest && (m == Mechanic.Compound ? _plan.CompoundRestSeconds : _plan.IsolationRestSeconds) is { } own
@@ -96,7 +97,7 @@ public partial class PlanSettingsViewModel : ObservableObject
     /// <summary>A new goal from the dropdown, and if wanted, every exercise's sets, reps, RIR and rest to suit it. The exercises stay.</summary>
     partial void OnGoalIndexChanged(int value)
     {
-        if (!_loading && value >= 0 && TrainingGoals.All[value] != _plan.Goal)
+        if (!_loading && value >= 0 && TrainingGoals.All[value] != GymBook.Models.Goals.Of(_plan.Goal, _plan.Priorities)[0])
             _ = ChangeGoal(TrainingGoals.All[value]);
     }
 
@@ -104,14 +105,17 @@ public partial class PlanSettingsViewModel : ObservableObject
     {
         var apply = await _dialogs.Confirm($"Use {goal.Display()} for every exercise?",
             $"{goal.Description()}. This resets each exercise's rep range, sets, reps in reserve and rest to suit it.", "Apply to all", "Only change the goal");
-        _plan.Goal = goal;
+        // The new main goal first, the plan's other priorities kept after it.
+        var others = GymBook.Models.Goals.Of(_plan.Goal, _plan.Priorities).Where(g => g != goal);
+        _plan.Priorities = _plan.Priorities.Count > 0 || goal == Goal.Aesthetics ? [goal, .. others] : [];
+        _plan.Goal = GymBook.Models.Goals.Storable(goal);
         if (apply)
         {
             foreach (var pe in Exercises)
             {
                 if (_store.GetExercise(pe.ExerciseId) is not { } ex)
                     continue;
-                var p = TrainingGoals.Prescription(goal, P.Experience, ex, P);
+                var p = TrainingGoals.Prescription(goal, P.Experience, ex, P, _plan.Priorities);
                 // The goal's range is in the exercise's usual unit, so it's counted that way again.
                 (pe.Sets, pe.RepMin, pe.RepMax, pe.Unit) = (p.Sets, p.RepMin, p.RepMax, p.Unit);
                 // The target RIR and rest follow the plan's again: its own, or the new goal's.

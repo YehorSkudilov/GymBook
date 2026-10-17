@@ -907,6 +907,10 @@ namespace GymBook.Api.Data.Migrations
                     b.Property<bool>("OnboardingDone")
                         .HasColumnType("boolean");
 
+                    b.PrimitiveCollection<int[]>("Priorities")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
                     b.Property<int?>("ProteinGoalG")
                         .HasColumnType("integer");
 
@@ -1054,6 +1058,10 @@ namespace GymBook.Api.Data.Migrations
 
                     b.Property<bool>("Periodization")
                         .HasColumnType("boolean");
+
+                    b.PrimitiveCollection<int[]>("Priorities")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
 
                     b.PrimitiveCollection<List<int>>("RestDays")
                         .HasColumnType("integer[]");

@@ -92,7 +92,7 @@ public class CsvImporter(DataStore store, AiPlanService ai, Billing.Subscription
                 {
                     var exercise = resolve(item.Exercise);
                     // Set up as an added exercise would be, then given the other app's sets and reps.
-                    var pe = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, exercise, store.Profile);
+                    var pe = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, exercise, store.Profile, plan.Priorities);
                     pe.RestSeconds = PlanRest.DefaultFor(plan, store.Profile, exercise);
                     pe.TargetRir = PlanTraining.RirFor(plan, store.Profile, exercise);
                     pe.Sets = item.Sets;

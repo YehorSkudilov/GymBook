@@ -355,6 +355,10 @@ namespace GymBook.LocalData.Migrations
                     b.Property<bool>("OnboardingDone")
                         .HasColumnType("INTEGER");
 
+                    b.PrimitiveCollection<string>("Priorities")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("ProteinGoalG")
                         .HasColumnType("INTEGER");
 
@@ -496,6 +500,10 @@ namespace GymBook.LocalData.Migrations
 
                     b.Property<bool>("Periodization")
                         .HasColumnType("INTEGER");
+
+                    b.PrimitiveCollection<string>("Priorities")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.PrimitiveCollection<string>("RestDays")
                         .HasColumnType("TEXT");

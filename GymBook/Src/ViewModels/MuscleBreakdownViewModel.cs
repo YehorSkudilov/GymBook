@@ -140,7 +140,7 @@ public partial class MuscleBreakdownViewModel : ObservableObject
         var experience = _store.Profile.Experience;
         var groups = Enum.GetValues<MuscleGroup>()
             .Select(g => (Group: g, Sets: parts.Where(p => p.Key.Group() == g).Sum(p => p.Value.Sets) * perWeek,
-                Target: IsDayMode ? null : VolumeTargets.For(g, goal, experience)))
+                Target: IsDayMode ? null : VolumeTargets.For(g, goal, experience, _plan.Priorities)))
             // The whole plan lists every muscle with a target, trained or not: a muscle left out is what most needs saying.
             .Where(x => x.Sets > 0 || x.Target != null)
             .OrderByDescending(x => x.Sets)
@@ -161,7 +161,7 @@ public partial class MuscleBreakdownViewModel : ObservableObject
             MusclesTitle = "Weekly sets per muscle";
             MusclesCaption = $"{targeted.Count - under - over} of {targeted.Count} muscles on target"
                 + (under > 0 ? $", {under} under" : "") + (over > 0 ? $", {over} over" : "")
-                + $". Targets for {goal.Display().ToLowerInvariant()}, {experience.Display().ToLowerInvariant()}; "
+                + $". Targets for {Goals.Display(Goals.Of(goal, _plan.Priorities)).ToLowerInvariant()}, {experience.Display().ToLowerInvariant()}; "
                 + "sets a muscle gets from the exercises it helps count half.";
         }
     }

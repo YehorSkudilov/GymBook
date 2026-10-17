@@ -25,7 +25,11 @@ public static class PlanLimits
 /// <summary>The plan wizard's answers about the user. On its own, the request for follow-up questions.</summary>
 public class PlanAnswers
 {
+    /// <summary>The main goal (as an older server knows them); <see cref="Priorities"/> has them all.</summary>
     public Goal Goal { get; set; }
+    /// <summary>Every goal to prioritise, in order, the main one first (Aesthetics included).</summary>
+    [MaxItems(6)]
+    public List<Goal> Priorities { get; set; } = [];
     public Experience Experience { get; set; }
     [Range(1, PlanLimits.MaxDays)]
     public int DaysPerWeek { get; set; } = 3;
