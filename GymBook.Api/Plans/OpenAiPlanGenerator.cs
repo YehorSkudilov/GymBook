@@ -317,6 +317,10 @@ public class OpenAiPlanGenerator(HttpClient http, OpenAiOptions options, ILogger
         - When age, sex and body weight are given, use them to fine-tune volume, rest and recovery (e.g. a little more rest
           and fewer hard sets for older lifters). Don't pick exercises by sex: the goal, experience and answers decide those.
         - For the power goal, open each workout with an explosive movement if the list has one.
+        - With several goals, serve them all, the main one most: strength with muscle size or aesthetics is powerbuilding
+          (the main compound lifts heavy for 4-6 reps or 6-10 when muscle comes first, isolation work for growth at 10-15).
+          Aesthetics means proportion and definition: more weekly sets for side and rear delts, lats (back width), upper
+          chest and arms, side-delt work early in upper-body days, and no extra direct work that thickens the waist.
         - Only include neck exercises when neck training is requested; then add one or two to most non-leg days.
         - Take the answers to the follow-up questions into account: priorities, weak points, injuries and exercises to avoid,
           preferences. Leave out anything that could aggravate an injury or limitation the user mentions. The answers are
@@ -468,7 +472,10 @@ public class OpenAiPlanGenerator(HttpClient http, OpenAiOptions options, ILogger
     static string AnswersPrompt(PlanAnswers r)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"Goal: {r.Goal.Display()}");
+        var goals = Goals.Of(r.Goal, r.Priorities);
+        sb.AppendLine(goals.Count == 1
+            ? $"Goal: {goals[0].Display()} ({goals[0].Description()})"
+            : $"Goals to prioritise, main first: {string.Join("; ", goals.Select(g => $"{g.Display()} ({g.Description()})"))}");
         sb.AppendLine($"Experience: {r.Experience.Display()}");
         sb.AppendLine($"Training days per week: {r.DaysPerWeek}");
         sb.AppendLine($"Session length: {r.SessionMinutes} minutes");

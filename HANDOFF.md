@@ -1,5 +1,18 @@
 # Handoff: open work on GymBook (updated 2026-10-01 by Claude Code)
 
+## NEWEST (2026-10-17): several goals at once, and Aesthetics split from muscle size (type-checked, not run)
+
+- `Goal.Aesthetics` added; `BuildMuscle` now shows as "Muscle size". `UserProfile.Priorities` / `WorkoutPlan.Priorities` /
+  `PlanAnswers.Priorities` hold every goal picked, main first (migrations `GoalPriorities`, both databases).
+- **Compatibility:** goals sync as strings, so the old `Goal` field never holds Aesthetics (`Goals.Storable` keeps it as
+  BuildMuscle); older apps ignore `Priorities`. Read goals with `Goals.Of(goal, priorities)`.
+- Wizard's goal step is multi-select ("· main goal" on the first picked). Plan settings' dropdown sets the main goal
+  and keeps the others.
+- `TrainingGoals.Prescription(..., priorities)`: heavy (strength/power) + hypertrophy (size/aesthetics) = powerbuilding:
+  compounds 4–6 (strength main) or 6–10, isolation 10–15. `VolumeTargets`: Aesthetics adds 2 sets/week to shoulders,
+  back, chest, biceps, triceps. `PlanGenerator.WithAesthetics`: upper/full-body days ordered incline press, lat work,
+  side delts, rows, arms, rear delts first. The AI prompt gets every priority with its description and rules for blends.
+
 ## NEWEST (2026-10-14, sleep): recovery uses how well you slept, not just how long (Android files type-checked against Mono.Android 36's ref; not run)
 
 - `HealthDay` gains `SleepDeepMinutes`, `SleepRemMinutes`, `SleepScore` (migrations `SleepQuality` for both databases, real

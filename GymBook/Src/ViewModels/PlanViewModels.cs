@@ -450,6 +450,7 @@ public partial class PlansViewModel(DataStore store, DialogService dialogs, AiPl
             Name = name.Trim(),
             Description = "Custom plan",
             Goal = store.Profile.Goal,
+            Priorities = [.. store.Profile.Priorities],
             DaysPerWeek = store.Profile.DaysPerWeek,
             Workouts = [new PlanWorkout { Name = "Workout A" }],
             RestDays = [],
@@ -574,7 +575,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         };
         var progress = new PlanProgress(plan, store.History);
         var schedule = progress.Days;
-        Meta = $"{plan.Goal.Display()} · {plan.Workouts.Count} training days · {schedule.Count - plan.Workouts.Count} rest";
+        Meta = $"{Goals.Display(Goals.Of(plan.Goal, plan.Priorities))} · {plan.Workouts.Count} training days · {schedule.Count - plan.Workouts.Count} rest";
         // Where the plan is in its cycle this week (deload, block week); nothing for a plan run the same every week.
         if (PlanCycle.Describe(plan, _week ?? progress.CurrentWeek) is { } phase)
             Meta += $"\nWeek {_week ?? progress.CurrentWeek} · {phase}";
@@ -650,6 +651,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         Name = p.Name,
         Description = p.Description,
         Goal = p.Goal,
+        Priorities = [.. p.Priorities],
         DaysPerWeek = p.DaysPerWeek,
         Workouts = p.Workouts,
         RestDays = p.RestDays,
@@ -697,6 +699,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         saved.Name = copy.Name;
         saved.Description = copy.Description;
         saved.Goal = copy.Goal;
+        saved.Priorities = copy.Priorities;
         // Training days per week: its workouts, whatever edits did to its days.
         saved.DaysPerWeek = Math.Max(1, copy.Workouts.Count);
         saved.Workouts = copy.Workouts;
@@ -776,7 +779,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         var index = workout.Exercises.IndexOf(item.Model);
         if (index < 0)
             return;
-        var pe = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, ex, store.Profile);
+        var pe = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, ex, store.Profile, plan.Priorities);
         pe.RestSeconds = PlanRest.DefaultFor(plan, store.Profile, ex);
         pe.TargetRir = PlanTraining.RirFor(plan, store.Profile, ex);
         pe.Sets = item.Model.Sets;
@@ -827,7 +830,7 @@ public partial class PlanDetailViewModel(DataStore store, DialogService dialogs,
         // once (e.g. a heavy and a light block).
         foreach (var ex in picked)
         {
-            var pe = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, ex, store.Profile);
+            var pe = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, ex, store.Profile, plan.Priorities);
             pe.RestSeconds = PlanRest.DefaultFor(plan, store.Profile, ex);
             pe.TargetRir = PlanTraining.RirFor(plan, store.Profile, ex);
             workout.Exercises.Add(pe);

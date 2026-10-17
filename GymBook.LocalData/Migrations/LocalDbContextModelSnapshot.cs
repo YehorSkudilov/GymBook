@@ -16,7 +16,7 @@ namespace GymBook.LocalData.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
             modelBuilder.Entity("GymBook.LocalData.LocalSetting", b =>
                 {
@@ -355,6 +355,10 @@ namespace GymBook.LocalData.Migrations
                     b.Property<bool>("OnboardingDone")
                         .HasColumnType("INTEGER");
 
+                    b.PrimitiveCollection<string>("Priorities")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int?>("ProteinGoalG")
                         .HasColumnType("INTEGER");
 
@@ -496,6 +500,10 @@ namespace GymBook.LocalData.Migrations
 
                     b.Property<bool>("Periodization")
                         .HasColumnType("INTEGER");
+
+                    b.PrimitiveCollection<string>("Priorities")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.PrimitiveCollection<string>("RestDays")
                         .HasColumnType("TEXT");

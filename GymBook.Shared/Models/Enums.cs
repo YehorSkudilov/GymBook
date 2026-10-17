@@ -7,7 +7,34 @@ public enum Equipment { Barbell, Dumbbell, Machine, Cable, Bodyweight, Kettlebel
 
 public enum Mechanic { Compound, Isolation }
 
-public enum Goal { BuildMuscle, Strength, LoseFat, GeneralFitness, Power }
+/// <summary>
+/// What training is for. Several can be prioritised together (see <see cref="Goals"/>): the plan's and profile's
+/// <c>Goal</c> is the main one as older apps know it (never <see cref="Aesthetics"/>, which they can't read), and
+/// <c>Priorities</c> all of them in order.
+/// </summary>
+public enum Goal { BuildMuscle, Strength, LoseFat, GeneralFitness, Power, Aesthetics }
+
+/// <summary>Several goals prioritised together, the first the main one.</summary>
+public static class Goals
+{
+    /// <summary>The goals a plan or profile prioritises, in order: its priorities, or just its goal when it has none.</summary>
+    public static IReadOnlyList<Goal> Of(Goal goal, IReadOnlyList<Goal>? priorities) => priorities is { Count: > 0 } p ? p : [goal];
+
+    /// <summary>
+    /// The main goal as kept in <c>Goal</c>, which older apps read: Aesthetics trains like muscle size (it's muscle size
+    /// spread for proportion), so it's kept as that.
+    /// </summary>
+    public static Goal Storable(Goal goal) => goal == Goal.Aesthetics ? Goal.BuildMuscle : goal;
+
+    /// <summary>"Strength + Muscle size".</summary>
+    public static string Display(IReadOnlyList<Goal> goals) => string.Join(" + ", goals.Select(g => g.Display()));
+
+    /// <summary>Building muscle, for size or for looks.</summary>
+    public static bool Hypertrophy(IReadOnlyList<Goal> goals) => goals.Any(g => g is Goal.BuildMuscle or Goal.Aesthetics);
+
+    /// <summary>Lifting heavy, for strength or power.</summary>
+    public static bool Heavy(IReadOnlyList<Goal> goals) => goals.Any(g => g is Goal.Strength or Goal.Power);
+}
 
 public enum Experience { Beginner, Intermediate, Advanced }
 
@@ -45,7 +72,8 @@ public static class EnumDisplay
 
     public static string Display(this Goal g) => g switch
     {
-        Goal.BuildMuscle => "Bodybuilding",
+        Goal.BuildMuscle => "Muscle size",
+        Goal.Aesthetics => "Aesthetics",
         Goal.Strength => "Strength",
         Goal.LoseFat => "Lose fat",
         Goal.Power => "Combat & power sports",
@@ -54,7 +82,8 @@ public static class EnumDisplay
 
     public static string Description(this Goal g) => g switch
     {
-        Goal.BuildMuscle => "Grow muscle: at least 10 reps on compounds and 12 on isolation work",
+        Goal.BuildMuscle => "Bodybuilding: as much muscle as you can, at least 10 reps on compounds and 12 on isolation work",
+        Goal.Aesthetics => "Proportion and definition: extra work where it shows (shoulders, back width, arms, upper chest)",
         Goal.Strength => "Heavy compounds for 3–6 fast, clean reps, plus muscle endurance work",
         Goal.LoseFat => "Higher reps and shorter rest to keep intensity up",
         Goal.Power => "Boxing, jiu-jitsu, MMA, wrestling: heavy lifts for 6 reps or fewer and explosive, fast reps",

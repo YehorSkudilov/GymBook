@@ -145,6 +145,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
             Name = response.Name,
             Description = response.Description,
             Goal = answers.Goal,
+            Priorities = [.. answers.Priorities],
             DaysPerWeek = answers.DaysPerWeek,
         };
         plan.Workouts = ToWorkouts(response, answers, []);
@@ -445,7 +446,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
                     break;
                 case PlanChangeActions.Add when incoming != null && !alreadyThere:
                     // Anything the AI left out comes from the goal's usual prescription.
-                    var added = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, incoming, store.Profile);
+                    var added = TrainingGoals.Prescription(plan.Goal, store.Profile.Experience, incoming, store.Profile, plan.Priorities);
                     SetNumbers(added, c);
                     workout.Exercises.Add(added);
                     break;
@@ -482,6 +483,7 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
         return new UserProfile
         {
             Goal = plan.Goal,
+            Priorities = [.. plan.Priorities],
             Experience = p.Experience,
             DaysPerWeek = plan.Workouts.Count > 0 ? plan.Workouts.Count : plan.DaysPerWeek,
             SessionMinutes = p.SessionMinutes,
@@ -498,7 +500,8 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
 
     static T Fill<T>(T target, UserProfile answers) where T : PlanAnswers
     {
-        target.Goal = answers.Goal;
+        target.Goal = Goals.Storable(answers.Goal);
+        target.Priorities = [.. answers.Priorities];
         target.Experience = answers.Experience;
         target.DaysPerWeek = answers.DaysPerWeek;
         target.SessionMinutes = answers.SessionMinutes;

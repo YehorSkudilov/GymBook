@@ -46,11 +46,13 @@ public static class PlanGenerator
     public static WorkoutPlan Generate(UserProfile profile)
     {
         var (splitName, days) = Split(profile);
+        var goals = Goals.Of(profile.Goal, profile.Priorities);
         var plan = new WorkoutPlan
         {
             Name = $"{splitName} · {profile.DaysPerWeek}x/week",
-            Description = $"{profile.Goal.Display()} · {profile.Experience.Display()} · {profile.EquipmentAccess.Display()}",
-            Goal = profile.Goal,
+            Description = $"{Goals.Display(goals)} · {profile.Experience.Display()} · {profile.EquipmentAccess.Display()}",
+            Goal = Goals.Storable(goals[0]),
+            Priorities = [.. profile.Priorities],
             DaysPerWeek = profile.DaysPerWeek,
         };
 
@@ -62,7 +64,7 @@ public static class PlanGenerator
             var baseName = name.Split(' ')[0];
             var variant = variants.GetValueOrDefault(baseName);
             variants[baseName] = variant + 1;
-            var workout = BuildWorkout(name, WithPower(profile.Goal, template), variant, count, profile);
+            var workout = BuildWorkout(name, WithAesthetics(goals, WithPower(profile.Goal, template)), variant, count, profile);
             if (profile.TrainNeck)
                 AddNeck(workout, template, profile, ref neckDay);
             plan.Workouts.Add(workout);
@@ -88,6 +90,27 @@ public static class PlanGenerator
             return template;
         string[] first = template == Lower || template == Legs ? ExplosiveLower : template == FullBody ? PowerLift : ExplosiveUpper;
         return [first, .. template];
+    }
+
+    /// <summary>
+    /// Aesthetics: what shapes how a body looks comes first, so a short session keeps it. Upper-body and full-body days
+    /// put the incline press (upper chest) ahead of other pressing, then back width, side delts (shoulder width), rows and
+    /// arms, with rear delts on every one (the day's own slots in that order); its other slots follow. Leg days are as
+    /// they were.
+    /// </summary>
+    static string[][] WithAesthetics(IReadOnlyList<Goal> goals, string[][] template)
+    {
+        if (!goals.Contains(Goal.Aesthetics) || template == Lower || template == Legs)
+            return template;
+        string[] press = template.Contains(InclinePush) ? InclinePush : HorizontalPush;
+        string[][] first = [Squat, press, VerticalPull, SideDelt, HorizontalPull, Hinge, Biceps, Triceps, RearDelt];
+        // Each in its place when the day has it (a push day gets no pulls); side and rear delts on every upper day.
+        var ordered = first.Where(slot => template.Contains(slot) || slot == SideDelt || slot == RearDelt).ToList();
+        // The rest as they came, a slot the day has twice (two rows on a pull day) still twice.
+        var rest = template.ToList();
+        foreach (var slot in ordered)
+            rest.Remove(slot);
+        return [.. ordered, .. rest];
     }
 
     /// <summary>
@@ -132,5 +155,6 @@ public static class PlanGenerator
     }
 
     /// <summary>Sets, rep range, RIR and rest for an exercise given the user's goal and experience.</summary>
-    public static PlanExercise Prescription(UserProfile profile, Exercise ex) => TrainingGoals.Prescription(profile.Goal, profile.Experience, ex, profile);
+    public static PlanExercise Prescription(UserProfile profile, Exercise ex) =>
+        TrainingGoals.Prescription(profile.Goal, profile.Experience, ex, profile, profile.Priorities);
 }

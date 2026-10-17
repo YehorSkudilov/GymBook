@@ -18,7 +18,7 @@ namespace GymBook.Api.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -907,6 +907,10 @@ namespace GymBook.Api.Data.Migrations
                     b.Property<bool>("OnboardingDone")
                         .HasColumnType("boolean");
 
+                    b.PrimitiveCollection<int[]>("Priorities")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
                     b.Property<int?>("ProteinGoalG")
                         .HasColumnType("integer");
 
@@ -1054,6 +1058,10 @@ namespace GymBook.Api.Data.Migrations
 
                     b.Property<bool>("Periodization")
                         .HasColumnType("boolean");
+
+                    b.PrimitiveCollection<int[]>("Priorities")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
 
                     b.PrimitiveCollection<List<int>>("RestDays")
                         .HasColumnType("integer[]");
