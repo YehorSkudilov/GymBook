@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GymBook.Api.Data.Migrations
 {
     [DbContext(typeof(ApiDbContext))]
-    [Migration("20261017053843_GoalPriorities")]
+    [Migration("20261017060037_GoalPriorities")]
     partial class GoalPriorities
     {
         /// <inheritdoc />
@@ -1135,6 +1135,8 @@ namespace GymBook.Api.Data.Migrations
 
                                     b2.Property<int>("TargetRir");
 
+                                    b2.Property<int?>("Unit");
+
                                     b2.Property<string>("Warmups");
                                 });
 
@@ -1221,6 +1223,8 @@ namespace GymBook.Api.Data.Migrations
                             b1.Property<int>("SkippedWarmups");
 
                             b1.Property<int>("TargetRir");
+
+                            b1.Property<int?>("Unit");
 
                             b1.ComplexCollection(typeof(List<Dictionary<string, object>>), "Sets", "GymBook.Models.WorkoutSession.Exercises#SessionExercise.Sets#SetEntry", b2 =>
                                 {

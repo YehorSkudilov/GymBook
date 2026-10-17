@@ -1283,12 +1283,13 @@ public static partial class ExerciseLibrary
         new("farmers_walk", "Farmer's Walk", Forearms, Dumbbell, Compound)
         {
             Secondary = [Traps, Abs, Glutes],
-            Summary = "Walk with a heavy weight in each hand to build grip, traps and a braced trunk; also done with kettlebells or farmer's handles.",
+            Unit = RepUnit.Seconds,
+            Summary = "Walk with a heavy weight in each hand to build grip, traps and a braced trunk that protects your back; also done with kettlebells or farmer's handles.",
             Steps =
             [
                 "Deadlift a heavy dumbbell or kettlebell in each hand, standing tall.",
                 "Brace your core and set your shoulders down and back.",
-                "Walk forward with short, quick steps for the set distance or time.",
+                "Walk with short, quick steps in a straight line, turning and coming back as needed, until your grip gives out or for the set time or distance.",
                 "Stop and set the weights down with a flat back.",
             ],
             Tips =
@@ -1302,6 +1303,7 @@ public static partial class ExerciseLibrary
         new("suitcase_carry", "Suitcase Carry", Abs, Dumbbell, Compound)
         {
             Secondary = [Forearms, Glutes, Traps],
+            Unit = RepUnit.Seconds,
             Summary = "Carry a heavy weight in one hand while staying perfectly upright, training the obliques and anti-lateral flexion.",
             Steps =
             [
@@ -1322,6 +1324,7 @@ public static partial class ExerciseLibrary
         {
             Secondary = [Abs, Triceps, Traps],
             Level = Intermediate,
+            Unit = RepUnit.Seconds,
             Summary = "Walk with a kettlebell or dumbbell locked out overhead, for shoulder stability and core control; one-arm is often called a waiter's walk.",
             Steps =
             [
@@ -1341,6 +1344,7 @@ public static partial class ExerciseLibrary
         new("front_rack_carry", "Front Rack Carry", Abs, Kettlebell, Compound)
         {
             Secondary = [Back, Shoulders, Forearms],
+            Unit = RepUnit.Seconds,
             Summary = "Walk with one or two kettlebells in the rack position, training the core to keep you upright.",
             Steps =
             [
@@ -1360,6 +1364,7 @@ public static partial class ExerciseLibrary
         new("sandbag_carry", "Sandbag Bear Hug Carry", Abs, Other, Compound)
         {
             Secondary = [Back, Biceps, Quads],
+            Unit = RepUnit.Meters,
             Summary = "Hug a heavy sandbag to your chest and walk, training the upper back, arms and core; needs a sandbag.",
             Steps =
             [
@@ -1380,6 +1385,7 @@ public static partial class ExerciseLibrary
         {
             Secondary = [Back, Biceps, Forearms],
             Level = Intermediate,
+            Unit = RepUnit.Meters,
             Summary = "A strongman carry with a keg held against the chest; the shifting load trains grip, upper back and core.",
             Steps =
             [
@@ -1401,6 +1407,7 @@ public static partial class ExerciseLibrary
         new("sled_push", "Sled Push", Quads, Other, Compound)
         {
             Secondary = [Glutes, Calves, Hamstrings],
+            Unit = RepUnit.Meters,
             Summary = "Drive a loaded sled across the floor with your legs, for leg power and conditioning with little muscle soreness.",
             Steps =
             [
@@ -1420,6 +1427,7 @@ public static partial class ExerciseLibrary
         new("sled_drag", "Backward Sled Drag", Quads, Other, Compound)
         {
             Secondary = [Calves],
+            Unit = RepUnit.Meters,
             Summary = "Walk backward pulling a sled by a strap or handles, a knee-friendly way to build the quads.",
             Steps =
             [
@@ -1524,6 +1532,7 @@ public static partial class ExerciseLibrary
         {
             Secondary = [Abs, LowerBack, Traps],
             Level = Advanced,
+            Unit = RepUnit.Meters,
             Summary = "Carry a heavy frame across your upper back for distance, building total-body strength and bracing.",
             Steps =
             [

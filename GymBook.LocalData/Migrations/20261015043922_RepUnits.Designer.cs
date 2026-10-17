@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GymBook.LocalData.Migrations
 {
     [DbContext(typeof(LocalDbContext))]
-    [Migration("20261017053849_GoalPriorities")]
-    partial class GoalPriorities
+    [Migration("20261015043922_RepUnits")]
+    partial class RepUnits
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -358,10 +358,6 @@ namespace GymBook.LocalData.Migrations
                     b.Property<bool>("OnboardingDone")
                         .HasColumnType("INTEGER");
 
-                    b.PrimitiveCollection<string>("Priorities")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<int?>("ProteinGoalG")
                         .HasColumnType("INTEGER");
 
@@ -504,10 +500,6 @@ namespace GymBook.LocalData.Migrations
                     b.Property<bool>("Periodization")
                         .HasColumnType("INTEGER");
 
-                    b.PrimitiveCollection<string>("Priorities")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.PrimitiveCollection<string>("RestDays")
                         .HasColumnType("TEXT");
 
@@ -573,6 +565,8 @@ namespace GymBook.LocalData.Migrations
                                     b2.Property<int>("Sets");
 
                                     b2.Property<int>("TargetRir");
+
+                                    b2.Property<int?>("Unit");
 
                                     b2.Property<string>("Warmups");
                                 });
@@ -654,6 +648,8 @@ namespace GymBook.LocalData.Migrations
                             b1.Property<int>("SkippedWarmups");
 
                             b1.Property<int>("TargetRir");
+
+                            b1.Property<int?>("Unit");
 
                             b1.ComplexCollection(typeof(List<Dictionary<string, object>>), "Sets", "GymBook.Models.WorkoutSession.Exercises#SessionExercise.Sets#SetEntry", b2 =>
                                 {

@@ -132,6 +132,11 @@ public class PlanExercise
     public int Sets { get; set; } = 3;
     public int RepMin { get; set; } = 8;
     public int RepMax { get; set; } = 12;
+    /// <summary>
+    /// What the rep range counts: seconds or meters for a carry (a farmer's walk), say. Null: reps, or seconds for a hold,
+    /// as before units were kept, so plans from then keep their meaning.
+    /// </summary>
+    public RepUnit? Unit { get; set; }
     public int TargetRir { get; set; } = 2;
     /// <summary>The rest used for this exercise: its own if <see cref="CustomRest"/>, otherwise kept at the plan's default.</summary>
     public int RestSeconds { get; set; } = 120;
@@ -197,6 +202,8 @@ public class SessionExercise
     public string ExerciseId { get; set; } = "";
     public int RepMin { get; set; } = 8;
     public int RepMax { get; set; } = 12;
+    /// <summary>What the rep range and each set's reps count, as <see cref="PlanExercise.Unit"/>; null: reps (seconds for a hold).</summary>
+    public RepUnit? Unit { get; set; }
     public int TargetRir { get; set; } = 2;
     public int RestSeconds { get; set; } = 120;
     [MaxLength(SyncLimits.TextLength)]

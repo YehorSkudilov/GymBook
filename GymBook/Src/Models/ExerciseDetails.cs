@@ -24,4 +24,9 @@ public record ExerciseVideo(string YouTubeId, double? Start = null, double? End 
 /// databases stay unchanged; custom exercises have none.
 /// </summary>
 /// <param name="Hold">Held still rather than moved: each rep is a second of holding (a hold of a few seconds for the neck).</param>
-public record ExerciseDetails(ExerciseCategory Category, ExerciseLevel Level, bool Hold, IReadOnlyList<string> Steps, IReadOnlyList<string> Tips, ExerciseVideo? Video);
+/// <param name="Unit">
+/// What its sets are counted in when it's put in a plan or workout, if not reps: a carry walked for seconds or meters, a
+/// sled pushed for meters (see TrainingGoals.DefaultUnit). The user can count it another way in each plan.
+/// </param>
+public record ExerciseDetails(ExerciseCategory Category, ExerciseLevel Level, bool Hold, IReadOnlyList<string> Steps, IReadOnlyList<string> Tips,
+    ExerciseVideo? Video, RepUnit? Unit = null);

@@ -59,7 +59,7 @@ public partial class SharedPlanViewModel(ApiClient api, SyncService sync, Dialog
             {
                 Title = $"Day {i + 1} · {w.Name}",
                 Exercises = string.Join("\n", w.Exercises.Select(e =>
-                    $"{e.Name}: {e.Sets} × {(e.RepMin == e.RepMax ? $"{e.RepMin}" : $"{e.RepMin}–{e.RepMax}")}")),
+                    $"{e.Name}: {e.Sets} × {(e.RepMin == e.RepMax ? $"{e.RepMin}" : $"{e.RepMin}–{e.RepMax}")}{(e.Unit is { } u ? $" {Models.EnumDisplay.Display(u)}" : "")}")),
             })];
             InviteText = plan.MyRole == Models.PlanShareRole.Editor
                 ? "You're invited to edit this plan: your changes reach everyone in it."

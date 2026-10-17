@@ -24,10 +24,18 @@ public class ProgressionEngine(DataStore store, Units units)
             .Select(x => ((WorkoutSession, SessionExercise)?)(x.s, x.e!))
             .FirstOrDefault();
 
-    public Suggestion Suggest(Exercise ex, int sets, int repMin, int repMax, int targetRir)
+    /// <summary>
+    /// The sets to start <paramref name="ex"/> with, and advice on progressing. <paramref name="unit"/> is what the sets
+    /// count, as kept with them (see TrainingGoals.UnitOf): seconds, meters or steps progress by the weight's step, not by
+    /// estimated maxes.
+    /// </summary>
+    public Suggestion Suggest(Exercise ex, int sets, int repMin, int repMax, int targetRir, RepUnit? unit = null)
     {
         var result = new List<SetEntry>();
         var last = LastSession(ex.Id);
+        var counted = TrainingGoals.UnitOf(ex, unit);
+        if (counted != RepUnit.Reps)
+            return SuggestCounted(ex, sets, repMin, repMax, counted, last);
 
         if (last == null)
         {
@@ -93,14 +101,61 @@ public class ProgressionEngine(DataStore store, Units units)
     }
 
     /// <summary>
-    /// Advice after a working set, with the weight it suggests for the next one: lower after falling short of the minimum,
-    /// higher after going past the maximum with reps to spare. Null when the set was in range.
+    /// <see cref="Suggest"/> for sets counted in seconds, meters or steps: last time's sets again, with the weight a step
+    /// up once every set reached the top of the range, or a step down when most fell short of the bottom.
     /// </summary>
-    public (string Advice, double? NextKg)? AfterSet(Exercise ex, SetEntry set, int repMin, int repMax, int targetRir)
+    Suggestion SuggestCounted(Exercise ex, int sets, int repMin, int repMax, RepUnit unit, (WorkoutSession Session, SessionExercise Exercise)? last)
+    {
+        var range = unit.Range(repMin, repMax);
+        var result = new List<SetEntry>();
+        // Last time counted another way: its weights are still a start, its counts aren't.
+        var sameUnit = last != null && TrainingGoals.UnitOf(ex, last.Value.Exercise.Unit) == unit;
+        if (last == null)
+        {
+            for (var i = 0; i < sets; i++)
+                result.Add(new SetEntry { Reps = repMin });
+            return new Suggestion(result, $"First time: pick a weight you can hold good posture with for {range}.");
+        }
+
+        var work = last.Value.Exercise.Sets.Where(s => s.IsCompleted && !s.IsWarmup).ToList();
+        foreach (var p in Expand(work, sets))
+            result.Add(new SetEntry { WeightKg = p.WeightKg, Reps = sameUnit ? p.Reps : repMin });
+        var top = work.Max(s => s.WeightKg);
+        if (!sameUnit || top <= 0)
+            return new Suggestion(result, $"Aim for {range} a set.");
+        if (work.All(s => s.Reps >= repMax))
+            return new Suggestion(result,
+                $"Try {units.FormatWithUnit(units.Step(top, ex, 1))}. You went {repMax}+ {unit.Display()} on every set last time.");
+        if (work.Count(s => s.Reps < repMin) * 2 >= work.Count)
+            return new Suggestion(result,
+                $"Consider {units.FormatWithUnit(units.Step(top, ex, -1))}. You got {unit.Count(work.Min(s => s.Reps))} last time, under your minimum of {repMin}.");
+        return new Suggestion(result, $"Same weight as last time. Aim for a little more on each set, up to {unit.Count(repMax)}.");
+    }
+
+    /// <summary>
+    /// Advice after a working set, with the weight it suggests for the next one: lower after falling short of the minimum,
+    /// higher after going past the maximum with reps to spare. Null when the set was in range. <paramref name="unit"/> is
+    /// what the sets count, as kept with them; in seconds, meters or steps the weight moves a step at a time.
+    /// </summary>
+    public (string Advice, double? NextKg)? AfterSet(Exercise ex, SetEntry set, int repMin, int repMax, int targetRir, RepUnit? unit = null)
     {
         if (set.IsWarmup || set.Reps <= 0)
             return null;
         var loaded = set.WeightKg > 0;
+        var counted = TrainingGoals.UnitOf(ex, unit);
+        if (counted != RepUnit.Reps)
+        {
+            var done = counted.Count(set.Reps);
+            if (set.Reps < repMin)
+                return loaded
+                    ? ($"{done} is under your {repMin} minimum. Consider {units.FormatWithUnit(units.Step(set.WeightKg, ex, -1))} for the next set.", units.Step(set.WeightKg, ex, -1))
+                    : ($"{done} is under your {repMin} minimum. Rest a little longer, or use an easier variation.", null);
+            if (set.Reps > repMax)
+                return loaded
+                    ? ($"{done} is over your {repMax} maximum. Consider {units.FormatWithUnit(units.Step(set.WeightKg, ex, 1))} for the next set.", units.Step(set.WeightKg, ex, 1))
+                    : ($"{done} is over your {repMax} maximum. Add weight or a harder variation next time.", null);
+            return null;
+        }
         if (set.Reps < repMin)
         {
             if (!loaded)
@@ -190,6 +245,8 @@ public class ProgressionEngine(DataStore store, Units units)
         var since = DateTime.Now.AddDays(-120);
         var ratios = store.History.Where(s => s.StartedAt >= since)
             .SelectMany(s => s.Exercises)
+            // Sets counted in seconds or meters (carries) give no 1RM.
+            .Where(e => TrainingGoals.UnitOf(store.GetExercise(e.ExerciseId), e.Unit) == RepUnit.Reps)
             .GroupBy(e => e.ExerciseId)
             .Select(g => (ex: store.GetExercise(g.Key), best: g.SelectMany(e => e.Sets).Where(s => s.IsCompleted && !s.IsWarmup && s.WeightKg > 0)
                 .Select(s => E1Rm(s.WeightKg, s.Reps, s.Rir)).DefaultIfEmpty(0).Max()))

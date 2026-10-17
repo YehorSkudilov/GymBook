@@ -2,6 +2,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymBook.Contracts;
+using GymBook.Models;
 
 namespace GymBook.Wear;
 
@@ -275,17 +276,17 @@ public partial class CompanionViewModel : ObservableObject
         var repsNow = _reps ?? set.Reps;
         HasWeight = weightNow > 0 || set.Weight > 0;
         WeightText = weightNow > 0 ? $"{weightNow.ToString("0.##", CultureInfo.CurrentCulture)} {_workout.Unit}" : "Bodyweight";
-        RepsText = $"{repsNow} reps";
+        RepsText = exercise.Unit.Count(repsNow);
         ExerciseName = exercise.Name;
         var ofKind = exercise.Sets.Where(s => s.IsWarmup == set.IsWarmup).ToList();
         var number = exercise.Sets.Take(current.Set + 1).Count(s => s.IsWarmup == set.IsWarmup);
         SetLabel = $"{(set.IsWarmup ? "Warm-up" : "Set")} {number} of {ofKind.Count}";
         var weight = set.Weight > 0 ? $"{set.Weight.ToString("0.#", CultureInfo.CurrentCulture)} {_workout.Unit}" : "Bodyweight";
-        Target = set.Reps > 0 ? $"{weight} × {set.Reps}" : weight;
+        Target = set.Reps > 0 ? $"{weight} × {(exercise.Unit == RepUnit.Reps ? $"{set.Reps}" : exercise.Unit.Count(set.Reps))}" : weight;
         var nextExercise = _workout.Exercises.Skip(current.Exercise + 1).FirstOrDefault(e => e.Sets.Any(s => !s.IsCompleted));
         Next = current.Set == exercise.Sets.Count - 1 && nextExercise != null ? $"Next: {nextExercise.Name}" : "";
         CanComplete = _pending == null && repsNow > 0;
-        DoneText = _pending != null ? "Saving…" : repsNow > 0 ? "Done" : "Add reps";
+        DoneText = _pending != null ? "Saving…" : repsNow > 0 ? "Done" : $"Add {exercise.Unit.Name().ToLowerInvariant()}";
     }
 
     /// <summary>The weight − and +: by the exercise's usual jump (2.5 kg / 5 lb when the phone didn't say).</summary>
@@ -306,8 +307,11 @@ public partial class CompanionViewModel : ObservableObject
     {
         if (Current() is not { } current || _pending != null)
             return;
-        var now = _reps ?? _workout.Exercises[current.Exercise].Sets[current.Set].Reps;
-        _reps = Math.Clamp(now + int.Parse(delta, CultureInfo.InvariantCulture), 0, 100);
+        var exercise = _workout.Exercises[current.Exercise];
+        var now = _reps ?? exercise.Sets[current.Set].Reps;
+        // Seconds and meters go 5 at a time.
+        var step = exercise.Unit is RepUnit.Seconds or RepUnit.Meters ? 5 : 1;
+        _reps = Math.Clamp(now + step * int.Parse(delta, CultureInfo.InvariantCulture), 0, 1000);
         Refresh();
     }
 

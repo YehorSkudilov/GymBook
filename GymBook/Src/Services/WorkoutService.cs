@@ -42,16 +42,21 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         return session;
     }
 
-    /// <summary>An exercise of a workout: its suggested sets, after its <paramref name="warmups"/>.</summary>
+    /// <summary>
+    /// An exercise of a workout: its suggested sets, after its <paramref name="warmups"/>, counted in <paramref name="unit"/>
+    /// (or the <paramref name="planned"/> exercise's).
+    /// </summary>
     public SessionExercise CreateExercise(Exercise ex, int sets, int repMin, int repMax, int rir, int rest, IReadOnlyList<WarmupStep> warmups,
-        PlanExercise? planned = null)
+        PlanExercise? planned = null, RepUnit? unit = null)
     {
-        var suggestion = engine.Suggest(ex, sets, repMin, repMax, rir);
+        unit ??= planned?.Unit;
+        var suggestion = engine.Suggest(ex, sets, repMin, repMax, rir, unit);
         var se = new SessionExercise
         {
             ExerciseId = ex.Id,
             RepMin = repMin,
             RepMax = repMax,
+            Unit = unit,
             TargetRir = rir,
             RestSeconds = rest,
             Recommendation = suggestion.Note,
@@ -75,7 +80,8 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
         var p = PlanGenerator.Prescription(store.Profile, ex);
         var rest = plan == null ? p.RestSeconds : PlanRest.DefaultFor(plan, store.Profile, ex);
         var warm = session?.Exercises.Any(e => store.GetExercise(e.ExerciseId)?.PrimaryMuscle == ex.PrimaryMuscle) == true;
-        return CreateExercise(ex, p.Sets, p.RepMin, p.RepMax, p.TargetRir, rest, Warmups.Recommended(ex, warm));
+        // Counted as it would be in a plan: seconds for a farmer's walk.
+        return CreateExercise(ex, p.Sets, p.RepMin, p.RepMax, p.TargetRir, rest, Warmups.Recommended(ex, warm), unit: p.Unit);
     }
 
     /// <summary>
@@ -268,7 +274,8 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
                 var note = se.NotePinned ? se.Note : null;
                 proposed.Add(new PlanExercise
                 {
-                    ExerciseId = se.ExerciseId, Sets = sets, RepMin = se.RepMin, RepMax = se.RepMax, TargetRir = se.TargetRir, RestSeconds = se.RestSeconds, Note = note,
+                    ExerciseId = se.ExerciseId, Sets = sets, RepMin = se.RepMin, RepMax = se.RepMax, Unit = se.Unit, TargetRir = se.TargetRir,
+                    RestSeconds = se.RestSeconds, Note = note,
                     // The warm-ups it had (none if they were all taken out); null when there's no weight to take them from.
                     Warmups = se.Sets.Any(s => s.IsWarmup) ? Warmups.FromSets(se.Sets) is { } done ? Warmups.FormatSteps(done) : null : "",
                 });
@@ -297,6 +304,13 @@ public class WorkoutService(DataStore store, ProgressionEngine engine)
             updated.CustomRest = planned.CustomRest || se.RestSeconds != planned.RestSeconds;
             // A pinned note becomes the plan's; unpinning the plan's takes it off.
             updated.Note = se.NotePinned ? se.Note : null;
+            // Counted another way (seconds instead of reps, say): that from now on, with the range that goes with it.
+            if (ex != null && TrainingGoals.UnitOf(ex, se.Unit) != TrainingGoals.UnitOf(ex, planned.Unit))
+            {
+                (updated.Unit, updated.RepMin, updated.RepMax) = (se.Unit, se.RepMin, se.RepMax);
+                changes.Add($"{Name(planned.ExerciseId)}: {TrainingGoals.UnitOf(ex, planned.Unit).Range(planned.RepMin, planned.RepMax)}"
+                    + $" → {TrainingGoals.UnitOf(ex, se.Unit).Range(se.RepMin, se.RepMax)}");
+            }
             if (updated.Sets != planned.Sets)
                 changes.Add($"{Name(planned.ExerciseId)}: {planned.Sets} → {updated.Sets} sets");
             if (updated.RestSeconds != planned.RestSeconds)

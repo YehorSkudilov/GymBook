@@ -29,8 +29,12 @@ public class DialogService
     public Task<int[]?> Numbers(string title, string? message, string accept, params NumberField[] fields) =>
         DialogSheet.Numbers(title, message, fields, accept);
 
-    /// <summary>Reps per set, exact or a range; (min, max), the same twice for exact, or null when cancelled.</summary>
-    public Task<(int Min, int Max)?> Reps(string title, int min, int max) => DialogSheet.Reps(title, min, max);
+    /// <summary>
+    /// Reps per set, exact or a range, and what they count (reps, seconds, meters or steps); switching the unit puts in
+    /// <paramref name="rangeFor"/> it. (min, max, unit), the same number twice for exact, or null when cancelled.
+    /// </summary>
+    public Task<(int Min, int Max, Models.RepUnit Unit)?> Reps(string title, int min, int max, Models.RepUnit unit, Func<Models.RepUnit, (int Min, int Max)> rangeFor) =>
+        DialogSheet.Reps(title, min, max, unit, rangeFor);
 
     /// <summary>An amount to add or subtract, typed or stepped; signed (negative to subtract), or null when cancelled.</summary>
     public Task<double?> Change(string title, string? message, string unit, double step) => DialogSheet.Change(title, message, unit, step);

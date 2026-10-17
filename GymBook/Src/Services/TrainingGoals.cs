@@ -25,6 +25,48 @@ public static class TrainingGoals
         ExerciseLibrary.Details(ex.Id)?.Category is ExerciseCategory.Stretch or ExerciseCategory.Yoga
         || IsIsometric(ex) && ex.PrimaryMuscle != MuscleGroup.Neck;
 
+    /// <summary>Carries and sleds: walked or pushed for time or distance, not repeated (see <see cref="DefaultUnit"/>).</summary>
+    public static bool IsCarry(Exercise ex) => ExerciseLibrary.Details(ex.Id)?.Unit != null;
+
+    /// <summary>
+    /// What <paramref name="ex"/>'s sets are counted in when it's put in a plan or workout: the library's unit for
+    /// carries and sleds (seconds for a farmer's walk), seconds for holds, else reps.
+    /// </summary>
+    public static RepUnit DefaultUnit(Exercise ex) =>
+        ExerciseLibrary.Details(ex.Id)?.Unit ?? (IsTimed(ex) ? RepUnit.Seconds : RepUnit.Reps);
+
+    /// <summary>
+    /// What the sets count: <paramref name="chosen"/>, the unit kept with the plan or workout exercise. Without one (as
+    /// everything was before units were kept), reps, or seconds for a hold, which always logged seconds as reps; never
+    /// the library's unit, so a carry logged in reps before stays in reps.
+    /// </summary>
+    public static RepUnit UnitOf(Exercise? ex, RepUnit? chosen) => chosen ?? (ex != null && IsTimed(ex) ? RepUnit.Seconds : RepUnit.Reps);
+
+    /// <summary>The unit to keep for <paramref name="unit"/>: null when that's what none means (see <see cref="UnitOf"/>).</summary>
+    public static RepUnit? Stored(Exercise? ex, RepUnit unit) => unit == UnitOf(ex, null) ? null : unit;
+
+    /// <summary>
+    /// A rep range for <paramref name="ex"/> counted in <paramref name="unit"/>: the goal's when that's its usual unit,
+    /// otherwise a typical one for the unit (half a minute to a minute of walking, 20–40 m, 40–80 steps).
+    /// </summary>
+    public static (int Min, int Max) Range(Goal goal, Experience experience, Exercise ex, RepUnit unit)
+    {
+        if (unit == DefaultUnit(ex))
+        {
+            var p = Prescription(goal, experience, ex);
+            return (p.RepMin, p.RepMax);
+        }
+        return UnitRange(unit) ?? (8, 12);
+    }
+
+    static (int, int)? UnitRange(RepUnit unit) => unit switch
+    {
+        RepUnit.Seconds => (30, 60),
+        RepUnit.Meters => (20, 40),
+        RepUnit.Steps => (40, 80),
+        _ => null,
+    };
+
     /// <summary>Neck strength work, reps or isometric holds, trained its own careful way (its stretches and mobility drills aren't).</summary>
     static bool IsNeckStrength(Exercise ex) => ex.PrimaryMuscle == MuscleGroup.Neck && !IsTimed(ex) && !IsControl(ex);
 
@@ -101,6 +143,13 @@ public static class TrainingGoals
             rir = 3;
             rest = stretch ? 15 : 60;
         }
+        else if (IsCarry(ex))
+        {
+            // Walked until the grip or posture gives out, or for a set time or distance; heavy, so a full rest.
+            (min, max) = UnitRange(DefaultUnit(ex))!.Value;
+            sets = 3;
+            rir = 2;
+        }
         else if (IsControl(ex))
         {
             (min, max) = (6, 10);
@@ -112,16 +161,28 @@ public static class TrainingGoals
         if (RestOverride(profile, ex) is { } own && !IsTimed(ex) && !IsControl(ex))
             rest = own;
 
-        return new PlanExercise { ExerciseId = ex.Id, Sets = sets, RepMin = min, RepMax = max, TargetRir = rir, RestSeconds = rest };
+        return new PlanExercise
+        {
+            ExerciseId = ex.Id, Sets = sets, RepMin = min, RepMax = max, Unit = Stored(ex, DefaultUnit(ex)), TargetRir = rir, RestSeconds = rest,
+        };
     }
 
     /// <summary>The rest the user set for exercises like <paramref name="ex"/>, or null to rest as the goal suggests.</summary>
     public static int? RestOverride(UserProfile? profile, Exercise ex) =>
         ex.Mechanic == Mechanic.Compound ? profile?.CompoundRestSeconds : profile?.IsolationRestSeconds;
 
-    /// <summary>Roughly how long one rep takes, including the lowering.</summary>
-    public static double SecondsPerRep(Goal goal, Exercise? ex)
+    /// <summary>Roughly how long one rep takes, including the lowering; or one second, meter or step, as <paramref name="unit"/> counts.</summary>
+    public static double SecondsPerRep(Goal goal, Exercise? ex, RepUnit? unit = null)
     {
+        switch (UnitOf(ex, unit))
+        {
+            case RepUnit.Seconds:
+                return ex != null && IsNeckStrength(ex) ? 6 : 1;
+            case RepUnit.Meters:
+                return 1; // A loaded walk or sled covers about a meter a second.
+            case RepUnit.Steps:
+                return 0.6;
+        }
         if (ex != null && IsNeckStrength(ex))
             return IsIsometric(ex) ? 6 : 4;
         if (ex != null && IsTimed(ex))
@@ -139,12 +200,16 @@ public static class TrainingGoals
         };
     }
 
-    /// <summary>Coaching cues for doing <paramref name="ex"/> the way <paramref name="goal"/> needs, most important first.</summary>
-    public static List<string> Tips(Goal goal, Exercise ex, int repMin, int repMax, int restSeconds)
+    /// <summary>
+    /// Coaching cues for doing <paramref name="ex"/> the way <paramref name="goal"/> needs, most important first;
+    /// <paramref name="unit"/> is what its sets count, as kept with it (see <see cref="UnitOf"/>).
+    /// </summary>
+    public static List<string> Tips(Goal goal, Exercise ex, int repMin, int repMax, int restSeconds, RepUnit? unit = null)
     {
         var tips = new List<string>();
         var compound = ex.Mechanic == Mechanic.Compound;
         var rest = Units.Rest(restSeconds);
+        var counted = UnitOf(ex, unit);
 
         if (IsNeckStrength(ex))
         {
@@ -160,12 +225,26 @@ public static class TrainingGoals
             return tips;
         }
 
-        if (IsTimed(ex))
+        if (IsTimed(ex) && counted == RepUnit.Seconds)
         {
-            tips.Add($"Count seconds, not reps: hold for {repMin}–{repMax} seconds and log the seconds as reps.");
+            tips.Add($"Count seconds, not reps: hold for {repMin}–{repMax} seconds and log the seconds.");
             tips.Add(ExerciseLibrary.Details(ex.Id)?.Category is ExerciseCategory.Stretch or ExerciseCategory.Yoga
                 ? "Ease into it and breathe slowly. A stretch should feel strong but never painful."
                 : "Stop the hold as soon as your position slips, rather than sagging through the last seconds.");
+            return tips;
+        }
+
+        if (counted != RepUnit.Reps)
+        {
+            var range = counted.Range(repMin, repMax);
+            tips.Add(counted switch
+            {
+                RepUnit.Seconds => $"Walk tall with short, quick steps for {range}, or until your grip gives out, and log the seconds.",
+                RepUnit.Meters => $"Cover {range} a set with short, quick steps, turning and coming back as needed, and log the meters.",
+                _ => $"Take {range} a set, short and quick, turning and coming back as needed, and log the steps.",
+            });
+            tips.Add("Brace your core and keep your shoulders back the whole way. Set the weight down with a flat back, never on a rounded one.");
+            tips.Add($"Short of {repMin} means the weight is too heavy, so lower it. {repMax} or more with good posture means it's time to add weight.");
             return tips;
         }
 

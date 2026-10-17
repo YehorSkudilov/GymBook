@@ -470,6 +470,9 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
         if (c.RepMax > 0)
             e.RepMax = c.RepMax;
         e.RepMax = Math.Max(e.RepMax, e.RepMin);
+        // The AI gives reps (seconds for a hold): a carry's own seconds or meters don't fit its numbers.
+        if (c.RepMin > 0 || c.RepMax > 0)
+            e.Unit = null;
         if (c.TargetRir >= 0)
             e.TargetRir = c.TargetRir;
         if (c.RestSeconds > 0)
@@ -585,6 +588,10 @@ public class AiPlanService(ApiClient api, AccountService account, DataStore stor
                     // An imported plan's rest times are as written: each exercise keeps its own.
                     CustomRest = keepRest,
                     CustomRir = keepRest,
+                    // The AI only sees the numbers: one it left as they were stays counted as it was (seconds for a
+                    // farmer's walk, say).
+                    Unit = previous.ElementAtOrDefault(workouts.Count)?.Exercises
+                        .FirstOrDefault(p => p.ExerciseId == ex.Id && p.RepMin == e.RepMin && p.RepMax == e.RepMax)?.Unit,
                 });
             }
             if (workout.Exercises.Count > 0)

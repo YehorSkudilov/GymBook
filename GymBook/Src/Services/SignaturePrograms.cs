@@ -726,6 +726,8 @@ public static class SignaturePrograms
                 pe.Sets = slot.Sets;
                 pe.RepMin = slot.RepMin;
                 pe.RepMax = slot.RepMax;
+                // The program's reps, not a carry's own seconds or meters.
+                pe.Unit = null;
                 if (slot.Rir is { } rir)
                     pe.TargetRir = rir;
                 if (slot.Rest is { } rest)

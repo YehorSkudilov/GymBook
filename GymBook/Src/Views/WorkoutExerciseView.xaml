@@ -84,7 +84,7 @@
                             <TapGestureRecognizer Command="{Binding WeightHeaderCommand}" />
                         </Label.GestureRecognizers>
                     </Label>
-                    <Label Grid.Column="2" Text="REPS ▾" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Fill" HorizontalTextAlignment="Center" Padding="0,6">
+                    <Label Grid.Column="2" Text="{Binding RepsLabel, StringFormat='{0} ▾'}" Style="{StaticResource Overline}" FontSize="13" HorizontalOptions="Fill" HorizontalTextAlignment="Center" Padding="0,6">
                         <Label.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding RepsHeaderCommand}" />
                         </Label.GestureRecognizers>
@@ -184,7 +184,7 @@
                     <Grid ColumnDefinitions="0.6*,*,*,*">
                         <Label Text="#" Style="{StaticResource Caption}" HorizontalOptions="Center" />
                         <Label Grid.Column="1" Text="{Binding UnitLabel}" Style="{StaticResource Caption}" HorizontalOptions="Center" />
-                        <Label Grid.Column="2" Text="REPS" Style="{StaticResource Caption}" HorizontalOptions="Center" />
+                        <Label Grid.Column="2" Text="{Binding RepsLabel}" Style="{StaticResource Caption}" HorizontalOptions="Center" />
                         <Label Grid.Column="3" Text="E1RM" Style="{StaticResource Caption}" HorizontalOptions="Center" />
                     </Grid>
                     <VerticalStackLayout BindableLayout.ItemsSource="{Binding PreviousRows}" Spacing="4">

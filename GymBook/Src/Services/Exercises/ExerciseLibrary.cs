@@ -33,7 +33,7 @@ public static partial class ExerciseLibrary
             Instructions = d.Summary,
         })];
         ById = All.ToDictionary(e => e.Id);
-        DetailsById = defs.ToDictionary(d => d.Id, d => new ExerciseDetails(d.Category, d.Level, d.Hold, d.Steps, d.Tips, d.Video));
+        DetailsById = defs.ToDictionary(d => d.Id, d => new ExerciseDetails(d.Category, d.Level, d.Hold, d.Steps, d.Tips, d.Video, d.Unit));
     }
 
     /// <summary>The exercise with <paramref name="id"/>, or the one an id from an earlier library became.</summary>
@@ -68,6 +68,8 @@ public static partial class ExerciseLibrary
         public ExerciseCategory Category { get; init; } = ExerciseCategory.Strength;
         public ExerciseLevel Level { get; init; } = ExerciseLevel.Beginner;
         public bool Hold { get; init; }
+        /// <summary>What its sets count when it isn't reps: seconds or meters for carries and sleds.</summary>
+        public RepUnit? Unit { get; init; }
         /// <summary>A sentence or two: what it is and how it's done. Shown above the steps.</summary>
         public required string Summary { get; init; }
         public IReadOnlyList<string> Steps { get; init; } = [];

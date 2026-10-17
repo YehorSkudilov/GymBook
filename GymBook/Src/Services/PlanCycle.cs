@@ -57,6 +57,7 @@ public static class PlanCycle
             Sets = sets,
             RepMin = pe.RepMin,
             RepMax = pe.RepMax,
+            Unit = pe.Unit,
             TargetRir = rir,
             RestSeconds = pe.RestSeconds,
             CustomRest = pe.CustomRest,

@@ -52,10 +52,11 @@ public static class Warmups
 
     /// <summary>
     /// The warm-ups an exercise gets when it's put in a plan (or added to a workout on the fly): by its kind, lighter
-    /// once an earlier exercise worked the same muscle; none for bodyweight moves.
+    /// once an earlier exercise worked the same muscle; none for bodyweight moves, nor for carries and sleds (walked for
+    /// time or distance, where a warm-up's reps mean nothing).
     /// </summary>
     public static List<WarmupStep> Recommended(Exercise ex, bool alreadyWarm) =>
-        ex.IsBodyweight ? [] : [.. KindOf(ex, alreadyWarm) switch
+        ex.IsBodyweight || TrainingGoals.IsCarry(ex) ? [] : [.. KindOf(ex, alreadyWarm) switch
         {
             WarmupKind.Barbell => Barbell,
             WarmupKind.Compound => Compound,

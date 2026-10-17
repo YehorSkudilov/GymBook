@@ -61,8 +61,12 @@ public record WearWorkout(
     public static readonly WearWorkout None = new(false, "", "", DateTimeOffset.MinValue, "kg", []);
 }
 
-/// <summary>An exercise; <see cref="WeightStep"/> is its usual weight jump in the workout's unit (0 from an older phone app).</summary>
-public record WearExercise(string Name, int RepMin, int RepMax, int RestSeconds, List<WearSet> Sets, double WeightStep = 0);
+/// <summary>
+/// An exercise; <see cref="WeightStep"/> is its usual weight jump in the workout's unit (0 from an older phone app), and
+/// <see cref="Unit"/> what its sets' reps count (seconds or meters for a carry; reps from an older phone app).
+/// </summary>
+public record WearExercise(string Name, int RepMin, int RepMax, int RestSeconds, List<WearSet> Sets, double WeightStep = 0,
+    Models.RepUnit Unit = Models.RepUnit.Reps);
 
 /// <summary>A set; <see cref="Weight"/> is in the workout's <see cref="WearWorkout.Unit"/>.</summary>
 public record WearSet(double Weight, int Reps, bool IsWarmup, bool IsCompleted, DateTimeOffset? CompletedAt);

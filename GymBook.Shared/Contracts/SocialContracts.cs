@@ -264,6 +264,8 @@ public class SharedExerciseView
     public int Sets { get; set; }
     public int RepMin { get; set; }
     public int RepMax { get; set; }
+    /// <summary>What the range counts when it isn't reps (seconds for a farmer's walk, say); null for reps.</summary>
+    public RepUnit? Unit { get; set; }
     public int? TargetRir { get; set; }
     public int RestSeconds { get; set; }
 }

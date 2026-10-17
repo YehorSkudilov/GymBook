@@ -15,8 +15,14 @@ public class StatsService(DataStore store, RecoveryService recovery)
         return d.Date.AddDays(-diff);
     }
 
-    public double SetVolume(Exercise? ex, SetEntry s)
+    /// <summary>
+    /// Weight × reps. None for a set counted in seconds, meters or steps (<paramref name="unit"/>, as kept with it; see
+    /// TrainingGoals.UnitOf), where that product means nothing.
+    /// </summary>
+    public double SetVolume(Exercise? ex, SetEntry s, RepUnit? unit = null)
     {
+        if (TrainingGoals.UnitOf(ex, unit) != RepUnit.Reps)
+            return 0;
         var load = s.WeightKg + (ex?.IsBodyweight == true ? store.Profile.BodyWeightKg : 0);
         return load * s.Reps;
     }
@@ -25,8 +31,11 @@ public class StatsService(DataStore store, RecoveryService recovery)
         session.Exercises.Sum(e =>
         {
             var ex = store.GetExercise(e.ExerciseId);
-            return e.Sets.Where(s => s.IsCompleted && !s.IsWarmup).Sum(s => SetVolume(ex, s));
+            return e.Sets.Where(s => s.IsCompleted && !s.IsWarmup).Sum(s => SetVolume(ex, s, e.Unit));
         });
+
+    /// <summary>Whether <paramref name="e"/>'s sets count reps: only those give an estimated 1RM (not seconds, meters or steps).</summary>
+    bool CountsReps(SessionExercise e) => TrainingGoals.UnitOf(store.GetExercise(e.ExerciseId), e.Unit) == RepUnit.Reps;
 
     /// <summary>The workouts from <paramref name="first"/> to <paramref name="last"/>, both days included.</summary>
     public List<WorkoutSession> SessionsIn(DateTime first, DateTime last) =>
@@ -126,7 +135,7 @@ public class StatsService(DataStore store, RecoveryService recovery)
     /// <summary>The loaded lifts trained in the most sessions, most first: the ones worth charting strength for.</summary>
     public List<Exercise> TrackedLifts(int max) =>
         [.. store.History
-            .SelectMany(s => s.Exercises.Where(e => e.Sets.Any(x => x.IsCompleted && !x.IsWarmup && x.WeightKg > 0)).Select(e => e.ExerciseId).Distinct())
+            .SelectMany(s => s.Exercises.Where(e => CountsReps(e) && e.Sets.Any(x => x.IsCompleted && !x.IsWarmup && x.WeightKg > 0)).Select(e => e.ExerciseId).Distinct())
             .GroupBy(id => id)
             .Select(g => (Exercise: store.GetExercise(g.Key), Sessions: g.Count()))
             .Where(x => x.Exercise is { IsBodyweight: false })
@@ -137,7 +146,7 @@ public class StatsService(DataStore store, RecoveryService recovery)
     /// <summary>Each session's best estimated 1RM for the exercise, oldest first.</summary>
     List<(DateTime Date, double E1Rm)> BestPerSession(string exerciseId) =>
         [.. store.History.Reverse()
-            .Select(s => (s.StartedAt, best: s.Exercises.Where(e => e.ExerciseId == exerciseId)
+            .Select(s => (s.StartedAt, best: s.Exercises.Where(e => e.ExerciseId == exerciseId && CountsReps(e))
                 .SelectMany(e => e.Sets).Where(x => x.IsCompleted && !x.IsWarmup)
                 .Select(x => ProgressionEngine.E1Rm(x.WeightKg, x.Reps, x.Rir)).DefaultIfEmpty(0).Max()))
             .Where(p => p.best > 0)];
@@ -185,7 +194,7 @@ public class StatsService(DataStore store, RecoveryService recovery)
     {
         PersonalRecord? best = null;
         foreach (var s in store.History.Where(s => s.Id != excludeSessionId))
-            foreach (var e in s.Exercises.Where(e => e.ExerciseId == exerciseId))
+            foreach (var e in s.Exercises.Where(e => e.ExerciseId == exerciseId && CountsReps(e)))
                 foreach (var set in e.Sets.Where(x => x.IsCompleted && !x.IsWarmup))
                 {
                     var e1 = ProgressionEngine.E1Rm(set.WeightKg, set.Reps, set.Rir);
@@ -211,7 +220,7 @@ public class StatsService(DataStore store, RecoveryService recovery)
         foreach (var e in session.Exercises)
         {
             var ex = store.GetExercise(e.ExerciseId);
-            if (ex == null || ex.IsBodyweight)
+            if (ex == null || ex.IsBodyweight || !CountsReps(e))
                 continue;
             var top = e.Sets.Where(s => s.IsCompleted && !s.IsWarmup)
                 .Select(s => (s, e1: ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir)))
@@ -219,7 +228,7 @@ public class StatsService(DataStore store, RecoveryService recovery)
             if (top.s == null || top.e1 <= 0)
                 continue;
             var previous = store.History.Where(s => s.Id != session.Id && s.StartedAt < session.StartedAt)
-                .SelectMany(s => s.Exercises.Where(x => x.ExerciseId == e.ExerciseId))
+                .SelectMany(s => s.Exercises.Where(x => x.ExerciseId == e.ExerciseId && CountsReps(x)))
                 .SelectMany(x => x.Sets.Where(s => s.IsCompleted && !s.IsWarmup))
                 .Select(s => ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir))
                 .DefaultIfEmpty(0).Max();
