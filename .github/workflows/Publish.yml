@@ -73,12 +73,12 @@ on:
       admin_windows:
         description: "Windows (.exe zip)"
         type: boolean
-        default: true
+        default: false
 
       admin_android:
         description: "Android (.apk)"
         type: boolean
-        default: true
+        default: false
 
 jobs:
 
