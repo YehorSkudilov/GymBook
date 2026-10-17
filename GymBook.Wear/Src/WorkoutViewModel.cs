@@ -80,9 +80,14 @@ public partial class WorkoutViewModel : ObservableObject
             Ended?.Invoke();
             return;
         }
-        // Pick up where it left off: the first exercise with sets still to do (kept when coming back from adding one).
+        // Pick up where it left off (kept when coming back from adding one): the exercise a set was last ticked in while it
+        // has sets to do (they needn't be done in order), else the first exercise with sets still to do.
         if (CurrentExercise == null || CurrentSet == null)
-            _exercise = Math.Max(0, session.Exercises.FindIndex(e => e.Sets.Any(s => !s.IsCompleted)));
+        {
+            var last = SetTimes.LastDone(session);
+            var going = last == null ? -1 : session.Exercises.FindIndex(e => e.Sets.Contains(last) && e.Sets.Any(s => !s.IsCompleted));
+            _exercise = going >= 0 ? going : Math.Max(0, session.Exercises.FindIndex(e => e.Sets.Any(s => !s.IsCompleted)));
+        }
         Name = session.Name;
         // Followed only while on screen: these outlive the page.
         _heart.Changed -= OnHeartRate;

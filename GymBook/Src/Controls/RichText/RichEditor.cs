@@ -28,6 +28,29 @@ public interface IRichTextPlatform
 /// </summary>
 public class RichEditor : View
 {
+    /// <summary>
+    /// A picture pasted into the text (from the clipboard, or a keyboard's image): its file name ("pasted-image.png") and
+    /// bytes, for the page to upload and put in as an attachment. Nothing goes in the text by itself.
+    /// </summary>
+    public event Action<string, byte[]>? ImagePasted;
+
+    /// <summary>From the platform's text box: a picture was pasted (see <see cref="ImagePasted"/>).</summary>
+    internal void OnImagePasted(string fileName, byte[] data)
+    {
+        if (data.Length > 0)
+            MainThread.BeginInvokeOnMainThread(() => ImagePasted?.Invoke(fileName, data));
+    }
+
+    /// <summary>A pasted picture's file name, by its type ("image/jpeg" → "pasted-image.jpg").</summary>
+    internal static string PastedName(string? mime) => "pasted-image." + (mime?.ToLowerInvariant() switch
+    {
+        "image/jpeg" or "image/jpg" => "jpg",
+        "image/gif" => "gif",
+        "image/webp" => "webp",
+        "image/heic" => "heic",
+        _ => "png",
+    });
+
     public static readonly BindableProperty MarkdownProperty = BindableProperty.Create(nameof(Markdown), typeof(string), typeof(RichEditor), "",
         BindingMode.TwoWay, propertyChanged: (b, _, v) => ((RichEditor)b).OnMarkdownChanged((string?)v ?? ""));
 
