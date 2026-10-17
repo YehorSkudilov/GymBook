@@ -153,10 +153,12 @@ public class RichEditorHandler : ViewHandler<RichEditor, RichEditText>, IRichTex
 /// </summary>
 sealed class ImageReceiver(RichEditorHandler handler) : Java.Lang.Object, AndroidX.Core.View.IOnReceiveContentListener
 {
-    public AndroidX.Core.View.ContentInfoCompat? OnReceiveContent(View view, AndroidX.Core.View.ContentInfoCompat payload)
+    public AndroidX.Core.View.ContentInfoCompat? OnReceiveContent(View? view, AndroidX.Core.View.ContentInfoCompat? payload)
     {
+        if (payload == null)
+            return null;
         var clip = payload.Clip;
-        var resolver = view.Context?.ContentResolver;
+        var resolver = view?.Context?.ContentResolver;
         if (resolver == null)
             return payload;
         var images = new List<(Android.Net.Uri Uri, string Mime)>();
