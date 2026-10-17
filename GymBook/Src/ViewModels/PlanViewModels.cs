@@ -135,7 +135,9 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
     IReadOnlyList<WarmupStep> OwnWarmups => exercise == null ? [] : Warmups.Of(Model, exercise, false);
 
     public string Sets => Model.Sets == 1 ? "1 set" : $"{Model.Sets} sets";
-    public string Reps => Model.RepMin == Model.RepMax ? $"{Model.RepMin} reps" : $"{Model.RepMin}–{Model.RepMax} reps";
+    /// <summary>What its sets count: reps, or seconds, meters or steps (a farmer's walk in seconds, say).</summary>
+    RepUnit Unit => TrainingGoals.UnitOf(exercise, Model.Unit);
+    public string Reps => Unit.Range(Model.RepMin, Model.RepMax);
     public string SetsText => Model.Sets.ToString();
     public string RepsText => Model.RepMin == Model.RepMax ? $"{Model.RepMin}" : $"{Model.RepMin}–{Model.RepMax}";
 
@@ -303,15 +305,18 @@ public partial class PlanDayExercise(PlanExercise model, Exercise? exercise, Wor
     }
 
     /// <summary>
-    /// The reps pill: an exact number of reps, or a range (lowest and highest), typed or stepped. Exact is kept as the
-    /// same number twice.
+    /// The reps pill: an exact number of reps, or a range (lowest and highest), typed or stepped, and what they count:
+    /// reps, or seconds, meters or steps for a carry. Exact is kept as the same number twice; the exercise's usual unit
+    /// kept as none when that's what none means (see TrainingGoals.UnitOf).
     /// </summary>
     [RelayCommand]
     async Task PickReps()
     {
-        if (await dialogs.Reps(Name, Model.RepMin, Model.RepMax) is not { } reps)
+        if (await dialogs.Reps(Name, Model.RepMin, Model.RepMax, Unit,
+                u => exercise == null ? (Model.RepMin, Model.RepMax) : TrainingGoals.Range(plan.Goal, profile.Experience, exercise, u)) is not { } reps)
             return;
-        (Model.RepMin, Model.RepMax) = reps;
+        (Model.RepMin, Model.RepMax) = (reps.Min, reps.Max);
+        Model.Unit = TrainingGoals.Stored(exercise, reps.Unit);
         Changed();
     }
 }

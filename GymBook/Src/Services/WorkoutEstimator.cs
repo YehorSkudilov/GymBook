@@ -17,23 +17,24 @@ public class WorkoutEstimator(DataStore store)
     const double MinPace = 0.5, MaxPace = 2.5;
 
     public int Minutes(PlanWorkout workout, Goal goal) =>
-        Round(Seconds(workout.Exercises.Select(pe => (store.GetExercise(pe.ExerciseId), pe.Sets, pe.RepMin, pe.RepMax, pe.RestSeconds)), goal) * Pace(workout, goal));
+        Round(Seconds(workout.Exercises.Select(pe => (store.GetExercise(pe.ExerciseId), pe.Sets, pe.RepMin, pe.RepMax, pe.RestSeconds, pe.Unit)), goal) * Pace(workout, goal));
 
-    public int Minutes(IEnumerable<(Exercise? Exercise, int Sets, int RepMin, int RepMax, int RestSeconds)> exercises, Goal goal) =>
+    /// <param name="exercises">Each with what its reps count (<see cref="PlanExercise.Unit"/>): seconds, meters or steps take their own time.</param>
+    public int Minutes(IEnumerable<(Exercise? Exercise, int Sets, int RepMin, int RepMax, int RestSeconds, RepUnit? Unit)> exercises, Goal goal) =>
         Round(Seconds(exercises, goal));
 
-    double Seconds(IEnumerable<(Exercise? Exercise, int Sets, int RepMin, int RepMax, int RestSeconds)> exercises, Goal goal)
+    double Seconds(IEnumerable<(Exercise? Exercise, int Sets, int RepMin, int RepMax, int RestSeconds, RepUnit? Unit)> exercises, Goal goal)
     {
         // About the warm-ups an exercise gets: its kind's ramp, or the lighter one once its muscle is warm.
         var warmupRest = store.Profile.WarmupRestSeconds;
         var worked = new HashSet<MuscleGroup>();
         var seconds = 0.0;
         var count = 0;
-        foreach (var (ex, sets, repMin, repMax, rest) in exercises)
+        foreach (var (ex, sets, repMin, repMax, rest, unit) in exercises)
         {
             if (sets <= 0)
                 continue;
-            var perRep = TrainingGoals.SecondsPerRep(goal, ex);
+            var perRep = TrainingGoals.SecondsPerRep(goal, ex, unit);
             seconds += sets * (SetupSeconds + (repMin + repMax) / 2.0 * perRep) + (sets - 1) * rest;
             if (ex is { IsBodyweight: false } && !TrainingGoals.IsExplosive(ex))
                 seconds += Warmups.Recommended(ex, worked.Contains(ex.PrimaryMuscle))
@@ -56,7 +57,7 @@ public class WorkoutEstimator(DataStore store)
             .Where(s => s.PlanWorkoutId == workout.Id && s.Duration >= MinSession && s.Duration <= MaxSession && s.WorkingSets.Any())
             .Take(PaceSessions)
             .Select(s => (Actual: s.Duration.TotalSeconds, Estimated: Seconds(s.Exercises.Select(e =>
-                (store.GetExercise(e.ExerciseId), e.Sets.Count(x => !x.IsWarmup), e.RepMin, e.RepMax, e.RestSeconds)), goal)))
+                (store.GetExercise(e.ExerciseId), e.Sets.Count(x => !x.IsWarmup), e.RepMin, e.RepMax, e.RestSeconds, e.Unit)), goal)))
             .Where(x => x.Estimated > 0)
             .Select(x => Math.Clamp(x.Actual / x.Estimated, MinPace, MaxPace))
             .Order()
@@ -141,7 +142,7 @@ public class WorkoutEstimator(DataStore store)
             if (samples.Count > 0)
                 return Median(samples);
             var reps = set.Reps > 0 ? set.Reps : (e.RepMin + e.RepMax) / 2.0;
-            return SetupSeconds + reps * TrainingGoals.SecondsPerRep(goal, store.GetExercise(e.ExerciseId));
+            return SetupSeconds + reps * TrainingGoals.SecondsPerRep(goal, store.GetExercise(e.ExerciseId), e.Unit);
         }
 
         for (var i = 0; i < open.Count; i++)

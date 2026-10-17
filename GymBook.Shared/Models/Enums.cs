@@ -16,6 +16,12 @@ public enum EquipmentAccess { FullGym, HomeDumbbells, Bodyweight }
 public enum WeightUnit { Kg, Lbs }
 
 /// <summary>
+/// What a set's count is: repetitions, or for holds and carries the seconds held, meters walked or steps taken. Kept in
+/// the rep fields (SetEntry.Reps, RepMin, RepMax), so only the label and the maths that need real reps change.
+/// </summary>
+public enum RepUnit { Reps, Seconds, Meters, Steps }
+
+/// <summary>
 /// A meal, as Samsung Health splits the day. <see cref="MealType.Snack"/> is the afternoon snack: it was the only snack once, and
 /// meals are stored by name, so it keeps its name; the morning and evening ones came later.
 /// </summary>
@@ -62,6 +68,30 @@ public static class EnumDisplay
     };
 
     public static string Display(this Experience e) => e.ToString();
+
+    /// <summary>The unit after a count: "12 reps", "45 sec", "30 m", "40 steps".</summary>
+    public static string Display(this RepUnit u) => u switch
+    {
+        RepUnit.Seconds => "sec",
+        RepUnit.Meters => "m",
+        RepUnit.Steps => "steps",
+        _ => "reps",
+    };
+
+    /// <summary>The unit's name in a menu: "Seconds".</summary>
+    public static string Name(this RepUnit u) => u switch
+    {
+        RepUnit.Seconds => "Seconds",
+        RepUnit.Meters => "Meters",
+        RepUnit.Steps => "Steps",
+        _ => "Reps",
+    };
+
+    /// <summary>A count with its unit: "1 rep", "12 reps", "45 sec".</summary>
+    public static string Count(this RepUnit u, int n) => u == RepUnit.Reps && n == 1 ? "1 rep" : $"{n} {u.Display()}";
+
+    /// <summary>A range with its unit: "8–12 reps", "30–60 sec", or one count when both ends are the same.</summary>
+    public static string Range(this RepUnit u, int min, int max) => min == max ? u.Count(min) : $"{min}–{max} {u.Display()}";
 
     public static string Display(this ActivityLevel a) => a switch
     {

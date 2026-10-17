@@ -60,7 +60,7 @@ public static class SharedPlanPage
             body.Append("<table><thead><tr><th>Exercise</th><th>Sets × reps</th><th class=\"hide-narrow\">Rest</th></tr></thead><tbody>");
             foreach (var e in workout.Exercises)
             {
-                var reps = e.RepMin == e.RepMax ? $"{e.RepMin}" : $"{e.RepMin}–{e.RepMax}";
+                var reps = (e.RepMin == e.RepMax ? $"{e.RepMin}" : $"{e.RepMin}–{e.RepMax}") + (e.Unit is { } u ? $" {u.Display()}" : "");
                 var rir = e.TargetRir is { } r ? $"<span class=\"muted small\"> · {r} RIR</span>" : "";
                 body.Append($"<tr><td>{E(e.Name)}</td><td class=\"nowrap\">{e.Sets} × {E(reps)}{rir}</td><td class=\"hide-narrow nowrap\">{E(Rest(e.RestSeconds))}</td></tr>");
             }

@@ -63,7 +63,8 @@ public class WatchLink(DataStore store, WorkoutService workouts, Units units)
                     s.IsWarmup,
                     s.IsCompleted,
                     s.CompletedAt is { } at ? new DateTimeOffset(at) : null))],
-                store.GetExercise(e.ExerciseId) is { } ex ? units.Increment(ex) : 0)).ToList());
+                store.GetExercise(e.ExerciseId) is { } ex ? units.Increment(ex) : 0,
+                TrainingGoals.UnitOf(store.GetExercise(e.ExerciseId), e.Unit))).ToList());
     }
 
     /// <summary>Ticks the set the watch asked for. Call on the main thread.</summary>
@@ -74,7 +75,8 @@ public class WatchLink(DataStore store, WorkoutService workouts, Units units)
         if (session.Exercises.ElementAtOrDefault(request.Exercise) is not { } se || se.Sets.ElementAtOrDefault(request.Set) is not { IsCompleted: false } set)
             return;
         double? kg = request.Weight is double w && w >= 0 ? units.FromDisplay(w) : null;
-        int? reps = request.Reps is int r && r is >= 0 and <= 100 ? r : null;
+        // Seconds, meters or steps run higher than reps.
+        int? reps = request.Reps is int r && r is >= 0 and <= 1000 ? r : null;
         if (LiveCompleteSet?.Invoke(set, kg, reps) == true)
             return;
         // The workout page isn't open: tick it the way the page would, at what the watch said; a new weight carries on

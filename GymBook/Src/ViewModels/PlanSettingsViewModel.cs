@@ -112,7 +112,8 @@ public partial class PlanSettingsViewModel : ObservableObject
                 if (_store.GetExercise(pe.ExerciseId) is not { } ex)
                     continue;
                 var p = TrainingGoals.Prescription(goal, P.Experience, ex, P);
-                (pe.Sets, pe.RepMin, pe.RepMax) = (p.Sets, p.RepMin, p.RepMax);
+                // The goal's range is in the exercise's usual unit, so it's counted that way again.
+                (pe.Sets, pe.RepMin, pe.RepMax, pe.Unit) = (p.Sets, p.RepMin, p.RepMax, p.Unit);
                 // The target RIR and rest follow the plan's again: its own, or the new goal's.
                 (pe.TargetRir, pe.CustomRir) = (PlanTraining.RirFor(_plan, P, ex), false);
                 (pe.RestSeconds, pe.CustomRest) = (PlanRest.DefaultFor(_plan, P, ex), false);

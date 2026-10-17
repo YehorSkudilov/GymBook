@@ -280,6 +280,7 @@ public class PlanShares(ApiDbContext db, TimeProvider time)
                     Sets = e.Sets,
                     RepMin = e.RepMin,
                     RepMax = e.RepMax,
+                    Unit = e.Unit is RepUnit.Reps ? null : e.Unit,
                     TargetRir = plan.UseRir ? e.TargetRir : null,
                     RestSeconds = e.RestSeconds,
                 })],

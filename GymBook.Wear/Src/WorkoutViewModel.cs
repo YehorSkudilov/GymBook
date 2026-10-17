@@ -211,7 +211,7 @@ public partial class WorkoutViewModel : ObservableObject
         SetLabel = $"{(set.IsWarmup ? "Warm-up" : "Set")} {ofKind.IndexOf(set) + 1} of {ofKind.Count}";
         HasWeight = info?.Equipment != Equipment.Bodyweight || set.WeightKg > 0;
         Weight = $"{_units.ToDisplay(set.WeightKg).ToString("0.#", CultureInfo.CurrentCulture)} {_units.Label}";
-        Reps = $"{set.Reps} reps";
+        Reps = TrainingGoals.UnitOf(info, se.Unit).Count(set.Reps);
         CanComplete = set.Reps > 0;
     }
 
@@ -239,9 +239,11 @@ public partial class WorkoutViewModel : ObservableObject
     [RelayCommand]
     void ChangeReps(string delta)
     {
-        if (CurrentSet is not { } set)
+        if (CurrentSet is not { } set || CurrentExercise is not { } se)
             return;
-        set.Reps = Math.Clamp(set.Reps + int.Parse(delta, CultureInfo.InvariantCulture), 0, 100);
+        // Seconds and meters go 5 at a time.
+        var step = TrainingGoals.UnitOf(Info(se), se.Unit) is RepUnit.Seconds or RepUnit.Meters ? 5 : 1;
+        set.Reps = Math.Clamp(set.Reps + step * int.Parse(delta, CultureInfo.InvariantCulture), 0, 1000);
         _workouts.Save();
         Refresh();
     }

@@ -98,6 +98,8 @@ public class CsvImporter(DataStore store, AiPlanService ai, Billing.Subscription
                     pe.Sets = item.Sets;
                     pe.RepMin = item.RepMin;
                     pe.RepMax = item.RepMax;
+                    // The other app's reps, not a carry's own seconds or meters.
+                    pe.Unit = null;
                     workout.Exercises.Add(pe);
                 }
                 plan.Workouts.Add(workout);

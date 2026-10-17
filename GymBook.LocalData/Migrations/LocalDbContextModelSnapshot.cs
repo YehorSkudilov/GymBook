@@ -16,7 +16,7 @@ namespace GymBook.LocalData.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
             modelBuilder.Entity("GymBook.LocalData.LocalSetting", b =>
                 {
@@ -563,6 +563,8 @@ namespace GymBook.LocalData.Migrations
 
                                     b2.Property<int>("TargetRir");
 
+                                    b2.Property<int?>("Unit");
+
                                     b2.Property<string>("Warmups");
                                 });
 
@@ -643,6 +645,8 @@ namespace GymBook.LocalData.Migrations
                             b1.Property<int>("SkippedWarmups");
 
                             b1.Property<int>("TargetRir");
+
+                            b1.Property<int?>("Unit");
 
                             b1.ComplexCollection(typeof(List<Dictionary<string, object>>), "Sets", "GymBook.Models.WorkoutSession.Exercises#SessionExercise.Sets#SetEntry", b2 =>
                                 {

@@ -1,3 +1,5 @@
+using GymBook.Models;
+
 namespace GymBook.Views;
 
 /// <summary>
@@ -240,16 +242,18 @@ public class DialogSheet : SheetPage
     }
 
     /// <summary>
-    /// Reps per set: an exact number, or a range (lowest and highest), switched at the top. Resolves to (min, max), the
-    /// same number twice for exact reps, or null when cancelled.
+    /// Reps per set: what's counted (reps, or seconds, meters or steps for a carry or hold), then an exact number or a
+    /// range (lowest and highest), switched at the top. Picking another unit puts in <paramref name="rangeFor"/> it.
+    /// Resolves to (min, max, unit), the same number twice for an exact count, or null when cancelled.
     /// </summary>
-    public static async Task<(int Min, int Max)?> Reps(string title, int min, int max)
+    public static async Task<(int Min, int Max, RepUnit Unit)?> Reps(string title, int min, int max, RepUnit unit,
+        Func<RepUnit, (int Min, int Max)> rangeFor)
     {
-        var exact = new NumberInput(new NumberField("Reps", max, 0, NumberField.NoLimit));
+        var exact = new NumberInput(new NumberField(unit.Name(), max, 0, NumberField.NoLimit));
         var low = new NumberInput(new NumberField("Min", min, 0, NumberField.NoLimit));
         var high = new NumberInput(new NumberField("Max", max, 0, NumberField.NoLimit));
         var isRange = min != max;
-        var sheet = new DialogSheet(title, "Reps per set", s =>
+        var sheet = new DialogSheet(title, null, s =>
         {
             // Max under min: side by side, the two don't fit on narrow phones.
             var range = new VerticalStackLayout { Spacing = 16 };
@@ -258,10 +262,42 @@ public class DialogSheet : SheetPage
 
             // Exact | Range: two halves of one toggle, like the calendar's.
             var toggle = new Grid { ColumnSpacing = 2, ColumnDefinitions = [new(GridLength.Star), new(GridLength.Star)] };
-            var exactHalf = Half("Exact reps");
-            var rangeHalf = Half("Rep range");
+            var exactHalf = Half("");
+            var rangeHalf = Half("");
             toggle.Add(exactHalf, 0);
             toggle.Add(rangeHalf, 1);
+
+            // What's counted, above it the same way: Reps | Seconds | Meters | Steps.
+            var units = Enum.GetValues<RepUnit>();
+            var unitRow = new Grid { ColumnSpacing = 2 };
+            var unitParts = units.Select(u => Half(u.Name())).ToArray();
+            for (var i = 0; i < units.Length; i++)
+            {
+                unitRow.ColumnDefinitions.Add(new(GridLength.Star));
+                unitRow.Add(unitParts[i], i);
+                var picked = units[i];
+                unitParts[i].GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => Count(picked, true)) });
+            }
+            void Count(RepUnit picked, bool fill)
+            {
+                if (fill && picked != unit)
+                {
+                    // Another unit, another scale: start from its usual range.
+                    var (lo, hi) = rangeFor(picked);
+                    if (lo != hi && !isRange)
+                        Show(true);
+                    low.Set(lo);
+                    high.Set(hi);
+                    exact.Set(hi);
+                }
+                unit = picked;
+                for (var i = 0; i < units.Length; i++)
+                    Paint(unitParts[i], units[i] == unit);
+                exact.Relabel(unit.Name());
+                ((Label)exactHalf.Content!).Text = $"Exact {unit.Name().ToLowerInvariant()}";
+                ((Label)rangeHalf.Content!).Text = unit == RepUnit.Reps ? "Rep range" : "Range";
+            }
+
             void Show(bool ranged)
             {
                 // Carry the number over: exact from the top of the range, the range around the exact number.
@@ -281,30 +317,33 @@ public class DialogSheet : SheetPage
             }
             exactHalf.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => Show(false)) });
             rangeHalf.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => Show(true)) });
-            var wrap = new Border
+            Border Track(View content) => new()
             {
                 BackgroundColor = Resource<Color>("Surface2"),
                 StrokeShape = new Microsoft.Maui.Controls.Shapes.RoundRectangle { CornerRadius = 12 },
                 StrokeThickness = 0,
                 Padding = 3,
-                Content = toggle,
+                Content = content,
             };
 
             var body = new VerticalStackLayout { Spacing = 16 };
-            body.Add(wrap);
+            body.Add(new Label { Text = "COUNT IN", Style = Resource<Style>("Overline"), FontSize = 11, HorizontalOptions = LayoutOptions.Center, Margin = new Thickness(0, 0, 0, -10) });
+            body.Add(Track(unitRow));
+            body.Add(Track(toggle));
             body.Add(exact.View);
             body.Add(range);
             // As it is now: nothing to carry over yet.
             Show(isRange);
+            Count(unit, false);
             // Read what's typed: the box being typed in may not have lost focus yet.
             return s.SaveCancel(body, "Save", () => $"{exact.Read()},{low.Read()},{high.Read()}");
         });
         if (await DialogSheet.Show(sheet) == null)
             return null;
         if (!isRange)
-            return (exact.Value, exact.Value);
+            return (exact.Value, exact.Value, unit);
         // Entered the wrong way round: swapped.
-        return (Math.Min(low.Value, high.Value), Math.Max(low.Value, high.Value));
+        return (Math.Min(low.Value, high.Value), Math.Max(low.Value, high.Value), unit);
     }
 
     /// <summary>
@@ -727,8 +766,9 @@ public class DialogSheet : SheetPage
     /// <summary>A labelled whole number between − and + (tap it for the number pad), kept within the field's limits.</summary>
     sealed class NumberInput
     {
-        readonly NumberField _field;
+        NumberField _field;
         readonly Label _number;
+        readonly Label _label;
 
         public NumberInput(NumberField field)
         {
@@ -746,7 +786,8 @@ public class DialogSheet : SheetPage
             var box = new Border { Style = Resource<Style>("InputBox"), HeightRequest = 60, Content = _number };
             box.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(async () =>
             {
-                if (await NumberPadSheet.Show(Value.ToString(), Value, 1, field.Min, Math.Min(field.Max, field.Min + 200), field.Label.ToLowerInvariant()) is { } v)
+                // Up to 1000 on the wheel: seconds, meters and steps run past what reps do.
+                if (await NumberPadSheet.Show(Value.ToString(), Value, 1, _field.Min, Math.Min(_field.Max, _field.Min + 1000), _field.Label.ToLowerInvariant()) is { } v)
                     Set((int)Math.Round(v));
             }) });
             var line = new Grid { ColumnSpacing = 8, ColumnDefinitions = [new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto)] };
@@ -754,7 +795,8 @@ public class DialogSheet : SheetPage
             line.Add(box, 1);
             line.Add(Step("+", 1), 2);
             var stack = new VerticalStackLayout { Spacing = 6 };
-            stack.Add(new Label { Text = field.Label.ToUpperInvariant(), Style = Resource<Style>("Overline"), FontSize = 11, HorizontalOptions = LayoutOptions.Center });
+            _label = new Label { Text = field.Label.ToUpperInvariant(), Style = Resource<Style>("Overline"), FontSize = 11, HorizontalOptions = LayoutOptions.Center };
+            stack.Add(_label);
             stack.Add(line);
             View = stack;
         }
@@ -769,6 +811,13 @@ public class DialogSheet : SheetPage
         {
             Value = Math.Clamp(value, _field.Min, _field.Max);
             _number.Text = Value.ToString();
+        }
+
+        /// <summary>Names it anew (above it, and on its number pad): "Seconds" once a hold's counted in seconds.</summary>
+        public void Relabel(string label)
+        {
+            _field = _field with { Label = label };
+            _label.Text = label.ToUpperInvariant();
         }
 
         Button Step(string text, int delta)

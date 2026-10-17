@@ -142,6 +142,7 @@ public partial class WorkoutViewModel(
     internal DialogService Dialogs => dialogs;
     /// <summary>The goal the exercises are coached for: the plan's, or the profile's for a workout outside a plan.</summary>
     internal Goal Goal => store.GetPlan(_session?.PlanId)?.Goal ?? store.Profile.Goal;
+    internal Experience Experience => store.Profile.Experience;
 
     /// <summary>A workout of a plan day: its exercises' notes can be pinned, for the plan update offered on finishing.</summary>
     internal bool IsPlanWorkout => _session is { } session
@@ -559,8 +560,9 @@ public partial class WorkoutViewModel(
         var sets = exercise.Model.Sets.Where(s => s.IsWarmup == set.IsWarmup).ToList();
         var which = set.IsWarmup ? $"warm-up {sets.IndexOf(set) + 1} of {sets.Count}" : $"set {sets.IndexOf(set) + 1} of {sets.Count}";
         var load = set.WeightKg > 0 ? units.FormatWithUnit(set.WeightKg) : exercise.Exercise.IsBodyweight ? "bodyweight" : "";
-        var reps = set.Reps > 0 ? $"{set.Reps} reps" : "";
-        var what = load.Length > 0 && set.Reps > 0 ? $" · {load} × {set.Reps}" : load.Length > 0 ? $" · {load}" : reps.Length > 0 ? $" · {reps}" : "";
+        var reps = set.Reps > 0 ? exercise.RepUnit.Count(set.Reps) : "";
+        var count = exercise.CountsReps ? $"{set.Reps}" : reps;
+        var what = load.Length > 0 && set.Reps > 0 ? $" · {load} × {count}" : load.Length > 0 ? $" · {load}" : reps.Length > 0 ? $" · {reps}" : "";
         return $"{exercise.Name} · {which}{what}";
     }
 
@@ -998,7 +1000,11 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             var work = last.Exercise.Sets.Where(s => s.IsCompleted && !s.IsWarmup).ToList();
             PreviousTitle = $"{last.Session.StartedAt:ddd, d MMM} · {last.Session.Name}";
             // Its skipped sets too, dimmed, as everywhere else.
-            PreviousRows = [.. work.Select((s, i) => new PlanDaySetRow($"{i + 1}", WeightText(s), $"{s.Reps}", E1RmText(s))),
+            // Counted another way last time (meters, say, where it's seconds now): each count says in what.
+            var lastUnit = TrainingGoals.UnitOf(exercise, last.Exercise.Unit);
+            var sameUnit = lastUnit == TrainingGoals.UnitOf(exercise, model.Unit);
+            PreviousRows = [.. work.Select((s, i) => new PlanDaySetRow($"{i + 1}", WeightText(s), sameUnit ? $"{s.Reps}" : lastUnit.Count(s.Reps),
+                    lastUnit == RepUnit.Reps ? E1RmText(s) : "–")),
                 .. Enumerable.Range(work.Count + 1, last.Exercise.SkippedSets).Select(n => new PlanDaySetRow($"{n}", "Skipped", "–", "N/A") { IsSkipped = true })];
         }
         foreach (var set in model.Sets)
@@ -1071,15 +1077,19 @@ public partial class WorkoutExerciseViewModel : ObservableObject
     internal Units Units => _parent.Units;
 
     public string Name => Exercise.Name;
-    /// <summary>"8–12", or just "12" when the range is one number.</summary>
-    string RepRange => Model.RepMin == Model.RepMax ? $"{Model.RepMin}" : $"{Model.RepMin}–{Model.RepMax}";
+    /// <summary>What its sets count: reps, or seconds, meters or steps for a carry or hold.</summary>
+    public RepUnit RepUnit => TrainingGoals.UnitOf(Exercise, Model.Unit);
+    /// <summary>Counted in reps: only reps give an estimated 1RM.</summary>
+    internal bool CountsReps => RepUnit == RepUnit.Reps;
+    /// <summary>The count column's heading: REPS, SEC, M or STEPS.</summary>
+    public string RepsLabel => RepUnit.Display().ToUpperInvariant();
     public string TargetText => TrackRir
-        ? $"{Exercise.Equipment.Display()} · {RepRange} reps · {Model.TargetRir} RIR · rest {Units.Rest(Model.RestSeconds)}"
-        : $"{Exercise.Equipment.Display()} · {RepRange} reps · rest {Units.Rest(Model.RestSeconds)}";
+        ? $"{Exercise.Equipment.Display()} · {RepUnit.Range(Model.RepMin, Model.RepMax)} · {Model.TargetRir} RIR · rest {Units.Rest(Model.RestSeconds)}"
+        : $"{Exercise.Equipment.Display()} · {RepUnit.Range(Model.RepMin, Model.RepMax)} · rest {Units.Rest(Model.RestSeconds)}";
     public string Recommendation => Model.Recommendation ?? "";
     public bool HasRecommendation => !string.IsNullOrEmpty(Model.Recommendation);
     /// <summary>The main coaching cue for this exercise and goal; the rest are on the exercise's page.</summary>
-    public string Tip => TrainingGoals.Tips(_parent.Goal, Exercise, Model.RepMin, Model.RepMax, Model.RestSeconds).FirstOrDefault() ?? "";
+    public string Tip => TrainingGoals.Tips(_parent.Goal, Exercise, Model.RepMin, Model.RepMax, Model.RestSeconds, Model.Unit).FirstOrDefault() ?? "";
     public bool HasTip => Tip.Length > 0;
     public bool TrackRir => _parent.TrackRir;
     public string UnitLabel => _parent.UnitLabel;
@@ -1114,7 +1124,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
 
     void UpdateFamous()
     {
-        var best = Sets.Where(s => s.IsCompleted && !s.Model.IsWarmup).Select(s => LevelService.SetE1Rm(s.Model)).DefaultIfEmpty(0).Max();
+        var best = !CountsReps ? 0 : Sets.Where(s => s.IsCompleted && !s.Model.IsWarmup).Select(s => LevelService.SetE1Rm(s.Model)).DefaultIfEmpty(0).Max();
         if (Ranks.LiftOf(Exercise.Id) is not { } lift || best <= 0)
         {
             FamousText = "";
@@ -1187,7 +1197,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
 
     internal string E1RmText(SetEntry s)
     {
-        var e1 = s.IsWarmup ? 0 : ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir);
+        var e1 = s.IsWarmup || !CountsReps ? 0 : ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir);
         return e1 > 0 ? Units.Format(e1) : "–";
     }
 
@@ -1266,7 +1276,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             // Out of the rep range: say so. Only advice: the working sets keep the weights and reps from history (or as
             // typed), and the user changes them.
             if (!row.Model.IsWarmup)
-                LiveAdvice = _parent.Engine.AfterSet(Exercise, row.Model, Model.RepMin, Model.RepMax, Model.TargetRir)?.Advice ?? "";
+                LiveAdvice = _parent.Engine.AfterSet(Exercise, row.Model, Model.RepMin, Model.RepMax, Model.TargetRir, Model.Unit)?.Advice ?? "";
             // Warm-ups done (or the rest skipped): fold them away and move on to the working sets.
             if (row.Model.IsWarmup && !HasOpenWarmups)
                 ShowWarmups = false;
@@ -1455,7 +1465,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         _parent.OnStructureChanged();
     }
 
-    /// <summary>The reps heading: one rep count for all the sets still to do.</summary>
+    /// <summary>The reps heading: one rep count (or seconds, meters, steps) for all the sets still to do.</summary>
     [RelayCommand]
     async Task RepsHeader()
     {
@@ -1465,10 +1475,11 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             await NothingOpen();
             return;
         }
+        var setAll = CountsReps ? "Set one rep count for all" : $"Set the same {RepUnit.Name().ToLowerInvariant()} for all";
         string[] options = Model.RepMin == Model.RepMax
-            ? [$"The target ({Model.RepMin})", "Set one rep count for all"]
-            : [$"Bottom of the range ({Model.RepMin})", $"Top of the range ({Model.RepMax})", "Set one rep count for all"];
-        var choice = await _parent.Dialogs.ActionSheet($"Reps for the {Count(open)} left", null, options);
+            ? [$"The target ({Model.RepMin})", setAll]
+            : [$"Bottom of the range ({Model.RepMin})", $"Top of the range ({Model.RepMax})", setAll];
+        var choice = await _parent.Dialogs.ActionSheet($"{RepUnit.Name()} for the {Count(open)} left", null, options);
         int? reps = choice switch
         {
             null => null,
@@ -1476,7 +1487,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             _ when choice.StartsWith("Bottom") => Model.RepMin,
             _ when choice.StartsWith("Top") => Model.RepMax,
             // The same number pad as one set's reps.
-            _ => await Views.NumberPadSheet.Show(open[0].RepsText, open[0].Model.Reps > 0 ? open[0].Model.Reps : Model.RepMin, 1, 0, 100, "reps") is { } r && r >= 1
+            _ => await Views.NumberPadSheet.Show(open[0].RepsText, open[0].Model.Reps > 0 ? open[0].Model.Reps : Model.RepMin, 1, 0, MaxCount, RepUnit.Display()) is { } r && r >= 1
                 ? (int)r
                 : null,
         };
@@ -1507,10 +1518,19 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         _parent.OnStructureChanged();
     }
 
+    /// <summary>The highest count the number pad offers: 100 reps, or 1000 seconds, meters or steps.</summary>
+    internal int MaxCount => CountsReps ? 100 : 1000;
+
     /// <summary>The E1RM heading: what the number is, and this exercise's best.</summary>
     [RelayCommand]
     async Task E1RmHeader()
     {
+        if (!CountsReps)
+        {
+            await _parent.Dialogs.Alert("Estimated one-rep max",
+                $"It's worked out from reps, so sets counted in {RepUnit.Name().ToLowerInvariant()} have none. To get one, count this exercise in reps: ··· › Change {RepUnit.Name().ToLowerInvariant()} per set.");
+            return;
+        }
         var best = Sets.Where(s => s.IsCompleted && !s.Model.IsWarmup)
             .Select(s => ProgressionEngine.E1Rm(s.Model.WeightKg, s.Model.Reps, s.Model.Rir)).DefaultIfEmpty(0).Max();
         var choice = await _parent.Dialogs.ActionSheet("Estimated 1RM", null,
@@ -1578,6 +1598,9 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         _parent.OnStructureChanged();
     }
 
+    /// <summary>The menu item for the rep range: "Change rep range", or "Change seconds per set" for a timed carry.</summary>
+    string ChangeRange => CountsReps ? "Change rep range" : $"Change {RepUnit.Name().ToLowerInvariant()} per set";
+
     [RelayCommand]
     async Task Menu()
     {
@@ -1585,7 +1608,7 @@ public partial class WorkoutExerciseViewModel : ObservableObject
         [
             .. CanSkipExercise ? [SkipExerciseText] : Array.Empty<string>(),
             .. _parent.Exercises.Count > 1 ? ["Swap with another exercise"] : Array.Empty<string>(),
-            "Replace exercise", "Exercise details", "Change rep range", "Change rest time",
+            "Replace exercise", "Exercise details", ChangeRange, "Change rest time",
         ];
         var choice = await _parent.Dialogs.ActionSheet(Name, "Remove exercise", options);
         if (choice == SkipExerciseText)
@@ -1608,14 +1631,28 @@ public partial class WorkoutExerciseViewModel : ObservableObject
             case "Exercise details":
                 await Help();
                 break;
-            case "Change rep range":
-                // Exact reps are kept as the same number twice, like in the plan.
-                if (await _parent.Dialogs.Reps($"{Name} · reps per set", Model.RepMin, Model.RepMax) is { } reps
-                    && (reps.Min, reps.Max) != (Model.RepMin, Model.RepMax))
+            case { } c when c == ChangeRange:
+                // Exact reps are kept as the same number twice, like in the plan. What's counted too: seconds for a
+                // farmer's walk, say.
+                if (await _parent.Dialogs.Reps($"{Name} · per set", Model.RepMin, Model.RepMax, RepUnit,
+                        u => TrainingGoals.Range(_parent.Goal, _parent.Experience, Exercise, u)) is { } reps
+                    && (reps.Min, reps.Max, reps.Unit) != (Model.RepMin, Model.RepMax, RepUnit))
                 {
-                    (Model.RepMin, Model.RepMax) = reps;
+                    var unitChanged = reps.Unit != RepUnit;
+                    (Model.RepMin, Model.RepMax) = (reps.Min, reps.Max);
+                    Model.Unit = TrainingGoals.Stored(Exercise, reps.Unit);
+                    // Counted another way: the sets still to do start from the new range.
+                    if (unitChanged)
+                        foreach (var s in Sets.Where(s => !s.IsSettled))
+                            s.RepsText = Model.RepMin.ToString();
+                    OnPropertyChanged(nameof(RepUnit));
+                    OnPropertyChanged(nameof(RepsLabel));
                     OnPropertyChanged(nameof(TargetText));
                     OnPropertyChanged(nameof(Tip));
+                    foreach (var s in Sets)
+                        s.RefreshCount();
+                    UpdateFamous();
+                    LiveAdvice = "";
                     _parent.OnStructureChanged();
                 }
                 break;
@@ -1725,6 +1762,9 @@ public partial class SetRowViewModel : ObservableObject
 
     internal void RefreshVisibility() => IsVisible = !Model.IsWarmup || _parent.ShowWarmups;
 
+    /// <summary>The exercise is counted another way now (seconds instead of reps): its E1RM goes or comes back.</summary>
+    internal void RefreshCount() => OnPropertyChanged(nameof(E1Rm));
+
     // Skipping is kept on the set itself, so it stays skipped when the workout is reopened.
     partial void OnIsSkippedChanged(bool value)
     {
@@ -1771,7 +1811,7 @@ public partial class SetRowViewModel : ObservableObject
     [RelayCommand]
     async Task EditReps()
     {
-        if (await Views.NumberPadSheet.Show(RepsText, Model.Reps, 1, 0, 100, "reps") is { } v)
+        if (await Views.NumberPadSheet.Show(RepsText, Model.Reps, 1, 0, _parent.MaxCount, _parent.RepUnit.Display()) is { } v)
             RepsText = ((int)v).ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 

@@ -362,10 +362,12 @@ public partial class ExerciseDetailViewModel(DataStore store, StatsService stats
         var goal = store.ActivePlan?.Goal ?? store.Profile.Goal;
         var target = TrainingGoals.Prescription(goal, store.Profile.Experience, ex, store.Profile);
         GoalTitle = $"For {goal.Display().ToLowerInvariant()}";
-        GoalTarget = $"{target.Sets} sets · min {target.RepMin}, max {target.RepMax} reps · {target.TargetRir} in reserve · rest {Units.Rest(target.RestSeconds)}";
-        GoalTips = TrainingGoals.Tips(goal, ex, target.RepMin, target.RepMax, target.RestSeconds);
-        // Before the first time: a starting weight estimated from the user's strength, age and build.
-        var (startKg, basis) = performed == 0 ? progression.StartingWeight(ex, target.RepMin, target.TargetRir) : (0, "");
+        var unit = TrainingGoals.UnitOf(ex, target.Unit);
+        GoalTarget = $"{target.Sets} sets · min {target.RepMin}, max {unit.Count(target.RepMax)} · {target.TargetRir} in reserve · rest {Units.Rest(target.RestSeconds)}";
+        GoalTips = TrainingGoals.Tips(goal, ex, target.RepMin, target.RepMax, target.RestSeconds, target.Unit);
+        // Before the first time: a starting weight estimated from the user's strength, age and build (from reps, so not
+        // for a carry walked for time or distance).
+        var (startKg, basis) = performed == 0 && unit == RepUnit.Reps ? progression.StartingWeight(ex, target.RepMin, target.TargetRir) : (0, "");
         StartingWeight = startKg > 0 ? $"Try {units.FormatWithUnit(startKg)} for your first sets, {basis}." : "";
         HasStartingWeight = startKg > 0;
 

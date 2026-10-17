@@ -393,39 +393,47 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var before = history.FirstOrDefault(s => s.Id != session.Id);
         var then = before == null ? [] : Working(before.Exercises.Where(e => e.ExerciseId == ex.Id)).ToList();
 
-        double Best(List<SetEntry> sets) => sets.Count == 0 ? 0 : sets.Max(s => ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir));
-        var top = now.MaxBy(s => ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir))!;
+        // Counted in seconds, meters or steps (a carry): there's no 1RM, so it's compared by the counts, like bodyweight.
+        var unit = TrainingGoals.UnitOf(ex, se.Unit);
+        var counted = unit != RepUnit.Reps;
+        double Best(List<SetEntry> sets) => sets.Count == 0 || counted ? 0 : sets.Max(s => ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir));
+        var top = counted ? now.MaxBy(s => (s.WeightKg, s.Reps))! : now.MaxBy(s => ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir))!;
         var bestNow = Best(now);
         var reps = now.Sum(s => s.Reps);
-        var volume = now.Sum(s => stats.SetVolume(ex, s));
-        var topText = ex.IsBodyweight && top.WeightKg <= 0 ? $"{top.Reps} reps" : $"{units.FormatWithUnit(top.WeightKg)} × {top.Reps}";
+        var volume = now.Sum(s => stats.SetVolume(ex, s, unit));
+        var topText = top.WeightKg <= 0 && (ex.IsBodyweight || counted) ? unit.Count(top.Reps)
+            : counted ? $"{units.FormatWithUnit(top.WeightKg)} × {unit.Count(top.Reps)}"
+            : $"{units.FormatWithUnit(top.WeightKg)} × {top.Reps}";
+        var byCount = (ex.IsBodyweight || counted) && bestNow <= 0;
 
         string headline, detail;
         Color color;
         if (then.Count == 0)
         {
             headline = $"Best set {topText}";
-            detail = $"{reps} reps · {units.FormatVolume(volume)} · first time";
+            detail = counted ? $"{unit.Count(reps)} · first time" : $"{reps} reps · {units.FormatVolume(volume)} · first time";
             color = Neutral;
         }
         else
         {
             var e1Change = bestNow - Best(then);
             var repsChange = reps - then.Sum(s => s.Reps);
-            var volumeChange = volume - then.Sum(s => stats.SetVolume(ex, s));
-            headline = ex.IsBodyweight && bestNow <= 0
-                ? $"Best set {topText} · {repsChange:+0;−0;±0} reps"
+            var volumeChange = volume - then.Sum(s => stats.SetVolume(ex, s, unit));
+            headline = byCount
+                ? $"Best set {topText} · {repsChange:+0;−0;±0} {unit.Display()}"
                 : $"Best set {topText} · est. 1RM {units.FormatWithUnit(bestNow)} ({(e1Change >= 0 ? "+" : "−")}{units.Format(Math.Abs(e1Change))})";
-            detail = $"{reps} reps ({repsChange:+0;−0;±0}) · {units.FormatVolume(volume)} ({(volumeChange >= 0 ? "+" : "−")}{units.FormatVolume(Math.Abs(volumeChange))}) vs last time";
-            var score = ex.IsBodyweight && bestNow <= 0 ? repsChange : e1Change;
+            detail = counted
+                ? $"{unit.Count(reps)} ({repsChange:+0;−0;±0}) vs last time"
+                : $"{reps} reps ({repsChange:+0;−0;±0}) · {units.FormatVolume(volume)} ({(volumeChange >= 0 ? "+" : "−")}{units.FormatVolume(Math.Abs(volumeChange))}) vs last time";
+            var score = byCount ? repsChange : e1Change;
             color = score > 0.05 ? Up : score < -0.05 ? Down : Neutral;
         }
 
-        // The estimated 1RM (or reps, for bodyweight) of its last few sessions, oldest first.
+        // The estimated 1RM (or reps, for bodyweight; seconds or meters for a carry) of its last few sessions, oldest first.
         var points = history.Take(8).Reverse().Select(s =>
         {
             var sets = Working(s.Exercises.Where(e => e.ExerciseId == ex.Id)).ToList();
-            var value = ex.IsBodyweight && Best(sets) <= 0 ? sets.Sum(x => x.Reps) : units.ToDisplay(Best(sets));
+            var value = byCount || counted ? sets.Sum(x => x.Reps) : units.ToDisplay(Best(sets));
             return new ChartPoint(s.StartedAt.ToString("d MMM"), Math.Round(value, 1));
         }).ToList();
         return new ExerciseProgressItem
@@ -445,17 +453,17 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
         var sets = se.Sets.Where(s => s.IsCompleted).ToList();
         if (sets.Count == 0)
             sets = se.Sets;
-        var reps = sets.Select(s => s.Reps).Distinct().Count() == 1 ? $"{sets[0].Reps}" : $"{sets.Min(s => s.Reps)}–{sets.Max(s => s.Reps)}";
+        var unit = TrainingGoals.UnitOf(ex, se.Unit);
         return new PlanDaySheetExercise
         {
             OpenCommand = OpenInfo(ex),
             Thumb = Thumb(ex),
             Name = ex?.Name ?? "Unknown exercise",
-            Detail = $"{ex?.Equipment.Display() ?? ""} · {sets.Count}×{reps} reps",
+            Detail = $"{ex?.Equipment.Display() ?? ""} · {sets.Count}×{unit.Range(sets.Min(s => s.Reps), sets.Max(s => s.Reps))}",
             Note = se.Note ?? "",
             IsDone = true,
             FirstHeader = units.Label.ToUpperInvariant(),
-            SecondHeader = "REPS",
+            SecondHeader = unit.Display().ToUpperInvariant(),
             ThirdHeader = "E1RM",
             Rows = SessionRows(se, ex),
         };
@@ -474,7 +482,7 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
             Note = se.Note ?? "",
             IsDone = false,
             FirstHeader = units.Label.ToUpperInvariant(),
-            SecondHeader = "REPS",
+            SecondHeader = TrainingGoals.UnitOf(ex, se.Unit).Display().ToUpperInvariant(),
             ThirdHeader = "E1RM",
             Rows = SessionRows(se, ex),
         };
@@ -483,17 +491,17 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     /// <summary>An exercise of a workout skipped this week: each of its sets, warm-ups first, as skipped.</summary>
     PlanDaySheetExercise SkippedExercise(PlanExercise pe, Exercise? ex, IReadOnlyList<WarmupStep> warmups)
     {
-        var range = pe.RepMin == pe.RepMax ? $"{pe.RepMin}" : $"{pe.RepMin}–{pe.RepMax}";
+        var unit = TrainingGoals.UnitOf(ex, pe.Unit);
         return new PlanDaySheetExercise
         {
             OpenCommand = OpenInfo(ex),
             Thumb = Thumb(ex),
             Name = ex?.Name ?? "Unknown exercise",
-            Detail = $"{ex?.Equipment.Display() ?? ""} · {pe.Sets}×{range} reps · skipped",
+            Detail = $"{ex?.Equipment.Display() ?? ""} · {pe.Sets}×{unit.Range(pe.RepMin, pe.RepMax)} · skipped",
             Note = pe.Note ?? "",
             IsDone = false,
             FirstHeader = units.Label.ToUpperInvariant(),
-            SecondHeader = "REPS",
+            SecondHeader = unit.Display().ToUpperInvariant(),
             ThirdHeader = "E1RM",
             Rows =
             [
@@ -510,17 +518,18 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     PlanDaySheetExercise Planned(PlanExercise pe, Exercise? ex, IReadOnlyList<WarmupStep> warmups)
     {
         var range = pe.RepMin == pe.RepMax ? $"{pe.RepMin}" : $"{pe.RepMin}–{pe.RepMax}";
+        var unit = TrainingGoals.UnitOf(ex, pe.Unit);
         var last = ex == null ? [] : progression.LastPerformance(ex.Id)?.Sets.Where(s => s.IsCompleted && !s.IsWarmup).ToList() ?? [];
         return new PlanDaySheetExercise
         {
             OpenCommand = OpenInfo(ex),
             Thumb = Thumb(ex),
             Name = ex?.Name ?? "Unknown exercise",
-            Detail = $"{ex?.Equipment.Display() ?? ""} · {pe.Sets}×{range} reps",
+            Detail = $"{ex?.Equipment.Display() ?? ""} · {pe.Sets}×{unit.Range(pe.RepMin, pe.RepMax)}",
             IsDone = false,
             FirstHeader = "TARGET",
             SecondHeader = $"LAST {units.Label.ToUpperInvariant()}",
-            ThirdHeader = "LAST REPS",
+            ThirdHeader = $"LAST {unit.Display().ToUpperInvariant()}",
             Rows =
             [
                 .. warmups.Select((w, i) => new PlanDaySetRow($"W{i + 1}", w.ToString(), "–", "–")),
@@ -541,11 +550,12 @@ public partial class PlanDayViewModel(DataStore store, WorkoutService workouts, 
     List<PlanDaySetRow> SessionRows(SessionExercise se, Exercise? ex)
     {
         var (working, warm) = (0, 0);
+        var countsReps = TrainingGoals.UnitOf(ex, se.Unit) == RepUnit.Reps;
         PlanDaySetRow Row(SetEntry s) => new(
             s.IsWarmup ? $"W{++warm}" : $"{++working}",
             ex?.IsBodyweight == true && s.WeightKg <= 0 ? "BW" : units.Format(s.WeightKg),
             $"{s.Reps}",
-            !s.IsWarmup && ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir) is > 0 and var e1 ? units.Format(e1) : "–");
+            !s.IsWarmup && countsReps && ProgressionEngine.E1Rm(s.WeightKg, s.Reps, s.Rir) is > 0 and var e1 ? units.Format(e1) : "–");
         PlanDaySetRow Skipped(bool warmup) => new(warmup ? $"W{++warm}" : $"{++working}", "Skipped", "–", "N/A") { IsSkipped = true };
         return
         [
